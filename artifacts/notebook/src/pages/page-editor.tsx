@@ -197,37 +197,23 @@ export default function PageEditor() {
         </button>
       </div>
 
-      {/* Sub-header — 2 rounded cards */}
-      <div className="bg-[#ece9e3] px-4 pt-0 pb-2 flex items-center gap-3 shrink-0">
-        {/* Card 2: Page Name */}
-        <div className="flex-1 bg-[#f5f2ee] border border-zinc-300 rounded-xl px-5 py-2 shadow-sm">
-          <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-0.5">Page Name</div>
-          <div className="text-sm font-semibold text-zinc-700" data-testid="text-page-name">
-            PAGE {page.pageNumber}
-          </div>
-        </div>
-
-        {/* Card 3: Page / Save status */}
-        <div className="flex-1 bg-[#f5f2ee] border border-zinc-300 rounded-xl px-5 py-2 shadow-sm flex items-center justify-between">
-          <div>
-            <div className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-0.5">Page</div>
-            <div className="text-sm font-semibold text-zinc-700" data-testid="text-page-count">
-              {page.pageNumber} / {pages?.length ?? 1}
-            </div>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-zinc-400">
-              {updatePage.isPending ? "Saving..." : "Saved"}
-            </span>
-            <button
-              onClick={handleDelete}
-              disabled={deletePage.isPending}
-              className="text-xs text-zinc-400 hover:text-red-500 transition-colors"
-              data-testid="btn-delete-page"
-            >
-              Delete
-            </button>
-          </div>
+      {/* Sub-header */}
+      <div className="bg-[#f0ede8] border-b border-zinc-300 px-4 py-1 flex items-center justify-between shrink-0">
+        <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">
+          Page: <span className="text-zinc-700">PAGE {page.pageNumber}</span>
+        </span>
+        <div className="flex items-center gap-3">
+          <span className="text-xs text-zinc-400">
+            {updatePage.isPending ? "Saving..." : "Saved"}
+          </span>
+          <button
+            onClick={handleDelete}
+            disabled={deletePage.isPending}
+            className="text-xs text-zinc-400 hover:text-red-500 transition-colors"
+            data-testid="btn-delete-page"
+          >
+            Delete
+          </button>
         </div>
       </div>
 
