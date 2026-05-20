@@ -11,24 +11,12 @@ import {
 } from "@workspace/api-client-react";
 import { useParams, useLocation } from "wouter";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useState, useEffect, useRef, useCallback, KeyboardEvent } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 const TOTAL_LINES = 1000;
 const LINE_HEIGHT = 28;
-
-function contentToLines(content: string): string[] {
-  const raw = content.split("\n");
-  const lines = Array.from({ length: TOTAL_LINES }, (_, i) => raw[i] ?? "");
-  return lines;
-}
-
-function linesToContent(lines: string[]): string {
-  // trim trailing empty lines but keep at least 1
-  let last = lines.length - 1;
-  while (last > 0 && lines[last] === "") last--;
-  return lines.slice(0, last + 1).join("\n");
-}
+const PAPER_HEIGHT = TOTAL_LINES * LINE_HEIGHT;
 
 export default function PageEditor() {
   const { bookId, pageId } = useParams();
@@ -42,11 +30,11 @@ export default function PageEditor() {
     query: { enabled: !!(bId && pId), queryKey: getGetPageQueryKey(bId, pId) },
   });
 
-  const [lines, setLines] = useState<string[]>(() => Array(TOTAL_LINES).fill(""));
+  const [content, setContent] = useState("");
   const initializedForId = useRef<number | null>(null);
   const lastSavedContent = useRef("");
-  const lineRefs = useRef<(HTMLInputElement | null)[]>([]);
   const tabsRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   const queryClient = useQueryClient();
   const updatePage = useUpdatePage();
@@ -65,15 +53,11 @@ export default function PageEditor() {
   const deletePage = useDeletePage({
     mutation: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getListPagesQueryList(bId) });
+        queryClient.invalidateQueries({ queryKey: getListPagesQueryKey(bId) });
         setLocation(`/books/${bId}`);
       },
     },
   });
-
-  function getListPagesQueryList(id: number) {
-    return getListPagesQueryKey(id);
-  }
 
   const handleDelete = () => {
     if (confirm("Delete this page?")) {
@@ -90,10 +74,10 @@ export default function PageEditor() {
   };
 
   const savePage = useCallback(
-    (content: string) => {
+    (text: string) => {
       const title = page?.title ?? `PAGE ${page?.pageNumber ?? 1}`;
       mutateFnRef.current(
-        { bookId: bId, pageId: pId, data: { title, content } },
+        { bookId: bId, pageId: pId, data: { title, content: text } },
         {
           onSuccess: (updatedPage) => {
             queryClient.setQueryData(getGetPageQueryKey(bId, pId), updatedPage);
@@ -105,19 +89,16 @@ export default function PageEditor() {
     [bId, pId, queryClient, page]
   );
 
-  // Initialize lines from page content
   useEffect(() => {
     if (page && initializedForId.current !== pId) {
       initializedForId.current = pId;
-      setLines(contentToLines(page.content));
+      setContent(page.content);
       lastSavedContent.current = page.content;
     }
   }, [page, pId]);
 
-  // Auto-save debounce
   useEffect(() => {
     if (initializedForId.current !== pId) return;
-    const content = linesToContent(lines);
     const timer = setTimeout(() => {
       if (content !== lastSavedContent.current) {
         savePage(content);
@@ -125,40 +106,7 @@ export default function PageEditor() {
       }
     }, 1000);
     return () => clearTimeout(timer);
-  }, [lines, pId, savePage]);
-
-  const handleLineChange = (index: number, value: string) => {
-    setLines((prev) => {
-      const next = [...prev];
-      next[index] = value;
-      return next;
-    });
-  };
-
-  const handleLineKeyDown = (index: number, e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      const nextIndex = index + 1;
-      if (nextIndex < TOTAL_LINES) {
-        lineRefs.current[nextIndex]?.focus();
-      }
-    } else if (e.key === "ArrowDown") {
-      e.preventDefault();
-      const nextIndex = index + 1;
-      if (nextIndex < TOTAL_LINES) {
-        lineRefs.current[nextIndex]?.focus();
-      }
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      const prevIndex = index - 1;
-      if (prevIndex >= 0) {
-        lineRefs.current[prevIndex]?.focus();
-      }
-    } else if (e.key === "Backspace" && lines[index] === "" && index > 0) {
-      e.preventDefault();
-      lineRefs.current[index - 1]?.focus();
-    }
-  };
+  }, [content, pId, savePage]);
 
   const scrollTabs = (dir: "left" | "right") => {
     if (tabsRef.current) {
@@ -175,11 +123,9 @@ export default function PageEditor() {
   if (!page)
     return <div className="h-screen bg-white flex items-center justify-center text-zinc-400">Page not found</div>;
 
-  const currentPageLabel = `PAGE ${page.pageNumber}`;
-
   return (
     <div className="h-screen bg-white flex flex-col overflow-hidden">
-      {/* Dark top bar with tabs */}
+      {/* Dark top bar */}
       <div className="bg-[#1a1a1a] text-white flex items-stretch shrink-0" style={{ minHeight: 44 }}>
         <button
           onClick={() => setLocation("/")}
@@ -235,7 +181,7 @@ export default function PageEditor() {
       {/* Sub-header */}
       <div className="bg-[#f0ede8] border-b border-zinc-300 px-4 py-1 flex items-center justify-between shrink-0">
         <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">
-          Page: <span className="text-zinc-700">{currentPageLabel}</span>
+          Page: <span className="text-zinc-700">PAGE {page.pageNumber}</span>
         </span>
         <div className="flex items-center gap-3">
           <span className="text-xs text-zinc-400">
@@ -252,48 +198,60 @@ export default function PageEditor() {
         </div>
       </div>
 
-      {/* 1000-line paper */}
+      {/* Paper area — scrollable */}
       <div className="flex-1 overflow-y-auto bg-white" style={{ scrollbarWidth: "thin" }}>
-        <div className="flex">
-          {/* Row number column */}
+        <div className="flex" style={{ minHeight: PAPER_HEIGHT }}>
+          {/* Row numbers */}
           <div
-            className="shrink-0 bg-[#f9f7f4] border-r border-zinc-200 text-right select-none"
+            className="shrink-0 bg-[#f9f7f4] border-r border-zinc-200 select-none"
             style={{ width: 40 }}
           >
             {Array.from({ length: TOTAL_LINES }).map((_, i) => (
               <div
                 key={i}
-                className="text-zinc-400 font-mono flex items-center justify-end pr-2"
+                className="text-zinc-400 font-mono flex items-center justify-end pr-2 cursor-text"
                 style={{ height: LINE_HEIGHT, fontSize: 11 }}
-                onClick={() => lineRefs.current[i]?.focus()}
+                onClick={() => textareaRef.current?.focus()}
               >
                 {i + 1}
               </div>
             ))}
           </div>
 
-          {/* Lines */}
-          <div className="flex-1 flex flex-col">
-            {Array.from({ length: TOTAL_LINES }).map((_, i) => (
-              <div
-                key={i}
-                className="relative border-b border-zinc-100"
-                style={{ height: LINE_HEIGHT }}
-              >
-                <input
-                  ref={(el) => { lineRefs.current[i] = el; }}
-                  type="text"
-                  value={lines[i] ?? ""}
-                  onChange={(e) => handleLineChange(i, e.target.value)}
-                  onKeyDown={(e) => handleLineKeyDown(i, e)}
-                  className="absolute inset-0 w-full bg-transparent border-none outline-none focus:ring-0 px-3 text-zinc-800 font-mono"
-                  style={{ fontSize: 14, lineHeight: `${LINE_HEIGHT}px`, height: LINE_HEIGHT }}
-                  placeholder={i === 0 ? "Start writing..." : ""}
-                  spellCheck={false}
-                  data-testid={`line-input-${i}`}
-                />
-              </div>
-            ))}
+          {/* Textarea overlaid on lined background */}
+          <div
+            className="flex-1 relative"
+            style={{ minHeight: PAPER_HEIGHT }}
+          >
+            {/* Horizontal ruled lines */}
+            <div
+              className="absolute inset-0 pointer-events-none"
+              style={{
+                backgroundImage: `repeating-linear-gradient(
+                  to bottom,
+                  transparent 0px,
+                  transparent ${LINE_HEIGHT - 1}px,
+                  #e2e2e2 ${LINE_HEIGHT - 1}px,
+                  #e2e2e2 ${LINE_HEIGHT}px
+                )`,
+              }}
+            />
+            <textarea
+              ref={textareaRef}
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              className="absolute inset-0 w-full h-full resize-none bg-transparent border-none outline-none focus:ring-0 px-3 text-zinc-800 font-mono"
+              style={{
+                fontSize: 14,
+                lineHeight: `${LINE_HEIGHT}px`,
+                minHeight: PAPER_HEIGHT,
+                paddingTop: 0,
+                caretColor: "#333",
+              }}
+              placeholder="Start writing..."
+              spellCheck={false}
+              data-testid="textarea-page-content"
+            />
           </div>
         </div>
       </div>
