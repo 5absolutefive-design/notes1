@@ -140,9 +140,10 @@ export default function PageEditor() {
       {/* EDIT card — full width, above dark bar */}
       <div className="bg-[#ece9e3] px-4 pt-3 pb-2 shrink-0">
         <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl px-3 py-3 shadow-sm">
-          <div className="flex items-center gap-3">
+          {/* Button groups — compact, sits in left portion of card */}
+          <div className="inline-flex items-start gap-2">
 
-            {/* Left group — 2×2 grid of square buttons */}
+            {/* Left group — 2×2 grid */}
             <div className="grid grid-cols-2 gap-1 shrink-0">
               {[0,1,2,3].map(i => (
                 <button key={i} className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
@@ -150,10 +151,10 @@ export default function PageEditor() {
             </div>
 
             {/* Middle group — 2 rows */}
-            <div className="flex-1 flex flex-col gap-1 min-w-0">
+            <div className="flex flex-col gap-1 shrink-0">
               {/* Top row: wide + 3 small */}
               <div className="flex items-center gap-1">
-                <button className="flex-1 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
+                <button className="w-24 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
                 {[0,1,2].map(i => (
                   <button key={i} className="w-8 h-8 shrink-0 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
                 ))}
@@ -163,13 +164,13 @@ export default function PageEditor() {
                 {[0,1,2].map(i => (
                   <button key={i} className="w-8 h-8 shrink-0 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
                 ))}
-                <button className="flex-1 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
+                <button className="w-24 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
               </div>
             </div>
 
-            {/* Right group — vertical stack of square buttons */}
+            {/* Right group — 3 stacked buttons */}
             <div className="flex flex-col gap-1 shrink-0">
-              {[0,1,2,3].map(i => (
+              {[0,1,2].map(i => (
                 <button key={i} className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
               ))}
             </div>
