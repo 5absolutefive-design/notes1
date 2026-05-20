@@ -144,156 +144,158 @@ export default function PageEditor() {
         </div>
       </div>
 
-      {/* Dark top bar */}
-      <div className="bg-[#1a1a1a] text-white flex items-stretch shrink-0" style={{ minHeight: 44 }}>
-        <button
-          onClick={() => setLocation("/")}
-          className="px-3 flex items-center text-zinc-400 hover:text-white transition-colors border-r border-zinc-700"
-          data-testid="btn-back-home"
-        >
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-        <button
-          onClick={() => scrollTabs("left")}
-          className="px-2 flex items-center text-zinc-400 hover:text-white transition-colors"
-          data-testid="btn-scroll-left"
-        >
-          <ChevronLeft className="w-4 h-4" />
-        </button>
-        <div
-          ref={tabsRef}
-          className="flex items-stretch overflow-x-auto flex-1"
-          style={{ scrollbarWidth: "none" }}
-        >
-          {pages?.map((p, index) => (
+      {/* Card 2 — Tab bar (rounded, dark) */}
+      <div className="bg-[#ece9e3] px-4 pt-0 pb-2 shrink-0">
+        <div className="overflow-hidden rounded-xl border border-zinc-700 shadow-sm">
+          <div className="bg-[#1a1a1a] text-white flex items-stretch" style={{ minHeight: 44 }}>
             <button
-              key={p.id}
-              onClick={() => setLocation(`/books/${bId}/pages/${p.id}`)}
-              data-testid={`tab-page-${p.id}`}
-              className={`px-5 py-2 text-sm font-semibold uppercase tracking-widest whitespace-nowrap transition-colors border-r border-zinc-700 ${
-                p.id === pId
-                  ? "bg-[#2a2a2a] text-white border-b-2 border-b-white"
-                  : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
-              }`}
+              onClick={() => setLocation("/")}
+              className="px-3 flex items-center text-zinc-400 hover:text-white transition-colors border-r border-zinc-700"
+              data-testid="btn-back-home"
             >
-              PAGE {index + 1}
+              <ChevronLeft className="w-5 h-5" />
             </button>
-          ))}
-        </div>
-        <button
-          onClick={() => scrollTabs("right")}
-          className="px-2 flex items-center text-zinc-400 hover:text-white transition-colors border-l border-zinc-700"
-          data-testid="btn-scroll-right"
-        >
-          <ChevronRight className="w-4 h-4" />
-        </button>
-        <button
-          onClick={handleCreatePage}
-          disabled={createPage.isPending}
-          className="px-4 py-2 text-sm font-semibold text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors border-l border-zinc-700 whitespace-nowrap uppercase tracking-wider"
-          data-testid="btn-new-page"
-        >
-          + NEW PAGE
-        </button>
-      </div>
-
-      {/* Sub-header */}
-      <div className="bg-[#f0ede8] border-b border-zinc-300 px-4 py-1 flex items-center justify-between shrink-0">
-        <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">
-          Page: <span className="text-zinc-700">PAGE {page.pageNumber}</span>
-        </span>
-        <div className="flex items-center gap-3">
-          <span className="text-xs text-zinc-400">
-            {updatePage.isPending ? "Saving..." : "Saved"}
-          </span>
-          <button
-            onClick={handleDelete}
-            disabled={deletePage.isPending}
-            className="text-xs text-zinc-400 hover:text-red-500 transition-colors"
-            data-testid="btn-delete-page"
-          >
-            Delete
-          </button>
-        </div>
-      </div>
-
-      {/* Paper area — scrollable */}
-      <div className="flex-1 overflow-y-auto bg-white" style={{ scrollbarWidth: "thin" }}>
-        <div className="flex" style={{ minHeight: PAPER_HEIGHT }}>
-          {/* Row numbers */}
-          <div
-            className="shrink-0 bg-[#f9f7f4] border-r border-zinc-200 select-none"
-            style={{ width: 40 }}
-          >
-            {Array.from({ length: TOTAL_LINES }).map((_, i) => (
-              <div
-                key={i}
-                className="text-zinc-400 font-mono flex items-center justify-end pr-2 cursor-text"
-                style={{ height: LINE_HEIGHT, fontSize: 11 }}
-                onClick={() => textareaRef.current?.focus()}
-              >
-                {i + 1}
-              </div>
-            ))}
-          </div>
-
-          {/* Textarea overlaid on lined background */}
-          <div
-            className="flex-1 relative"
-            style={{ minHeight: PAPER_HEIGHT }}
-          >
-            {/* Horizontal ruled lines */}
+            <button
+              onClick={() => scrollTabs("left")}
+              className="px-2 flex items-center text-zinc-400 hover:text-white transition-colors"
+              data-testid="btn-scroll-left"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
             <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                backgroundImage: `repeating-linear-gradient(
-                  to bottom,
-                  transparent 0px,
-                  transparent ${LINE_HEIGHT - 1}px,
-                  #e2e2e2 ${LINE_HEIGHT - 1}px,
-                  #e2e2e2 ${LINE_HEIGHT}px
-                )`,
-              }}
-            />
-            <textarea
-              ref={textareaRef}
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="absolute inset-0 w-full h-full resize-none bg-transparent border-none outline-none focus:ring-0 px-3 text-zinc-800 font-mono"
-              style={{
-                fontSize: 14,
-                lineHeight: `${LINE_HEIGHT}px`,
-                minHeight: PAPER_HEIGHT,
-                paddingTop: 0,
-                caretColor: "#333",
-              }}
-              placeholder="Start writing..."
-              spellCheck={false}
-              data-testid="textarea-page-content"
-            />
+              ref={tabsRef}
+              className="flex items-stretch overflow-x-auto flex-1"
+              style={{ scrollbarWidth: "none" }}
+            >
+              {pages?.map((p, index) => (
+                <button
+                  key={p.id}
+                  onClick={() => setLocation(`/books/${bId}/pages/${p.id}`)}
+                  data-testid={`tab-page-${p.id}`}
+                  className={`px-5 py-2 text-sm font-semibold uppercase tracking-widest whitespace-nowrap transition-colors border-r border-zinc-700 ${
+                    p.id === pId
+                      ? "bg-[#2a2a2a] text-white border-b-2 border-b-white"
+                      : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
+                  }`}
+                >
+                  PAGE {index + 1}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => scrollTabs("right")}
+              className="px-2 flex items-center text-zinc-400 hover:text-white transition-colors border-l border-zinc-700"
+              data-testid="btn-scroll-right"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+            <button
+              onClick={handleCreatePage}
+              disabled={createPage.isPending}
+              className="px-4 py-2 text-sm font-semibold text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors border-l border-zinc-700 whitespace-nowrap uppercase tracking-wider"
+              data-testid="btn-new-page"
+            >
+              + NEW PAGE
+            </button>
           </div>
         </div>
       </div>
 
-      {/* Bottom nav */}
-      <div className="bg-[#f0ede8] border-t border-zinc-300 px-4 py-1 flex items-center justify-between text-xs text-zinc-500 shrink-0">
-        <button
-          onClick={() => prevPage && setLocation(`/books/${bId}/pages/${prevPage.id}`)}
-          disabled={!prevPage}
-          className="disabled:opacity-30 hover:text-zinc-700 transition-colors flex items-center gap-1"
-          data-testid="btn-prev-page"
-        >
-          <ChevronLeft className="w-3 h-3" /> Prev
-        </button>
-        <span className="font-medium">{book?.title}</span>
-        <button
-          onClick={() => nextPage && setLocation(`/books/${bId}/pages/${nextPage.id}`)}
-          disabled={!nextPage}
-          className="disabled:opacity-30 hover:text-zinc-700 transition-colors flex items-center gap-1"
-          data-testid="btn-next-page"
-        >
-          Next <ChevronRight className="w-3 h-3" />
-        </button>
+      {/* Card 3 — Sub-header + Paper + Bottom nav (one big rounded card) */}
+      <div className="flex-1 flex flex-col min-h-0 bg-[#ece9e3] px-4 pb-4">
+        <div className="flex-1 flex flex-col min-h-0 overflow-hidden rounded-xl border border-zinc-300 shadow-sm bg-white">
+          {/* Sub-header inside card */}
+          <div className="bg-[#f5f2ee] border-b border-zinc-200 px-4 py-1 flex items-center justify-between shrink-0">
+            <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">
+              Page: <span className="text-zinc-700">PAGE {page.pageNumber}</span>
+            </span>
+            <div className="flex items-center gap-3">
+              <span className="text-xs text-zinc-400">
+                {updatePage.isPending ? "Saving..." : "Saved"}
+              </span>
+              <button
+                onClick={handleDelete}
+                disabled={deletePage.isPending}
+                className="text-xs text-zinc-400 hover:text-red-500 transition-colors"
+                data-testid="btn-delete-page"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+
+          {/* Paper area */}
+          <div className="flex-1 overflow-y-auto bg-white" style={{ scrollbarWidth: "thin" }}>
+            <div className="flex" style={{ minHeight: PAPER_HEIGHT }}>
+              <div
+                className="shrink-0 bg-[#f9f7f4] border-r border-zinc-200 select-none"
+                style={{ width: 40 }}
+              >
+                {Array.from({ length: TOTAL_LINES }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="text-zinc-400 font-mono flex items-center justify-end pr-2 cursor-text"
+                    style={{ height: LINE_HEIGHT, fontSize: 11 }}
+                    onClick={() => textareaRef.current?.focus()}
+                  >
+                    {i + 1}
+                  </div>
+                ))}
+              </div>
+              <div className="flex-1 relative" style={{ minHeight: PAPER_HEIGHT }}>
+                <div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    backgroundImage: `repeating-linear-gradient(
+                      to bottom,
+                      transparent 0px,
+                      transparent ${LINE_HEIGHT - 1}px,
+                      #e2e2e2 ${LINE_HEIGHT - 1}px,
+                      #e2e2e2 ${LINE_HEIGHT}px
+                    )`,
+                  }}
+                />
+                <textarea
+                  ref={textareaRef}
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  className="absolute inset-0 w-full h-full resize-none bg-transparent border-none outline-none focus:ring-0 px-3 text-zinc-800 font-mono"
+                  style={{
+                    fontSize: 14,
+                    lineHeight: `${LINE_HEIGHT}px`,
+                    minHeight: PAPER_HEIGHT,
+                    paddingTop: 0,
+                    caretColor: "#333",
+                  }}
+                  placeholder="Start writing..."
+                  spellCheck={false}
+                  data-testid="textarea-page-content"
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom nav inside card */}
+          <div className="bg-[#f5f2ee] border-t border-zinc-200 px-4 py-1 flex items-center justify-between text-xs text-zinc-500 shrink-0">
+            <button
+              onClick={() => prevPage && setLocation(`/books/${bId}/pages/${prevPage.id}`)}
+              disabled={!prevPage}
+              className="disabled:opacity-30 hover:text-zinc-700 transition-colors flex items-center gap-1"
+              data-testid="btn-prev-page"
+            >
+              <ChevronLeft className="w-3 h-3" /> Prev
+            </button>
+            <span className="font-medium">{book?.title}</span>
+            <button
+              onClick={() => nextPage && setLocation(`/books/${bId}/pages/${nextPage.id}`)}
+              disabled={!nextPage}
+              className="disabled:opacity-30 hover:text-zinc-700 transition-colors flex items-center gap-1"
+              data-testid="btn-next-page"
+            >
+              Next <ChevronRight className="w-3 h-3" />
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
