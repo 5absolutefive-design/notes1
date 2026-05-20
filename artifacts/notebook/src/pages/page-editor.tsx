@@ -11,8 +11,24 @@ import {
 } from "@workspace/api-client-react";
 import { useParams, useLocation } from "wouter";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, KeyboardEvent } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+
+const TOTAL_LINES = 1000;
+const LINE_HEIGHT = 28;
+
+function contentToLines(content: string): string[] {
+  const raw = content.split("\n");
+  const lines = Array.from({ length: TOTAL_LINES }, (_, i) => raw[i] ?? "");
+  return lines;
+}
+
+function linesToContent(lines: string[]): string {
+  // trim trailing empty lines but keep at least 1
+  let last = lines.length - 1;
+  while (last > 0 && lines[last] === "") last--;
+  return lines.slice(0, last + 1).join("\n");
+}
 
 export default function PageEditor() {
   const { bookId, pageId } = useParams();
@@ -26,9 +42,10 @@ export default function PageEditor() {
     query: { enabled: !!(bId && pId), queryKey: getGetPageQueryKey(bId, pId) },
   });
 
-  const [content, setContent] = useState("");
+  const [lines, setLines] = useState<string[]>(() => Array(TOTAL_LINES).fill(""));
   const initializedForId = useRef<number | null>(null);
-  const lastSaved = useRef({ title: "", content: "" });
+  const lastSavedContent = useRef("");
+  const lineRefs = useRef<(HTMLInputElement | null)[]>([]);
   const tabsRef = useRef<HTMLDivElement>(null);
 
   const queryClient = useQueryClient();
@@ -48,11 +65,15 @@ export default function PageEditor() {
   const deletePage = useDeletePage({
     mutation: {
       onSuccess: () => {
-        queryClient.invalidateQueries({ queryKey: getListPagesQueryKey(bId) });
+        queryClient.invalidateQueries({ queryKey: getListPagesQueryList(bId) });
         setLocation(`/books/${bId}`);
       },
     },
   });
+
+  function getListPagesQueryList(id: number) {
+    return getListPagesQueryKey(id);
+  }
 
   const handleDelete = () => {
     if (confirm("Delete this page?")) {
@@ -69,9 +90,10 @@ export default function PageEditor() {
   };
 
   const savePage = useCallback(
-    (data: { title: string; content: string }) => {
+    (content: string) => {
+      const title = page?.title ?? `PAGE ${page?.pageNumber ?? 1}`;
       mutateFnRef.current(
-        { bookId: bId, pageId: pId, data },
+        { bookId: bId, pageId: pId, data: { title, content } },
         {
           onSuccess: (updatedPage) => {
             queryClient.setQueryData(getGetPageQueryKey(bId, pId), updatedPage);
@@ -80,32 +102,63 @@ export default function PageEditor() {
         }
       );
     },
-    [bId, pId, queryClient]
+    [bId, pId, queryClient, page]
   );
 
+  // Initialize lines from page content
   useEffect(() => {
     if (page && initializedForId.current !== pId) {
       initializedForId.current = pId;
-      setContent(page.content);
-      lastSaved.current = { title: page.title, content: page.content };
+      setLines(contentToLines(page.content));
+      lastSavedContent.current = page.content;
     }
   }, [page, pId]);
 
+  // Auto-save debounce
   useEffect(() => {
     if (initializedForId.current !== pId) return;
+    const content = linesToContent(lines);
     const timer = setTimeout(() => {
-      if (content !== lastSaved.current.content) {
-        const title = page?.title ?? `PAGE ${page?.pageNumber ?? 1}`;
-        savePage({ title, content });
-        lastSaved.current = { title, content };
+      if (content !== lastSavedContent.current) {
+        savePage(content);
+        lastSavedContent.current = content;
       }
     }, 1000);
     return () => clearTimeout(timer);
-  }, [content, pId, savePage, page]);
+  }, [lines, pId, savePage]);
 
-  const currentIndex = pages?.findIndex((p) => p.id === pId) ?? 0;
-  const prevPage = pages?.[currentIndex - 1];
-  const nextPage = pages?.[currentIndex + 1];
+  const handleLineChange = (index: number, value: string) => {
+    setLines((prev) => {
+      const next = [...prev];
+      next[index] = value;
+      return next;
+    });
+  };
+
+  const handleLineKeyDown = (index: number, e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      const nextIndex = index + 1;
+      if (nextIndex < TOTAL_LINES) {
+        lineRefs.current[nextIndex]?.focus();
+      }
+    } else if (e.key === "ArrowDown") {
+      e.preventDefault();
+      const nextIndex = index + 1;
+      if (nextIndex < TOTAL_LINES) {
+        lineRefs.current[nextIndex]?.focus();
+      }
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      const prevIndex = index - 1;
+      if (prevIndex >= 0) {
+        lineRefs.current[prevIndex]?.focus();
+      }
+    } else if (e.key === "Backspace" && lines[index] === "" && index > 0) {
+      e.preventDefault();
+      lineRefs.current[index - 1]?.focus();
+    }
+  };
 
   const scrollTabs = (dir: "left" | "right") => {
     if (tabsRef.current) {
@@ -113,26 +166,28 @@ export default function PageEditor() {
     }
   };
 
-  if (isLoading) return <div className="min-h-screen bg-background flex items-center justify-center text-muted-foreground">Loading...</div>;
-  if (!page) return <div className="min-h-screen bg-background flex items-center justify-center text-muted-foreground">Page not found</div>;
+  const currentIndex = pages?.findIndex((p) => p.id === pId) ?? 0;
+  const prevPage = pages?.[currentIndex - 1];
+  const nextPage = pages?.[currentIndex + 1];
+
+  if (isLoading)
+    return <div className="h-screen bg-white flex items-center justify-center text-zinc-400">Loading...</div>;
+  if (!page)
+    return <div className="h-screen bg-white flex items-center justify-center text-zinc-400">Page not found</div>;
 
   const currentPageLabel = `PAGE ${page.pageNumber}`;
 
   return (
-    <div className="h-screen bg-background flex flex-col overflow-hidden">
+    <div className="h-screen bg-white flex flex-col overflow-hidden">
       {/* Dark top bar with tabs */}
       <div className="bg-[#1a1a1a] text-white flex items-stretch shrink-0" style={{ minHeight: 44 }}>
-        {/* Back arrow */}
         <button
           onClick={() => setLocation("/")}
           className="px-3 flex items-center text-zinc-400 hover:text-white transition-colors border-r border-zinc-700"
-          title="Back to home"
           data-testid="btn-back-home"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
-
-        {/* Scroll left */}
         <button
           onClick={() => scrollTabs("left")}
           className="px-2 flex items-center text-zinc-400 hover:text-white transition-colors"
@@ -140,11 +195,9 @@ export default function PageEditor() {
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
-
-        {/* Page tabs — scrollable */}
         <div
           ref={tabsRef}
-          className="flex items-stretch overflow-x-auto scrollbar-none flex-1"
+          className="flex items-stretch overflow-x-auto flex-1"
           style={{ scrollbarWidth: "none" }}
         >
           {pages?.map((p, index) => (
@@ -162,8 +215,6 @@ export default function PageEditor() {
             </button>
           ))}
         </div>
-
-        {/* Scroll right */}
         <button
           onClick={() => scrollTabs("right")}
           className="px-2 flex items-center text-zinc-400 hover:text-white transition-colors border-l border-zinc-700"
@@ -171,8 +222,6 @@ export default function PageEditor() {
         >
           <ChevronRight className="w-4 h-4" />
         </button>
-
-        {/* New Page */}
         <button
           onClick={handleCreatePage}
           disabled={createPage.isPending}
@@ -183,7 +232,7 @@ export default function PageEditor() {
         </button>
       </div>
 
-      {/* Sub-header: page label + save status */}
+      {/* Sub-header */}
       <div className="bg-[#f0ede8] border-b border-zinc-300 px-4 py-1 flex items-center justify-between shrink-0">
         <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">
           Page: <span className="text-zinc-700">{currentPageLabel}</span>
@@ -196,7 +245,6 @@ export default function PageEditor() {
             onClick={handleDelete}
             disabled={deletePage.isPending}
             className="text-xs text-zinc-400 hover:text-red-500 transition-colors"
-            title="Delete this page"
             data-testid="btn-delete-page"
           >
             Delete
@@ -204,54 +252,53 @@ export default function PageEditor() {
         </div>
       </div>
 
-      {/* Lined paper — full width, no card */}
+      {/* 1000-line paper */}
       <div className="flex-1 overflow-y-auto bg-white" style={{ scrollbarWidth: "thin" }}>
-        <div className="flex h-full min-h-full">
-          {/* Row numbers column */}
+        <div className="flex">
+          {/* Row number column */}
           <div
-            className="shrink-0 bg-[#f9f7f4] border-r border-zinc-200 text-right pr-2 select-none"
-            style={{ width: 40, paddingTop: 1 }}
+            className="shrink-0 bg-[#f9f7f4] border-r border-zinc-200 text-right select-none"
+            style={{ width: 40 }}
           >
-            {Array.from({ length: 200 }).map((_, i) => (
+            {Array.from({ length: TOTAL_LINES }).map((_, i) => (
               <div
                 key={i}
-                className="text-zinc-400 font-mono"
-                style={{ height: 28, lineHeight: "28px", fontSize: 11 }}
+                className="text-zinc-400 font-mono flex items-center justify-end pr-2"
+                style={{ height: LINE_HEIGHT, fontSize: 11 }}
+                onClick={() => lineRefs.current[i]?.focus()}
               >
                 {i + 1}
               </div>
             ))}
           </div>
 
-          {/* Textarea with lines */}
-          <div className="flex-1 relative">
-            {/* Horizontal lines */}
-            <div
-              className="absolute inset-0 pointer-events-none"
-              style={{
-                backgroundImage: "repeating-linear-gradient(to bottom, transparent, transparent 27px, #e5e5e5 27px, #e5e5e5 28px)",
-                backgroundPositionY: "0px",
-              }}
-            />
-            <textarea
-              value={content}
-              onChange={(e) => setContent(e.target.value)}
-              className="relative w-full h-full min-h-full resize-none bg-transparent border-none outline-none focus:ring-0 font-mono text-[15px] text-zinc-800 placeholder:text-zinc-300 px-4"
-              style={{
-                lineHeight: "28px",
-                paddingTop: 1,
-                paddingBottom: 40,
-                caretColor: "#555",
-              }}
-              placeholder="Start writing..."
-              spellCheck={false}
-              data-testid="textarea-page-content"
-            />
+          {/* Lines */}
+          <div className="flex-1 flex flex-col">
+            {Array.from({ length: TOTAL_LINES }).map((_, i) => (
+              <div
+                key={i}
+                className="relative border-b border-zinc-100"
+                style={{ height: LINE_HEIGHT }}
+              >
+                <input
+                  ref={(el) => { lineRefs.current[i] = el; }}
+                  type="text"
+                  value={lines[i] ?? ""}
+                  onChange={(e) => handleLineChange(i, e.target.value)}
+                  onKeyDown={(e) => handleLineKeyDown(i, e)}
+                  className="absolute inset-0 w-full bg-transparent border-none outline-none focus:ring-0 px-3 text-zinc-800 font-mono"
+                  style={{ fontSize: 14, lineHeight: `${LINE_HEIGHT}px`, height: LINE_HEIGHT }}
+                  placeholder={i === 0 ? "Start writing..." : ""}
+                  spellCheck={false}
+                  data-testid={`line-input-${i}`}
+                />
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* Bottom page navigation */}
+      {/* Bottom nav */}
       <div className="bg-[#f0ede8] border-t border-zinc-300 px-4 py-1 flex items-center justify-between text-xs text-zinc-500 shrink-0">
         <button
           onClick={() => prevPage && setLocation(`/books/${bId}/pages/${prevPage.id}`)}
