@@ -137,47 +137,10 @@ export default function PageEditor() {
 
   return (
     <div className="h-screen bg-white flex flex-col overflow-hidden">
-      {/* 3 info cards above the dark bar */}
-      <div className="bg-[#f0ede8] border-b border-zinc-300 px-4 py-2 flex items-stretch gap-3 shrink-0">
-        {/* Card 1: EDIT — click to rename the page title */}
-        <div className="flex-1 bg-white border border-zinc-200 rounded-lg px-4 py-2 shadow-sm flex flex-col justify-center min-w-0">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Edit</span>
-          {editingTitle ? (
-            <input
-              ref={titleInputRef}
-              value={pageTitle}
-              onChange={(e) => setPageTitle(e.target.value)}
-              onBlur={handleTitleSave}
-              onKeyDown={(e) => { if (e.key === "Enter") handleTitleSave(); if (e.key === "Escape") setEditingTitle(false); }}
-              className="text-sm font-semibold text-zinc-800 bg-transparent border-none outline-none focus:ring-0 w-full"
-              data-testid="input-page-title"
-              autoFocus
-            />
-          ) : (
-            <button
-              onClick={() => { setEditingTitle(true); setTimeout(() => titleInputRef.current?.select(), 50); }}
-              className="text-sm font-semibold text-zinc-800 text-left truncate hover:text-zinc-500 transition-colors"
-              data-testid="btn-edit-title"
-            >
-              {pageTitle || "Untitled"}
-            </button>
-          )}
-        </div>
-
-        {/* Card 2: PAGE NAME — current page label */}
-        <div className="flex-1 bg-white border border-zinc-200 rounded-lg px-4 py-2 shadow-sm flex flex-col justify-center min-w-0">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Page Name</span>
-          <span className="text-sm font-semibold text-zinc-800 truncate" data-testid="text-page-name">
-            PAGE {page.pageNumber}
-          </span>
-        </div>
-
-        {/* Card 3: PAGE — page position in book */}
-        <div className="flex-1 bg-white border border-zinc-200 rounded-lg px-4 py-2 shadow-sm flex flex-col justify-center min-w-0">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Page</span>
-          <span className="text-sm font-semibold text-zinc-800" data-testid="text-page-count">
-            {page.pageNumber} / {pages?.length ?? 1}
-          </span>
+      {/* EDIT card — full width, above dark bar */}
+      <div className="bg-[#ece9e3] px-4 pt-3 pb-2 shrink-0">
+        <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl px-5 py-4 shadow-sm min-h-[56px]">
+          <div className="text-sm font-semibold text-zinc-700">EDIT</div>
         </div>
       </div>
 
