@@ -5,7 +5,10 @@
  * Notebook API specification
  * OpenAPI spec version: 0.1.0
  */
+import type { Book } from './book';
 
-export interface HealthStatus {
-  status: string;
+export interface Summary {
+  totalBooks: number;
+  totalPages: number;
+  recentBooks: Book[];
 }
