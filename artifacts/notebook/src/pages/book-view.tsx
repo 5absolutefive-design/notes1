@@ -1,4 +1,4 @@
-import { useParams, useLocation } from "wouter";
+import { useParams, useLocation, Redirect } from "wouter";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useRef, useState, useEffect, useCallback } from "react";
 import { store, type Book, type Page } from "@/lib/store";
@@ -36,8 +36,7 @@ export default function BookView() {
     }
   };
 
-  if (!book)
-    return <div className="h-screen bg-[#ece9e3] flex items-center justify-center text-zinc-400">Book not found</div>;
+  if (!book) return <Redirect to="/" />;
 
   return (
     <div className="h-screen bg-[#ece9e3] flex flex-col overflow-hidden">

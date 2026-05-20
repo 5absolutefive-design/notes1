@@ -1,4 +1,4 @@
-import { useParams, useLocation } from "wouter";
+import { useParams, useLocation, Redirect } from "wouter";
 import { ChevronLeft, ChevronRight, Trash2, ArchiveRestore, X, RotateCcw } from "lucide-react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { store, type Book, type Page } from "@/lib/store";
@@ -109,8 +109,7 @@ export default function PageEditor() {
   const prevPage = pages[currentIndex - 1];
   const nextPage = pages[currentIndex + 1];
 
-  if (!page)
-    return <div className="h-screen bg-white flex items-center justify-center text-zinc-400">Page not found</div>;
+  if (!page) return <Redirect to="/" />;
 
   return (
     <div className="h-screen bg-white flex flex-col overflow-hidden">
