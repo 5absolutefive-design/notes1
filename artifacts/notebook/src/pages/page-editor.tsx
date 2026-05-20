@@ -31,10 +31,13 @@ export default function PageEditor() {
   });
 
   const [content, setContent] = useState("");
+  const [pageTitle, setPageTitle] = useState("");
+  const [editingTitle, setEditingTitle] = useState(false);
   const initializedForId = useRef<number | null>(null);
   const lastSavedContent = useRef("");
   const tabsRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const titleInputRef = useRef<HTMLInputElement>(null);
 
   const queryClient = useQueryClient();
   const updatePage = useUpdatePage();
@@ -74,10 +77,10 @@ export default function PageEditor() {
   };
 
   const savePage = useCallback(
-    (text: string) => {
-      const title = page?.title ?? `PAGE ${page?.pageNumber ?? 1}`;
+    (text: string, title?: string) => {
+      const resolvedTitle = title ?? pageTitle ?? page?.title ?? `PAGE ${page?.pageNumber ?? 1}`;
       mutateFnRef.current(
-        { bookId: bId, pageId: pId, data: { title, content: text } },
+        { bookId: bId, pageId: pId, data: { title: resolvedTitle, content: text } },
         {
           onSuccess: (updatedPage) => {
             queryClient.setQueryData(getGetPageQueryKey(bId, pId), updatedPage);
@@ -86,16 +89,25 @@ export default function PageEditor() {
         }
       );
     },
-    [bId, pId, queryClient, page]
+    [bId, pId, queryClient, page, pageTitle]
   );
 
   useEffect(() => {
     if (page && initializedForId.current !== pId) {
       initializedForId.current = pId;
       setContent(page.content);
+      setPageTitle(page.title);
       lastSavedContent.current = page.content;
     }
   }, [page, pId]);
+
+  const handleTitleSave = () => {
+    setEditingTitle(false);
+    if (pageTitle.trim()) {
+      savePage(content, pageTitle.trim());
+      lastSavedContent.current = content;
+    }
+  };
 
   useEffect(() => {
     if (initializedForId.current !== pId) return;
@@ -125,6 +137,50 @@ export default function PageEditor() {
 
   return (
     <div className="h-screen bg-white flex flex-col overflow-hidden">
+      {/* 3 info cards above the dark bar */}
+      <div className="bg-[#f0ede8] border-b border-zinc-300 px-4 py-2 flex items-stretch gap-3 shrink-0">
+        {/* Card 1: EDIT — click to rename the page title */}
+        <div className="flex-1 bg-white border border-zinc-200 rounded-lg px-4 py-2 shadow-sm flex flex-col justify-center min-w-0">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Edit</span>
+          {editingTitle ? (
+            <input
+              ref={titleInputRef}
+              value={pageTitle}
+              onChange={(e) => setPageTitle(e.target.value)}
+              onBlur={handleTitleSave}
+              onKeyDown={(e) => { if (e.key === "Enter") handleTitleSave(); if (e.key === "Escape") setEditingTitle(false); }}
+              className="text-sm font-semibold text-zinc-800 bg-transparent border-none outline-none focus:ring-0 w-full"
+              data-testid="input-page-title"
+              autoFocus
+            />
+          ) : (
+            <button
+              onClick={() => { setEditingTitle(true); setTimeout(() => titleInputRef.current?.select(), 50); }}
+              className="text-sm font-semibold text-zinc-800 text-left truncate hover:text-zinc-500 transition-colors"
+              data-testid="btn-edit-title"
+            >
+              {pageTitle || "Untitled"}
+            </button>
+          )}
+        </div>
+
+        {/* Card 2: PAGE NAME — current page label */}
+        <div className="flex-1 bg-white border border-zinc-200 rounded-lg px-4 py-2 shadow-sm flex flex-col justify-center min-w-0">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Page Name</span>
+          <span className="text-sm font-semibold text-zinc-800 truncate" data-testid="text-page-name">
+            PAGE {page.pageNumber}
+          </span>
+        </div>
+
+        {/* Card 3: PAGE — page position in book */}
+        <div className="flex-1 bg-white border border-zinc-200 rounded-lg px-4 py-2 shadow-sm flex flex-col justify-center min-w-0">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-400 mb-1">Page</span>
+          <span className="text-sm font-semibold text-zinc-800" data-testid="text-page-count">
+            {page.pageNumber} / {pages?.length ?? 1}
+          </span>
+        </div>
+      </div>
+
       {/* Dark top bar */}
       <div className="bg-[#1a1a1a] text-white flex items-stretch shrink-0" style={{ minHeight: 44 }}>
         <button
