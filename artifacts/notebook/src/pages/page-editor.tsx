@@ -13,9 +13,9 @@ export default function PageEditor() {
   const bId = parseInt(bookId || "0", 10);
   const pId = parseInt(pageId || "0", 10);
 
-  const [book, setBook] = useState<Book | null>(null);
-  const [pages, setPages] = useState<Page[]>([]);
-  const [page, setPage] = useState<Page | null>(null);
+  const [book, setBook] = useState<Book | null>(() => store.getBook(bId) ?? null);
+  const [pages, setPages] = useState<Page[]>(() => store.listPages(bId));
+  const [page, setPage] = useState<Page | null>(() => store.getPage(bId, pId) ?? null);
   const [trashedPages, setTrashedPages] = useState<Page[]>([]);
   const [content, setContent] = useState("");
   const [pageTitle, setPageTitle] = useState("");

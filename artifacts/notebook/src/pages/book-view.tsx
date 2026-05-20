@@ -12,8 +12,8 @@ export default function BookView() {
   const id = parseInt(bookId || "0", 10);
   const tabsRef = useRef<HTMLDivElement>(null);
 
-  const [book, setBook] = useState<Book | null>(null);
-  const [pages, setPages] = useState<Page[]>([]);
+  const [book, setBook] = useState<Book | null>(() => store.getBook(id) ?? null);
+  const [pages, setPages] = useState<Page[]>(() => store.listPages(id));
 
   const refresh = useCallback(() => {
     setBook(store.getBook(id) ?? null);
