@@ -206,23 +206,25 @@ export default function PageEditor() {
 
           </div>
 
-          {/* Right side — Delete + Trash buttons */}
-          <div className="flex flex-col gap-1 shrink-0">
-            <button
-              onClick={handleDelete}
-              disabled={deletePage.isPending}
-              title="Move to trash"
-              className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-red-50 hover:border-red-400 active:bg-red-100 transition-colors flex items-center justify-center disabled:opacity-40"
-            >
-              <Trash2 className="w-4 h-4 text-zinc-500 hover:text-red-500" />
-            </button>
-            <button
-              onClick={() => setShowTrash(true)}
-              title="Open trash"
-              className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center"
-            >
-              <ArchiveRestore className="w-4 h-4 text-zinc-500" />
-            </button>
+          {/* Right side — Delete + Trash buttons in a bordered box */}
+          <div className="border border-zinc-400 rounded-lg p-1.5 shrink-0">
+            <div className="flex flex-col gap-1">
+              <button
+                onClick={handleDelete}
+                disabled={deletePage.isPending}
+                title="Move to trash"
+                className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-red-50 hover:border-red-400 active:bg-red-100 transition-colors flex items-center justify-center disabled:opacity-40"
+              >
+                <Trash2 className="w-4 h-4 text-zinc-500 hover:text-red-500" />
+              </button>
+              <button
+                onClick={() => setShowTrash(true)}
+                title="Open trash"
+                className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center"
+              >
+                <ArchiveRestore className="w-4 h-4 text-zinc-500" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
