@@ -139,8 +139,42 @@ export default function PageEditor() {
     <div className="h-screen bg-white flex flex-col overflow-hidden">
       {/* EDIT card — full width, above dark bar */}
       <div className="bg-[#ece9e3] px-4 pt-3 pb-2 shrink-0">
-        <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl px-5 py-4 shadow-sm min-h-[56px]">
-          <div className="text-sm font-semibold text-zinc-700">EDIT</div>
+        <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl px-3 py-3 shadow-sm">
+          <div className="flex items-center gap-3">
+
+            {/* Left group — 2×2 grid of square buttons */}
+            <div className="grid grid-cols-2 gap-1 shrink-0">
+              {[0,1,2,3].map(i => (
+                <button key={i} className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
+              ))}
+            </div>
+
+            {/* Middle group — 2 rows */}
+            <div className="flex-1 flex flex-col gap-1 min-w-0">
+              {/* Top row: wide + 3 small */}
+              <div className="flex items-center gap-1">
+                <button className="flex-1 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
+                {[0,1,2].map(i => (
+                  <button key={i} className="w-8 h-8 shrink-0 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
+                ))}
+              </div>
+              {/* Bottom row: 3 small + wide */}
+              <div className="flex items-center gap-1">
+                {[0,1,2].map(i => (
+                  <button key={i} className="w-8 h-8 shrink-0 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
+                ))}
+                <button className="flex-1 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
+              </div>
+            </div>
+
+            {/* Right group — vertical stack of square buttons */}
+            <div className="flex flex-col gap-1 shrink-0">
+              {[0,1,2,3].map(i => (
+                <button key={i} className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
+              ))}
+            </div>
+
+          </div>
         </div>
       </div>
 
