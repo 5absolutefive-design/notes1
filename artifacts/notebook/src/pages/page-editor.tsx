@@ -156,7 +156,7 @@ export default function PageEditor() {
             <div className="border border-zinc-400 rounded-lg p-1.5">
               <div className="flex flex-col gap-1">
                 <div className="flex items-center gap-1">
-                  <button className="w-24 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
+                  <button className="w-36 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
                   {[0,1,2].map(i => (
                     <button key={i} className="w-8 h-8 shrink-0 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
                   ))}
@@ -165,7 +165,7 @@ export default function PageEditor() {
                   {[0,1,2].map(i => (
                     <button key={i} className="w-8 h-8 shrink-0 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
                   ))}
-                  <button className="w-24 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
+                  <button className="w-36 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
                 </div>
               </div>
             </div>
