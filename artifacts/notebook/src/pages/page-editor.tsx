@@ -118,12 +118,19 @@ export default function PageEditor() {
         <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl px-3 py-3 shadow-sm flex items-start justify-between">
           <div className="inline-flex items-start gap-2">
 
-            {/* Group 1 */}
-            <div className="border border-zinc-400 rounded-lg p-1.5">
-              <div className="grid grid-cols-2 gap-1">
-                {[0,1,2,3].map(i => (
-                  <button key={i} className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
-                ))}
+            {/* Group 1 — top 2 and bottom 2 in separate boxes */}
+            <div className="flex flex-col gap-1">
+              <div className="border border-zinc-400 rounded-lg p-1.5">
+                <div className="flex gap-1">
+                  <button className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
+                  <button className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
+                </div>
+              </div>
+              <div className="border border-zinc-400 rounded-lg p-1.5">
+                <div className="flex gap-1">
+                  <button className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
+                  <button className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
+                </div>
               </div>
             </div>
 
