@@ -36,6 +36,7 @@ export interface Page {
   title: string;
   content: string;
   pageNumber: number;
+  deletedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }

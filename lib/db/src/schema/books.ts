@@ -20,6 +20,7 @@ export const pagesTable = pgTable("pages", {
   title: text("title").notNull(),
   content: text("content").notNull().default(""),
   pageNumber: integer("page_number").notNull().default(1),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow().$onUpdate(() => new Date()),
 });

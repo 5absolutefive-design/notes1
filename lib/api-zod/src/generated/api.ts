@@ -106,6 +106,7 @@ export const ListPagesResponseItem = zod.object({
   "title": zod.string(),
   "content": zod.string(),
   "pageNumber": zod.number(),
+  "deletedAt": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 })
@@ -142,6 +143,7 @@ export const GetPageResponse = zod.object({
   "title": zod.string(),
   "content": zod.string(),
   "pageNumber": zod.number(),
+  "deletedAt": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 })
@@ -169,15 +171,65 @@ export const UpdatePageResponse = zod.object({
   "title": zod.string(),
   "content": zod.string(),
   "pageNumber": zod.number(),
+  "deletedAt": zod.string().nullish(),
   "createdAt": zod.string(),
   "updatedAt": zod.string()
 })
 
 
 /**
- * @summary Delete a page
+ * @summary Soft-delete a page (move to trash)
  */
 export const DeletePageParams = zod.object({
+  "bookId": zod.coerce.number(),
+  "pageId": zod.coerce.number()
+})
+
+
+/**
+ * @summary List trashed pages for a book
+ */
+export const ListTrashedPagesParams = zod.object({
+  "bookId": zod.coerce.number()
+})
+
+export const ListTrashedPagesResponseItem = zod.object({
+  "id": zod.number(),
+  "bookId": zod.number(),
+  "title": zod.string(),
+  "content": zod.string(),
+  "pageNumber": zod.number(),
+  "deletedAt": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+export const ListTrashedPagesResponse = zod.array(ListTrashedPagesResponseItem)
+
+
+/**
+ * @summary Restore a page from trash
+ */
+export const RestorePageParams = zod.object({
+  "bookId": zod.coerce.number(),
+  "pageId": zod.coerce.number()
+})
+
+export const RestorePageResponse = zod.object({
+  "id": zod.number(),
+  "bookId": zod.number(),
+  "title": zod.string(),
+  "content": zod.string(),
+  "pageNumber": zod.number(),
+  "deletedAt": zod.string().nullish(),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string()
+})
+
+
+/**
+ * @summary Permanently delete a page from trash
+ */
+export const PermanentDeletePageParams = zod.object({
   "bookId": zod.coerce.number(),
   "pageId": zod.coerce.number()
 })

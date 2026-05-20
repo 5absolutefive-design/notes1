@@ -222,7 +222,7 @@ paths:
     delete:
       operationId: deletePage
       tags: [pages]
-      summary: Delete a page
+      summary: Soft-delete a page (move to trash)
       parameters:
         - name: bookId
           in: path
@@ -236,7 +236,72 @@ paths:
             type: integer
       responses:
         "204":
-          description: Deleted
+          description: Moved to trash
+
+  /books/{bookId}/trash:
+    get:
+      operationId: listTrashedPages
+      tags: [pages]
+      summary: List trashed pages for a book
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: List of trashed pages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Page"
+
+  /books/{bookId}/pages/{pageId}/restore:
+    post:
+      operationId: restorePage
+      tags: [pages]
+      summary: Restore a page from trash
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: pageId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Page restored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Page"
+
+  /books/{bookId}/pages/{pageId}/permanent:
+    delete:
+      operationId: permanentDeletePage
+      tags: [pages]
+      summary: Permanently delete a page from trash
+      parameters:
+        - name: bookId
+          in: path
+          required: true
+          schema:
+            type: integer
+        - name: pageId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Permanently deleted
 
   /summary:
     get:
@@ -311,6 +376,9 @@ components:
           type: string
         pageNumber:
           type: integer
+        deletedAt:
+          type: string
+          nullable: true
         createdAt:
           type: string
         updatedAt:

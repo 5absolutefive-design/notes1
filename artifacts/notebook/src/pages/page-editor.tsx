@@ -8,9 +8,13 @@ import {
   getListPagesQueryKey,
   useDeletePage,
   useCreatePage,
+  useListTrashedPages,
+  getListTrashedPagesQueryKey,
+  useRestorePage,
+  usePermanentDeletePage,
 } from "@workspace/api-client-react";
 import { useParams, useLocation } from "wouter";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Trash2, ArchiveRestore, X, RotateCcw } from "lucide-react";
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -33,6 +37,7 @@ export default function PageEditor() {
   const [content, setContent] = useState("");
   const [pageTitle, setPageTitle] = useState("");
   const [editingTitle, setEditingTitle] = useState(false);
+  const [showTrash, setShowTrash] = useState(false);
   const initializedForId = useRef<number | null>(null);
   const lastSavedContent = useRef("");
   const tabsRef = useRef<HTMLDivElement>(null);
@@ -57,15 +62,35 @@ export default function PageEditor() {
     mutation: {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: getListPagesQueryKey(bId) });
+        queryClient.invalidateQueries({ queryKey: getListTrashedPagesQueryKey(bId) });
         setLocation(`/books/${bId}`);
       },
     },
   });
 
+  const { data: trashedPages } = useListTrashedPages(bId, {
+    query: { enabled: !!bId && showTrash, queryKey: getListTrashedPagesQueryKey(bId) },
+  });
+
+  const restorePage = useRestorePage({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListPagesQueryKey(bId) });
+        queryClient.invalidateQueries({ queryKey: getListTrashedPagesQueryKey(bId) });
+      },
+    },
+  });
+
+  const permanentDeletePage = usePermanentDeletePage({
+    mutation: {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: getListTrashedPagesQueryKey(bId) });
+      },
+    },
+  });
+
   const handleDelete = () => {
-    if (confirm("Delete this page?")) {
-      deletePage.mutate({ bookId: bId, pageId: pId });
-    }
+    deletePage.mutate({ bookId: bId, pageId: pId });
   };
 
   const handleCreatePage = () => {
@@ -139,7 +164,7 @@ export default function PageEditor() {
     <div className="h-screen bg-white flex flex-col overflow-hidden">
       {/* EDIT card — full width, above dark bar */}
       <div className="bg-[#ece9e3] px-4 pt-3 pb-2 shrink-0">
-        <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl px-3 py-3 shadow-sm">
+        <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl px-3 py-3 shadow-sm flex items-start justify-between">
           {/* 3 button groups, each in its own rounded border box */}
           <div className="inline-flex items-start gap-2">
 
@@ -180,8 +205,80 @@ export default function PageEditor() {
             </div>
 
           </div>
+
+          {/* Right side — Delete + Trash buttons */}
+          <div className="flex flex-col gap-1 shrink-0">
+            <button
+              onClick={handleDelete}
+              disabled={deletePage.isPending}
+              title="Move to trash"
+              className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-red-50 hover:border-red-400 active:bg-red-100 transition-colors flex items-center justify-center disabled:opacity-40"
+            >
+              <Trash2 className="w-4 h-4 text-zinc-500 hover:text-red-500" />
+            </button>
+            <button
+              onClick={() => setShowTrash(true)}
+              title="Open trash"
+              className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center"
+            >
+              <ArchiveRestore className="w-4 h-4 text-zinc-500" />
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Trash panel overlay */}
+      {showTrash && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+            <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-200 bg-[#f5f2ee]">
+              <div className="flex items-center gap-2">
+                <Trash2 className="w-4 h-4 text-zinc-500" />
+                <span className="text-sm font-bold uppercase tracking-widest text-zinc-700">Trash</span>
+              </div>
+              <button
+                onClick={() => setShowTrash(false)}
+                className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-zinc-200 transition-colors"
+              >
+                <X className="w-4 h-4 text-zinc-500" />
+              </button>
+            </div>
+            <div className="max-h-72 overflow-y-auto divide-y divide-zinc-100">
+              {!trashedPages || trashedPages.length === 0 ? (
+                <div className="px-5 py-8 text-center text-zinc-400 text-sm italic">Trash is empty</div>
+              ) : (
+                trashedPages.map((p) => (
+                  <div key={p.id} className="flex items-center justify-between px-5 py-3 hover:bg-zinc-50">
+                    <span className="text-sm text-zinc-700 font-medium">{p.title}</span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => restorePage.mutate({ bookId: bId, pageId: p.id })}
+                        disabled={restorePage.isPending}
+                        title="Restore page"
+                        className="flex items-center gap-1 px-2 py-1 text-xs text-zinc-600 border border-zinc-300 rounded-md hover:bg-green-50 hover:border-green-400 hover:text-green-700 transition-colors"
+                      >
+                        <RotateCcw className="w-3 h-3" /> Restore
+                      </button>
+                      <button
+                        onClick={() => {
+                          if (confirm("Permanently delete this page? This cannot be undone.")) {
+                            permanentDeletePage.mutate({ bookId: bId, pageId: p.id });
+                          }
+                        }}
+                        disabled={permanentDeletePage.isPending}
+                        title="Permanently delete"
+                        className="flex items-center gap-1 px-2 py-1 text-xs text-zinc-600 border border-zinc-300 rounded-md hover:bg-red-50 hover:border-red-400 hover:text-red-700 transition-colors"
+                      >
+                        <Trash2 className="w-3 h-3" /> Delete
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Card 2 — Tab bar (rounded, dark) */}
       <div className="bg-[#ece9e3] px-4 pt-0 pb-2 shrink-0">
@@ -248,19 +345,9 @@ export default function PageEditor() {
             <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">
               Page: <span className="text-zinc-700">PAGE {page.pageNumber}</span>
             </span>
-            <div className="flex items-center gap-3">
-              <span className="text-xs text-zinc-400">
-                {updatePage.isPending ? "Saving..." : "Saved"}
-              </span>
-              <button
-                onClick={handleDelete}
-                disabled={deletePage.isPending}
-                className="text-xs text-zinc-400 hover:text-red-500 transition-colors"
-                data-testid="btn-delete-page"
-              >
-                Delete
-              </button>
-            </div>
+            <span className="text-xs text-zinc-400">
+              {updatePage.isPending ? "Saving..." : "Saved"}
+            </span>
           </div>
 
           {/* Paper area */}

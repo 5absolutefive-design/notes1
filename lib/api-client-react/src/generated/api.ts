@@ -802,7 +802,7 @@ export const getDeletePageUrl = (bookId: number,
 }
 
 /**
- * @summary Delete a page
+ * @summary Soft-delete a page (move to trash)
  */
 export const deletePage = async (bookId: number,
     pageId: number, options?: RequestInit): Promise<void> => {
@@ -851,7 +851,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type DeletePageMutationError = ErrorType<unknown>
 
     /**
- * @summary Delete a page
+ * @summary Soft-delete a page (move to trash)
  */
 export const useDeletePage = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePage>>, TError,{bookId: number;pageId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -862,6 +862,227 @@ export const useDeletePage = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getDeletePageMutationOptions(options));
+    }
+
+export const getListTrashedPagesUrl = (bookId: number,) => {
+
+
+
+
+  return `/api/books/${bookId}/trash`
+}
+
+/**
+ * @summary List trashed pages for a book
+ */
+export const listTrashedPages = async (bookId: number, options?: RequestInit): Promise<Page[]> => {
+
+  return customFetch<Page[]>(getListTrashedPagesUrl(bookId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListTrashedPagesQueryKey = (bookId: number,) => {
+    return [
+    `/api/books/${bookId}/trash`
+    ] as const;
+    }
+
+
+export const getListTrashedPagesQueryOptions = <TData = Awaited<ReturnType<typeof listTrashedPages>>, TError = ErrorType<unknown>>(bookId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTrashedPages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListTrashedPagesQueryKey(bookId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listTrashedPages>>> = ({ signal }) => listTrashedPages(bookId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: !!(bookId), ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listTrashedPages>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListTrashedPagesQueryResult = NonNullable<Awaited<ReturnType<typeof listTrashedPages>>>
+export type ListTrashedPagesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List trashed pages for a book
+ */
+
+export function useListTrashedPages<TData = Awaited<ReturnType<typeof listTrashedPages>>, TError = ErrorType<unknown>>(
+ bookId: number, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listTrashedPages>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListTrashedPagesQueryOptions(bookId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getRestorePageUrl = (bookId: number,
+    pageId: number,) => {
+
+
+
+
+  return `/api/books/${bookId}/pages/${pageId}/restore`
+}
+
+/**
+ * @summary Restore a page from trash
+ */
+export const restorePage = async (bookId: number,
+    pageId: number, options?: RequestInit): Promise<Page> => {
+
+  return customFetch<Page>(getRestorePageUrl(bookId,pageId),
+  {
+    ...options,
+    method: 'POST'
+
+
+  }
+);}
+
+
+
+
+export const getRestorePageMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restorePage>>, TError,{bookId: number;pageId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof restorePage>>, TError,{bookId: number;pageId: number}, TContext> => {
+
+const mutationKey = ['restorePage'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof restorePage>>, {bookId: number;pageId: number}> = (props) => {
+          const {bookId,pageId} = props ?? {};
+
+          return  restorePage(bookId,pageId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type RestorePageMutationResult = NonNullable<Awaited<ReturnType<typeof restorePage>>>
+
+    export type RestorePageMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Restore a page from trash
+ */
+export const useRestorePage = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof restorePage>>, TError,{bookId: number;pageId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof restorePage>>,
+        TError,
+        {bookId: number;pageId: number},
+        TContext
+      > => {
+      return useMutation(getRestorePageMutationOptions(options));
+    }
+
+export const getPermanentDeletePageUrl = (bookId: number,
+    pageId: number,) => {
+
+
+
+
+  return `/api/books/${bookId}/pages/${pageId}/permanent`
+}
+
+/**
+ * @summary Permanently delete a page from trash
+ */
+export const permanentDeletePage = async (bookId: number,
+    pageId: number, options?: RequestInit): Promise<void> => {
+
+  return customFetch<void>(getPermanentDeletePageUrl(bookId,pageId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getPermanentDeletePageMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof permanentDeletePage>>, TError,{bookId: number;pageId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof permanentDeletePage>>, TError,{bookId: number;pageId: number}, TContext> => {
+
+const mutationKey = ['permanentDeletePage'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof permanentDeletePage>>, {bookId: number;pageId: number}> = (props) => {
+          const {bookId,pageId} = props ?? {};
+
+          return  permanentDeletePage(bookId,pageId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type PermanentDeletePageMutationResult = NonNullable<Awaited<ReturnType<typeof permanentDeletePage>>>
+
+    export type PermanentDeletePageMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Permanently delete a page from trash
+ */
+export const usePermanentDeletePage = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof permanentDeletePage>>, TError,{bookId: number;pageId: number}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof permanentDeletePage>>,
+        TError,
+        {bookId: number;pageId: number},
+        TContext
+      > => {
+      return useMutation(getPermanentDeletePageMutationOptions(options));
     }
 
 export const getGetSummaryUrl = () => {
