@@ -48,13 +48,13 @@ export default function BookView() {
 
             {/* Group 1 — top 2 and bottom 2 in separate boxes */}
             <div className="flex flex-col gap-1">
-              <div className="border border-zinc-400 rounded-lg p-1.5">
+              <div className="border border-zinc-400 rounded-lg p-1">
                 <div className="flex gap-1">
                   <button className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
                   <button className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
                 </div>
               </div>
-              <div className="border border-zinc-400 rounded-lg p-1.5">
+              <div className="border border-zinc-400 rounded-lg p-1">
                 <div className="flex gap-1">
                   <button className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
                   <button className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
