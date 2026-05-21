@@ -1,6 +1,7 @@
 import { useParams, useLocation, Redirect } from "wouter";
 import { ChevronLeft, ChevronRight, Trash2, ArchiveRestore, X, RotateCcw } from "lucide-react";
 import { useState, useEffect, useRef, useCallback } from "react";
+
 import { store, type Book, type Page } from "@/lib/store";
 
 const TOTAL_LINES = 1000;
@@ -26,6 +27,10 @@ export default function PageEditor() {
   const lastSavedContent = useRef("");
   const tabsRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  const undoStack = useRef<string[]>([]);
+  const redoStack = useRef<string[]>([]);
+  const prevContent = useRef("");
 
   const refresh = useCallback(() => {
     setBook(store.getBook(bId) ?? null);
@@ -99,6 +104,64 @@ export default function PageEditor() {
     }
   };
 
+  const handleContentChange = (newText: string) => {
+    undoStack.current = [...undoStack.current.slice(-99), prevContent.current];
+    redoStack.current = [];
+    prevContent.current = newText;
+    setContent(newText);
+  };
+
+  const handleUndo = () => {
+    if (undoStack.current.length === 0) return;
+    const prev = undoStack.current[undoStack.current.length - 1];
+    undoStack.current = undoStack.current.slice(0, -1);
+    redoStack.current = [content, ...redoStack.current.slice(0, 99)];
+    prevContent.current = prev;
+    setContent(prev);
+  };
+
+  const handleRedo = () => {
+    if (redoStack.current.length === 0) return;
+    const next = redoStack.current[0];
+    redoStack.current = redoStack.current.slice(1);
+    undoStack.current = [...undoStack.current.slice(-99), content];
+    prevContent.current = next;
+    setContent(next);
+  };
+
+  const handleCopy = async () => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    const selected = ta.value.substring(ta.selectionStart, ta.selectionEnd);
+    const textToCopy = selected || ta.value;
+    try {
+      await navigator.clipboard.writeText(textToCopy);
+    } catch {
+      // fallback: select all and copy via execCommand
+      ta.select();
+      document.execCommand("copy");
+    }
+  };
+
+  const handlePaste = async () => {
+    const ta = textareaRef.current;
+    if (!ta) return;
+    try {
+      const clipText = await navigator.clipboard.readText();
+      const start = ta.selectionStart;
+      const end = ta.selectionEnd;
+      const newText = content.substring(0, start) + clipText + content.substring(end);
+      handleContentChange(newText);
+      setTimeout(() => {
+        ta.selectionStart = ta.selectionEnd = start + clipText.length;
+        ta.focus();
+      }, 0);
+    } catch {
+      ta.focus();
+      document.execCommand("paste");
+    }
+  };
+
   const scrollTabs = (dir: "left" | "right") => {
     if (tabsRef.current) {
       tabsRef.current.scrollBy({ left: dir === "left" ? -120 : 120, behavior: "smooth" });
@@ -118,12 +181,29 @@ export default function PageEditor() {
         <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl px-3 py-3 shadow-sm flex items-start justify-between">
           <div className="inline-flex items-start gap-2">
 
-            {/* Group 1 — 2×2 grid in one box */}
+            {/* Group 1 — Copy, Paste, Undo, Redo */}
             <div className="border border-zinc-400 rounded-lg p-1.5">
               <div className="grid grid-cols-2 gap-1">
-                {[0,1,2,3].map(i => (
-                  <button key={i} className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
-                ))}
+                <button
+                  onClick={handleCopy}
+                  title="Copy"
+                  className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-base"
+                >📋</button>
+                <button
+                  onClick={handlePaste}
+                  title="Paste"
+                  className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-base"
+                >📌</button>
+                <button
+                  onClick={handleUndo}
+                  title="Undo"
+                  className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-base"
+                >↩️</button>
+                <button
+                  onClick={handleRedo}
+                  title="Redo"
+                  className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-base"
+                >↪️</button>
               </div>
             </div>
 
@@ -321,7 +401,7 @@ export default function PageEditor() {
                 <textarea
                   ref={textareaRef}
                   value={content}
-                  onChange={(e) => setContent(e.target.value)}
+                  onChange={(e) => handleContentChange(e.target.value)}
                   className="absolute inset-0 w-full h-full resize-none bg-transparent border-none outline-none focus:ring-0 px-3 text-zinc-800 font-mono"
                   style={{
                     fontSize: 14,
