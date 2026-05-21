@@ -176,7 +176,9 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
     const c = active ? active[1] : (anchorRef.current ? anchorRef.current[1] : null);
     if (c === null) return;
     setData(prev => {
-      const next = Math.max(40, (prev.colWidths?.[c] ?? 80) - 20);
+      const cur = prev.colWidths?.[c] ?? 80;
+      const raw = cur - 20;
+      const next = cur > 80 && raw < 80 ? 80 : Math.max(40, raw);
       const colWidths = { ...(prev.colWidths ?? {}), [c]: next };
       if (next === 80) delete colWidths[c];
       return { ...prev, colWidths };
@@ -193,7 +195,9 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
     const r = active ? active[0] : (anchorRef.current ? anchorRef.current[0] : null);
     if (r === null) return;
     setData(prev => {
-      const next = Math.max(18, (prev.rowHeights?.[r] ?? ROW_HEIGHT) - 10);
+      const cur = prev.rowHeights?.[r] ?? ROW_HEIGHT;
+      const raw = cur - 10;
+      const next = cur > ROW_HEIGHT && raw < ROW_HEIGHT ? ROW_HEIGHT : Math.max(18, raw);
       const rowHeights = { ...(prev.rowHeights ?? {}), [r]: next };
       if (next === ROW_HEIGHT) delete rowHeights[r];
       return { ...prev, rowHeights };
