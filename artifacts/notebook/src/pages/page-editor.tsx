@@ -1148,14 +1148,16 @@ export default function PageEditor() {
                   })}
                 </div>
                 {/* Lined editor */}
-                <div className="flex-1 relative" style={{ minHeight: 500 * lineHeightPx, backgroundColor: "#faf6ef" }}>
-                  <div
-                    className="absolute inset-0 pointer-events-none"
-                    style={{
-                      backgroundImage: `repeating-linear-gradient(#faf6ef, #faf6ef ${lineHeightPx - 1}px, #e8dfd0 ${lineHeightPx - 1}px, #e8dfd0 ${lineHeightPx}px)`,
-                      backgroundPositionY: "4px",
-                    }}
-                  />
+                <div
+                  className="flex-1 relative"
+                  style={{
+                    minHeight: 500 * lineHeightPx,
+                    backgroundImage: `repeating-linear-gradient(to bottom, #faf6ef, #faf6ef ${lineHeightPx - 1}px, #e8dfd0 ${lineHeightPx - 1}px, #e8dfd0 ${lineHeightPx}px)`,
+                    backgroundPositionY: "4px",
+                    backgroundRepeat: "repeat-y",
+                    backgroundSize: `100% ${lineHeightPx}px`,
+                  }}
+                >
                   <div
                     ref={editorRef}
                     contentEditable
@@ -1164,8 +1166,8 @@ export default function PageEditor() {
                     onInput={handleEditorInput}
                     onKeyUp={updateActiveFormats}
                     onMouseUp={updateActiveFormats}
-                    className="relative w-full outline-none px-4 z-10"
-                    style={{ fontFamily: font, fontSize: fontSize, lineHeight: `${lineHeightPx}px`, minHeight: 500 * lineHeightPx, whiteSpace: autoWrap ? "pre-wrap" : "pre", overflowX: autoWrap ? "hidden" : "auto", color: "#3a2e20", paddingTop: 4 }}
+                    className="relative w-full outline-none px-4"
+                    style={{ fontFamily: font, fontSize: fontSize, lineHeight: `${lineHeightPx}px`, minHeight: 500 * lineHeightPx, whiteSpace: autoWrap ? "pre-wrap" : "pre", overflowX: autoWrap ? "hidden" : "auto", color: "#3a2e20", paddingTop: 4, backgroundColor: "transparent" }}
                     data-placeholder="Start writing..."
                   />
                 </div>
