@@ -1142,12 +1142,15 @@ export default function PageEditor() {
 
           <div
             ref={pageScrollRef}
-            className="flex-1 overflow-y-auto bg-white"
-            style={{ scrollbarWidth: "thin" }}
+            className="flex-1 bg-white"
+            style={{
+              scrollbarWidth: "thin",
+              overflow: pageType === "spreadsheet" ? "hidden" : "auto",
+            }}
             onScroll={e => pageType === "lined" && setLinedScroll((e.currentTarget as HTMLDivElement).scrollTop)}
           >
             {pageType === "spreadsheet" ? (
-              <div style={{ zoom: zoom / 100, transformOrigin: "top left" }}>
+              <div style={{ zoom: zoom / 100, transformOrigin: "top left", height: "100%" }}>
                 <SpreadsheetEditor
                   content={content}
                   mergeRef={spreadsheetMergeRef}
