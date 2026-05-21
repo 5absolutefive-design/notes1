@@ -354,24 +354,26 @@ export default function PageEditor() {
                           <div className="w-5 h-5 border border-zinc-400 bg-black shrink-0" />
                           <span className="font-medium">Automatic</span>
                         </button>
-                        {/* Theme Colors */}
+                        {/* Theme Colors — rows go light→dark (top→bottom), 10 cols × 6 rows */}
                         <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1">Theme Colors</div>
                         <div className="grid grid-cols-10 gap-[3px] mb-1">
                           {[
-                            ["#FFFFFF","#F2F2F2","#D9D9D9","#BFBFBF","#A5A5A5","#7F7F7F"],
-                            ["#000000","#808080","#595959","#404040","#262626","#0D0D0D"],
-                            ["#EEECE1","#DDD9C4","#C4BD97","#948A54","#494429","#1D1B10"],
-                            ["#1F497D","#C6D9F1","#8DB4E2","#548DD4","#17375E","#0F243E"],
-                            ["#4F81BD","#DCE6F1","#B8CCE4","#95B3D7","#366092","#243F60"],
-                            ["#9B59B6","#E8D5F0","#D198E8","#8064A2","#60497A","#3F3151"],
-                            ["#C0504D","#F2DCDB","#E6B8B7","#C0504D","#963634","#632523"],
-                            ["#E36C09","#FDE9D9","#FBBF7C","#F79646","#974806","#6A3400"],
-                            ["#9BBB59","#EBF1DE","#D8E4BC","#C4D79B","#76933C","#4F6228"],
-                            ["#4BACC6","#DAEEF3","#B7DEE8","#92CDDC","#31849B","#215868"],
-                          ].map((col, ci) =>
-                            col.map((c, ri) => (
+                            // Row 0 — lightest (top)
+                            ["#FFFFFF","#F2F2F2","#EEECE1","#DCE6F1","#DBE5F1","#E8D5F0","#F2DCDB","#FDE9D9","#EBF1DE","#DAEEF3"],
+                            // Row 1
+                            ["#F2F2F2","#D9D9D9","#DDD9C4","#C6D9F1","#B8CCE4","#D198E8","#E6B8B7","#FBBF7C","#D8E4BC","#B7DEE8"],
+                            // Row 2 — base colors
+                            ["#D9D9D9","#BFBFBF","#C4BD97","#8DB4E2","#95B3D7","#8064A2","#DA9694","#F79646","#C4D79B","#92CDDC"],
+                            // Row 3
+                            ["#BFBFBF","#808080","#948A54","#548DD4","#4F81BD","#7030A0","#C0504D","#E36C09","#9BBB59","#4BACC6"],
+                            // Row 4
+                            ["#808080","#595959","#494429","#17375E","#366092","#60497A","#963634","#974806","#76933C","#31849B"],
+                            // Row 5 — darkest (bottom)
+                            ["#595959","#262626","#1D1B10","#0F243E","#243F60","#3F3151","#632523","#6A3400","#4F6228","#215868"],
+                          ].map((row, ri) =>
+                            row.map((c, ci) => (
                               <button
-                                key={`${ci}-${ri}`}
+                                key={`${ri}-${ci}`}
                                 onClick={() => handleFontColor(c)}
                                 className="w-[18px] h-[18px] border border-zinc-200 hover:scale-110 hover:border-zinc-500 transition-transform"
                                 style={{ backgroundColor: c }}
