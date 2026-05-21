@@ -17,10 +17,30 @@ function SpreadsheetEditor({ content, onChange, mergeRef }: {
   };
   const [cells, setCells] = useState<Record<string, string>>(parseCells);
   const [active, setActive] = useState<[number, number] | null>(null);
-  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [anchor, setAnchor] = useState<[number, number] | null>(null);
+  const [dragEnd, setDragEnd] = useState<[number, number] | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+  const tableRef = useRef<HTMLDivElement>(null);
 
   const key = (r: number, c: number) => `${r}-${c}`;
+
+  // Compute selected rectangle from anchor→dragEnd
+  const getSelected = (): Set<string> => {
+    if (!anchor) return new Set();
+    const end = dragEnd ?? anchor;
+    const minR = Math.min(anchor[0], end[0]);
+    const maxR = Math.max(anchor[0], end[0]);
+    const minC = Math.min(anchor[1], end[1]);
+    const maxC = Math.max(anchor[1], end[1]);
+    const s = new Set<string>();
+    for (let r = minR; r <= maxR; r++)
+      for (let c = minC; c <= maxC; c++)
+        s.add(key(r, c));
+    return s;
+  };
+  const selected = getSelected();
+  const selCount = selected.size;
 
   const update = (r: number, c: number, val: string) => {
     setCells(prev => {
@@ -35,12 +55,13 @@ function SpreadsheetEditor({ content, onChange, mergeRef }: {
     const nr = Math.max(0, Math.min(ROWS - 1, r + dr));
     const nc = Math.max(0, Math.min(COLS - 1, c + dc));
     setActive([nr, nc]);
-    setSelected(new Set());
+    setAnchor(null);
+    setDragEnd(null);
     setTimeout(() => inputRefs.current[key(nr, nc)]?.focus(), 0);
   };
 
   const mergeSelected = () => {
-    if (selected.size < 2) return;
+    if (selCount < 2) return;
     const keys = Array.from(selected);
     const combined = keys.map(k => cells[k] ?? "").filter(Boolean).join(" ");
     const firstKey = keys[0];
@@ -51,7 +72,8 @@ function SpreadsheetEditor({ content, onChange, mergeRef }: {
       onChange(JSON.stringify({ cells: next }));
       return next;
     });
-    setSelected(new Set());
+    setAnchor(null);
+    setDragEnd(null);
     setActive(null);
   };
 
@@ -59,11 +81,22 @@ function SpreadsheetEditor({ content, onChange, mergeRef }: {
     if (mergeRef) mergeRef.current = mergeSelected;
   });
 
+  // Global mouseup to end drag
+  useEffect(() => {
+    const onUp = () => setIsDragging(false);
+    window.addEventListener("mouseup", onUp);
+    return () => window.removeEventListener("mouseup", onUp);
+  }, []);
+
   return (
-    <div className="overflow-auto w-full h-full" style={{ fontFamily: "monospace", fontSize: 13 }}>
-      {selected.size >= 2 && (
+    <div
+      ref={tableRef}
+      className="overflow-auto w-full h-full"
+      style={{ fontFamily: "monospace", fontSize: 13, userSelect: isDragging ? "none" : "auto" }}
+    >
+      {selCount >= 2 && (
         <div className="px-3 py-1 bg-blue-50 border-b border-blue-200 text-[11px] text-blue-600 font-medium">
-          {selected.size} cells selected — click ⇄ in header to merge
+          {selCount} cells selected — click ⇄ in header to merge
         </div>
       )}
       <table className="border-collapse min-w-max">
@@ -85,32 +118,52 @@ function SpreadsheetEditor({ content, onChange, mergeRef }: {
               </td>
               {Array.from({ length: COLS }, (_, c) => {
                 const k = key(r, c);
-                const isActive = active && active[0] === r && active[1] === c;
+                const isActive = !isDragging && active && active[0] === r && active[1] === c;
                 const isSelected = selected.has(k);
+                const isAnchor = anchor && anchor[0] === r && anchor[1] === c;
                 return (
                   <td
                     key={c}
-                    onClick={e => {
-                      if (e.ctrlKey || e.metaKey) {
-                        e.preventDefault();
-                        setSelected(prev => {
-                          const next = new Set(prev);
-                          next.has(k) ? next.delete(k) : next.add(k);
-                          return next;
-                        });
-                      } else {
-                        setSelected(new Set());
+                    onMouseDown={e => {
+                      if (e.button !== 0) return;
+                      e.preventDefault();
+                      setAnchor([r, c]);
+                      setDragEnd([r, c]);
+                      setIsDragging(true);
+                      setActive(null);
+                    }}
+                    onMouseEnter={() => {
+                      if (isDragging) setDragEnd([r, c]);
+                    }}
+                    onMouseUp={() => {
+                      setIsDragging(false);
+                      // If single cell (anchor == dragEnd), activate it for typing
+                      if (anchor && dragEnd && anchor[0] === r && anchor[1] === c && dragEnd[0] === r && dragEnd[1] === c) {
+                        setAnchor(null);
+                        setDragEnd(null);
                         setActive([r, c]);
                         setTimeout(() => inputRefs.current[k]?.focus(), 0);
                       }
                     }}
-                    className={`border border-zinc-200 p-0 cursor-pointer ${isActive ? "outline outline-2 outline-blue-500 z-10 relative" : ""} ${isSelected ? "bg-blue-100" : ""}`}
+                    className={`border p-0 cursor-cell ${
+                      isActive
+                        ? "outline outline-2 outline-blue-500 z-10 relative border-zinc-200"
+                        : isAnchor && selCount > 1
+                        ? "border-blue-400 bg-blue-50"
+                        : isSelected
+                        ? "bg-blue-100 border-blue-300"
+                        : "border-zinc-200"
+                    }`}
                   >
                     <input
                       ref={el => { inputRefs.current[k] = el; }}
                       value={cells[k] ?? ""}
                       onChange={e => update(r, c, e.target.value)}
-                      onFocus={() => { setActive([r, c]); setSelected(new Set()); }}
+                      onFocus={() => {
+                        setActive([r, c]);
+                        setAnchor(null);
+                        setDragEnd(null);
+                      }}
                       onKeyDown={e => {
                         if (e.key === "Enter") { e.preventDefault(); move(r, c, 1, 0); }
                         else if (e.key === "Tab") { e.preventDefault(); move(r, c, 0, e.shiftKey ? -1 : 1); }
@@ -119,8 +172,8 @@ function SpreadsheetEditor({ content, onChange, mergeRef }: {
                         else if (e.key === "ArrowRight" && (e.target as HTMLInputElement).selectionStart === (e.target as HTMLInputElement).value.length) { e.preventDefault(); move(r, c, 0, 1); }
                         else if (e.key === "ArrowLeft" && (e.target as HTMLInputElement).selectionStart === 0) { e.preventDefault(); move(r, c, 0, -1); }
                       }}
-                      className="w-full h-6 px-1 outline-none bg-transparent text-zinc-800 text-[13px]"
-                      style={{ minWidth: 80 }}
+                      className="w-full h-6 px-1 outline-none bg-transparent text-zinc-800 text-[13px] pointer-events-none"
+                      style={{ minWidth: 80, pointerEvents: isDragging ? "none" : "auto" }}
                     />
                   </td>
                 );
