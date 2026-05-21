@@ -5,6 +5,8 @@ import { store, type Book, type Page, type PageType } from "@/lib/store";
 
 const COLS = 26;
 const ROWS = 500;
+const ROW_HEIGHT = 24;
+const VIRT_BUFFER = 30;
 const COL_LABELS = Array.from({ length: COLS }, (_, i) => String.fromCharCode(65 + i));
 
 interface MergeRegion { r1: number; c1: number; r2: number; c2: number; }
@@ -35,6 +37,9 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const dataRef = useRef<SheetData>(data);
   dataRef.current = data;
+
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [virtScroll, setVirtScroll] = useState({ top: 0, height: 600 });
 
   const key = (r: number, c: number) => `${r}-${c}`;
 
@@ -200,8 +205,25 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
     return () => window.removeEventListener("mouseup", onUp);
   }, []);
 
+  useEffect(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    const update = () => setVirtScroll({ top: el.scrollTop, height: el.clientHeight });
+    update();
+    el.addEventListener("scroll", update, { passive: true });
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => { el.removeEventListener("scroll", update); ro.disconnect(); };
+  }, []);
+
+  const firstRow = Math.max(0, Math.floor(virtScroll.top / ROW_HEIGHT) - VIRT_BUFFER);
+  const lastRow = Math.min(ROWS - 1, Math.ceil((virtScroll.top + virtScroll.height) / ROW_HEIGHT) + VIRT_BUFFER);
+  const topSpacer = firstRow * ROW_HEIGHT;
+  const bottomSpacer = (ROWS - 1 - lastRow) * ROW_HEIGHT;
+
   return (
     <div
+      ref={containerRef}
       className="overflow-auto w-full h-full"
       style={{ fontFamily: "monospace", fontSize: 13, userSelect: isDraggingRef.current ? "none" : "auto" }}
       onMouseMove={e => {
@@ -232,72 +254,77 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
           </tr>
         </thead>
         <tbody>
-          {Array.from({ length: ROWS }, (_, r) => (
-            <tr key={r}>
-              <td className="bg-zinc-50 border border-zinc-300 text-zinc-400 text-[11px] text-center font-medium px-1 sticky left-0 z-10 select-none" style={{ width: 40, height: 24 }}>
-                {r + 1}
-              </td>
-              {Array.from({ length: COLS }, (_, c) => {
-                const k = key(r, c);
-                if (absorbedSet.has(k)) return null;
-                const span = mergeAnchorMap.get(k);
-                const colSpan = span?.colSpan ?? 1;
-                const rowSpan = span?.rowSpan ?? 1;
-                const isMerged = !!span;
-                const isActive = active && active[0] === r && active[1] === c;
-                const isSelected = selectedSet.has(k);
-                return (
-                  <td
-                    key={c}
-                    data-cell="1"
-                    data-r={r}
-                    data-c={c}
-                    colSpan={colSpan}
-                    rowSpan={rowSpan}
-                    onMouseDown={e => {
-                      if (e.button !== 0) return;
-                      e.preventDefault();
-                      anchorRef.current = [r, c];
-                      dragEndRef.current = [r, c];
-                      isDraggingRef.current = true;
-                      setActive(null);
-                      setSelection({ anchor: [r, c], end: [r, c] });
-                    }}
-                    className={`border p-0 cursor-cell ${
-                      isActive
-                        ? "outline outline-2 outline-blue-500 z-10 relative border-blue-400"
-                        : isSelected
-                        ? "bg-blue-100 border-blue-300"
-                        : "border-zinc-200"
-                    }`}
-                    style={{ height: 24, minWidth: 80 }}
-                  >
-                    <input
-                      ref={el => { inputRefs.current[k] = el; }}
-                      value={data.cells[k] ?? ""}
-                      onChange={e => update(r, c, e.target.value)}
-                      onFocus={() => {
-                        setActive([r, c]);
-                        setSelection(null);
-                        anchorRef.current = null;
-                        dragEndRef.current = null;
+          {topSpacer > 0 && <tr style={{ height: topSpacer }}><td colSpan={COLS + 1} /></tr>}
+          {Array.from({ length: lastRow - firstRow + 1 }, (_, i) => {
+            const r = firstRow + i;
+            return (
+              <tr key={r}>
+                <td className="bg-zinc-50 border border-zinc-300 text-zinc-400 text-[11px] text-center font-medium px-1 sticky left-0 z-10 select-none" style={{ width: 40, height: ROW_HEIGHT }}>
+                  {r + 1}
+                </td>
+                {Array.from({ length: COLS }, (_, c) => {
+                  const k = key(r, c);
+                  if (absorbedSet.has(k)) return null;
+                  const span = mergeAnchorMap.get(k);
+                  const colSpan = span?.colSpan ?? 1;
+                  const rowSpan = span?.rowSpan ?? 1;
+                  const isMerged = !!span;
+                  const isActive = active && active[0] === r && active[1] === c;
+                  const isSelected = selectedSet.has(k);
+                  return (
+                    <td
+                      key={c}
+                      data-cell="1"
+                      data-r={r}
+                      data-c={c}
+                      colSpan={colSpan}
+                      rowSpan={rowSpan}
+                      onMouseDown={e => {
+                        if (e.button !== 0) return;
+                        e.preventDefault();
+                        anchorRef.current = [r, c];
+                        dragEndRef.current = [r, c];
+                        isDraggingRef.current = true;
+                        setActive(null);
+                        setSelection({ anchor: [r, c], end: [r, c] });
                       }}
-                      onKeyDown={e => {
-                        if (e.key === "Enter") { e.preventDefault(); move(r, c, 1, 0); }
-                        else if (e.key === "Tab") { e.preventDefault(); move(r, c, 0, e.shiftKey ? -1 : 1); }
-                        else if (e.key === "ArrowDown") { e.preventDefault(); move(r, c, 1, 0); }
-                        else if (e.key === "ArrowUp") { e.preventDefault(); move(r, c, -1, 0); }
-                        else if (e.key === "ArrowRight" && (e.target as HTMLInputElement).selectionStart === (e.target as HTMLInputElement).value.length) { e.preventDefault(); move(r, c, 0, 1); }
-                        else if (e.key === "ArrowLeft" && (e.target as HTMLInputElement).selectionStart === 0) { e.preventDefault(); move(r, c, 0, -1); }
-                      }}
-                      className="w-full h-full px-1 outline-none bg-transparent text-zinc-800 text-[13px]"
-                      style={{ minWidth: isMerged ? colSpan * 80 : 80, pointerEvents: isDraggingRef.current ? "none" : "auto" }}
-                    />
-                  </td>
-                );
-              })}
-            </tr>
-          ))}
+                      className={`border p-0 cursor-cell ${
+                        isActive
+                          ? "outline outline-2 outline-blue-500 z-10 relative border-blue-400"
+                          : isSelected
+                          ? "bg-blue-100 border-blue-300"
+                          : "border-zinc-200"
+                      }`}
+                      style={{ height: ROW_HEIGHT, minWidth: 80 }}
+                    >
+                      <input
+                        ref={el => { inputRefs.current[k] = el; }}
+                        value={data.cells[k] ?? ""}
+                        onChange={e => update(r, c, e.target.value)}
+                        onFocus={() => {
+                          setActive([r, c]);
+                          setSelection(null);
+                          anchorRef.current = null;
+                          dragEndRef.current = null;
+                        }}
+                        onKeyDown={e => {
+                          if (e.key === "Enter") { e.preventDefault(); move(r, c, 1, 0); }
+                          else if (e.key === "Tab") { e.preventDefault(); move(r, c, 0, e.shiftKey ? -1 : 1); }
+                          else if (e.key === "ArrowDown") { e.preventDefault(); move(r, c, 1, 0); }
+                          else if (e.key === "ArrowUp") { e.preventDefault(); move(r, c, -1, 0); }
+                          else if (e.key === "ArrowRight" && (e.target as HTMLInputElement).selectionStart === (e.target as HTMLInputElement).value.length) { e.preventDefault(); move(r, c, 0, 1); }
+                          else if (e.key === "ArrowLeft" && (e.target as HTMLInputElement).selectionStart === 0) { e.preventDefault(); move(r, c, 0, -1); }
+                        }}
+                        className="w-full h-full px-1 outline-none bg-transparent text-zinc-800 text-[13px]"
+                        style={{ minWidth: isMerged ? colSpan * 80 : 80, pointerEvents: isDraggingRef.current ? "none" : "auto" }}
+                      />
+                    </td>
+                  );
+                })}
+              </tr>
+            );
+          })}
+          {bottomSpacer > 0 && <tr style={{ height: bottomSpacer }}><td colSpan={COLS + 1} /></tr>}
         </tbody>
       </table>
     </div>
@@ -1128,24 +1155,20 @@ export default function PageEditor() {
               <div className="flex w-full" style={{ minHeight: 500 * lineHeightPx, backgroundColor: "#faf6ef", zoom: zoom / 100, transformOrigin: "top left" }}>
                 {/* Line numbers + margin */}
                 <div className="shrink-0 select-none" style={{ width: 44, minHeight: 500 * lineHeightPx, backgroundColor: "#faf6ef", borderRight: "2px solid #ddd5c4", paddingTop: 4 }}>
-                  {Array.from({ length: 500 }, (_, i) => {
-                    const lineText = (editorRef.current?.innerText ?? "").split("\n")[i] ?? "";
-                    const hasContent = lineText.trim().length > 0;
-                    return (
-                      <div
-                        key={i}
-                        className="font-mono flex items-center justify-end pr-2 cursor-pointer hover:bg-amber-100 transition-colors"
-                        style={{ fontSize: 11, height: lineHeightPx, color: hasContent ? "#3a2e20" : "#c4b89a" }}
-                        onClick={() => {
-                          editorRef.current?.focus();
-                          const scrollParent = editorRef.current?.closest(".overflow-y-auto") as HTMLElement | null;
-                          if (scrollParent) scrollParent.scrollTop = i * lineHeightPx;
-                        }}
-                      >
-                        {i + 1}
-                      </div>
-                    );
-                  })}
+                  {Array.from({ length: 500 }, (_, i) => (
+                    <div
+                      key={i}
+                      className="font-mono flex items-center justify-end pr-2 cursor-pointer hover:bg-amber-100 transition-colors"
+                      style={{ fontSize: 11, height: lineHeightPx, color: "#c4b89a" }}
+                      onClick={() => {
+                        editorRef.current?.focus();
+                        const scrollParent = editorRef.current?.closest(".overflow-y-auto") as HTMLElement | null;
+                        if (scrollParent) scrollParent.scrollTop = i * lineHeightPx;
+                      }}
+                    >
+                      {i + 1}
+                    </div>
+                  ))}
                 </div>
                 {/* Lined editor */}
                 <div
