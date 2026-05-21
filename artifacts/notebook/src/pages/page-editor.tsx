@@ -427,7 +427,7 @@ export default function PageEditor() {
             {/* Group 1 — Copy, Paste, Undo, Redo */}
             <div className="border border-zinc-400 rounded-lg p-1.5">
               <div className="grid grid-cols-2 gap-1">
-                <button onClick={handleCopy} title="Copy" className={`${btnSq} text-base`}>🗐</button>
+                <button onClick={handleCopy} title="Copy" className={`${btnSq}`} style={{ fontSize: 18 }}>✊🏻</button>
                 <button onClick={handlePaste} title="Paste" className={`${btnSq} text-base`}>📑</button>
                 <button onClick={handleUndo} title="Undo" className={`${btnSq} text-base`}>↩</button>
                 <button onClick={handleRedo} title="Redo" className={`${btnSq} text-base`}>↪</button>
