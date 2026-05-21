@@ -345,39 +345,67 @@ export default function PageEditor() {
                       </div>
                     </button>
                     {showColorPicker && (
-                      <div className="absolute top-9 left-0 z-50 bg-white border border-zinc-300 rounded-lg shadow-lg p-2 w-[168px]">
-                        <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1">Automatic</div>
+                      <div className="absolute top-9 left-0 z-50 bg-white border border-zinc-300 rounded-lg shadow-xl p-3 w-[220px]">
+                        {/* Automatic */}
                         <button
                           onClick={() => handleFontColor("#000000")}
-                          className="flex items-center gap-2 w-full px-1 py-0.5 hover:bg-zinc-100 rounded text-xs text-zinc-700 mb-1"
+                          className="flex items-center gap-2 w-full px-1 py-1 hover:bg-zinc-100 rounded text-xs text-zinc-700 mb-2 border border-zinc-200"
                         >
-                          <div className="w-4 h-4 rounded-sm border border-zinc-300 bg-black shrink-0" />
-                          Black (default)
+                          <div className="w-5 h-5 border border-zinc-400 bg-black shrink-0" />
+                          <span className="font-medium">Automatic</span>
                         </button>
-                        <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1">Standard Colors</div>
-                        <div className="grid grid-cols-7 gap-1 mb-2">
-                          {["#c00000","#ff0000","#ffc000","#ffff00","#92d050","#00b0f0","#0070c0","#7030a0","#ff6699","#ff9900","#00b050","#00bcd4","#3f51b5","#e91e63"].map(c => (
+                        {/* Theme Colors */}
+                        <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1">Theme Colors</div>
+                        <div className="grid grid-cols-10 gap-[3px] mb-1">
+                          {[
+                            ["#FFFFFF","#F2F2F2","#D9D9D9","#BFBFBF","#A5A5A5","#7F7F7F"],
+                            ["#000000","#808080","#595959","#404040","#262626","#0D0D0D"],
+                            ["#EEECE1","#DDD9C4","#C4BD97","#948A54","#494429","#1D1B10"],
+                            ["#1F497D","#C6D9F1","#8DB4E2","#548DD4","#17375E","#0F243E"],
+                            ["#4F81BD","#DCE6F1","#B8CCE4","#95B3D7","#366092","#243F60"],
+                            ["#9B59B6","#E8D5F0","#D198E8","#8064A2","#60497A","#3F3151"],
+                            ["#C0504D","#F2DCDB","#E6B8B7","#C0504D","#963634","#632523"],
+                            ["#E36C09","#FDE9D9","#FBBF7C","#F79646","#974806","#6A3400"],
+                            ["#9BBB59","#EBF1DE","#D8E4BC","#C4D79B","#76933C","#4F6228"],
+                            ["#4BACC6","#DAEEF3","#B7DEE8","#92CDDC","#31849B","#215868"],
+                          ].map((col, ci) =>
+                            col.map((c, ri) => (
+                              <button
+                                key={`${ci}-${ri}`}
+                                onClick={() => handleFontColor(c)}
+                                className="w-[18px] h-[18px] border border-zinc-200 hover:scale-110 hover:border-zinc-500 transition-transform"
+                                style={{ backgroundColor: c }}
+                                title={c}
+                              />
+                            ))
+                          )}
+                        </div>
+                        {/* Standard Colors */}
+                        <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1 mt-2">Standard Colors</div>
+                        <div className="flex gap-[3px] mb-2">
+                          {["#C00000","#FF0000","#FFC000","#FFFF00","#92D050","#00B050","#00B0F0","#0070C0","#002060","#7030A0"].map(c => (
                             <button
                               key={c}
                               onClick={() => handleFontColor(c)}
-                              className="w-5 h-5 rounded-sm border border-zinc-200 hover:scale-110 transition-transform"
+                              className="w-[18px] h-[18px] border border-zinc-200 hover:scale-110 hover:border-zinc-500 transition-transform"
                               style={{ backgroundColor: c }}
                               title={c}
                             />
                           ))}
                         </div>
-                        <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1">More Colors</div>
-                        <div className="grid grid-cols-7 gap-1">
-                          {["#ffffff","#d9d9d9","#a6a6a6","#595959","#262626","#f4b942","#e07b39","#c0392b","#27ae60","#2980b9","#8e44ad","#1abc9c","#f39c12","#2c3e50"].map(c => (
-                            <button
-                              key={c}
-                              onClick={() => handleFontColor(c)}
-                              className="w-5 h-5 rounded-sm border border-zinc-200 hover:scale-110 transition-transform"
-                              style={{ backgroundColor: c }}
-                              title={c}
-                            />
-                          ))}
-                        </div>
+                        {/* More Colors */}
+                        <button
+                          onClick={() => {
+                            const input = document.createElement("input");
+                            input.type = "color";
+                            input.value = fontColor;
+                            input.onchange = () => handleFontColor(input.value);
+                            input.click();
+                          }}
+                          className="w-full text-xs text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded px-2 py-1 text-left border border-zinc-200 transition-colors"
+                        >
+                          🎨 More Colors...
+                        </button>
                       </div>
                     )}
                   </div>
