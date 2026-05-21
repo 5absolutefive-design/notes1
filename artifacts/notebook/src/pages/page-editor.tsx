@@ -29,12 +29,15 @@ export default function PageEditor() {
   const [showFontMenu, setShowFontMenu] = useState(false);
   const [activeFormats, setActiveFormats] = useState({ bold: false, underline: false, strikeThrough: false, overline: false });
   const [align, setAlign] = useState<"left" | "center" | "right">("left");
+  const [fontColor, setFontColor] = useState("#000000");
+  const [showColorPicker, setShowColorPicker] = useState(false);
 
   const initializedForId = useRef<number | null>(null);
   const lastSavedContent = useRef("");
   const tabsRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
   const fontMenuRef = useRef<HTMLDivElement>(null);
+  const colorPickerRef = useRef<HTMLDivElement>(null);
 
   const refresh = useCallback(() => {
     setBook(store.getBook(bId) ?? null);
@@ -62,11 +65,14 @@ export default function PageEditor() {
     if (showTrash) setTrashedPages(store.listTrashedPages(bId));
   }, [showTrash, bId]);
 
-  // Close font menu on outside click
+  // Close font menu and color picker on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (fontMenuRef.current && !fontMenuRef.current.contains(e.target as Node)) {
         setShowFontMenu(false);
+      }
+      if (colorPickerRef.current && !colorPickerRef.current.contains(e.target as Node)) {
+        setShowColorPicker(false);
       }
     };
     document.addEventListener("mousedown", handler);
@@ -160,6 +166,23 @@ export default function PageEditor() {
     // Use fontSize 1-7 scale: map pixel to execCommand size
     const size = newSize <= 10 ? 1 : newSize <= 13 ? 2 : newSize <= 16 ? 3 : newSize <= 18 ? 4 : newSize <= 24 ? 5 : newSize <= 32 ? 6 : 7;
     document.execCommand("fontSize", false, String(size));
+    handleEditorInput();
+  };
+
+  const handleFontColor = (color: string) => {
+    if (!hasSelection()) return;
+    setFontColor(color);
+    setShowColorPicker(false);
+    editorRef.current?.focus();
+    document.execCommand("foreColor", false, color);
+    // collapse cursor and remove format lock
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      const range = sel.getRangeAt(0);
+      range.collapse(false);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
     handleEditorInput();
   };
 
@@ -307,9 +330,57 @@ export default function PageEditor() {
                     <span className="font-bold text-xs leading-none">A</span>
                   </button>
                 </div>
-                {/* Row 2: 3 empty placeholders, Bold, Underline (red), Strikethrough (red), Overline */}
+                {/* Row 2: font color picker, 2 empty placeholders, Bold, Underline, Strikethrough, Overline */}
                 <div className="flex items-center gap-1">
-                  <button className={btnSq} />
+                  {/* Font Color Picker */}
+                  <div className="relative" ref={colorPickerRef}>
+                    <button
+                      onClick={() => setShowColorPicker(v => !v)}
+                      title="Font color"
+                      className={btnSq}
+                    >
+                      <div className="flex flex-col items-center justify-center gap-0.5">
+                        <span className="font-bold text-sm leading-none" style={{ color: fontColor }}>A</span>
+                        <div className="w-5 h-1 rounded-sm" style={{ backgroundColor: fontColor }} />
+                      </div>
+                    </button>
+                    {showColorPicker && (
+                      <div className="absolute top-9 left-0 z-50 bg-white border border-zinc-300 rounded-lg shadow-lg p-2 w-[168px]">
+                        <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1">Automatic</div>
+                        <button
+                          onClick={() => handleFontColor("#000000")}
+                          className="flex items-center gap-2 w-full px-1 py-0.5 hover:bg-zinc-100 rounded text-xs text-zinc-700 mb-1"
+                        >
+                          <div className="w-4 h-4 rounded-sm border border-zinc-300 bg-black shrink-0" />
+                          Black (default)
+                        </button>
+                        <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1">Standard Colors</div>
+                        <div className="grid grid-cols-7 gap-1 mb-2">
+                          {["#c00000","#ff0000","#ffc000","#ffff00","#92d050","#00b0f0","#0070c0","#7030a0","#ff6699","#ff9900","#00b050","#00bcd4","#3f51b5","#e91e63"].map(c => (
+                            <button
+                              key={c}
+                              onClick={() => handleFontColor(c)}
+                              className="w-5 h-5 rounded-sm border border-zinc-200 hover:scale-110 transition-transform"
+                              style={{ backgroundColor: c }}
+                              title={c}
+                            />
+                          ))}
+                        </div>
+                        <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1">More Colors</div>
+                        <div className="grid grid-cols-7 gap-1">
+                          {["#ffffff","#d9d9d9","#a6a6a6","#595959","#262626","#f4b942","#e07b39","#c0392b","#27ae60","#2980b9","#8e44ad","#1abc9c","#f39c12","#2c3e50"].map(c => (
+                            <button
+                              key={c}
+                              onClick={() => handleFontColor(c)}
+                              className="w-5 h-5 rounded-sm border border-zinc-200 hover:scale-110 transition-transform"
+                              style={{ backgroundColor: c }}
+                              title={c}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   <button className={btnSq} />
                   <button className={btnSq} />
                   {/* Bold */}
