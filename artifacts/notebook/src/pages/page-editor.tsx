@@ -950,17 +950,33 @@ export default function PageEditor() {
               <div className="flex w-full" style={{ minHeight: 600, backgroundColor: "#faf6ef" }}>
                 {/* Line numbers + off-white margin */}
                 <div
-                  className="shrink-0 text-right pr-2 pt-4 select-none"
+                  className="shrink-0 select-none"
                   style={{
                     width: 44,
                     minHeight: 600,
                     backgroundColor: "#faf6ef",
                     borderRight: "2px solid #ddd5c4",
+                    paddingTop: 4,
                   }}
                 >
-                  {Array.from({ length: 40 }, (_, i) => (
-                    <div key={i} className="font-mono leading-[36px]" style={{ fontSize: 11, color: "#c4b89a" }}>{i + 1}</div>
-                  ))}
+                  {Array.from({ length: 40 }, (_, i) => {
+                    const lineText = (editorRef.current?.innerText ?? "").split("\n")[i] ?? "";
+                    const hasContent = lineText.trim().length > 0;
+                    return (
+                      <div
+                        key={i}
+                        className="font-mono flex items-center justify-end pr-2"
+                        style={{
+                          fontSize: 11,
+                          height: 36,
+                          color: hasContent ? "#3a2e20" : "#c4b89a",
+                          transition: "color 0.15s",
+                        }}
+                      >
+                        {i + 1}
+                      </div>
+                    );
+                  })}
                 </div>
                 {/* Lined editor */}
                 <div className="flex-1 relative" style={{ minHeight: 600, backgroundColor: "#faf6ef" }}>
@@ -979,7 +995,7 @@ export default function PageEditor() {
                     onInput={handleEditorInput}
                     onKeyUp={updateActiveFormats}
                     onMouseUp={updateActiveFormats}
-                    className="relative w-full outline-none px-4 py-1 z-10"
+                    className="relative w-full outline-none px-4 z-10"
                     style={{
                       fontFamily: font,
                       fontSize: fontSize,
@@ -987,6 +1003,7 @@ export default function PageEditor() {
                       minHeight: 600,
                       whiteSpace: "pre-wrap",
                       color: "#3a2e20",
+                      paddingTop: 4,
                     }}
                     data-placeholder="Start writing..."
                   />
