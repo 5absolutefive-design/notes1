@@ -39,6 +39,7 @@ export default function PageEditor() {
   const editorRef = useRef<HTMLDivElement>(null);
   const fontMenuRef = useRef<HTMLDivElement>(null);
   const colorPickerRef = useRef<HTMLDivElement>(null);
+  const savedRangeRef = useRef<Range | null>(null);
 
   const refresh = useCallback(() => {
     setBook(store.getBook(bId) ?? null);
@@ -170,8 +171,17 @@ export default function PageEditor() {
     handleEditorInput();
   };
 
+  const restoreSelection = () => {
+    if (!savedRangeRef.current) return false;
+    const sel = window.getSelection();
+    if (sel) {
+      sel.removeAllRanges();
+      sel.addRange(savedRangeRef.current);
+    }
+    return true;
+  };
+
   const handleFontColor = (color: string, addToRecent = false) => {
-    if (!hasSelection()) return;
     setFontColor(color);
     setShowColorPicker(false);
     if (addToRecent) {
@@ -181,6 +191,10 @@ export default function PageEditor() {
       });
     }
     editorRef.current?.focus();
+    // Restore saved selection if current selection is empty
+    if (!hasSelection()) {
+      if (!restoreSelection()) return;
+    }
     document.execCommand("foreColor", false, color);
     const sel = window.getSelection();
     if (sel && sel.rangeCount > 0) {
@@ -189,6 +203,7 @@ export default function PageEditor() {
       sel.removeAllRanges();
       sel.addRange(range);
     }
+    savedRangeRef.current = null;
     handleEditorInput();
   };
 
@@ -421,6 +436,11 @@ export default function PageEditor() {
                         {/* More Colors */}
                         <button
                           onClick={() => {
+                            // Save selection before native picker steals focus
+                            const sel = window.getSelection();
+                            if (sel && sel.rangeCount > 0) {
+                              savedRangeRef.current = sel.getRangeAt(0).cloneRange();
+                            }
                             const input = document.createElement("input");
                             input.type = "color";
                             input.value = fontColor;
