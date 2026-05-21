@@ -118,6 +118,9 @@ export default function PageEditor() {
   const [showHighlightPicker, setShowHighlightPicker] = useState(false);
   const [recentHighlights, setRecentHighlights] = useState<string[]>([]);
 
+  const [zoom, setZoom] = useState(100);
+  const [autoWrap, setAutoWrap] = useState(true);
+
   const initializedForId = useRef<number | null>(null);
   const lastSavedContent = useRef("");
   const tabsRef = useRef<HTMLDivElement>(null);
@@ -929,9 +932,67 @@ export default function PageEditor() {
       <div className="flex-1 flex flex-col min-h-0 bg-[#ece9e3] px-4 pb-4">
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden rounded-xl border border-zinc-300 shadow-sm bg-white">
           <div className="bg-[#f5f2ee] border-b border-zinc-200 px-4 py-1 flex items-center justify-between shrink-0">
-            <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">
-              Page: <span className="text-zinc-700">PAGE {page.pageNumber}</span>
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">
+                Page: <span className="text-zinc-700">PAGE {page.pageNumber}</span>
+              </span>
+              {(page.pageType ?? "blank") === "lined" && (
+                <div className="flex items-center gap-1 ml-2">
+                  {/* Auto-wrap toggle */}
+                  <button
+                    onClick={() => setAutoWrap(v => !v)}
+                    title={autoWrap ? "Auto-wrap: ON (click to turn off)" : "Auto-wrap: OFF (click to turn on)"}
+                    className="flex items-center justify-center rounded"
+                    style={{
+                      width: 22, height: 22,
+                      fontSize: 11,
+                      fontWeight: 700,
+                      border: `1.5px solid ${autoWrap ? "#16a34a" : "#dc2626"}`,
+                      color: autoWrap ? "#16a34a" : "#dc2626",
+                      background: autoWrap ? "#f0fdf4" : "#fef2f2",
+                      lineHeight: 1,
+                      letterSpacing: 0,
+                    }}
+                  >
+                    ➜]
+                  </button>
+                  {/* Zoom out */}
+                  <button
+                    onClick={() => setZoom(z => Math.max(50, z - 10))}
+                    title={`Zoom out (${zoom}%)`}
+                    className="flex items-center justify-center rounded"
+                    style={{
+                      width: 22, height: 22,
+                      fontSize: 13,
+                      fontWeight: 700,
+                      border: "1.5px solid #a8a29e",
+                      color: "#78716c",
+                      background: "#faf6ef",
+                    }}
+                  >
+                    −
+                  </button>
+                  {/* Zoom level */}
+                  <span className="text-[10px] font-semibold text-zinc-400 select-none w-7 text-center">{zoom}%</span>
+                  {/* Zoom in */}
+                  <button
+                    onClick={() => setZoom(z => Math.min(200, z + 10))}
+                    title={`Zoom in (${zoom}%)`}
+                    className="flex items-center justify-center rounded"
+                    style={{
+                      width: 22, height: 22,
+                      fontSize: 13,
+                      fontWeight: 700,
+                      border: "1.5px solid #a8a29e",
+                      color: "#78716c",
+                      background: "#faf6ef",
+                    }}
+                  >
+                    +
+                  </button>
+                </div>
+              )}
+            </div>
             <span className="text-xs text-zinc-400">
               {saveStatus === "saving" ? "Saving..." : "Saved"}
             </span>
@@ -947,7 +1008,15 @@ export default function PageEditor() {
                 }}
               />
             ) : (page.pageType ?? "blank") === "lined" ? (
-              <div className="flex w-full" style={{ minHeight: 600, backgroundColor: "#faf6ef" }}>
+              <div
+                className="flex w-full"
+                style={{
+                  minHeight: 600,
+                  backgroundColor: "#faf6ef",
+                  zoom: zoom / 100,
+                  transformOrigin: "top left",
+                }}
+              >
                 {/* Line numbers + off-white margin */}
                 <div
                   className="shrink-0 select-none"
@@ -1001,7 +1070,8 @@ export default function PageEditor() {
                       fontSize: fontSize,
                       lineHeight: "36px",
                       minHeight: 600,
-                      whiteSpace: "pre-wrap",
+                      whiteSpace: autoWrap ? "pre-wrap" : "pre",
+                      overflowX: autoWrap ? "hidden" : "auto",
                       color: "#3a2e20",
                       paddingTop: 4,
                     }}
