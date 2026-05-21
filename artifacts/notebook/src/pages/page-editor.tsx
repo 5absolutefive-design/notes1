@@ -962,29 +962,6 @@ export default function PageEditor() {
               <CommonGroups />
 
 
-              {/* Insert group — spreadsheet only */}
-              <div className="border border-zinc-400 rounded-lg p-1.5">
-                <div className="flex flex-col gap-1">
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 text-center px-1">Insert</span>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => spreadsheetInsertRowRef.current?.()}
-                      title="Insert a row below the active cell"
-                      className="h-8 px-3 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors text-xs font-semibold text-zinc-700 flex items-center gap-1.5"
-                    >
-                      <span className="text-base leading-none">↓</span> Row
-                    </button>
-                    <button
-                      onClick={() => spreadsheetInsertColRef.current?.()}
-                      title="Insert a column after the active cell"
-                      className="h-8 px-3 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors text-xs font-semibold text-zinc-700 flex items-center gap-1.5"
-                    >
-                      <span className="text-base leading-none">→</span> Col
-                    </button>
-                  </div>
-                </div>
-              </div>
-
               {/* Placeholder box — 1 long top + 4 short bottom */}
               <div className="border border-zinc-400 rounded-lg p-1.5">
                 <div className="flex flex-col gap-1">
@@ -1175,9 +1152,6 @@ export default function PageEditor() {
                     style={{ width: 22, height: 22, fontSize: 11, fontWeight: 700, border: `1.5px solid ${autoWrap ? "#16a34a" : "#dc2626"}`, color: autoWrap ? "#16a34a" : "#dc2626", background: autoWrap ? "#f0fdf4" : "#fef2f2", lineHeight: 1, letterSpacing: 0 }}
                   >➜]</button>
                 )}
-                <button onClick={() => setZoom(z => Math.max(50, z - 10))} title={`Zoom out (${zoom}%)`} className="flex items-center justify-center rounded" style={{ width: 22, height: 22, fontSize: 13, fontWeight: 700, border: "1.5px solid #a8a29e", color: "#78716c", background: "#faf6ef" }}>−</button>
-                <span className="text-[10px] font-semibold text-zinc-400 select-none w-7 text-center">{zoom}%</span>
-                <button onClick={() => setZoom(z => Math.min(200, z + 10))} title={`Zoom in (${zoom}%)`} className="flex items-center justify-center rounded" style={{ width: 22, height: 22, fontSize: 13, fontWeight: 700, border: "1.5px solid #a8a29e", color: "#78716c", background: "#faf6ef" }}>+</button>
               </div>
             </div>
             <div className="flex items-center gap-2">
