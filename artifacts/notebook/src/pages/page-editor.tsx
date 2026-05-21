@@ -751,20 +751,102 @@ export default function PageEditor() {
     </div>
   );
 
+  // Common groups shared across all 3 toolbars
+  const CommonGroups = () => (
+    <>
+      {/* Group 1 — Copy, Paste, Undo, Redo */}
+      <div className="border border-zinc-400 rounded-lg p-1.5">
+        <div className="grid grid-cols-2 gap-1">
+          <button onClick={handleCopy} title="Copy" className={`${btnSq}`} style={{ fontSize: 18 }}>✊🏻</button>
+          <button onClick={handlePaste} title="Paste" className={`${btnSq} text-base`}>📑</button>
+          <button onClick={handleUndo} title="Undo" className={`${btnSq} text-base`}>↩</button>
+          <button onClick={handleRedo} title="Redo" className={`${btnSq} text-base`}>↪</button>
+        </div>
+      </div>
+
+      {/* Group 2 — Font, Size, Color, Bold, Underline, Strikethrough, Overline */}
+      <div className="border border-zinc-400 rounded-lg p-1.5">
+        <div className="flex flex-col gap-1">
+          <div className="flex items-center gap-1">
+            <div className="relative" ref={fontMenuRef}>
+              <button onClick={() => setShowFontMenu(v => !v)} className="w-36 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors px-2 text-left text-sm font-medium text-zinc-700 truncate" style={{ fontFamily: font }}>
+                {font}
+              </button>
+              {showFontMenu && (
+                <div className="absolute top-9 left-0 z-50 bg-white border border-zinc-300 rounded-lg shadow-lg overflow-y-auto max-h-52 w-44">
+                  {FONTS.map(f => (
+                    <button key={f} onClick={() => handleFontChange(f)} className={`w-full text-left px-3 py-1.5 text-sm hover:bg-zinc-100 transition-colors ${font === f ? "bg-zinc-100 font-semibold" : ""}`} style={{ fontFamily: f }}>{f}</button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="w-8 h-8 rounded-md border border-zinc-300 bg-white flex items-center justify-center text-xs font-semibold text-zinc-700 select-none">{fontSize}</div>
+            <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className={btnSq}><span className="font-bold text-base leading-none">A</span></button>
+            <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className={btnSq}><span className="font-bold text-xs leading-none">A</span></button>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="relative" ref={colorPickerRef}>
+              <button onClick={() => setShowColorPicker(v => !v)} title="Font color" className={btnSq}>
+                <div className="flex flex-col items-center justify-center gap-0.5">
+                  <span className="font-bold text-sm leading-none" style={{ color: fontColor }}>A</span>
+                  <div className="w-5 h-1 rounded-sm" style={{ backgroundColor: fontColor }} />
+                </div>
+              </button>
+              {showColorPicker && <FontColorPanel />}
+            </div>
+            <div className="relative" ref={highlightPickerRef}>
+              <button onClick={() => setShowHighlightPicker(v => !v)} title="Highlight color" className={btnSq}>
+                <div className="flex flex-col items-center justify-center gap-0.5">
+                  <span className="font-bold text-sm leading-none text-zinc-700">A</span>
+                  <div className="w-5 h-1.5 rounded-sm" style={{ backgroundColor: highlightColor }} />
+                </div>
+              </button>
+              {showHighlightPicker && <HighlightPanel />}
+            </div>
+            <button className={btnSq} />
+            <button onClick={() => execInlineFormat("bold")} title="Bold (select text first)" className={`${btnSq} ${activeFormats.bold ? btnActive : ""}`}><span className="font-black text-sm">B</span></button>
+            <button onClick={() => execInlineFormat("underline")} title="Underline (select text first)" className={`${btnSq} ${activeFormats.underline ? btnActive : ""}`}><span className="text-sm underline decoration-red-500 decoration-[3px]">U</span></button>
+            <button onClick={() => execInlineFormat("strikeThrough")} title="Strikethrough (select text first)" className={`${btnSq} ${activeFormats.strikeThrough ? btnActive : ""}`}><span className="text-sm line-through decoration-red-500 decoration-[3px]">U</span></button>
+            <button onClick={() => execInlineFormat("underline")} title="Overline (select text first)" className={btnSq}>
+              <span className="text-sm" style={{ textDecoration: "overline", textDecorationColor: "red", textDecorationThickness: "3px" }}>U</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Group 3 — Align left, right, center, Neutral */}
+      <div className="border border-zinc-400 rounded-lg p-1.5">
+        <div className="grid grid-cols-2 gap-1">
+          <button onClick={() => { execFormat("justifyLeft"); setAlign("left"); }} title="Align left" className={`${btnSq} ${align === "left" ? btnActive : ""}`}>
+            <svg viewBox="0 0 16 16" className="w-4 h-4 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="1" y="7" width="9" height="2" rx="1"/><rect x="1" y="12" width="12" height="2" rx="1"/></svg>
+          </button>
+          <button onClick={() => { execFormat("justifyRight"); setAlign("right"); }} title="Align right" className={`${btnSq} ${align === "right" ? btnActive : ""}`}>
+            <svg viewBox="0 0 16 16" className="w-4 h-4 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="6" y="7" width="9" height="2" rx="1"/><rect x="3" y="12" width="12" height="2" rx="1"/></svg>
+          </button>
+          <button onClick={() => { execFormat("justifyCenter"); setAlign("center"); }} title="Align center" className={`${btnSq} ${align === "center" ? btnActive : ""}`}>
+            <svg viewBox="0 0 16 16" className="w-4 h-4 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="3.5" y="7" width="9" height="2" rx="1"/><rect x="2" y="12" width="12" height="2" rx="1"/></svg>
+          </button>
+          <button onClick={handleNeutral} title="Remove all formatting" className={btnSq}><span className="text-sm font-bold text-zinc-600">N</span></button>
+        </div>
+      </div>
+    </>
+  );
+
   return (
     <div className="h-screen bg-white flex flex-col overflow-hidden">
 
       {/* ═══════════════════════════════════════════════════════
-          EDIT CARD — separate toolbar per page type
+          EDIT CARD — common buttons in all 3, plus page-specific extras
           ═══════════════════════════════════════════════════════ */}
 
       {pageType === "spreadsheet" ? (
-        /* ── SPREADSHEET TOOLBAR ── Cell operations only ── */
+        /* ── SPREADSHEET TOOLBAR ── Common + Cell operations ── */
         <div className="bg-[#ece9e3] px-4 pt-3 pb-2 shrink-0">
           <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl px-3 py-3 shadow-sm flex items-start justify-between">
-            <div className="inline-flex items-start gap-2">
+            <div className="inline-flex items-start gap-2 flex-wrap">
+              <CommonGroups />
 
-              {/* Cells group */}
+              {/* Cells group — spreadsheet only */}
               <div className="border border-zinc-400 rounded-lg p-1.5">
                 <div className="flex flex-col gap-1">
                   <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 text-center px-1">Cells</span>
@@ -772,14 +854,14 @@ export default function PageEditor() {
                     <button
                       onClick={() => spreadsheetMergeRef.current?.()}
                       title="Merge selected cells (drag to select first)"
-                      className={`h-8 px-3 rounded-md border border-purple-300 bg-purple-50 hover:bg-purple-100 active:bg-purple-200 transition-colors text-xs font-semibold text-purple-700 flex items-center gap-1.5`}
+                      className="h-8 px-3 rounded-md border border-purple-300 bg-purple-50 hover:bg-purple-100 active:bg-purple-200 transition-colors text-xs font-semibold text-purple-700 flex items-center gap-1.5"
                     >
                       <span className="text-base leading-none">⇄</span> Merge
                     </button>
                     <button
                       onClick={() => spreadsheetClearRef.current?.()}
                       title="Clear active cell or selected cells"
-                      className={`h-8 px-3 rounded-md border border-red-200 bg-red-50 hover:bg-red-100 active:bg-red-200 transition-colors text-xs font-semibold text-red-600 flex items-center gap-1.5`}
+                      className="h-8 px-3 rounded-md border border-red-200 bg-red-50 hover:bg-red-100 active:bg-red-200 transition-colors text-xs font-semibold text-red-600 flex items-center gap-1.5"
                     >
                       <span className="text-base leading-none">✕</span> Clear
                     </button>
@@ -787,7 +869,7 @@ export default function PageEditor() {
                 </div>
               </div>
 
-              {/* Insert group */}
+              {/* Insert group — spreadsheet only */}
               <div className="border border-zinc-400 rounded-lg p-1.5">
                 <div className="flex flex-col gap-1">
                   <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 text-center px-1">Insert</span>
@@ -795,106 +877,33 @@ export default function PageEditor() {
                     <button
                       onClick={() => spreadsheetInsertRowRef.current?.()}
                       title="Insert a row below the active cell"
-                      className={`h-8 px-3 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors text-xs font-semibold text-zinc-700 flex items-center gap-1.5`}
+                      className="h-8 px-3 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors text-xs font-semibold text-zinc-700 flex items-center gap-1.5"
                     >
                       <span className="text-base leading-none">↓</span> Row
                     </button>
                     <button
                       onClick={() => spreadsheetInsertColRef.current?.()}
                       title="Insert a column after the active cell"
-                      className={`h-8 px-3 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors text-xs font-semibold text-zinc-700 flex items-center gap-1.5`}
+                      className="h-8 px-3 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors text-xs font-semibold text-zinc-700 flex items-center gap-1.5"
                     >
                       <span className="text-base leading-none">→</span> Col
                     </button>
                   </div>
                 </div>
               </div>
-
             </div>
             <DeleteGroup />
           </div>
         </div>
 
       ) : pageType === "lined" ? (
-        /* ── LINED TOOLBAR ── Text formatting + Line Spacing ── */
+        /* ── LINED TOOLBAR ── Common + Line Spacing ── */
         <div className="bg-[#ece9e3] px-4 pt-3 pb-2 shrink-0">
           <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl px-3 py-3 shadow-sm flex items-start justify-between">
-            <div className="inline-flex items-start gap-2">
+            <div className="inline-flex items-start gap-2 flex-wrap">
+              <CommonGroups />
 
-              {/* Group 1 — Copy, Paste, Undo, Redo */}
-              <div className="border border-zinc-400 rounded-lg p-1.5">
-                <div className="grid grid-cols-2 gap-1">
-                  <button onClick={handleCopy} title="Copy" className={`${btnSq}`} style={{ fontSize: 18 }}>✊🏻</button>
-                  <button onClick={handlePaste} title="Paste" className={`${btnSq} text-base`}>📑</button>
-                  <button onClick={handleUndo} title="Undo" className={`${btnSq} text-base`}>↩</button>
-                  <button onClick={handleRedo} title="Redo" className={`${btnSq} text-base`}>↪</button>
-                </div>
-              </div>
-
-              {/* Group 2 — Font, Size, Color, Bold, Underline, Strikethrough */}
-              <div className="border border-zinc-400 rounded-lg p-1.5">
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center gap-1">
-                    <div className="relative" ref={fontMenuRef}>
-                      <button onClick={() => setShowFontMenu(v => !v)} className="w-36 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors px-2 text-left text-sm font-medium text-zinc-700 truncate" style={{ fontFamily: font }}>
-                        {font}
-                      </button>
-                      {showFontMenu && (
-                        <div className="absolute top-9 left-0 z-50 bg-white border border-zinc-300 rounded-lg shadow-lg overflow-y-auto max-h-52 w-44">
-                          {FONTS.map(f => (
-                            <button key={f} onClick={() => handleFontChange(f)} className={`w-full text-left px-3 py-1.5 text-sm hover:bg-zinc-100 transition-colors ${font === f ? "bg-zinc-100 font-semibold" : ""}`} style={{ fontFamily: f }}>{f}</button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <div className="w-8 h-8 rounded-md border border-zinc-300 bg-white flex items-center justify-center text-xs font-semibold text-zinc-700 select-none">{fontSize}</div>
-                    <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className={btnSq}><span className="font-bold text-base leading-none">A</span></button>
-                    <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className={btnSq}><span className="font-bold text-xs leading-none">A</span></button>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <div className="relative" ref={colorPickerRef}>
-                      <button onClick={() => setShowColorPicker(v => !v)} title="Font color" className={btnSq}>
-                        <div className="flex flex-col items-center justify-center gap-0.5">
-                          <span className="font-bold text-sm leading-none" style={{ color: fontColor }}>A</span>
-                          <div className="w-5 h-1 rounded-sm" style={{ backgroundColor: fontColor }} />
-                        </div>
-                      </button>
-                      {showColorPicker && <FontColorPanel />}
-                    </div>
-                    <div className="relative" ref={highlightPickerRef}>
-                      <button onClick={() => setShowHighlightPicker(v => !v)} title="Highlight color" className={btnSq}>
-                        <div className="flex flex-col items-center justify-center gap-0.5">
-                          <span className="font-bold text-sm leading-none text-zinc-700">A</span>
-                          <div className="w-5 h-1.5 rounded-sm" style={{ backgroundColor: highlightColor }} />
-                        </div>
-                      </button>
-                      {showHighlightPicker && <HighlightPanel />}
-                    </div>
-                    <button className={btnSq} />
-                    <button onClick={() => execInlineFormat("bold")} title="Bold (select text first)" className={`${btnSq} ${activeFormats.bold ? btnActive : ""}`}><span className="font-black text-sm">B</span></button>
-                    <button onClick={() => execInlineFormat("underline")} title="Underline (select text first)" className={`${btnSq} ${activeFormats.underline ? btnActive : ""}`}><span className="text-sm underline decoration-red-500 decoration-[3px]">U</span></button>
-                    <button onClick={() => execInlineFormat("strikeThrough")} title="Strikethrough (select text first)" className={`${btnSq} ${activeFormats.strikeThrough ? btnActive : ""}`}><span className="text-sm line-through decoration-red-500 decoration-[3px]">U</span></button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Group 3 — Align */}
-              <div className="border border-zinc-400 rounded-lg p-1.5">
-                <div className="grid grid-cols-2 gap-1">
-                  <button onClick={() => { execFormat("justifyLeft"); setAlign("left"); }} title="Align left" className={`${btnSq} ${align === "left" ? btnActive : ""}`}>
-                    <svg viewBox="0 0 16 16" className="w-4 h-4 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="1" y="7" width="9" height="2" rx="1"/><rect x="1" y="12" width="12" height="2" rx="1"/></svg>
-                  </button>
-                  <button onClick={() => { execFormat("justifyRight"); setAlign("right"); }} title="Align right" className={`${btnSq} ${align === "right" ? btnActive : ""}`}>
-                    <svg viewBox="0 0 16 16" className="w-4 h-4 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="6" y="7" width="9" height="2" rx="1"/><rect x="3" y="12" width="12" height="2" rx="1"/></svg>
-                  </button>
-                  <button onClick={() => { execFormat("justifyCenter"); setAlign("center"); }} title="Align center" className={`${btnSq} ${align === "center" ? btnActive : ""}`}>
-                    <svg viewBox="0 0 16 16" className="w-4 h-4 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="3.5" y="7" width="9" height="2" rx="1"/><rect x="2" y="12" width="12" height="2" rx="1"/></svg>
-                  </button>
-                  <button onClick={handleNeutral} title="Remove all formatting" className={btnSq}><span className="text-sm font-bold text-zinc-600">N</span></button>
-                </div>
-              </div>
-
-              {/* Group 4 — Line Spacing (unique to lined pages) */}
+              {/* Line Spacing — lined only */}
               <div className="border border-zinc-400 rounded-lg p-1.5">
                 <div className="flex flex-col gap-1">
                   <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 text-center px-1">Line Spacing</span>
@@ -912,94 +921,17 @@ export default function PageEditor() {
                   </div>
                 </div>
               </div>
-
             </div>
             <DeleteGroup />
           </div>
         </div>
 
       ) : (
-        /* ── BLANK TOOLBAR ── Full rich text formatting ── */
+        /* ── BLANK TOOLBAR ── Common buttons only ── */
         <div className="bg-[#ece9e3] px-4 pt-3 pb-2 shrink-0">
           <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl px-3 py-3 shadow-sm flex items-start justify-between">
-            <div className="inline-flex items-start gap-2">
-
-              {/* Group 1 — Copy, Paste, Undo, Redo */}
-              <div className="border border-zinc-400 rounded-lg p-1.5">
-                <div className="grid grid-cols-2 gap-1">
-                  <button onClick={handleCopy} title="Copy" className={`${btnSq}`} style={{ fontSize: 18 }}>✊🏻</button>
-                  <button onClick={handlePaste} title="Paste" className={`${btnSq} text-base`}>📑</button>
-                  <button onClick={handleUndo} title="Undo" className={`${btnSq} text-base`}>↩</button>
-                  <button onClick={handleRedo} title="Redo" className={`${btnSq} text-base`}>↪</button>
-                </div>
-              </div>
-
-              {/* Group 2 — Font, Size, Bold, Underline, Strikethrough, Overline */}
-              <div className="border border-zinc-400 rounded-lg p-1.5">
-                <div className="flex flex-col gap-1">
-                  <div className="flex items-center gap-1">
-                    <div className="relative" ref={fontMenuRef}>
-                      <button onClick={() => setShowFontMenu(v => !v)} className="w-36 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors px-2 text-left text-sm font-medium text-zinc-700 truncate" style={{ fontFamily: font }}>
-                        {font}
-                      </button>
-                      {showFontMenu && (
-                        <div className="absolute top-9 left-0 z-50 bg-white border border-zinc-300 rounded-lg shadow-lg overflow-y-auto max-h-52 w-44">
-                          {FONTS.map(f => (
-                            <button key={f} onClick={() => handleFontChange(f)} className={`w-full text-left px-3 py-1.5 text-sm hover:bg-zinc-100 transition-colors ${font === f ? "bg-zinc-100 font-semibold" : ""}`} style={{ fontFamily: f }}>{f}</button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    <div className="w-8 h-8 rounded-md border border-zinc-300 bg-white flex items-center justify-center text-xs font-semibold text-zinc-700 select-none">{fontSize}</div>
-                    <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className={btnSq}><span className="font-bold text-base leading-none">A</span></button>
-                    <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className={btnSq}><span className="font-bold text-xs leading-none">A</span></button>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <div className="relative" ref={colorPickerRef}>
-                      <button onClick={() => setShowColorPicker(v => !v)} title="Font color" className={btnSq}>
-                        <div className="flex flex-col items-center justify-center gap-0.5">
-                          <span className="font-bold text-sm leading-none" style={{ color: fontColor }}>A</span>
-                          <div className="w-5 h-1 rounded-sm" style={{ backgroundColor: fontColor }} />
-                        </div>
-                      </button>
-                      {showColorPicker && <FontColorPanel />}
-                    </div>
-                    <div className="relative" ref={highlightPickerRef}>
-                      <button onClick={() => setShowHighlightPicker(v => !v)} title="Highlight color" className={btnSq}>
-                        <div className="flex flex-col items-center justify-center gap-0.5">
-                          <span className="font-bold text-sm leading-none text-zinc-700">A</span>
-                          <div className="w-5 h-1.5 rounded-sm" style={{ backgroundColor: highlightColor }} />
-                        </div>
-                      </button>
-                      {showHighlightPicker && <HighlightPanel />}
-                    </div>
-                    <button className={btnSq} />
-                    <button onClick={() => execInlineFormat("bold")} title="Bold (select text first)" className={`${btnSq} ${activeFormats.bold ? btnActive : ""}`}><span className="font-black text-sm">B</span></button>
-                    <button onClick={() => execInlineFormat("underline")} title="Underline (select text first)" className={`${btnSq} ${activeFormats.underline ? btnActive : ""}`}><span className="text-sm underline decoration-red-500 decoration-[3px]">U</span></button>
-                    <button onClick={() => execInlineFormat("strikeThrough")} title="Strikethrough (select text first)" className={`${btnSq} ${activeFormats.strikeThrough ? btnActive : ""}`}><span className="text-sm line-through decoration-red-500 decoration-[3px]">U</span></button>
-                    <button onClick={() => execInlineFormat("underline")} title="Overline (select text first)" className={btnSq}>
-                      <span className="text-sm" style={{ textDecoration: "overline", textDecorationColor: "red", textDecorationThickness: "3px" }}>U</span>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Group 3 — Align left, Align right, Align center, Neutral */}
-              <div className="border border-zinc-400 rounded-lg p-1.5">
-                <div className="grid grid-cols-2 gap-1">
-                  <button onClick={() => { execFormat("justifyLeft"); setAlign("left"); }} title="Align left" className={`${btnSq} ${align === "left" ? btnActive : ""}`}>
-                    <svg viewBox="0 0 16 16" className="w-4 h-4 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="1" y="7" width="9" height="2" rx="1"/><rect x="1" y="12" width="12" height="2" rx="1"/></svg>
-                  </button>
-                  <button onClick={() => { execFormat("justifyRight"); setAlign("right"); }} title="Align right" className={`${btnSq} ${align === "right" ? btnActive : ""}`}>
-                    <svg viewBox="0 0 16 16" className="w-4 h-4 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="6" y="7" width="9" height="2" rx="1"/><rect x="3" y="12" width="12" height="2" rx="1"/></svg>
-                  </button>
-                  <button onClick={() => { execFormat("justifyCenter"); setAlign("center"); }} title="Align center" className={`${btnSq} ${align === "center" ? btnActive : ""}`}>
-                    <svg viewBox="0 0 16 16" className="w-4 h-4 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="3.5" y="7" width="9" height="2" rx="1"/><rect x="2" y="12" width="12" height="2" rx="1"/></svg>
-                  </button>
-                  <button onClick={handleNeutral} title="Remove all formatting" className={btnSq}><span className="text-sm font-bold text-zinc-600">N</span></button>
-                </div>
-              </div>
-
+            <div className="inline-flex items-start gap-2 flex-wrap">
+              <CommonGroups />
             </div>
             <DeleteGroup />
           </div>
