@@ -881,7 +881,7 @@ export default function PageEditor() {
         </div>
         {/* Page type picker — outside overflow-hidden so it's not clipped */}
         {showPageTypePicker && (
-          <div className="absolute bottom-full right-4 mb-2 z-50 bg-white border border-zinc-200 rounded-lg shadow-xl p-2 flex gap-1.5">
+          <div className="absolute top-full right-0 mt-1 z-50 bg-white border border-zinc-200 rounded-lg shadow-xl p-2 flex gap-1.5">
             {/* Blank */}
             <button
               onClick={() => handleCreatePageWithType("blank")}
