@@ -184,3 +184,16 @@
   color: #aaa;
   pointer-events: none;
 }
+
+[contenteditable] u {
+  text-decoration: underline;
+  text-decoration-color: red;
+  text-decoration-thickness: 3px;
+}
+
+[contenteditable] s,
+[contenteditable] strike {
+  text-decoration: line-through;
+  text-decoration-color: red;
+  text-decoration-thickness: 3px;
+}
