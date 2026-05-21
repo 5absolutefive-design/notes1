@@ -1105,14 +1105,16 @@ export default function PageEditor() {
 
           <div className="flex-1 overflow-y-auto bg-white" style={{ scrollbarWidth: "thin" }}>
             {(page.pageType ?? "blank") === "spreadsheet" ? (
-              <SpreadsheetEditor
-                content={content}
-                mergeRef={spreadsheetMergeRef}
-                onChange={(v) => {
-                  setContent(v);
-                  setSaveStatus("saving");
-                }}
-              />
+              <div style={{ zoom: zoom / 100, transformOrigin: "top left" }}>
+                <SpreadsheetEditor
+                  content={content}
+                  mergeRef={spreadsheetMergeRef}
+                  onChange={(v) => {
+                    setContent(v);
+                    setSaveStatus("saving");
+                  }}
+                />
+              </div>
             ) : (page.pageType ?? "blank") === "lined" ? (
               <div
                 className="flex w-full"
@@ -1186,24 +1188,27 @@ export default function PageEditor() {
                 </div>
               </div>
             ) : (
-              <div
-                ref={editorRef}
-                contentEditable
-                suppressContentEditableWarning
-                spellCheck={false}
-                onInput={handleEditorInput}
-                onKeyUp={updateActiveFormats}
-                onMouseUp={updateActiveFormats}
-                className="w-full min-h-full outline-none px-6 py-4 text-zinc-800"
-                style={{
-                  fontFamily: font,
-                  fontSize: fontSize,
-                  lineHeight: "1.8",
-                  minHeight: 600,
-                  whiteSpace: "pre-wrap",
-                }}
-                data-placeholder="Start writing..."
-              />
+              <div style={{ zoom: zoom / 100, transformOrigin: "top left" }}>
+                <div
+                  ref={editorRef}
+                  contentEditable
+                  suppressContentEditableWarning
+                  spellCheck={false}
+                  onInput={handleEditorInput}
+                  onKeyUp={updateActiveFormats}
+                  onMouseUp={updateActiveFormats}
+                  className="w-full min-h-full outline-none px-6 py-4 text-zinc-800"
+                  style={{
+                    fontFamily: font,
+                    fontSize: fontSize,
+                    lineHeight: "1.8",
+                    minHeight: 600,
+                    whiteSpace: autoWrap ? "pre-wrap" : "pre",
+                    overflowX: autoWrap ? "hidden" : "auto",
+                  }}
+                  data-placeholder="Start writing..."
+                />
+              </div>
             )}
           </div>
 
