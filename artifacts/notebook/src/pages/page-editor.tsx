@@ -31,6 +31,7 @@ export default function PageEditor() {
   const [align, setAlign] = useState<"left" | "center" | "right">("left");
   const [fontColor, setFontColor] = useState("#000000");
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const [recentColors, setRecentColors] = useState<string[]>([]);
 
   const initializedForId = useRef<number | null>(null);
   const lastSavedContent = useRef("");
@@ -169,13 +170,18 @@ export default function PageEditor() {
     handleEditorInput();
   };
 
-  const handleFontColor = (color: string) => {
+  const handleFontColor = (color: string, addToRecent = false) => {
     if (!hasSelection()) return;
     setFontColor(color);
     setShowColorPicker(false);
+    if (addToRecent) {
+      setRecentColors(prev => {
+        const filtered = prev.filter(c => c !== color);
+        return [color, ...filtered].slice(0, 10);
+      });
+    }
     editorRef.current?.focus();
     document.execCommand("foreColor", false, color);
-    // collapse cursor and remove format lock
     const sel = window.getSelection();
     if (sel && sel.rangeCount > 0) {
       const range = sel.getRangeAt(0);
@@ -395,13 +401,30 @@ export default function PageEditor() {
                             />
                           ))}
                         </div>
+                        {/* Recent Colors */}
+                        {recentColors.length > 0 && (
+                          <>
+                            <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1 mt-2">Recent Colors</div>
+                            <div className="flex gap-[3px] mb-2 flex-wrap">
+                              {recentColors.map((c, i) => (
+                                <button
+                                  key={i}
+                                  onClick={() => handleFontColor(c)}
+                                  className="w-[18px] h-[18px] border border-zinc-200 hover:scale-110 hover:border-zinc-500 transition-transform"
+                                  style={{ backgroundColor: c }}
+                                  title={c}
+                                />
+                              ))}
+                            </div>
+                          </>
+                        )}
                         {/* More Colors */}
                         <button
                           onClick={() => {
                             const input = document.createElement("input");
                             input.type = "color";
                             input.value = fontColor;
-                            input.onchange = () => handleFontColor(input.value);
+                            input.onchange = () => handleFontColor(input.value, true);
                             input.click();
                           }}
                           className="w-full text-xs text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded px-2 py-1 text-left border border-zinc-200 transition-colors"
