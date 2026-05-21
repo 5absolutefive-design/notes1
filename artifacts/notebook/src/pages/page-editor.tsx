@@ -99,21 +99,36 @@ export default function PageEditor() {
     return () => clearTimeout(timer);
   }, [content, pId, savePage]);
 
+  const hasSelection = () => {
+    const sel = window.getSelection();
+    return sel && sel.toString().length > 0;
+  };
+
   const updateActiveFormats = () => {
+    const selected = hasSelection();
     setActiveFormats({
-      bold: document.queryCommandState("bold"),
-      underline: document.queryCommandState("underline"),
-      strikeThrough: document.queryCommandState("strikeThrough"),
+      bold: selected ? document.queryCommandState("bold") : false,
+      underline: selected ? document.queryCommandState("underline") : false,
+      strikeThrough: selected ? document.queryCommandState("strikeThrough") : false,
       overline: false,
     });
-    const align = document.queryCommandValue("justifyLeft") === "true"
+    const al = document.queryCommandValue("justifyLeft") === "true"
       ? "left"
       : document.queryCommandValue("justifyCenter") === "true"
       ? "center"
       : document.queryCommandValue("justifyRight") === "true"
       ? "right"
       : "left";
-    setAlign(align as "left" | "center" | "right");
+    setAlign(al as "left" | "center" | "right");
+  };
+
+  const execInlineFormat = (cmd: string) => {
+    if (!hasSelection()) return;
+    editorRef.current?.focus();
+    document.execCommand(cmd, false);
+    handleEditorInput();
+    // Reset active states after applying — format is applied, not "locked"
+    setActiveFormats({ bold: false, underline: false, strikeThrough: false, overline: false });
   };
 
   const execFormat = (cmd: string, value?: string) => {
@@ -290,35 +305,35 @@ export default function PageEditor() {
                   <button className={btnSq} />
                   {/* Bold */}
                   <button
-                    onClick={() => execFormat("bold")}
-                    title="Bold"
+                    onClick={() => execInlineFormat("bold")}
+                    title="Bold (select text first)"
                     className={`${btnSq} ${activeFormats.bold ? btnActive : ""}`}
                   >
                     <span className="font-black text-sm">B</span>
                   </button>
                   {/* Underline — red underline */}
                   <button
-                    onClick={() => execFormat("underline")}
-                    title="Underline"
+                    onClick={() => execInlineFormat("underline")}
+                    title="Underline (select text first)"
                     className={`${btnSq} ${activeFormats.underline ? btnActive : ""}`}
                   >
-                    <span className="text-sm underline decoration-red-500 decoration-2">U</span>
+                    <span className="text-sm underline decoration-red-500 decoration-[3px]">U</span>
                   </button>
                   {/* Strikethrough — red line through */}
                   <button
-                    onClick={() => execFormat("strikeThrough")}
-                    title="Strikethrough"
+                    onClick={() => execInlineFormat("strikeThrough")}
+                    title="Strikethrough (select text first)"
                     className={`${btnSq} ${activeFormats.strikeThrough ? btnActive : ""}`}
                   >
-                    <span className="text-sm line-through decoration-red-500 decoration-2">U</span>
+                    <span className="text-sm line-through decoration-red-500 decoration-[3px]">U</span>
                   </button>
                   {/* Overline */}
                   <button
-                    onClick={() => execFormat("underline")}
-                    title="Overline"
+                    onClick={() => execInlineFormat("underline")}
+                    title="Overline (select text first)"
                     className={btnSq}
                   >
-                    <span className="text-sm" style={{ textDecoration: "overline", textDecorationColor: "red", textDecorationThickness: 2 }}>U</span>
+                    <span className="text-sm" style={{ textDecoration: "overline", textDecorationColor: "red", textDecorationThickness: "3px" }}>U</span>
                   </button>
                 </div>
               </div>
