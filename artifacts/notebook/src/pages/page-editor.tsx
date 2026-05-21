@@ -32,6 +32,9 @@ export default function PageEditor() {
   const [fontColor, setFontColor] = useState("#000000");
   const [showColorPicker, setShowColorPicker] = useState(false);
   const [recentColors, setRecentColors] = useState<string[]>([]);
+  const [highlightColor, setHighlightColor] = useState("#FFFF00");
+  const [showHighlightPicker, setShowHighlightPicker] = useState(false);
+  const [recentHighlights, setRecentHighlights] = useState<string[]>([]);
 
   const initializedForId = useRef<number | null>(null);
   const lastSavedContent = useRef("");
@@ -39,6 +42,7 @@ export default function PageEditor() {
   const editorRef = useRef<HTMLDivElement>(null);
   const fontMenuRef = useRef<HTMLDivElement>(null);
   const colorPickerRef = useRef<HTMLDivElement>(null);
+  const highlightPickerRef = useRef<HTMLDivElement>(null);
   const savedRangeRef = useRef<Range | null>(null);
 
   const refresh = useCallback(() => {
@@ -75,6 +79,9 @@ export default function PageEditor() {
       }
       if (colorPickerRef.current && !colorPickerRef.current.contains(e.target as Node)) {
         setShowColorPicker(false);
+      }
+      if (highlightPickerRef.current && !highlightPickerRef.current.contains(e.target as Node)) {
+        setShowHighlightPicker(false);
       }
     };
     document.addEventListener("mousedown", handler);
@@ -196,6 +203,31 @@ export default function PageEditor() {
       if (!restoreSelection()) return;
     }
     document.execCommand("foreColor", false, color);
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      const range = sel.getRangeAt(0);
+      range.collapse(false);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+    savedRangeRef.current = null;
+    handleEditorInput();
+  };
+
+  const handleHighlightColor = (color: string, addToRecent = false) => {
+    setHighlightColor(color);
+    setShowHighlightPicker(false);
+    if (addToRecent) {
+      setRecentHighlights(prev => {
+        const filtered = prev.filter(c => c !== color);
+        return [color, ...filtered].slice(0, 10);
+      });
+    }
+    editorRef.current?.focus();
+    if (!hasSelection()) {
+      if (!restoreSelection()) return;
+    }
+    document.execCommand("hiliteColor", false, color);
     const sel = window.getSelection();
     if (sel && sel.rangeCount > 0) {
       const range = sel.getRangeAt(0);
@@ -454,7 +486,102 @@ export default function PageEditor() {
                       </div>
                     )}
                   </div>
-                  <button className={btnSq} />
+                  {/* Highlight Color Picker */}
+                  <div className="relative" ref={highlightPickerRef}>
+                    <button
+                      onClick={() => setShowHighlightPicker(v => !v)}
+                      title="Highlight color"
+                      className={btnSq}
+                    >
+                      <div className="flex flex-col items-center justify-center gap-0.5">
+                        <span className="font-bold text-sm leading-none text-zinc-700">A</span>
+                        <div className="w-5 h-1.5 rounded-sm" style={{ backgroundColor: highlightColor }} />
+                      </div>
+                    </button>
+                    {showHighlightPicker && (
+                      <div className="absolute top-9 left-0 z-50 bg-white border border-zinc-300 rounded-lg shadow-xl p-3 w-[220px]">
+                        {/* No Fill */}
+                        <button
+                          onClick={() => handleHighlightColor("transparent")}
+                          className="flex items-center gap-2 w-full px-1 py-1 hover:bg-zinc-100 rounded text-xs text-zinc-700 mb-2 border border-zinc-200"
+                        >
+                          <div className="w-5 h-5 border border-zinc-400 bg-white shrink-0 relative overflow-hidden">
+                            <div className="absolute inset-0 flex items-center justify-center text-red-400 font-bold text-xs">∅</div>
+                          </div>
+                          <span className="font-medium">No Fill</span>
+                        </button>
+                        {/* Theme Colors */}
+                        <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1">Theme Colors</div>
+                        <div className="grid grid-cols-10 gap-[3px] mb-1">
+                          {[
+                            ["#FFFFFF","#F2F2F2","#EEECE1","#DCE6F1","#DBE5F1","#E8D5F0","#F2DCDB","#FDE9D9","#EBF1DE","#DAEEF3"],
+                            ["#F2F2F2","#D9D9D9","#DDD9C4","#C6D9F1","#B8CCE4","#D198E8","#E6B8B7","#FBBF7C","#D8E4BC","#B7DEE8"],
+                            ["#D9D9D9","#BFBFBF","#C4BD97","#8DB4E2","#95B3D7","#8064A2","#DA9694","#F79646","#C4D79B","#92CDDC"],
+                            ["#BFBFBF","#808080","#948A54","#548DD4","#4F81BD","#7030A0","#C0504D","#E36C09","#9BBB59","#4BACC6"],
+                            ["#808080","#595959","#494429","#17375E","#366092","#60497A","#963634","#974806","#76933C","#31849B"],
+                            ["#595959","#262626","#1D1B10","#0F243E","#243F60","#3F3151","#632523","#6A3400","#4F6228","#215868"],
+                          ].map((row, ri) =>
+                            row.map((c, ci) => (
+                              <button
+                                key={`h-${ri}-${ci}`}
+                                onClick={() => handleHighlightColor(c)}
+                                className="w-[18px] h-[18px] border border-zinc-200 hover:scale-110 hover:border-zinc-500 transition-transform"
+                                style={{ backgroundColor: c }}
+                                title={c}
+                              />
+                            ))
+                          )}
+                        </div>
+                        {/* Standard Colors */}
+                        <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1 mt-2">Standard Colors</div>
+                        <div className="flex gap-[3px] mb-2">
+                          {["#C00000","#FF0000","#FFC000","#FFFF00","#92D050","#00B050","#00B0F0","#0070C0","#002060","#7030A0"].map(c => (
+                            <button
+                              key={c}
+                              onClick={() => handleHighlightColor(c)}
+                              className="w-[18px] h-[18px] border border-zinc-200 hover:scale-110 hover:border-zinc-500 transition-transform"
+                              style={{ backgroundColor: c }}
+                              title={c}
+                            />
+                          ))}
+                        </div>
+                        {/* Recent Highlights */}
+                        {recentHighlights.length > 0 && (
+                          <>
+                            <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1 mt-2">Recent Colors</div>
+                            <div className="flex gap-[3px] mb-2 flex-wrap">
+                              {recentHighlights.map((c, i) => (
+                                <button
+                                  key={i}
+                                  onClick={() => handleHighlightColor(c)}
+                                  className="w-[18px] h-[18px] border border-zinc-200 hover:scale-110 hover:border-zinc-500 transition-transform"
+                                  style={{ backgroundColor: c }}
+                                  title={c}
+                                />
+                              ))}
+                            </div>
+                          </>
+                        )}
+                        {/* More Colors */}
+                        <button
+                          onClick={() => {
+                            const sel = window.getSelection();
+                            if (sel && sel.rangeCount > 0) {
+                              savedRangeRef.current = sel.getRangeAt(0).cloneRange();
+                            }
+                            const input = document.createElement("input");
+                            input.type = "color";
+                            input.value = highlightColor;
+                            input.onchange = () => handleHighlightColor(input.value, true);
+                            input.click();
+                          }}
+                          className="w-full text-xs text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded px-2 py-1 text-left border border-zinc-200 transition-colors"
+                        >
+                          🎨 More Colors...
+                        </button>
+                      </div>
+                    )}
+                  </div>
                   <button className={btnSq} />
                   {/* Bold */}
                   <button
