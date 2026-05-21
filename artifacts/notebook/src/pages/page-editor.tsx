@@ -1,12 +1,13 @@
 import { useParams, useLocation, Redirect } from "wouter";
 import { ChevronLeft, ChevronRight, Trash2, ArchiveRestore, X, RotateCcw } from "lucide-react";
 import { useState, useEffect, useRef, useCallback } from "react";
-
 import { store, type Book, type Page } from "@/lib/store";
 
-const TOTAL_LINES = 1000;
-const LINE_HEIGHT = 28;
-const PAPER_HEIGHT = TOTAL_LINES * LINE_HEIGHT;
+const FONTS = [
+  "Inter", "Roboto", "Lato", "Poppins", "Nunito",
+  "Merriweather", "Playfair Display", "EB Garamond",
+  "Source Code Pro", "Courier Prime",
+];
 
 export default function PageEditor() {
   const { bookId, pageId } = useParams();
@@ -23,14 +24,17 @@ export default function PageEditor() {
   const [showTrash, setShowTrash] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving">("saved");
 
+  const [font, setFont] = useState("Inter");
+  const [fontSize, setFontSize] = useState(16);
+  const [showFontMenu, setShowFontMenu] = useState(false);
+  const [activeFormats, setActiveFormats] = useState({ bold: false, underline: false, strikeThrough: false, overline: false });
+  const [align, setAlign] = useState<"left" | "center" | "right">("left");
+
   const initializedForId = useRef<number | null>(null);
   const lastSavedContent = useRef("");
   const tabsRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
-
-  const undoStack = useRef<string[]>([]);
-  const redoStack = useRef<string[]>([]);
-  const prevContent = useRef("");
+  const editorRef = useRef<HTMLDivElement>(null);
+  const fontMenuRef = useRef<HTMLDivElement>(null);
 
   const refresh = useCallback(() => {
     setBook(store.getBook(bId) ?? null);
@@ -39,35 +43,51 @@ export default function PageEditor() {
     setPage(p ?? null);
   }, [bId, pId]);
 
-  useEffect(() => {
-    refresh();
-  }, [refresh]);
+  useEffect(() => { refresh(); }, [refresh]);
 
   useEffect(() => {
     if (page && initializedForId.current !== pId) {
       initializedForId.current = pId;
-      setContent(page.content);
+      const c = page.content;
+      setContent(c);
       setPageTitle(page.title);
-      lastSavedContent.current = page.content;
+      lastSavedContent.current = c;
+      if (editorRef.current) {
+        editorRef.current.innerHTML = c;
+      }
     }
   }, [page, pId]);
 
   useEffect(() => {
-    if (showTrash) {
-      setTrashedPages(store.listTrashedPages(bId));
-    }
+    if (showTrash) setTrashedPages(store.listTrashedPages(bId));
   }, [showTrash, bId]);
 
+  // Close font menu on outside click
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (fontMenuRef.current && !fontMenuRef.current.contains(e.target as Node)) {
+        setShowFontMenu(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
   const savePage = useCallback(
-    (text: string, title?: string) => {
+    (html: string, title?: string) => {
       const resolvedTitle = title ?? pageTitle;
       setSaveStatus("saving");
-      store.updatePage(bId, pId, { content: text, title: resolvedTitle });
+      store.updatePage(bId, pId, { content: html, title: resolvedTitle });
       setSaveStatus("saved");
-      lastSavedContent.current = text;
+      lastSavedContent.current = html;
     },
     [bId, pId, pageTitle]
   );
+
+  const handleEditorInput = () => {
+    const html = editorRef.current?.innerHTML ?? "";
+    setContent(html);
+  };
 
   useEffect(() => {
     if (initializedForId.current !== pId) return;
@@ -78,6 +98,90 @@ export default function PageEditor() {
     }, 800);
     return () => clearTimeout(timer);
   }, [content, pId, savePage]);
+
+  const updateActiveFormats = () => {
+    setActiveFormats({
+      bold: document.queryCommandState("bold"),
+      underline: document.queryCommandState("underline"),
+      strikeThrough: document.queryCommandState("strikeThrough"),
+      overline: false,
+    });
+    const align = document.queryCommandValue("justifyLeft") === "true"
+      ? "left"
+      : document.queryCommandValue("justifyCenter") === "true"
+      ? "center"
+      : document.queryCommandValue("justifyRight") === "true"
+      ? "right"
+      : "left";
+    setAlign(align as "left" | "center" | "right");
+  };
+
+  const execFormat = (cmd: string, value?: string) => {
+    editorRef.current?.focus();
+    document.execCommand(cmd, false, value);
+    handleEditorInput();
+    updateActiveFormats();
+  };
+
+  const handleFontChange = (f: string) => {
+    setFont(f);
+    setShowFontMenu(false);
+    execFormat("fontName", f);
+  };
+
+  const handleFontSizeChange = (delta: number) => {
+    const newSize = Math.max(8, Math.min(72, fontSize + delta));
+    setFontSize(newSize);
+    editorRef.current?.focus();
+    // Use fontSize 1-7 scale: map pixel to execCommand size
+    const size = newSize <= 10 ? 1 : newSize <= 13 ? 2 : newSize <= 16 ? 3 : newSize <= 18 ? 4 : newSize <= 24 ? 5 : newSize <= 32 ? 6 : 7;
+    document.execCommand("fontSize", false, String(size));
+    handleEditorInput();
+  };
+
+  const handleNeutral = () => {
+    editorRef.current?.focus();
+    document.execCommand("removeFormat", false);
+    document.execCommand("justifyLeft", false);
+    setActiveFormats({ bold: false, underline: false, strikeThrough: false, overline: false });
+    setAlign("left");
+    handleEditorInput();
+  };
+
+  const handleCopy = async () => {
+    const sel = window.getSelection();
+    const selectedText = sel?.toString() || editorRef.current?.innerText || "";
+    try {
+      await navigator.clipboard.writeText(selectedText);
+    } catch {
+      document.execCommand("copy");
+    }
+  };
+
+  const handlePaste = async () => {
+    editorRef.current?.focus();
+    try {
+      const text = await navigator.clipboard.readText();
+      document.execCommand("insertText", false, text);
+      handleEditorInput();
+    } catch {
+      document.execCommand("paste");
+    }
+  };
+
+  const handleUndo = () => {
+    editorRef.current?.focus();
+    document.execCommand("undo");
+    handleEditorInput();
+    updateActiveFormats();
+  };
+
+  const handleRedo = () => {
+    editorRef.current?.focus();
+    document.execCommand("redo");
+    handleEditorInput();
+    updateActiveFormats();
+  };
 
   const handleDelete = () => {
     store.deletePage(bId, pId);
@@ -104,64 +208,6 @@ export default function PageEditor() {
     }
   };
 
-  const handleContentChange = (newText: string) => {
-    undoStack.current = [...undoStack.current.slice(-99), prevContent.current];
-    redoStack.current = [];
-    prevContent.current = newText;
-    setContent(newText);
-  };
-
-  const handleUndo = () => {
-    if (undoStack.current.length === 0) return;
-    const prev = undoStack.current[undoStack.current.length - 1];
-    undoStack.current = undoStack.current.slice(0, -1);
-    redoStack.current = [content, ...redoStack.current.slice(0, 99)];
-    prevContent.current = prev;
-    setContent(prev);
-  };
-
-  const handleRedo = () => {
-    if (redoStack.current.length === 0) return;
-    const next = redoStack.current[0];
-    redoStack.current = redoStack.current.slice(1);
-    undoStack.current = [...undoStack.current.slice(-99), content];
-    prevContent.current = next;
-    setContent(next);
-  };
-
-  const handleCopy = async () => {
-    const ta = textareaRef.current;
-    if (!ta) return;
-    const selected = ta.value.substring(ta.selectionStart, ta.selectionEnd);
-    const textToCopy = selected || ta.value;
-    try {
-      await navigator.clipboard.writeText(textToCopy);
-    } catch {
-      // fallback: select all and copy via execCommand
-      ta.select();
-      document.execCommand("copy");
-    }
-  };
-
-  const handlePaste = async () => {
-    const ta = textareaRef.current;
-    if (!ta) return;
-    try {
-      const clipText = await navigator.clipboard.readText();
-      const start = ta.selectionStart;
-      const end = ta.selectionEnd;
-      const newText = content.substring(0, start) + clipText + content.substring(end);
-      handleContentChange(newText);
-      setTimeout(() => {
-        ta.selectionStart = ta.selectionEnd = start + clipText.length;
-        ta.focus();
-      }, 0);
-    } catch {
-      ta.focus();
-      document.execCommand("paste");
-    }
-  };
-
   const scrollTabs = (dir: "left" | "right") => {
     if (tabsRef.current) {
       tabsRef.current.scrollBy({ left: dir === "left" ? -120 : 120, behavior: "smooth" });
@@ -174,6 +220,10 @@ export default function PageEditor() {
 
   if (!page) return <Redirect to="/" />;
 
+  const btnBase = "rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center";
+  const btnSq = `w-8 h-8 ${btnBase}`;
+  const btnActive = "bg-zinc-200 border-zinc-500";
+
   return (
     <div className="h-screen bg-white flex flex-col overflow-hidden">
       {/* EDIT card */}
@@ -184,72 +234,162 @@ export default function PageEditor() {
             {/* Group 1 — Copy, Paste, Undo, Redo */}
             <div className="border border-zinc-400 rounded-lg p-1.5">
               <div className="grid grid-cols-2 gap-1">
-                <button
-                  onClick={handleCopy}
-                  title="Copy"
-                  className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-base"
-                >🗐</button>
-                <button
-                  onClick={handlePaste}
-                  title="Paste"
-                  className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-base"
-                >📑</button>
-                <button
-                  onClick={handleUndo}
-                  title="Undo"
-                  className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-base"
-                >↩</button>
-                <button
-                  onClick={handleRedo}
-                  title="Redo"
-                  className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-base"
-                >↪</button>
+                <button onClick={handleCopy} title="Copy" className={`${btnSq} text-base`}>🗐</button>
+                <button onClick={handlePaste} title="Paste" className={`${btnSq} text-base`}>📑</button>
+                <button onClick={handleUndo} title="Undo" className={`${btnSq} text-base`}>↩</button>
+                <button onClick={handleRedo} title="Redo" className={`${btnSq} text-base`}>↪</button>
               </div>
             </div>
 
-            {/* Group 2 */}
+            {/* Group 2 — Font, Size, Bold, Underline, Strikethrough */}
             <div className="border border-zinc-400 rounded-lg p-1.5">
               <div className="flex flex-col gap-1">
+                {/* Row 1: font picker, font size, big A, small A */}
                 <div className="flex items-center gap-1">
-                  <button className="w-36 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
-                  {[0,1,2].map(i => (
-                    <button key={i} className="w-8 h-8 shrink-0 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
-                  ))}
+                  {/* Font picker */}
+                  <div className="relative" ref={fontMenuRef}>
+                    <button
+                      onClick={() => setShowFontMenu(v => !v)}
+                      className="w-36 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors px-2 text-left text-sm font-medium text-zinc-700 truncate"
+                      style={{ fontFamily: font }}
+                    >
+                      {font}
+                    </button>
+                    {showFontMenu && (
+                      <div className="absolute top-9 left-0 z-50 bg-white border border-zinc-300 rounded-lg shadow-lg overflow-y-auto max-h-52 w-44">
+                        {FONTS.map(f => (
+                          <button
+                            key={f}
+                            onClick={() => handleFontChange(f)}
+                            className={`w-full text-left px-3 py-1.5 text-sm hover:bg-zinc-100 transition-colors ${font === f ? "bg-zinc-100 font-semibold" : ""}`}
+                            style={{ fontFamily: f }}
+                          >
+                            {f}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  {/* Font size display */}
+                  <div className="w-8 h-8 rounded-md border border-zinc-300 bg-white flex items-center justify-center text-xs font-semibold text-zinc-700 select-none">
+                    {fontSize}
+                  </div>
+                  {/* Big A — increase size */}
+                  <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className={btnSq}>
+                    <span className="font-bold text-base leading-none">A</span>
+                  </button>
+                  {/* Small A — decrease size */}
+                  <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className={btnSq}>
+                    <span className="font-bold text-xs leading-none">A</span>
+                  </button>
                 </div>
+                {/* Row 2: 3 empty placeholders, Bold, Underline (red), Strikethrough (red), Overline */}
                 <div className="flex items-center gap-1">
-                  {[0,1,2].map(i => (
-                    <button key={i} className="w-8 h-8 shrink-0 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
-                  ))}
-                  <button className="w-36 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
+                  <button className={btnSq} />
+                  <button className={btnSq} />
+                  <button className={btnSq} />
+                  {/* Bold */}
+                  <button
+                    onClick={() => execFormat("bold")}
+                    title="Bold"
+                    className={`${btnSq} ${activeFormats.bold ? btnActive : ""}`}
+                  >
+                    <span className="font-black text-sm">B</span>
+                  </button>
+                  {/* Underline — red underline */}
+                  <button
+                    onClick={() => execFormat("underline")}
+                    title="Underline"
+                    className={`${btnSq} ${activeFormats.underline ? btnActive : ""}`}
+                  >
+                    <span className="text-sm underline decoration-red-500 decoration-2">U</span>
+                  </button>
+                  {/* Strikethrough — red line through */}
+                  <button
+                    onClick={() => execFormat("strikeThrough")}
+                    title="Strikethrough"
+                    className={`${btnSq} ${activeFormats.strikeThrough ? btnActive : ""}`}
+                  >
+                    <span className="text-sm line-through decoration-red-500 decoration-2">U</span>
+                  </button>
+                  {/* Overline */}
+                  <button
+                    onClick={() => execFormat("underline")}
+                    title="Overline"
+                    className={btnSq}
+                  >
+                    <span className="text-sm" style={{ textDecoration: "overline", textDecorationColor: "red", textDecorationThickness: 2 }}>U</span>
+                  </button>
                 </div>
               </div>
             </div>
 
-            {/* Group 3 */}
+            {/* Group 3 — Align left, Align right, Align center, Neutral */}
             <div className="border border-zinc-400 rounded-lg p-1.5">
               <div className="grid grid-cols-2 gap-1">
-                {[0,1,2,3].map(i => (
-                  <button key={i} className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
-                ))}
+                {/* Align left */}
+                <button
+                  onClick={() => { execFormat("justifyLeft"); setAlign("left"); }}
+                  title="Align left"
+                  className={`${btnSq} ${align === "left" ? btnActive : ""}`}
+                >
+                  <svg viewBox="0 0 16 16" className="w-4 h-4 fill-zinc-600">
+                    <rect x="1" y="2" width="14" height="2" rx="1"/>
+                    <rect x="1" y="7" width="9" height="2" rx="1"/>
+                    <rect x="1" y="12" width="12" height="2" rx="1"/>
+                  </svg>
+                </button>
+                {/* Align right */}
+                <button
+                  onClick={() => { execFormat("justifyRight"); setAlign("right"); }}
+                  title="Align right"
+                  className={`${btnSq} ${align === "right" ? btnActive : ""}`}
+                >
+                  <svg viewBox="0 0 16 16" className="w-4 h-4 fill-zinc-600">
+                    <rect x="1" y="2" width="14" height="2" rx="1"/>
+                    <rect x="6" y="7" width="9" height="2" rx="1"/>
+                    <rect x="3" y="12" width="12" height="2" rx="1"/>
+                  </svg>
+                </button>
+                {/* Align center */}
+                <button
+                  onClick={() => { execFormat("justifyCenter"); setAlign("center"); }}
+                  title="Align center"
+                  className={`${btnSq} ${align === "center" ? btnActive : ""}`}
+                >
+                  <svg viewBox="0 0 16 16" className="w-4 h-4 fill-zinc-600">
+                    <rect x="1" y="2" width="14" height="2" rx="1"/>
+                    <rect x="3.5" y="7" width="9" height="2" rx="1"/>
+                    <rect x="2" y="12" width="12" height="2" rx="1"/>
+                  </svg>
+                </button>
+                {/* Neutral — remove all formatting */}
+                <button
+                  onClick={handleNeutral}
+                  title="Remove all formatting"
+                  className={btnSq}
+                >
+                  <span className="text-sm font-bold text-zinc-600">N</span>
+                </button>
               </div>
             </div>
 
           </div>
 
-          {/* Right side — Delete + Trash in bordered box */}
+          {/* Right side — Delete + Trash */}
           <div className="border border-zinc-400 rounded-lg p-1.5 shrink-0">
             <div className="flex flex-col gap-1">
               <button
                 onClick={handleDelete}
                 title="Move to trash"
-                className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-red-50 hover:border-red-400 active:bg-red-100 transition-colors flex items-center justify-center"
+                className={`${btnSq} hover:bg-red-50 hover:border-red-400 active:bg-red-100`}
               >
                 <Trash2 className="w-4 h-4 text-zinc-500" />
               </button>
               <button
                 onClick={() => setShowTrash(true)}
                 title="Open trash"
-                className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center"
+                className={btnSq}
               >
                 <ArchiveRestore className="w-4 h-4 text-zinc-500" />
               </button>
@@ -369,52 +509,23 @@ export default function PageEditor() {
           </div>
 
           <div className="flex-1 overflow-y-auto bg-white" style={{ scrollbarWidth: "thin" }}>
-            <div className="flex" style={{ minHeight: PAPER_HEIGHT }}>
-              <div
-                className="shrink-0 bg-[#f9f7f4] border-r border-zinc-200 select-none"
-                style={{ width: 40 }}
-              >
-                {Array.from({ length: TOTAL_LINES }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="text-zinc-400 font-mono flex items-center justify-end pr-2 cursor-text"
-                    style={{ height: LINE_HEIGHT, fontSize: 11 }}
-                    onClick={() => textareaRef.current?.focus()}
-                  >
-                    {i + 1}
-                  </div>
-                ))}
-              </div>
-              <div className="flex-1 relative" style={{ minHeight: PAPER_HEIGHT }}>
-                <div
-                  className="absolute inset-0 pointer-events-none"
-                  style={{
-                    backgroundImage: `repeating-linear-gradient(
-                      to bottom,
-                      transparent 0px,
-                      transparent ${LINE_HEIGHT - 1}px,
-                      #e2e2e2 ${LINE_HEIGHT - 1}px,
-                      #e2e2e2 ${LINE_HEIGHT}px
-                    )`,
-                  }}
-                />
-                <textarea
-                  ref={textareaRef}
-                  value={content}
-                  onChange={(e) => handleContentChange(e.target.value)}
-                  className="absolute inset-0 w-full h-full resize-none bg-transparent border-none outline-none focus:ring-0 px-3 text-zinc-800 font-mono"
-                  style={{
-                    fontSize: 14,
-                    lineHeight: `${LINE_HEIGHT}px`,
-                    minHeight: PAPER_HEIGHT,
-                    paddingTop: 0,
-                    caretColor: "#333",
-                  }}
-                  placeholder="Start writing..."
-                  spellCheck={false}
-                />
-              </div>
-            </div>
+            <div
+              ref={editorRef}
+              contentEditable
+              suppressContentEditableWarning
+              onInput={handleEditorInput}
+              onKeyUp={updateActiveFormats}
+              onMouseUp={updateActiveFormats}
+              className="w-full min-h-full outline-none px-6 py-4 text-zinc-800"
+              style={{
+                fontFamily: font,
+                fontSize: fontSize,
+                lineHeight: "1.8",
+                minHeight: 600,
+                whiteSpace: "pre-wrap",
+              }}
+              data-placeholder="Start writing..."
+            />
           </div>
 
           <div className="bg-[#f5f2ee] border-t border-zinc-200 px-4 py-1 flex items-center justify-between text-xs text-zinc-500 shrink-0">
