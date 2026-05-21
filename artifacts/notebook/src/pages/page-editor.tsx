@@ -947,19 +947,27 @@ export default function PageEditor() {
                 }}
               />
             ) : (page.pageType ?? "blank") === "lined" ? (
-              <div className="flex w-full" style={{ minHeight: 600 }}>
-                {/* Line numbers + red margin */}
-                <div className="shrink-0 border-r-2 border-red-400 bg-[#fdf8f6] text-right pr-2 pt-4 select-none" style={{ width: 44, minHeight: 600 }}>
+              <div className="flex w-full" style={{ minHeight: 600, backgroundColor: "#faf6ef" }}>
+                {/* Line numbers + off-white margin */}
+                <div
+                  className="shrink-0 text-right pr-2 pt-4 select-none"
+                  style={{
+                    width: 44,
+                    minHeight: 600,
+                    backgroundColor: "#faf6ef",
+                    borderRight: "2px solid #ddd5c4",
+                  }}
+                >
                   {Array.from({ length: 40 }, (_, i) => (
-                    <div key={i} className="text-[11px] text-zinc-400 font-mono leading-[36px]">{i + 1}</div>
+                    <div key={i} className="font-mono leading-[36px]" style={{ fontSize: 11, color: "#c4b89a" }}>{i + 1}</div>
                   ))}
                 </div>
                 {/* Lined editor */}
-                <div className="flex-1 relative" style={{ minHeight: 600 }}>
+                <div className="flex-1 relative" style={{ minHeight: 600, backgroundColor: "#faf6ef" }}>
                   <div
                     className="absolute inset-0 pointer-events-none"
                     style={{
-                      backgroundImage: "repeating-linear-gradient(transparent, transparent 35px, #bfdbfe 35px, #bfdbfe 36px)",
+                      backgroundImage: "repeating-linear-gradient(#faf6ef, #faf6ef 35px, #e8dfd0 35px, #e8dfd0 36px)",
                       backgroundPositionY: "4px",
                     }}
                   />
@@ -971,13 +979,14 @@ export default function PageEditor() {
                     onInput={handleEditorInput}
                     onKeyUp={updateActiveFormats}
                     onMouseUp={updateActiveFormats}
-                    className="relative w-full outline-none px-4 py-1 text-zinc-800 z-10"
+                    className="relative w-full outline-none px-4 py-1 z-10"
                     style={{
                       fontFamily: font,
                       fontSize: fontSize,
                       lineHeight: "36px",
                       minHeight: 600,
                       whiteSpace: "pre-wrap",
+                      color: "#3a2e20",
                     }}
                     data-placeholder="Start writing..."
                   />
