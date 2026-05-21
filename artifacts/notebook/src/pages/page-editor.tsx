@@ -993,9 +993,46 @@ export default function PageEditor() {
                 </div>
               )}
             </div>
-            <span className="text-xs text-zinc-400">
-              {saveStatus === "saving" ? "Saving..." : "Saved"}
-            </span>
+            <div className="flex items-center gap-2">
+              {(() => {
+                const plain = editorRef.current?.innerText ?? "";
+                const lt = plain.replace(/\s/g, "").length;
+                const wd = plain.trim() ? plain.trim().split(/\s+/).length : 0;
+                const sn = plain.trim() ? plain.split(/[.!?]+/).filter(s => s.trim().length > 0).length : 0;
+                const badge = (label: string, val: number) => (
+                  <span
+                    key={label}
+                    style={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 3,
+                      fontSize: 10,
+                      fontWeight: 700,
+                      letterSpacing: "0.04em",
+                      color: "#78716c",
+                      background: "#f0ebe2",
+                      border: "1px solid #ddd5c4",
+                      borderRadius: 4,
+                      padding: "1px 5px",
+                      fontFamily: "monospace",
+                    }}
+                  >
+                    <span style={{ color: "#a8956b" }}>{label}</span>
+                    <span style={{ color: "#3a2e20" }}>{val}</span>
+                  </span>
+                );
+                return (
+                  <div className="flex items-center gap-1.5">
+                    {badge("SN", sn)}
+                    {badge("WD", wd)}
+                    {badge("LT", lt)}
+                  </div>
+                );
+              })()}
+              <span className="text-xs text-zinc-400 ml-1">
+                {saveStatus === "saving" ? "Saving..." : "Saved"}
+              </span>
+            </div>
           </div>
 
           <div className="flex-1 overflow-y-auto bg-white" style={{ scrollbarWidth: "thin" }}>
