@@ -10,10 +10,13 @@ const COL_LABELS = Array.from({ length: COLS }, (_, i) => String.fromCharCode(65
 interface MergeRegion { r1: number; c1: number; r2: number; c2: number; }
 interface SheetData { cells: Record<string, string>; merges: MergeRegion[]; }
 
-function SpreadsheetEditor({ content, onChange, mergeRef }: {
+function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef, insertColRef }: {
   content: string;
   onChange: (v: string) => void;
   mergeRef?: MutableRefObject<(() => void) | null>;
+  clearRef?: MutableRefObject<(() => void) | null>;
+  insertRowRef?: MutableRefObject<(() => void) | null>;
+  insertColRef?: MutableRefObject<(() => void) | null>;
 }) {
   const parseData = (): SheetData => {
     try {
@@ -24,12 +27,10 @@ function SpreadsheetEditor({ content, onChange, mergeRef }: {
 
   const [data, setData] = useState<SheetData>(parseData);
   const [active, setActive] = useState<[number, number] | null>(null);
-  // anchor/dragEnd stored in refs during drag to avoid excessive re-renders
   const anchorRef = useRef<[number, number] | null>(null);
   const dragEndRef = useRef<[number, number] | null>(null);
   const isDraggingRef = useRef(false);
   const rafRef = useRef<number | null>(null);
-  // selection state committed only on mouseup / rAF
   const [selection, setSelection] = useState<{ anchor: [number,number]; end: [number,number] } | null>(null);
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const dataRef = useRef<SheetData>(data);
@@ -50,7 +51,6 @@ function SpreadsheetEditor({ content, onChange, mergeRef }: {
     return ks;
   };
 
-  // Build merge lookup maps from data.merges
   const mergeAnchorMap = new Map<string, { colSpan: number; rowSpan: number }>();
   const absorbedSet = new Set<string>();
   data.merges.forEach(m => {
@@ -60,7 +60,6 @@ function SpreadsheetEditor({ content, onChange, mergeRef }: {
         if (!(r === m.r1 && c === m.c1)) absorbedSet.add(key(r, c));
   });
 
-  // Selected cells for highlight
   const selectedSet = (() => {
     if (!selection) return new Set<string>();
     return new Set<string>(rectKeys(getRect(selection.anchor, selection.end)));
@@ -85,7 +84,6 @@ function SpreadsheetEditor({ content, onChange, mergeRef }: {
     setTimeout(() => inputRefs.current[key(nr, nc)]?.focus(), 0);
   };
 
-  // Real visual merge using colSpan/rowSpan
   const mergeSelected = useCallback(() => {
     const a = anchorRef.current;
     const d = dragEndRef.current ?? a;
@@ -98,7 +96,6 @@ function SpreadsheetEditor({ content, onChange, mergeRef }: {
       const cells = { ...prev.cells };
       keys.forEach(k => delete cells[k]);
       if (combined) cells[key(rect.r1, rect.c1)] = combined;
-      // Remove overlapping merges, then add new one
       const merges = prev.merges.filter(
         m => !(m.r1 <= rect.r2 && m.r2 >= rect.r1 && m.c1 <= rect.c2 && m.c2 >= rect.c1)
       );
@@ -111,7 +108,54 @@ function SpreadsheetEditor({ content, onChange, mergeRef }: {
     setActive(null);
   }, [onChange]);
 
-  // Sync all data changes to parent — avoids calling onChange inside setData updaters
+  const clearSelected = useCallback(() => {
+    if (selection) {
+      const keys = rectKeys(getRect(selection.anchor, selection.end));
+      setData(prev => {
+        const cells = { ...prev.cells };
+        keys.forEach(k => delete cells[k]);
+        return { ...prev, cells };
+      });
+    } else if (active) {
+      const k = key(active[0], active[1]);
+      setData(prev => {
+        const cells = { ...prev.cells };
+        delete cells[k];
+        return { ...prev, cells };
+      });
+    }
+  }, [selection, active]);
+
+  const insertRow = useCallback(() => {
+    const r = anchorRef.current ? anchorRef.current[0] : (active ? active[0] : null);
+    if (r === null) return;
+    setData(prev => {
+      const cells: Record<string, string> = {};
+      Object.entries(prev.cells).forEach(([k, v]) => {
+        const parts = k.split('-');
+        const cr = parseInt(parts[0]);
+        const cc = parseInt(parts[1]);
+        cells[cr > r ? key(cr + 1, cc) : k] = v;
+      });
+      return { cells, merges: [] };
+    });
+  }, [active]);
+
+  const insertCol = useCallback(() => {
+    const c = anchorRef.current ? anchorRef.current[1] : (active ? active[1] : null);
+    if (c === null) return;
+    setData(prev => {
+      const cells: Record<string, string> = {};
+      Object.entries(prev.cells).forEach(([k, v]) => {
+        const parts = k.split('-');
+        const cr = parseInt(parts[0]);
+        const cc = parseInt(parts[1]);
+        cells[cc > c ? key(cr, cc + 1) : k] = v;
+      });
+      return { cells, merges: [] };
+    });
+  }, [active]);
+
   const isFirstRender = useRef(true);
   useEffect(() => {
     if (isFirstRender.current) { isFirstRender.current = false; return; }
@@ -120,9 +164,11 @@ function SpreadsheetEditor({ content, onChange, mergeRef }: {
 
   useEffect(() => {
     if (mergeRef) mergeRef.current = mergeSelected;
-  }, [mergeSelected]);
+    if (clearRef) clearRef.current = clearSelected;
+    if (insertRowRef) insertRowRef.current = insertRow;
+    if (insertColRef) insertColRef.current = insertCol;
+  }, [mergeSelected, clearSelected, insertRow, insertCol]);
 
-  // Smooth drag: throttle selection updates via rAF
   const commitDragSelection = useCallback(() => {
     const a = anchorRef.current;
     const d = dragEndRef.current;
@@ -130,19 +176,16 @@ function SpreadsheetEditor({ content, onChange, mergeRef }: {
     else if (a) setSelection({ anchor: a, end: a });
   }, []);
 
-  // Global mouseup
   useEffect(() => {
     const onUp = () => {
       if (!isDraggingRef.current) return;
       isDraggingRef.current = false;
       if (rafRef.current) { cancelAnimationFrame(rafRef.current); rafRef.current = null; }
-      // Final commit
       const a = anchorRef.current;
       const d = dragEndRef.current ?? a;
       if (a && d) {
         const rect = getRect(a, d);
         if (rect.r1 === rect.r2 && rect.c1 === rect.c2) {
-          // Single cell click → activate for typing
           setSelection(null);
           setActive([a[0], a[1]]);
           anchorRef.current = null;
@@ -163,7 +206,6 @@ function SpreadsheetEditor({ content, onChange, mergeRef }: {
       style={{ fontFamily: "monospace", fontSize: 13, userSelect: isDraggingRef.current ? "none" : "auto" }}
       onMouseMove={e => {
         if (!isDraggingRef.current) return;
-        // Find which TD we're over
         const el = document.elementFromPoint(e.clientX, e.clientY);
         const td = el?.closest("td[data-cell]") as HTMLElement | null;
         if (!td) return;
@@ -171,7 +213,7 @@ function SpreadsheetEditor({ content, onChange, mergeRef }: {
         const c = parseInt(td.dataset.c ?? "-1");
         if (r < 0 || c < 0) return;
         dragEndRef.current = [r, c];
-        if (rafRef.current) return; // already scheduled
+        if (rafRef.current) return;
         rafRef.current = requestAnimationFrame(() => {
           rafRef.current = null;
           commitDragSelection();
@@ -299,6 +341,7 @@ export default function PageEditor() {
 
   const [zoom, setZoom] = useState(100);
   const [autoWrap, setAutoWrap] = useState(true);
+  const [lineSpacing, setLineSpacing] = useState<"compact" | "normal" | "relaxed">("normal");
 
   const initializedForId = useRef<number | null>(null);
   const lastSavedContent = useRef("");
@@ -309,6 +352,11 @@ export default function PageEditor() {
   const highlightPickerRef = useRef<HTMLDivElement>(null);
   const savedRangeRef = useRef<Range | null>(null);
   const spreadsheetMergeRef = useRef<(() => void) | null>(null);
+  const spreadsheetClearRef = useRef<(() => void) | null>(null);
+  const spreadsheetInsertRowRef = useRef<(() => void) | null>(null);
+  const spreadsheetInsertColRef = useRef<(() => void) | null>(null);
+
+  const lineHeightPx = lineSpacing === "compact" ? 28 : lineSpacing === "relaxed" ? 44 : 36;
 
   const refresh = useCallback(() => {
     setBook(store.getBook(bId) ?? null);
@@ -336,7 +384,6 @@ export default function PageEditor() {
     if (showTrash) setTrashedPages(store.listTrashedPages(bId));
   }, [showTrash, bId]);
 
-  // Close font menu and color picker on outside click
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (fontMenuRef.current && !fontMenuRef.current.contains(e.target as Node)) {
@@ -409,7 +456,6 @@ export default function PageEditor() {
     if (!hasSelection()) return;
     editorRef.current?.focus();
     document.execCommand(cmd, false);
-    // Collapse cursor to end of selection, then turn off format so future typing is clean
     const sel = window.getSelection();
     if (sel && sel.rangeCount > 0) {
       const range = sel.getRangeAt(0);
@@ -417,7 +463,6 @@ export default function PageEditor() {
       sel.removeAllRanges();
       sel.addRange(range);
     }
-    // Toggle off at collapsed cursor — only affects future typing, not selected text
     document.execCommand(cmd, false);
     handleEditorInput();
     setActiveFormats({ bold: false, underline: false, strikeThrough: false, overline: false });
@@ -440,7 +485,6 @@ export default function PageEditor() {
     const newSize = Math.max(8, Math.min(72, fontSize + delta));
     setFontSize(newSize);
     editorRef.current?.focus();
-    // Use fontSize 1-7 scale: map pixel to execCommand size
     const size = newSize <= 10 ? 1 : newSize <= 13 ? 2 : newSize <= 16 ? 3 : newSize <= 18 ? 4 : newSize <= 24 ? 5 : newSize <= 32 ? 6 : 7;
     document.execCommand("fontSize", false, String(size));
     handleEditorInput();
@@ -466,7 +510,6 @@ export default function PageEditor() {
       });
     }
     editorRef.current?.focus();
-    // Restore saved selection if current selection is empty
     if (!hasSelection()) {
       if (!restoreSelection()) return;
     }
@@ -593,378 +636,375 @@ export default function PageEditor() {
 
   if (!page) return <Redirect to="/" />;
 
+  const pageType = page.pageType ?? "blank";
   const btnBase = "rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center";
   const btnSq = `w-8 h-8 ${btnBase}`;
   const btnActive = "bg-zinc-200 border-zinc-500";
 
+  // Shared color picker panel components
+  const themeColorRows = [
+    ["#FFFFFF","#F2F2F2","#EEECE1","#DCE6F1","#DBE5F1","#E8D5F0","#F2DCDB","#FDE9D9","#EBF1DE","#DAEEF3"],
+    ["#F2F2F2","#D9D9D9","#DDD9C4","#C6D9F1","#B8CCE4","#D198E8","#E6B8B7","#FBBF7C","#D8E4BC","#B7DEE8"],
+    ["#D9D9D9","#BFBFBF","#C4BD97","#8DB4E2","#95B3D7","#8064A2","#DA9694","#F79646","#C4D79B","#92CDDC"],
+    ["#BFBFBF","#808080","#948A54","#548DD4","#4F81BD","#7030A0","#C0504D","#E36C09","#9BBB59","#4BACC6"],
+    ["#808080","#595959","#494429","#17375E","#366092","#60497A","#963634","#974806","#76933C","#31849B"],
+    ["#595959","#262626","#1D1B10","#0F243E","#243F60","#3F3151","#632523","#6A3400","#4F6228","#215868"],
+  ];
+  const standardColors = ["#C00000","#FF0000","#FFC000","#FFFF00","#92D050","#00B050","#00B0F0","#0070C0","#002060","#7030A0"];
+
+  const FontColorPanel = () => (
+    <div className="absolute top-9 left-0 z-50 bg-white border border-zinc-300 rounded-lg shadow-xl p-3 w-[220px]">
+      <button onClick={() => handleFontColor("#000000")} className="flex items-center gap-2 w-full px-1 py-1 hover:bg-zinc-100 rounded text-xs text-zinc-700 mb-2 border border-zinc-200">
+        <div className="w-5 h-5 border border-zinc-400 bg-black shrink-0" />
+        <span className="font-medium">Automatic</span>
+      </button>
+      <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1">Theme Colors</div>
+      <div className="grid grid-cols-10 gap-[3px] mb-1">
+        {themeColorRows.map((row, ri) => row.map((c, ci) => (
+          <button key={`${ri}-${ci}`} onClick={() => handleFontColor(c)} className="w-[18px] h-[18px] border border-zinc-200 hover:scale-110 hover:border-zinc-500 transition-transform" style={{ backgroundColor: c }} title={c} />
+        )))}
+      </div>
+      <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1 mt-2">Standard Colors</div>
+      <div className="flex gap-[3px] mb-2">
+        {standardColors.map(c => (
+          <button key={c} onClick={() => handleFontColor(c)} className="w-[18px] h-[18px] border border-zinc-200 hover:scale-110 hover:border-zinc-500 transition-transform" style={{ backgroundColor: c }} title={c} />
+        ))}
+      </div>
+      {recentColors.length > 0 && (
+        <>
+          <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1 mt-2">Recent Colors</div>
+          <div className="flex gap-[3px] mb-2 flex-wrap">
+            {recentColors.map((c, i) => (
+              <button key={i} onClick={() => handleFontColor(c)} className="w-[18px] h-[18px] border border-zinc-200 hover:scale-110 hover:border-zinc-500 transition-transform" style={{ backgroundColor: c }} title={c} />
+            ))}
+          </div>
+        </>
+      )}
+      <button
+        onClick={() => {
+          const sel = window.getSelection();
+          if (sel && sel.rangeCount > 0) savedRangeRef.current = sel.getRangeAt(0).cloneRange();
+          const input = document.createElement("input");
+          input.type = "color"; input.value = fontColor;
+          input.onchange = () => handleFontColor(input.value, true);
+          input.click();
+        }}
+        className="w-full text-xs text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded px-2 py-1 text-left border border-zinc-200 transition-colors"
+      >🎨 More Colors...</button>
+    </div>
+  );
+
+  const HighlightPanel = () => (
+    <div className="absolute top-9 left-0 z-50 bg-white border border-zinc-300 rounded-lg shadow-xl p-3 w-[220px]">
+      <button onClick={() => handleHighlightColor("transparent")} className="flex items-center gap-2 w-full px-1 py-1 hover:bg-zinc-100 rounded text-xs text-zinc-700 mb-2 border border-zinc-200">
+        <div className="w-5 h-5 border border-zinc-400 bg-white shrink-0 relative overflow-hidden">
+          <div className="absolute inset-0 flex items-center justify-center text-red-400 font-bold text-xs">∅</div>
+        </div>
+        <span className="font-medium">No Fill</span>
+      </button>
+      <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1">Theme Colors</div>
+      <div className="grid grid-cols-10 gap-[3px] mb-1">
+        {themeColorRows.map((row, ri) => row.map((c, ci) => (
+          <button key={`h-${ri}-${ci}`} onClick={() => handleHighlightColor(c)} className="w-[18px] h-[18px] border border-zinc-200 hover:scale-110 hover:border-zinc-500 transition-transform" style={{ backgroundColor: c }} title={c} />
+        )))}
+      </div>
+      <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1 mt-2">Standard Colors</div>
+      <div className="flex gap-[3px] mb-2">
+        {standardColors.map(c => (
+          <button key={c} onClick={() => handleHighlightColor(c)} className="w-[18px] h-[18px] border border-zinc-200 hover:scale-110 hover:border-zinc-500 transition-transform" style={{ backgroundColor: c }} title={c} />
+        ))}
+      </div>
+      {recentHighlights.length > 0 && (
+        <>
+          <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1 mt-2">Recent Colors</div>
+          <div className="flex gap-[3px] mb-2 flex-wrap">
+            {recentHighlights.map((c, i) => (
+              <button key={i} onClick={() => handleHighlightColor(c)} className="w-[18px] h-[18px] border border-zinc-200 hover:scale-110 hover:border-zinc-500 transition-transform" style={{ backgroundColor: c }} title={c} />
+            ))}
+          </div>
+        </>
+      )}
+      <button
+        onClick={() => {
+          const sel = window.getSelection();
+          if (sel && sel.rangeCount > 0) savedRangeRef.current = sel.getRangeAt(0).cloneRange();
+          const input = document.createElement("input");
+          input.type = "color"; input.value = highlightColor;
+          input.onchange = () => handleHighlightColor(input.value, true);
+          input.click();
+        }}
+        className="w-full text-xs text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded px-2 py-1 text-left border border-zinc-200 transition-colors"
+      >🎨 More Colors...</button>
+    </div>
+  );
+
+  const DeleteGroup = () => (
+    <div className="border border-zinc-400 rounded-lg p-1.5 shrink-0">
+      <div className="flex flex-col gap-1">
+        <button onClick={handleDelete} title="Move to trash" className={`${btnSq} hover:bg-red-50 hover:border-red-400 active:bg-red-100`}>
+          <Trash2 className="w-4 h-4 text-zinc-500" />
+        </button>
+        <button onClick={() => setShowTrash(true)} title="Open trash" className={btnSq}>
+          <ArchiveRestore className="w-4 h-4 text-zinc-500" />
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <div className="h-screen bg-white flex flex-col overflow-hidden">
-      {/* EDIT card */}
-      <div className="bg-[#ece9e3] px-4 pt-3 pb-2 shrink-0">
-        <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl px-3 py-3 shadow-sm flex items-start justify-between">
-          <div className="inline-flex items-start gap-2">
 
-            {/* Group 1 — Copy, Paste, Undo, Redo */}
-            <div className="border border-zinc-400 rounded-lg p-1.5">
-              <div className="grid grid-cols-2 gap-1">
-                <button onClick={handleCopy} title="Copy" className={`${btnSq}`} style={{ fontSize: 18 }}>✊🏻</button>
-                <button onClick={handlePaste} title="Paste" className={`${btnSq} text-base`}>📑</button>
-                <button onClick={handleUndo} title="Undo" className={`${btnSq} text-base`}>↩</button>
-                <button onClick={handleRedo} title="Redo" className={`${btnSq} text-base`}>↪</button>
-              </div>
-            </div>
+      {/* ═══════════════════════════════════════════════════════
+          EDIT CARD — separate toolbar per page type
+          ═══════════════════════════════════════════════════════ */}
 
-            {/* Group 2 — Font, Size, Bold, Underline, Strikethrough */}
-            <div className="border border-zinc-400 rounded-lg p-1.5">
-              <div className="flex flex-col gap-1">
-                {/* Row 1: font picker, font size, big A, small A */}
-                <div className="flex items-center gap-1">
-                  {/* Font picker */}
-                  <div className="relative" ref={fontMenuRef}>
+      {pageType === "spreadsheet" ? (
+        /* ── SPREADSHEET TOOLBAR ── Cell operations only ── */
+        <div className="bg-[#ece9e3] px-4 pt-3 pb-2 shrink-0">
+          <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl px-3 py-3 shadow-sm flex items-start justify-between">
+            <div className="inline-flex items-start gap-2">
+
+              {/* Cells group */}
+              <div className="border border-zinc-400 rounded-lg p-1.5">
+                <div className="flex flex-col gap-1">
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 text-center px-1">Cells</span>
+                  <div className="flex items-center gap-1">
                     <button
-                      onClick={() => setShowFontMenu(v => !v)}
-                      className="w-36 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors px-2 text-left text-sm font-medium text-zinc-700 truncate"
-                      style={{ fontFamily: font }}
+                      onClick={() => spreadsheetMergeRef.current?.()}
+                      title="Merge selected cells (drag to select first)"
+                      className={`h-8 px-3 rounded-md border border-purple-300 bg-purple-50 hover:bg-purple-100 active:bg-purple-200 transition-colors text-xs font-semibold text-purple-700 flex items-center gap-1.5`}
                     >
-                      {font}
+                      <span className="text-base leading-none">⇄</span> Merge
                     </button>
-                    {showFontMenu && (
-                      <div className="absolute top-9 left-0 z-50 bg-white border border-zinc-300 rounded-lg shadow-lg overflow-y-auto max-h-52 w-44">
-                        {FONTS.map(f => (
-                          <button
-                            key={f}
-                            onClick={() => handleFontChange(f)}
-                            className={`w-full text-left px-3 py-1.5 text-sm hover:bg-zinc-100 transition-colors ${font === f ? "bg-zinc-100 font-semibold" : ""}`}
-                            style={{ fontFamily: f }}
-                          >
-                            {f}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  {/* Font size display */}
-                  <div className="w-8 h-8 rounded-md border border-zinc-300 bg-white flex items-center justify-center text-xs font-semibold text-zinc-700 select-none">
-                    {fontSize}
-                  </div>
-                  {/* Big A — increase size */}
-                  <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className={btnSq}>
-                    <span className="font-bold text-base leading-none">A</span>
-                  </button>
-                  {/* Small A — decrease size */}
-                  <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className={btnSq}>
-                    <span className="font-bold text-xs leading-none">A</span>
-                  </button>
-                </div>
-                {/* Row 2: font color picker, 2 empty placeholders, Bold, Underline, Strikethrough, Overline */}
-                <div className="flex items-center gap-1">
-                  {/* Font Color Picker */}
-                  <div className="relative" ref={colorPickerRef}>
                     <button
-                      onClick={() => setShowColorPicker(v => !v)}
-                      title="Font color"
-                      className={btnSq}
+                      onClick={() => spreadsheetClearRef.current?.()}
+                      title="Clear active cell or selected cells"
+                      className={`h-8 px-3 rounded-md border border-red-200 bg-red-50 hover:bg-red-100 active:bg-red-200 transition-colors text-xs font-semibold text-red-600 flex items-center gap-1.5`}
                     >
-                      <div className="flex flex-col items-center justify-center gap-0.5">
-                        <span className="font-bold text-sm leading-none" style={{ color: fontColor }}>A</span>
-                        <div className="w-5 h-1 rounded-sm" style={{ backgroundColor: fontColor }} />
-                      </div>
+                      <span className="text-base leading-none">✕</span> Clear
                     </button>
-                    {showColorPicker && (
-                      <div className="absolute top-9 left-0 z-50 bg-white border border-zinc-300 rounded-lg shadow-xl p-3 w-[220px]">
-                        {/* Automatic */}
-                        <button
-                          onClick={() => handleFontColor("#000000")}
-                          className="flex items-center gap-2 w-full px-1 py-1 hover:bg-zinc-100 rounded text-xs text-zinc-700 mb-2 border border-zinc-200"
-                        >
-                          <div className="w-5 h-5 border border-zinc-400 bg-black shrink-0" />
-                          <span className="font-medium">Automatic</span>
-                        </button>
-                        {/* Theme Colors — rows go light→dark (top→bottom), 10 cols × 6 rows */}
-                        <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1">Theme Colors</div>
-                        <div className="grid grid-cols-10 gap-[3px] mb-1">
-                          {[
-                            // Row 0 — lightest (top)
-                            ["#FFFFFF","#F2F2F2","#EEECE1","#DCE6F1","#DBE5F1","#E8D5F0","#F2DCDB","#FDE9D9","#EBF1DE","#DAEEF3"],
-                            // Row 1
-                            ["#F2F2F2","#D9D9D9","#DDD9C4","#C6D9F1","#B8CCE4","#D198E8","#E6B8B7","#FBBF7C","#D8E4BC","#B7DEE8"],
-                            // Row 2 — base colors
-                            ["#D9D9D9","#BFBFBF","#C4BD97","#8DB4E2","#95B3D7","#8064A2","#DA9694","#F79646","#C4D79B","#92CDDC"],
-                            // Row 3
-                            ["#BFBFBF","#808080","#948A54","#548DD4","#4F81BD","#7030A0","#C0504D","#E36C09","#9BBB59","#4BACC6"],
-                            // Row 4
-                            ["#808080","#595959","#494429","#17375E","#366092","#60497A","#963634","#974806","#76933C","#31849B"],
-                            // Row 5 — darkest (bottom)
-                            ["#595959","#262626","#1D1B10","#0F243E","#243F60","#3F3151","#632523","#6A3400","#4F6228","#215868"],
-                          ].map((row, ri) =>
-                            row.map((c, ci) => (
-                              <button
-                                key={`${ri}-${ci}`}
-                                onClick={() => handleFontColor(c)}
-                                className="w-[18px] h-[18px] border border-zinc-200 hover:scale-110 hover:border-zinc-500 transition-transform"
-                                style={{ backgroundColor: c }}
-                                title={c}
-                              />
-                            ))
-                          )}
-                        </div>
-                        {/* Standard Colors */}
-                        <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1 mt-2">Standard Colors</div>
-                        <div className="flex gap-[3px] mb-2">
-                          {["#C00000","#FF0000","#FFC000","#FFFF00","#92D050","#00B050","#00B0F0","#0070C0","#002060","#7030A0"].map(c => (
-                            <button
-                              key={c}
-                              onClick={() => handleFontColor(c)}
-                              className="w-[18px] h-[18px] border border-zinc-200 hover:scale-110 hover:border-zinc-500 transition-transform"
-                              style={{ backgroundColor: c }}
-                              title={c}
-                            />
-                          ))}
-                        </div>
-                        {/* Recent Colors */}
-                        {recentColors.length > 0 && (
-                          <>
-                            <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1 mt-2">Recent Colors</div>
-                            <div className="flex gap-[3px] mb-2 flex-wrap">
-                              {recentColors.map((c, i) => (
-                                <button
-                                  key={i}
-                                  onClick={() => handleFontColor(c)}
-                                  className="w-[18px] h-[18px] border border-zinc-200 hover:scale-110 hover:border-zinc-500 transition-transform"
-                                  style={{ backgroundColor: c }}
-                                  title={c}
-                                />
-                              ))}
-                            </div>
-                          </>
-                        )}
-                        {/* More Colors */}
-                        <button
-                          onClick={() => {
-                            // Save selection before native picker steals focus
-                            const sel = window.getSelection();
-                            if (sel && sel.rangeCount > 0) {
-                              savedRangeRef.current = sel.getRangeAt(0).cloneRange();
-                            }
-                            const input = document.createElement("input");
-                            input.type = "color";
-                            input.value = fontColor;
-                            input.onchange = () => handleFontColor(input.value, true);
-                            input.click();
-                          }}
-                          className="w-full text-xs text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded px-2 py-1 text-left border border-zinc-200 transition-colors"
-                        >
-                          🎨 More Colors...
-                        </button>
-                      </div>
-                    )}
                   </div>
-                  {/* Highlight Color Picker */}
-                  <div className="relative" ref={highlightPickerRef}>
-                    <button
-                      onClick={() => setShowHighlightPicker(v => !v)}
-                      title="Highlight color"
-                      className={btnSq}
-                    >
-                      <div className="flex flex-col items-center justify-center gap-0.5">
-                        <span className="font-bold text-sm leading-none text-zinc-700">A</span>
-                        <div className="w-5 h-1.5 rounded-sm" style={{ backgroundColor: highlightColor }} />
-                      </div>
-                    </button>
-                    {showHighlightPicker && (
-                      <div className="absolute top-9 left-0 z-50 bg-white border border-zinc-300 rounded-lg shadow-xl p-3 w-[220px]">
-                        {/* No Fill */}
-                        <button
-                          onClick={() => handleHighlightColor("transparent")}
-                          className="flex items-center gap-2 w-full px-1 py-1 hover:bg-zinc-100 rounded text-xs text-zinc-700 mb-2 border border-zinc-200"
-                        >
-                          <div className="w-5 h-5 border border-zinc-400 bg-white shrink-0 relative overflow-hidden">
-                            <div className="absolute inset-0 flex items-center justify-center text-red-400 font-bold text-xs">∅</div>
-                          </div>
-                          <span className="font-medium">No Fill</span>
-                        </button>
-                        {/* Theme Colors */}
-                        <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1">Theme Colors</div>
-                        <div className="grid grid-cols-10 gap-[3px] mb-1">
-                          {[
-                            ["#FFFFFF","#F2F2F2","#EEECE1","#DCE6F1","#DBE5F1","#E8D5F0","#F2DCDB","#FDE9D9","#EBF1DE","#DAEEF3"],
-                            ["#F2F2F2","#D9D9D9","#DDD9C4","#C6D9F1","#B8CCE4","#D198E8","#E6B8B7","#FBBF7C","#D8E4BC","#B7DEE8"],
-                            ["#D9D9D9","#BFBFBF","#C4BD97","#8DB4E2","#95B3D7","#8064A2","#DA9694","#F79646","#C4D79B","#92CDDC"],
-                            ["#BFBFBF","#808080","#948A54","#548DD4","#4F81BD","#7030A0","#C0504D","#E36C09","#9BBB59","#4BACC6"],
-                            ["#808080","#595959","#494429","#17375E","#366092","#60497A","#963634","#974806","#76933C","#31849B"],
-                            ["#595959","#262626","#1D1B10","#0F243E","#243F60","#3F3151","#632523","#6A3400","#4F6228","#215868"],
-                          ].map((row, ri) =>
-                            row.map((c, ci) => (
-                              <button
-                                key={`h-${ri}-${ci}`}
-                                onClick={() => handleHighlightColor(c)}
-                                className="w-[18px] h-[18px] border border-zinc-200 hover:scale-110 hover:border-zinc-500 transition-transform"
-                                style={{ backgroundColor: c }}
-                                title={c}
-                              />
-                            ))
-                          )}
-                        </div>
-                        {/* Standard Colors */}
-                        <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1 mt-2">Standard Colors</div>
-                        <div className="flex gap-[3px] mb-2">
-                          {["#C00000","#FF0000","#FFC000","#FFFF00","#92D050","#00B050","#00B0F0","#0070C0","#002060","#7030A0"].map(c => (
-                            <button
-                              key={c}
-                              onClick={() => handleHighlightColor(c)}
-                              className="w-[18px] h-[18px] border border-zinc-200 hover:scale-110 hover:border-zinc-500 transition-transform"
-                              style={{ backgroundColor: c }}
-                              title={c}
-                            />
-                          ))}
-                        </div>
-                        {/* Recent Highlights */}
-                        {recentHighlights.length > 0 && (
-                          <>
-                            <div className="text-[10px] font-semibold text-zinc-500 uppercase tracking-wider mb-1 mt-2">Recent Colors</div>
-                            <div className="flex gap-[3px] mb-2 flex-wrap">
-                              {recentHighlights.map((c, i) => (
-                                <button
-                                  key={i}
-                                  onClick={() => handleHighlightColor(c)}
-                                  className="w-[18px] h-[18px] border border-zinc-200 hover:scale-110 hover:border-zinc-500 transition-transform"
-                                  style={{ backgroundColor: c }}
-                                  title={c}
-                                />
-                              ))}
-                            </div>
-                          </>
-                        )}
-                        {/* More Colors */}
-                        <button
-                          onClick={() => {
-                            const sel = window.getSelection();
-                            if (sel && sel.rangeCount > 0) {
-                              savedRangeRef.current = sel.getRangeAt(0).cloneRange();
-                            }
-                            const input = document.createElement("input");
-                            input.type = "color";
-                            input.value = highlightColor;
-                            input.onchange = () => handleHighlightColor(input.value, true);
-                            input.click();
-                          }}
-                          className="w-full text-xs text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded px-2 py-1 text-left border border-zinc-200 transition-colors"
-                        >
-                          🎨 More Colors...
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                  <button className={btnSq} />
-                  {/* Bold */}
-                  <button
-                    onClick={() => execInlineFormat("bold")}
-                    title="Bold (select text first)"
-                    className={`${btnSq} ${activeFormats.bold ? btnActive : ""}`}
-                  >
-                    <span className="font-black text-sm">B</span>
-                  </button>
-                  {/* Underline — red underline */}
-                  <button
-                    onClick={() => execInlineFormat("underline")}
-                    title="Underline (select text first)"
-                    className={`${btnSq} ${activeFormats.underline ? btnActive : ""}`}
-                  >
-                    <span className="text-sm underline decoration-red-500 decoration-[3px]">U</span>
-                  </button>
-                  {/* Strikethrough — red line through */}
-                  <button
-                    onClick={() => execInlineFormat("strikeThrough")}
-                    title="Strikethrough (select text first)"
-                    className={`${btnSq} ${activeFormats.strikeThrough ? btnActive : ""}`}
-                  >
-                    <span className="text-sm line-through decoration-red-500 decoration-[3px]">U</span>
-                  </button>
-                  {/* Overline */}
-                  <button
-                    onClick={() => execInlineFormat("underline")}
-                    title="Overline (select text first)"
-                    className={btnSq}
-                  >
-                    <span className="text-sm" style={{ textDecoration: "overline", textDecorationColor: "red", textDecorationThickness: "3px" }}>U</span>
-                  </button>
                 </div>
               </div>
-            </div>
 
-            {/* Group 3 — Align left, Align right, Align center, Neutral */}
-            <div className="border border-zinc-400 rounded-lg p-1.5">
-              <div className="grid grid-cols-2 gap-1">
-                {/* Align left */}
-                <button
-                  onClick={() => { execFormat("justifyLeft"); setAlign("left"); }}
-                  title="Align left"
-                  className={`${btnSq} ${align === "left" ? btnActive : ""}`}
-                >
-                  <svg viewBox="0 0 16 16" className="w-4 h-4 fill-zinc-600">
-                    <rect x="1" y="2" width="14" height="2" rx="1"/>
-                    <rect x="1" y="7" width="9" height="2" rx="1"/>
-                    <rect x="1" y="12" width="12" height="2" rx="1"/>
-                  </svg>
-                </button>
-                {/* Align right */}
-                <button
-                  onClick={() => { execFormat("justifyRight"); setAlign("right"); }}
-                  title="Align right"
-                  className={`${btnSq} ${align === "right" ? btnActive : ""}`}
-                >
-                  <svg viewBox="0 0 16 16" className="w-4 h-4 fill-zinc-600">
-                    <rect x="1" y="2" width="14" height="2" rx="1"/>
-                    <rect x="6" y="7" width="9" height="2" rx="1"/>
-                    <rect x="3" y="12" width="12" height="2" rx="1"/>
-                  </svg>
-                </button>
-                {/* Align center */}
-                <button
-                  onClick={() => { execFormat("justifyCenter"); setAlign("center"); }}
-                  title="Align center"
-                  className={`${btnSq} ${align === "center" ? btnActive : ""}`}
-                >
-                  <svg viewBox="0 0 16 16" className="w-4 h-4 fill-zinc-600">
-                    <rect x="1" y="2" width="14" height="2" rx="1"/>
-                    <rect x="3.5" y="7" width="9" height="2" rx="1"/>
-                    <rect x="2" y="12" width="12" height="2" rx="1"/>
-                  </svg>
-                </button>
-                {/* Neutral — remove all formatting */}
-                <button
-                  onClick={handleNeutral}
-                  title="Remove all formatting"
-                  className={btnSq}
-                >
-                  <span className="text-sm font-bold text-zinc-600">N</span>
-                </button>
+              {/* Insert group */}
+              <div className="border border-zinc-400 rounded-lg p-1.5">
+                <div className="flex flex-col gap-1">
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 text-center px-1">Insert</span>
+                  <div className="flex items-center gap-1">
+                    <button
+                      onClick={() => spreadsheetInsertRowRef.current?.()}
+                      title="Insert a row below the active cell"
+                      className={`h-8 px-3 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors text-xs font-semibold text-zinc-700 flex items-center gap-1.5`}
+                    >
+                      <span className="text-base leading-none">↓</span> Row
+                    </button>
+                    <button
+                      onClick={() => spreadsheetInsertColRef.current?.()}
+                      title="Insert a column after the active cell"
+                      className={`h-8 px-3 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors text-xs font-semibold text-zinc-700 flex items-center gap-1.5`}
+                    >
+                      <span className="text-base leading-none">→</span> Col
+                    </button>
+                  </div>
+                </div>
               </div>
-            </div>
 
-          </div>
-
-          {/* Right side — Delete + Trash */}
-          <div className="border border-zinc-400 rounded-lg p-1.5 shrink-0">
-            <div className="flex flex-col gap-1">
-              <button
-                onClick={handleDelete}
-                title="Move to trash"
-                className={`${btnSq} hover:bg-red-50 hover:border-red-400 active:bg-red-100`}
-              >
-                <Trash2 className="w-4 h-4 text-zinc-500" />
-              </button>
-              <button
-                onClick={() => setShowTrash(true)}
-                title="Open trash"
-                className={btnSq}
-              >
-                <ArchiveRestore className="w-4 h-4 text-zinc-500" />
-              </button>
             </div>
+            <DeleteGroup />
           </div>
         </div>
-      </div>
+
+      ) : pageType === "lined" ? (
+        /* ── LINED TOOLBAR ── Text formatting + Line Spacing ── */
+        <div className="bg-[#ece9e3] px-4 pt-3 pb-2 shrink-0">
+          <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl px-3 py-3 shadow-sm flex items-start justify-between">
+            <div className="inline-flex items-start gap-2">
+
+              {/* Group 1 — Copy, Paste, Undo, Redo */}
+              <div className="border border-zinc-400 rounded-lg p-1.5">
+                <div className="grid grid-cols-2 gap-1">
+                  <button onClick={handleCopy} title="Copy" className={`${btnSq}`} style={{ fontSize: 18 }}>✊🏻</button>
+                  <button onClick={handlePaste} title="Paste" className={`${btnSq} text-base`}>📑</button>
+                  <button onClick={handleUndo} title="Undo" className={`${btnSq} text-base`}>↩</button>
+                  <button onClick={handleRedo} title="Redo" className={`${btnSq} text-base`}>↪</button>
+                </div>
+              </div>
+
+              {/* Group 2 — Font, Size, Color, Bold, Underline, Strikethrough */}
+              <div className="border border-zinc-400 rounded-lg p-1.5">
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-1">
+                    <div className="relative" ref={fontMenuRef}>
+                      <button onClick={() => setShowFontMenu(v => !v)} className="w-36 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors px-2 text-left text-sm font-medium text-zinc-700 truncate" style={{ fontFamily: font }}>
+                        {font}
+                      </button>
+                      {showFontMenu && (
+                        <div className="absolute top-9 left-0 z-50 bg-white border border-zinc-300 rounded-lg shadow-lg overflow-y-auto max-h-52 w-44">
+                          {FONTS.map(f => (
+                            <button key={f} onClick={() => handleFontChange(f)} className={`w-full text-left px-3 py-1.5 text-sm hover:bg-zinc-100 transition-colors ${font === f ? "bg-zinc-100 font-semibold" : ""}`} style={{ fontFamily: f }}>{f}</button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="w-8 h-8 rounded-md border border-zinc-300 bg-white flex items-center justify-center text-xs font-semibold text-zinc-700 select-none">{fontSize}</div>
+                    <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className={btnSq}><span className="font-bold text-base leading-none">A</span></button>
+                    <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className={btnSq}><span className="font-bold text-xs leading-none">A</span></button>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="relative" ref={colorPickerRef}>
+                      <button onClick={() => setShowColorPicker(v => !v)} title="Font color" className={btnSq}>
+                        <div className="flex flex-col items-center justify-center gap-0.5">
+                          <span className="font-bold text-sm leading-none" style={{ color: fontColor }}>A</span>
+                          <div className="w-5 h-1 rounded-sm" style={{ backgroundColor: fontColor }} />
+                        </div>
+                      </button>
+                      {showColorPicker && <FontColorPanel />}
+                    </div>
+                    <div className="relative" ref={highlightPickerRef}>
+                      <button onClick={() => setShowHighlightPicker(v => !v)} title="Highlight color" className={btnSq}>
+                        <div className="flex flex-col items-center justify-center gap-0.5">
+                          <span className="font-bold text-sm leading-none text-zinc-700">A</span>
+                          <div className="w-5 h-1.5 rounded-sm" style={{ backgroundColor: highlightColor }} />
+                        </div>
+                      </button>
+                      {showHighlightPicker && <HighlightPanel />}
+                    </div>
+                    <button className={btnSq} />
+                    <button onClick={() => execInlineFormat("bold")} title="Bold (select text first)" className={`${btnSq} ${activeFormats.bold ? btnActive : ""}`}><span className="font-black text-sm">B</span></button>
+                    <button onClick={() => execInlineFormat("underline")} title="Underline (select text first)" className={`${btnSq} ${activeFormats.underline ? btnActive : ""}`}><span className="text-sm underline decoration-red-500 decoration-[3px]">U</span></button>
+                    <button onClick={() => execInlineFormat("strikeThrough")} title="Strikethrough (select text first)" className={`${btnSq} ${activeFormats.strikeThrough ? btnActive : ""}`}><span className="text-sm line-through decoration-red-500 decoration-[3px]">U</span></button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Group 3 — Align */}
+              <div className="border border-zinc-400 rounded-lg p-1.5">
+                <div className="grid grid-cols-2 gap-1">
+                  <button onClick={() => { execFormat("justifyLeft"); setAlign("left"); }} title="Align left" className={`${btnSq} ${align === "left" ? btnActive : ""}`}>
+                    <svg viewBox="0 0 16 16" className="w-4 h-4 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="1" y="7" width="9" height="2" rx="1"/><rect x="1" y="12" width="12" height="2" rx="1"/></svg>
+                  </button>
+                  <button onClick={() => { execFormat("justifyRight"); setAlign("right"); }} title="Align right" className={`${btnSq} ${align === "right" ? btnActive : ""}`}>
+                    <svg viewBox="0 0 16 16" className="w-4 h-4 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="6" y="7" width="9" height="2" rx="1"/><rect x="3" y="12" width="12" height="2" rx="1"/></svg>
+                  </button>
+                  <button onClick={() => { execFormat("justifyCenter"); setAlign("center"); }} title="Align center" className={`${btnSq} ${align === "center" ? btnActive : ""}`}>
+                    <svg viewBox="0 0 16 16" className="w-4 h-4 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="3.5" y="7" width="9" height="2" rx="1"/><rect x="2" y="12" width="12" height="2" rx="1"/></svg>
+                  </button>
+                  <button onClick={handleNeutral} title="Remove all formatting" className={btnSq}><span className="text-sm font-bold text-zinc-600">N</span></button>
+                </div>
+              </div>
+
+              {/* Group 4 — Line Spacing (unique to lined pages) */}
+              <div className="border border-zinc-400 rounded-lg p-1.5">
+                <div className="flex flex-col gap-1">
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 text-center px-1">Line Spacing</span>
+                  <div className="flex items-center gap-1">
+                    {(["compact", "normal", "relaxed"] as const).map(s => (
+                      <button
+                        key={s}
+                        onClick={() => setLineSpacing(s)}
+                        title={`Line spacing: ${s}`}
+                        className={`h-8 px-2 rounded-md border transition-colors text-[10px] font-bold flex items-center justify-center ${lineSpacing === s ? "bg-zinc-200 border-zinc-500 text-zinc-800" : "border-zinc-300 bg-white hover:bg-zinc-100 text-zinc-600"}`}
+                      >
+                        {s === "compact" ? "C" : s === "normal" ? "N" : "R"}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+            </div>
+            <DeleteGroup />
+          </div>
+        </div>
+
+      ) : (
+        /* ── BLANK TOOLBAR ── Full rich text formatting ── */
+        <div className="bg-[#ece9e3] px-4 pt-3 pb-2 shrink-0">
+          <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl px-3 py-3 shadow-sm flex items-start justify-between">
+            <div className="inline-flex items-start gap-2">
+
+              {/* Group 1 — Copy, Paste, Undo, Redo */}
+              <div className="border border-zinc-400 rounded-lg p-1.5">
+                <div className="grid grid-cols-2 gap-1">
+                  <button onClick={handleCopy} title="Copy" className={`${btnSq}`} style={{ fontSize: 18 }}>✊🏻</button>
+                  <button onClick={handlePaste} title="Paste" className={`${btnSq} text-base`}>📑</button>
+                  <button onClick={handleUndo} title="Undo" className={`${btnSq} text-base`}>↩</button>
+                  <button onClick={handleRedo} title="Redo" className={`${btnSq} text-base`}>↪</button>
+                </div>
+              </div>
+
+              {/* Group 2 — Font, Size, Bold, Underline, Strikethrough, Overline */}
+              <div className="border border-zinc-400 rounded-lg p-1.5">
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center gap-1">
+                    <div className="relative" ref={fontMenuRef}>
+                      <button onClick={() => setShowFontMenu(v => !v)} className="w-36 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors px-2 text-left text-sm font-medium text-zinc-700 truncate" style={{ fontFamily: font }}>
+                        {font}
+                      </button>
+                      {showFontMenu && (
+                        <div className="absolute top-9 left-0 z-50 bg-white border border-zinc-300 rounded-lg shadow-lg overflow-y-auto max-h-52 w-44">
+                          {FONTS.map(f => (
+                            <button key={f} onClick={() => handleFontChange(f)} className={`w-full text-left px-3 py-1.5 text-sm hover:bg-zinc-100 transition-colors ${font === f ? "bg-zinc-100 font-semibold" : ""}`} style={{ fontFamily: f }}>{f}</button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div className="w-8 h-8 rounded-md border border-zinc-300 bg-white flex items-center justify-center text-xs font-semibold text-zinc-700 select-none">{fontSize}</div>
+                    <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className={btnSq}><span className="font-bold text-base leading-none">A</span></button>
+                    <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className={btnSq}><span className="font-bold text-xs leading-none">A</span></button>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <div className="relative" ref={colorPickerRef}>
+                      <button onClick={() => setShowColorPicker(v => !v)} title="Font color" className={btnSq}>
+                        <div className="flex flex-col items-center justify-center gap-0.5">
+                          <span className="font-bold text-sm leading-none" style={{ color: fontColor }}>A</span>
+                          <div className="w-5 h-1 rounded-sm" style={{ backgroundColor: fontColor }} />
+                        </div>
+                      </button>
+                      {showColorPicker && <FontColorPanel />}
+                    </div>
+                    <div className="relative" ref={highlightPickerRef}>
+                      <button onClick={() => setShowHighlightPicker(v => !v)} title="Highlight color" className={btnSq}>
+                        <div className="flex flex-col items-center justify-center gap-0.5">
+                          <span className="font-bold text-sm leading-none text-zinc-700">A</span>
+                          <div className="w-5 h-1.5 rounded-sm" style={{ backgroundColor: highlightColor }} />
+                        </div>
+                      </button>
+                      {showHighlightPicker && <HighlightPanel />}
+                    </div>
+                    <button className={btnSq} />
+                    <button onClick={() => execInlineFormat("bold")} title="Bold (select text first)" className={`${btnSq} ${activeFormats.bold ? btnActive : ""}`}><span className="font-black text-sm">B</span></button>
+                    <button onClick={() => execInlineFormat("underline")} title="Underline (select text first)" className={`${btnSq} ${activeFormats.underline ? btnActive : ""}`}><span className="text-sm underline decoration-red-500 decoration-[3px]">U</span></button>
+                    <button onClick={() => execInlineFormat("strikeThrough")} title="Strikethrough (select text first)" className={`${btnSq} ${activeFormats.strikeThrough ? btnActive : ""}`}><span className="text-sm line-through decoration-red-500 decoration-[3px]">U</span></button>
+                    <button onClick={() => execInlineFormat("underline")} title="Overline (select text first)" className={btnSq}>
+                      <span className="text-sm" style={{ textDecoration: "overline", textDecorationColor: "red", textDecorationThickness: "3px" }}>U</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Group 3 — Align left, Align right, Align center, Neutral */}
+              <div className="border border-zinc-400 rounded-lg p-1.5">
+                <div className="grid grid-cols-2 gap-1">
+                  <button onClick={() => { execFormat("justifyLeft"); setAlign("left"); }} title="Align left" className={`${btnSq} ${align === "left" ? btnActive : ""}`}>
+                    <svg viewBox="0 0 16 16" className="w-4 h-4 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="1" y="7" width="9" height="2" rx="1"/><rect x="1" y="12" width="12" height="2" rx="1"/></svg>
+                  </button>
+                  <button onClick={() => { execFormat("justifyRight"); setAlign("right"); }} title="Align right" className={`${btnSq} ${align === "right" ? btnActive : ""}`}>
+                    <svg viewBox="0 0 16 16" className="w-4 h-4 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="6" y="7" width="9" height="2" rx="1"/><rect x="3" y="12" width="12" height="2" rx="1"/></svg>
+                  </button>
+                  <button onClick={() => { execFormat("justifyCenter"); setAlign("center"); }} title="Align center" className={`${btnSq} ${align === "center" ? btnActive : ""}`}>
+                    <svg viewBox="0 0 16 16" className="w-4 h-4 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="3.5" y="7" width="9" height="2" rx="1"/><rect x="2" y="12" width="12" height="2" rx="1"/></svg>
+                  </button>
+                  <button onClick={handleNeutral} title="Remove all formatting" className={btnSq}><span className="text-sm font-bold text-zinc-600">N</span></button>
+                </div>
+              </div>
+
+            </div>
+            <DeleteGroup />
+          </div>
+        </div>
+      )}
 
       {/* Trash panel */}
       {showTrash && (
@@ -975,10 +1015,7 @@ export default function PageEditor() {
                 <Trash2 className="w-4 h-4 text-zinc-500" />
                 <span className="text-sm font-bold uppercase tracking-widest text-zinc-700">Trash</span>
               </div>
-              <button
-                onClick={() => setShowTrash(false)}
-                className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-zinc-200 transition-colors"
-              >
+              <button onClick={() => setShowTrash(false)} className="w-7 h-7 flex items-center justify-center rounded-md hover:bg-zinc-200 transition-colors">
                 <X className="w-4 h-4 text-zinc-500" />
               </button>
             </div>
@@ -990,18 +1027,10 @@ export default function PageEditor() {
                   <div key={p.id} className="flex items-center justify-between px-5 py-3 hover:bg-zinc-50">
                     <span className="text-sm text-zinc-700 font-medium">{p.title}</span>
                     <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => handleRestore(p.id)}
-                        title="Restore page"
-                        className="flex items-center gap-1 px-2 py-1 text-xs text-zinc-600 border border-zinc-300 rounded-md hover:bg-green-50 hover:border-green-400 hover:text-green-700 transition-colors"
-                      >
+                      <button onClick={() => handleRestore(p.id)} title="Restore page" className="flex items-center gap-1 px-2 py-1 text-xs text-zinc-600 border border-zinc-300 rounded-md hover:bg-green-50 hover:border-green-400 hover:text-green-700 transition-colors">
                         <RotateCcw className="w-3 h-3" /> Restore
                       </button>
-                      <button
-                        onClick={() => handlePermanentDelete(p.id)}
-                        title="Permanently delete"
-                        className="flex items-center gap-1 px-2 py-1 text-xs text-zinc-600 border border-zinc-300 rounded-md hover:bg-red-50 hover:border-red-400 hover:text-red-700 transition-colors"
-                      >
+                      <button onClick={() => handlePermanentDelete(p.id)} title="Permanently delete" className="flex items-center gap-1 px-2 py-1 text-xs text-zinc-600 border border-zinc-300 rounded-md hover:bg-red-50 hover:border-red-400 hover:text-red-700 transition-colors">
                         <Trash2 className="w-3 h-3" /> Delete
                       </button>
                     </div>
@@ -1017,23 +1046,13 @@ export default function PageEditor() {
       <div className="bg-[#ece9e3] px-4 pt-0 pb-2 shrink-0 relative" ref={pageTypePickerRef}>
         <div className="overflow-hidden rounded-xl border border-zinc-700 shadow-sm">
           <div className="bg-[#1a1a1a] text-white flex items-stretch" style={{ minHeight: 44 }}>
-            <button
-              onClick={() => setLocation("/")}
-              className="px-3 flex items-center text-zinc-400 hover:text-white transition-colors border-r border-zinc-700"
-            >
+            <button onClick={() => setLocation("/")} className="px-3 flex items-center text-zinc-400 hover:text-white transition-colors border-r border-zinc-700">
               <ChevronLeft className="w-5 h-5" />
             </button>
-            <button
-              onClick={() => scrollTabs("left")}
-              className="px-2 flex items-center text-zinc-400 hover:text-white transition-colors"
-            >
+            <button onClick={() => scrollTabs("left")} className="px-2 flex items-center text-zinc-400 hover:text-white transition-colors">
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <div
-              ref={tabsRef}
-              className="flex items-stretch overflow-x-auto flex-1"
-              style={{ scrollbarWidth: "none" }}
-            >
+            <div ref={tabsRef} className="flex items-stretch overflow-x-auto flex-1" style={{ scrollbarWidth: "none" }}>
               {pages.map((p, index) => (
                 <button
                   key={p.id}
@@ -1048,36 +1067,21 @@ export default function PageEditor() {
                 </button>
               ))}
             </div>
-            <button
-              onClick={() => scrollTabs("right")}
-              className="px-2 flex items-center text-zinc-400 hover:text-white transition-colors border-l border-zinc-700"
-            >
+            <button onClick={() => scrollTabs("right")} className="px-2 flex items-center text-zinc-400 hover:text-white transition-colors border-l border-zinc-700">
               <ChevronRight className="w-4 h-4" />
             </button>
-            <button
-              onClick={handleCreatePage}
-              className="px-4 py-2 text-sm font-semibold text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors border-l border-zinc-700 whitespace-nowrap uppercase tracking-wider"
-            >
+            <button onClick={handleCreatePage} className="px-4 py-2 text-sm font-semibold text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors border-l border-zinc-700 whitespace-nowrap uppercase tracking-wider">
               + NEW PAGE
             </button>
           </div>
         </div>
-        {/* Page type picker — outside overflow-hidden so it's not clipped */}
         {showPageTypePicker && (
           <div className="absolute top-full right-0 mt-1 z-50 bg-white border border-zinc-200 rounded-lg shadow-xl p-2 flex gap-1.5">
-            {/* Blank */}
-            <button
-              onClick={() => handleCreatePageWithType("blank")}
-              className="flex flex-col items-center gap-1 px-2 py-1.5 hover:bg-zinc-100 rounded-md transition-colors group"
-            >
+            <button onClick={() => handleCreatePageWithType("blank")} className="flex flex-col items-center gap-1 px-2 py-1.5 hover:bg-zinc-100 rounded-md transition-colors group">
               <div className="w-10 h-12 border border-zinc-300 group-hover:border-zinc-500 rounded-sm bg-white shadow-sm" />
               <span className="text-[10px] font-semibold text-zinc-500 group-hover:text-zinc-800">Blank</span>
             </button>
-            {/* Lined */}
-            <button
-              onClick={() => handleCreatePageWithType("lined")}
-              className="flex flex-col items-center gap-1 px-2 py-1.5 hover:bg-zinc-100 rounded-md transition-colors group"
-            >
+            <button onClick={() => handleCreatePageWithType("lined")} className="flex flex-col items-center gap-1 px-2 py-1.5 hover:bg-zinc-100 rounded-md transition-colors group">
               <div className="w-10 h-12 border border-zinc-300 group-hover:border-zinc-500 rounded-sm bg-white overflow-hidden shadow-sm relative">
                 <div className="absolute top-0 left-3 bottom-0 border-l border-red-400" />
                 {Array.from({ length: 8 }, (_, i) => (
@@ -1086,11 +1090,7 @@ export default function PageEditor() {
               </div>
               <span className="text-[10px] font-semibold text-zinc-500 group-hover:text-zinc-800">Lined</span>
             </button>
-            {/* Spreadsheet */}
-            <button
-              onClick={() => handleCreatePageWithType("spreadsheet")}
-              className="flex flex-col items-center gap-1 px-2 py-1.5 hover:bg-zinc-100 rounded-md transition-colors group"
-            >
+            <button onClick={() => handleCreatePageWithType("spreadsheet")} className="flex flex-col items-center gap-1 px-2 py-1.5 hover:bg-zinc-100 rounded-md transition-colors group">
               <div className="w-10 h-12 border border-zinc-300 group-hover:border-zinc-500 rounded-sm bg-white overflow-hidden shadow-sm">
                 <div className="grid border-b border-zinc-300 bg-zinc-100" style={{ gridTemplateColumns: "8px repeat(3, 1fr)" }}>
                   {Array.from({ length: 4 }, (_, i) => <div key={i} className="border-r border-zinc-300 h-2" />)}
@@ -1117,78 +1117,25 @@ export default function PageEditor() {
                 Page: <span className="text-zinc-700">PAGE {page.pageNumber}</span>
               </span>
               <div className="flex items-center gap-1 ml-2">
-                  {/* First button: ⇄ merge for spreadsheet, ➜] wrap toggle for others */}
-                  {(page.pageType ?? "blank") === "spreadsheet" ? (
-                    <button
-                      onClick={() => spreadsheetMergeRef.current?.()}
-                      title="Merge selected cells (Ctrl+click to select)"
-                      className="flex items-center justify-center rounded"
-                      style={{
-                        width: 22, height: 22,
-                        fontSize: 13,
-                        fontWeight: 700,
-                        border: "1.5px solid #7c3aed",
-                        color: "#7c3aed",
-                        background: "#f5f3ff",
-                        lineHeight: 1,
-                      }}
-                    >
-                      ⇄
-                    </button>
-                  ) : (
+                {pageType === "spreadsheet" ? (
+                  <button
+                    onClick={() => spreadsheetMergeRef.current?.()}
+                    title="Merge selected cells"
+                    className="flex items-center justify-center rounded"
+                    style={{ width: 22, height: 22, fontSize: 13, fontWeight: 700, border: "1.5px solid #7c3aed", color: "#7c3aed", background: "#f5f3ff", lineHeight: 1 }}
+                  >⇄</button>
+                ) : (
                   <button
                     onClick={() => setAutoWrap(v => !v)}
                     title={autoWrap ? "Auto-wrap: ON (click to turn off)" : "Auto-wrap: OFF (click to turn on)"}
                     className="flex items-center justify-center rounded"
-                    style={{
-                      width: 22, height: 22,
-                      fontSize: 11,
-                      fontWeight: 700,
-                      border: `1.5px solid ${autoWrap ? "#16a34a" : "#dc2626"}`,
-                      color: autoWrap ? "#16a34a" : "#dc2626",
-                      background: autoWrap ? "#f0fdf4" : "#fef2f2",
-                      lineHeight: 1,
-                      letterSpacing: 0,
-                    }}
-                  >
-                    ➜]
-                  </button>
-                  )}
-                  {/* Zoom out */}
-                  <button
-                    onClick={() => setZoom(z => Math.max(50, z - 10))}
-                    title={`Zoom out (${zoom}%)`}
-                    className="flex items-center justify-center rounded"
-                    style={{
-                      width: 22, height: 22,
-                      fontSize: 13,
-                      fontWeight: 700,
-                      border: "1.5px solid #a8a29e",
-                      color: "#78716c",
-                      background: "#faf6ef",
-                    }}
-                  >
-                    −
-                  </button>
-                  {/* Zoom level */}
-                  <span className="text-[10px] font-semibold text-zinc-400 select-none w-7 text-center">{zoom}%</span>
-                  {/* Zoom in */}
-                  <button
-                    onClick={() => setZoom(z => Math.min(200, z + 10))}
-                    title={`Zoom in (${zoom}%)`}
-                    className="flex items-center justify-center rounded"
-                    style={{
-                      width: 22, height: 22,
-                      fontSize: 13,
-                      fontWeight: 700,
-                      border: "1.5px solid #a8a29e",
-                      color: "#78716c",
-                      background: "#faf6ef",
-                    }}
-                  >
-                    +
-                  </button>
-                </div>
+                    style={{ width: 22, height: 22, fontSize: 11, fontWeight: 700, border: `1.5px solid ${autoWrap ? "#16a34a" : "#dc2626"}`, color: autoWrap ? "#16a34a" : "#dc2626", background: autoWrap ? "#f0fdf4" : "#fef2f2", lineHeight: 1, letterSpacing: 0 }}
+                  >➜]</button>
+                )}
+                <button onClick={() => setZoom(z => Math.max(50, z - 10))} title={`Zoom out (${zoom}%)`} className="flex items-center justify-center rounded" style={{ width: 22, height: 22, fontSize: 13, fontWeight: 700, border: "1.5px solid #a8a29e", color: "#78716c", background: "#faf6ef" }}>−</button>
+                <span className="text-[10px] font-semibold text-zinc-400 select-none w-7 text-center">{zoom}%</span>
+                <button onClick={() => setZoom(z => Math.min(200, z + 10))} title={`Zoom in (${zoom}%)`} className="flex items-center justify-center rounded" style={{ width: 22, height: 22, fontSize: 13, fontWeight: 700, border: "1.5px solid #a8a29e", color: "#78716c", background: "#faf6ef" }}>+</button>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               {(() => {
@@ -1197,88 +1144,45 @@ export default function PageEditor() {
                 const wd = plain.trim() ? plain.trim().split(/\s+/).length : 0;
                 const sn = plain.trim() ? plain.split(/[.!?]+/).filter(s => s.trim().length > 0).length : 0;
                 const badge = (label: string, val: number) => (
-                  <span
-                    key={label}
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 3,
-                      fontSize: 10,
-                      fontWeight: 700,
-                      letterSpacing: "0.04em",
-                      color: "#78716c",
-                      background: "#f0ebe2",
-                      border: "1px solid #ddd5c4",
-                      borderRadius: 4,
-                      padding: "1px 5px",
-                      fontFamily: "monospace",
-                    }}
-                  >
+                  <span key={label} style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10, fontWeight: 700, letterSpacing: "0.04em", color: "#78716c", background: "#f0ebe2", border: "1px solid #ddd5c4", borderRadius: 4, padding: "1px 5px", fontFamily: "monospace" }}>
                     <span style={{ color: "#a8956b" }}>{label}</span>
                     <span style={{ color: "#3a2e20" }}>{val}</span>
                   </span>
                 );
                 return (
                   <div className="flex items-center gap-1.5">
-                    {badge("SN", sn)}
-                    {badge("WD", wd)}
-                    {badge("LT", lt)}
+                    {badge("SN", sn)}{badge("WD", wd)}{badge("LT", lt)}
                   </div>
                 );
               })()}
-              <span className="text-xs text-zinc-400 ml-1">
-                {saveStatus === "saving" ? "Saving..." : "Saved"}
-              </span>
+              <span className="text-xs text-zinc-400 ml-1">{saveStatus === "saving" ? "Saving..." : "Saved"}</span>
             </div>
           </div>
 
           <div className="flex-1 overflow-y-auto bg-white" style={{ scrollbarWidth: "thin" }}>
-            {(page.pageType ?? "blank") === "spreadsheet" ? (
+            {pageType === "spreadsheet" ? (
               <div style={{ zoom: zoom / 100, transformOrigin: "top left" }}>
                 <SpreadsheetEditor
                   content={content}
                   mergeRef={spreadsheetMergeRef}
+                  clearRef={spreadsheetClearRef}
+                  insertRowRef={spreadsheetInsertRowRef}
+                  insertColRef={spreadsheetInsertColRef}
                   onChange={(v) => {
                     setContent(v);
                     setSaveStatus("saving");
                   }}
                 />
               </div>
-            ) : (page.pageType ?? "blank") === "lined" ? (
-              <div
-                className="flex w-full"
-                style={{
-                  minHeight: 600,
-                  backgroundColor: "#faf6ef",
-                  zoom: zoom / 100,
-                  transformOrigin: "top left",
-                }}
-              >
-                {/* Line numbers + off-white margin */}
-                <div
-                  className="shrink-0 select-none"
-                  style={{
-                    width: 44,
-                    minHeight: 600,
-                    backgroundColor: "#faf6ef",
-                    borderRight: "2px solid #ddd5c4",
-                    paddingTop: 4,
-                  }}
-                >
+            ) : pageType === "lined" ? (
+              <div className="flex w-full" style={{ minHeight: 600, backgroundColor: "#faf6ef", zoom: zoom / 100, transformOrigin: "top left" }}>
+                {/* Line numbers + margin */}
+                <div className="shrink-0 select-none" style={{ width: 44, minHeight: 600, backgroundColor: "#faf6ef", borderRight: "2px solid #ddd5c4", paddingTop: 4 }}>
                   {Array.from({ length: 40 }, (_, i) => {
                     const lineText = (editorRef.current?.innerText ?? "").split("\n")[i] ?? "";
                     const hasContent = lineText.trim().length > 0;
                     return (
-                      <div
-                        key={i}
-                        className="font-mono flex items-center justify-end pr-2"
-                        style={{
-                          fontSize: 11,
-                          height: 36,
-                          color: hasContent ? "#3a2e20" : "#c4b89a",
-                          transition: "color 0.15s",
-                        }}
-                      >
+                      <div key={i} className="font-mono flex items-center justify-end pr-2" style={{ fontSize: 11, height: lineHeightPx, color: hasContent ? "#3a2e20" : "#c4b89a", transition: "color 0.15s" }}>
                         {i + 1}
                       </div>
                     );
@@ -1289,7 +1193,7 @@ export default function PageEditor() {
                   <div
                     className="absolute inset-0 pointer-events-none"
                     style={{
-                      backgroundImage: "repeating-linear-gradient(#faf6ef, #faf6ef 35px, #e8dfd0 35px, #e8dfd0 36px)",
+                      backgroundImage: `repeating-linear-gradient(#faf6ef, #faf6ef ${lineHeightPx - 1}px, #e8dfd0 ${lineHeightPx - 1}px, #e8dfd0 ${lineHeightPx}px)`,
                       backgroundPositionY: "4px",
                     }}
                   />
@@ -1302,16 +1206,7 @@ export default function PageEditor() {
                     onKeyUp={updateActiveFormats}
                     onMouseUp={updateActiveFormats}
                     className="relative w-full outline-none px-4 z-10"
-                    style={{
-                      fontFamily: font,
-                      fontSize: fontSize,
-                      lineHeight: "36px",
-                      minHeight: 600,
-                      whiteSpace: autoWrap ? "pre-wrap" : "pre",
-                      overflowX: autoWrap ? "hidden" : "auto",
-                      color: "#3a2e20",
-                      paddingTop: 4,
-                    }}
+                    style={{ fontFamily: font, fontSize: fontSize, lineHeight: `${lineHeightPx}px`, minHeight: 600, whiteSpace: autoWrap ? "pre-wrap" : "pre", overflowX: autoWrap ? "hidden" : "auto", color: "#3a2e20", paddingTop: 4 }}
                     data-placeholder="Start writing..."
                   />
                 </div>
@@ -1327,14 +1222,7 @@ export default function PageEditor() {
                   onKeyUp={updateActiveFormats}
                   onMouseUp={updateActiveFormats}
                   className="w-full min-h-full outline-none px-6 py-4 text-zinc-800"
-                  style={{
-                    fontFamily: font,
-                    fontSize: fontSize,
-                    lineHeight: "1.8",
-                    minHeight: 600,
-                    whiteSpace: autoWrap ? "pre-wrap" : "pre",
-                    overflowX: autoWrap ? "hidden" : "auto",
-                  }}
+                  style={{ fontFamily: font, fontSize: fontSize, lineHeight: "1.8", minHeight: 600, whiteSpace: autoWrap ? "pre-wrap" : "pre", overflowX: autoWrap ? "hidden" : "auto" }}
                   data-placeholder="Start writing..."
                 />
               </div>
@@ -1342,19 +1230,11 @@ export default function PageEditor() {
           </div>
 
           <div className="bg-[#f5f2ee] border-t border-zinc-200 px-4 py-1 flex items-center justify-between text-xs text-zinc-500 shrink-0">
-            <button
-              onClick={() => prevPage && setLocation(`/books/${bId}/pages/${prevPage.id}`)}
-              disabled={!prevPage}
-              className="disabled:opacity-30 hover:text-zinc-700 transition-colors flex items-center gap-1"
-            >
+            <button onClick={() => prevPage && setLocation(`/books/${bId}/pages/${prevPage.id}`)} disabled={!prevPage} className="disabled:opacity-30 hover:text-zinc-700 transition-colors flex items-center gap-1">
               <ChevronLeft className="w-3 h-3" /> Prev
             </button>
             <span className="font-medium">{book?.title}</span>
-            <button
-              onClick={() => nextPage && setLocation(`/books/${bId}/pages/${nextPage.id}`)}
-              disabled={!nextPage}
-              className="disabled:opacity-30 hover:text-zinc-700 transition-colors flex items-center gap-1"
-            >
+            <button onClick={() => nextPage && setLocation(`/books/${bId}/pages/${nextPage.id}`)} disabled={!nextPage} className="disabled:opacity-30 hover:text-zinc-700 transition-colors flex items-center gap-1">
               Next <ChevronRight className="w-3 h-3" />
             </button>
           </div>
