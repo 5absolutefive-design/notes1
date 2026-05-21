@@ -188,22 +188,22 @@ export default function PageEditor() {
                   onClick={handleCopy}
                   title="Copy"
                   className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-base"
-                >📋</button>
+                >🗐</button>
                 <button
                   onClick={handlePaste}
                   title="Paste"
                   className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-base"
-                >📌</button>
+                >📑</button>
                 <button
                   onClick={handleUndo}
                   title="Undo"
                   className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-base"
-                >↩️</button>
+                >↩</button>
                 <button
                   onClick={handleRedo}
                   title="Redo"
                   className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-base"
-                >↪️</button>
+                >↪</button>
               </div>
             </div>
 
