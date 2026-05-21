@@ -369,6 +369,9 @@ export default function PageEditor() {
   const [zoom, setZoom] = useState(100);
   const [autoWrap, setAutoWrap] = useState(true);
   const [lineSpacing, setLineSpacing] = useState<"compact" | "normal" | "relaxed">("normal");
+  const [textStats, setTextStats] = useState({ lt: 0, wd: 0, sn: 0 });
+  const [linedScroll, setLinedScroll] = useState(0);
+  const pageScrollRef = useRef<HTMLDivElement>(null);
 
   const initializedForId = useRef<number | null>(null);
   const lastSavedContent = useRef("");
@@ -444,6 +447,11 @@ export default function PageEditor() {
   const handleEditorInput = () => {
     const html = editorRef.current?.innerHTML ?? "";
     setContent(html);
+    const plain = editorRef.current?.innerText ?? "";
+    const lt = plain.replace(/\s/g, "").length;
+    const wd = plain.trim() ? plain.trim().split(/\s+/).length : 0;
+    const sn = plain.trim() ? plain.split(/[.!?]+/).filter(s => s.trim().length > 0).length : 0;
+    setTextStats({ lt, wd, sn });
   };
 
   useEffect(() => {
@@ -1116,10 +1124,6 @@ export default function PageEditor() {
             </div>
             <div className="flex items-center gap-2">
               {(() => {
-                const plain = editorRef.current?.innerText ?? "";
-                const lt = plain.replace(/\s/g, "").length;
-                const wd = plain.trim() ? plain.trim().split(/\s+/).length : 0;
-                const sn = plain.trim() ? plain.split(/[.!?]+/).filter(s => s.trim().length > 0).length : 0;
                 const badge = (label: string, val: number) => (
                   <span key={label} style={{ display: "inline-flex", alignItems: "center", gap: 3, fontSize: 10, fontWeight: 700, letterSpacing: "0.04em", color: "#78716c", background: "#f0ebe2", border: "1px solid #ddd5c4", borderRadius: 4, padding: "1px 5px", fontFamily: "monospace" }}>
                     <span style={{ color: "#a8956b" }}>{label}</span>
@@ -1128,7 +1132,7 @@ export default function PageEditor() {
                 );
                 return (
                   <div className="flex items-center gap-1.5">
-                    {badge("SN", sn)}{badge("WD", wd)}{badge("LT", lt)}
+                    {badge("SN", textStats.sn)}{badge("WD", textStats.wd)}{badge("LT", textStats.lt)}
                   </div>
                 );
               })()}
@@ -1136,7 +1140,12 @@ export default function PageEditor() {
             </div>
           </div>
 
-          <div className="flex-1 overflow-y-auto bg-white" style={{ scrollbarWidth: "thin" }}>
+          <div
+            ref={pageScrollRef}
+            className="flex-1 overflow-y-auto bg-white"
+            style={{ scrollbarWidth: "thin" }}
+            onScroll={e => pageType === "lined" && setLinedScroll((e.currentTarget as HTMLDivElement).scrollTop)}
+          >
             {pageType === "spreadsheet" ? (
               <div style={{ zoom: zoom / 100, transformOrigin: "top left" }}>
                 <SpreadsheetEditor
@@ -1153,23 +1162,37 @@ export default function PageEditor() {
               </div>
             ) : pageType === "lined" ? (
               <div className="flex w-full" style={{ minHeight: 500 * lineHeightPx, backgroundColor: "#faf6ef", zoom: zoom / 100, transformOrigin: "top left" }}>
-                {/* Line numbers + margin */}
-                <div className="shrink-0 select-none" style={{ width: 44, minHeight: 500 * lineHeightPx, backgroundColor: "#faf6ef", borderRight: "2px solid #ddd5c4", paddingTop: 4 }}>
-                  {Array.from({ length: 500 }, (_, i) => (
-                    <div
-                      key={i}
-                      className="font-mono flex items-center justify-end pr-2 cursor-pointer hover:bg-amber-100 transition-colors"
-                      style={{ fontSize: 11, height: lineHeightPx, color: "#c4b89a" }}
-                      onClick={() => {
-                        editorRef.current?.focus();
-                        const scrollParent = editorRef.current?.closest(".overflow-y-auto") as HTMLElement | null;
-                        if (scrollParent) scrollParent.scrollTop = i * lineHeightPx;
-                      }}
-                    >
-                      {i + 1}
+                {/* Line numbers + margin — virtualized */}
+                {(() => {
+                  const containerH = pageScrollRef.current?.clientHeight ?? 600;
+                  const buf = 20;
+                  const firstLn = Math.max(0, Math.floor(linedScroll / lineHeightPx) - buf);
+                  const lastLn = Math.min(499, Math.ceil((linedScroll + containerH) / lineHeightPx) + buf);
+                  const topSp = firstLn * lineHeightPx;
+                  const botSp = (499 - lastLn) * lineHeightPx;
+                  return (
+                    <div className="shrink-0 select-none" style={{ width: 44, minHeight: 500 * lineHeightPx, backgroundColor: "#faf6ef", borderRight: "2px solid #ddd5c4", paddingTop: 4 }}>
+                      {topSp > 0 && <div style={{ height: topSp }} />}
+                      {Array.from({ length: lastLn - firstLn + 1 }, (_, i) => {
+                        const ln = firstLn + i;
+                        return (
+                          <div
+                            key={ln}
+                            className="font-mono flex items-center justify-end pr-2 cursor-pointer hover:bg-amber-100 transition-colors"
+                            style={{ fontSize: 11, height: lineHeightPx, color: "#c4b89a" }}
+                            onClick={() => {
+                              editorRef.current?.focus();
+                              if (pageScrollRef.current) pageScrollRef.current.scrollTop = ln * lineHeightPx;
+                            }}
+                          >
+                            {ln + 1}
+                          </div>
+                        );
+                      })}
+                      {botSp > 0 && <div style={{ height: botSp }} />}
                     </div>
-                  ))}
-                </div>
+                  );
+                })()}
                 {/* Lined editor */}
                 <div
                   className="flex-1 relative"
