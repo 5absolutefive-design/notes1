@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback, type MutableRefObject } from 
 import { store, type Book, type Page, type PageType } from "@/lib/store";
 
 const COLS = 26;
-const ROWS = 50;
+const ROWS = 500;
 const COL_LABELS = Array.from({ length: COLS }, (_, i) => String.fromCharCode(65 + i));
 
 interface MergeRegion { r1: number; c1: number; r2: number; c2: number; }
@@ -1125,21 +1125,30 @@ export default function PageEditor() {
                 />
               </div>
             ) : pageType === "lined" ? (
-              <div className="flex w-full" style={{ minHeight: 600, backgroundColor: "#faf6ef", zoom: zoom / 100, transformOrigin: "top left" }}>
+              <div className="flex w-full" style={{ minHeight: 500 * lineHeightPx, backgroundColor: "#faf6ef", zoom: zoom / 100, transformOrigin: "top left" }}>
                 {/* Line numbers + margin */}
-                <div className="shrink-0 select-none" style={{ width: 44, minHeight: 600, backgroundColor: "#faf6ef", borderRight: "2px solid #ddd5c4", paddingTop: 4 }}>
-                  {Array.from({ length: 40 }, (_, i) => {
+                <div className="shrink-0 select-none" style={{ width: 44, minHeight: 500 * lineHeightPx, backgroundColor: "#faf6ef", borderRight: "2px solid #ddd5c4", paddingTop: 4 }}>
+                  {Array.from({ length: 500 }, (_, i) => {
                     const lineText = (editorRef.current?.innerText ?? "").split("\n")[i] ?? "";
                     const hasContent = lineText.trim().length > 0;
                     return (
-                      <div key={i} className="font-mono flex items-center justify-end pr-2" style={{ fontSize: 11, height: lineHeightPx, color: hasContent ? "#3a2e20" : "#c4b89a", transition: "color 0.15s" }}>
+                      <div
+                        key={i}
+                        className="font-mono flex items-center justify-end pr-2 cursor-pointer hover:bg-amber-100 transition-colors"
+                        style={{ fontSize: 11, height: lineHeightPx, color: hasContent ? "#3a2e20" : "#c4b89a" }}
+                        onClick={() => {
+                          editorRef.current?.focus();
+                          const scrollParent = editorRef.current?.closest(".overflow-y-auto") as HTMLElement | null;
+                          if (scrollParent) scrollParent.scrollTop = i * lineHeightPx;
+                        }}
+                      >
                         {i + 1}
                       </div>
                     );
                   })}
                 </div>
                 {/* Lined editor */}
-                <div className="flex-1 relative" style={{ minHeight: 600, backgroundColor: "#faf6ef" }}>
+                <div className="flex-1 relative" style={{ minHeight: 500 * lineHeightPx, backgroundColor: "#faf6ef" }}>
                   <div
                     className="absolute inset-0 pointer-events-none"
                     style={{
@@ -1156,7 +1165,7 @@ export default function PageEditor() {
                     onKeyUp={updateActiveFormats}
                     onMouseUp={updateActiveFormats}
                     className="relative w-full outline-none px-4 z-10"
-                    style={{ fontFamily: font, fontSize: fontSize, lineHeight: `${lineHeightPx}px`, minHeight: 600, whiteSpace: autoWrap ? "pre-wrap" : "pre", overflowX: autoWrap ? "hidden" : "auto", color: "#3a2e20", paddingTop: 4 }}
+                    style={{ fontFamily: font, fontSize: fontSize, lineHeight: `${lineHeightPx}px`, minHeight: 500 * lineHeightPx, whiteSpace: autoWrap ? "pre-wrap" : "pre", overflowX: autoWrap ? "hidden" : "auto", color: "#3a2e20", paddingTop: 4 }}
                     data-placeholder="Start writing..."
                   />
                 </div>
@@ -1172,7 +1181,7 @@ export default function PageEditor() {
                   onKeyUp={updateActiveFormats}
                   onMouseUp={updateActiveFormats}
                   className="w-full min-h-full outline-none px-6 py-4 text-zinc-800"
-                  style={{ fontFamily: font, fontSize: fontSize, lineHeight: "1.8", minHeight: 600, whiteSpace: autoWrap ? "pre-wrap" : "pre", overflowX: autoWrap ? "hidden" : "auto" }}
+                  style={{ fontFamily: font, fontSize: fontSize, lineHeight: "1.8", minHeight: 500 * Math.round(fontSize * 1.8), whiteSpace: autoWrap ? "pre-wrap" : "pre", overflowX: autoWrap ? "hidden" : "auto" }}
                   data-placeholder="Start writing..."
                 />
               </div>
