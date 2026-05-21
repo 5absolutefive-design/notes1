@@ -10,21 +10,25 @@ const VIRT_BUFFER = 30;
 const COL_LABELS = Array.from({ length: COLS }, (_, i) => String.fromCharCode(65 + i));
 
 interface MergeRegion { r1: number; c1: number; r2: number; c2: number; }
-interface SheetData { cells: Record<string, string>; merges: MergeRegion[]; }
+interface SheetData { cells: Record<string, string>; merges: MergeRegion[]; colWidths?: Record<number, number>; rowHeights?: Record<number, number>; }
 
-function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef, insertColRef }: {
+function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef, insertColRef, colWidthIncRef, colWidthDecRef, rowHeightIncRef, rowHeightDecRef }: {
   content: string;
   onChange: (v: string) => void;
   mergeRef?: MutableRefObject<(() => void) | null>;
   clearRef?: MutableRefObject<(() => void) | null>;
   insertRowRef?: MutableRefObject<(() => void) | null>;
   insertColRef?: MutableRefObject<(() => void) | null>;
+  colWidthIncRef?: MutableRefObject<(() => void) | null>;
+  colWidthDecRef?: MutableRefObject<(() => void) | null>;
+  rowHeightIncRef?: MutableRefObject<(() => void) | null>;
+  rowHeightDecRef?: MutableRefObject<(() => void) | null>;
 }) {
   const parseData = (): SheetData => {
     try {
       const d = JSON.parse(content);
-      return { cells: d.cells ?? {}, merges: d.merges ?? [] };
-    } catch { return { cells: {}, merges: [] }; }
+      return { cells: d.cells ?? {}, merges: d.merges ?? [], colWidths: d.colWidths ?? {}, rowHeights: d.rowHeights ?? {} };
+    } catch { return { cells: {}, merges: [], colWidths: {}, rowHeights: {} }; }
   };
 
   const [data, setData] = useState<SheetData>(parseData);
@@ -161,6 +165,30 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
     });
   }, [active]);
 
+  const colWidthInc = useCallback(() => {
+    const c = active ? active[1] : (anchorRef.current ? anchorRef.current[1] : null);
+    if (c === null) return;
+    setData(prev => ({ ...prev, colWidths: { ...(prev.colWidths ?? {}), [c]: (prev.colWidths?.[c] ?? 80) + 20 } }));
+  }, [active]);
+
+  const colWidthDec = useCallback(() => {
+    const c = active ? active[1] : (anchorRef.current ? anchorRef.current[1] : null);
+    if (c === null) return;
+    setData(prev => ({ ...prev, colWidths: { ...(prev.colWidths ?? {}), [c]: Math.max(40, (prev.colWidths?.[c] ?? 80) - 20) } }));
+  }, [active]);
+
+  const rowHeightInc = useCallback(() => {
+    const r = active ? active[0] : (anchorRef.current ? anchorRef.current[0] : null);
+    if (r === null) return;
+    setData(prev => ({ ...prev, rowHeights: { ...(prev.rowHeights ?? {}), [r]: (prev.rowHeights?.[r] ?? ROW_HEIGHT) + 10 } }));
+  }, [active]);
+
+  const rowHeightDec = useCallback(() => {
+    const r = active ? active[0] : (anchorRef.current ? anchorRef.current[0] : null);
+    if (r === null) return;
+    setData(prev => ({ ...prev, rowHeights: { ...(prev.rowHeights ?? {}), [r]: Math.max(18, (prev.rowHeights?.[r] ?? ROW_HEIGHT) - 10) } }));
+  }, [active]);
+
   const isFirstRender = useRef(true);
   useEffect(() => {
     if (isFirstRender.current) { isFirstRender.current = false; return; }
@@ -172,7 +200,11 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
     if (clearRef) clearRef.current = clearSelected;
     if (insertRowRef) insertRowRef.current = insertRow;
     if (insertColRef) insertColRef.current = insertCol;
-  }, [mergeSelected, clearSelected, insertRow, insertCol]);
+    if (colWidthIncRef) colWidthIncRef.current = colWidthInc;
+    if (colWidthDecRef) colWidthDecRef.current = colWidthDec;
+    if (rowHeightIncRef) rowHeightIncRef.current = rowHeightInc;
+    if (rowHeightDecRef) rowHeightDecRef.current = rowHeightDec;
+  }, [mergeSelected, clearSelected, insertRow, insertCol, colWidthInc, colWidthDec, rowHeightInc, rowHeightDec]);
 
   const commitDragSelection = useCallback(() => {
     const a = anchorRef.current;
@@ -246,8 +278,8 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
         <thead>
           <tr>
             <th className="w-10 min-w-[40px] bg-zinc-100 border border-zinc-300 text-zinc-400 text-[11px] font-medium sticky top-0 left-0 z-20" style={{ width: 40 }} />
-            {COL_LABELS.map(col => (
-              <th key={col} className="bg-zinc-100 border border-zinc-300 text-zinc-600 text-[11px] font-semibold px-1 py-0.5 sticky top-0 z-10 text-center" style={{ width: 80 }}>
+            {COL_LABELS.map((col, ci) => (
+              <th key={col} className="bg-zinc-100 border border-zinc-300 text-zinc-600 text-[11px] font-semibold px-1 py-0.5 sticky top-0 z-10 text-center" style={{ width: data.colWidths?.[ci] ?? 80 }}>
                 {col}
               </th>
             ))}
@@ -295,7 +327,7 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
                           ? "bg-blue-100 border-blue-300"
                           : "border-zinc-200"
                       }`}
-                      style={{ height: ROW_HEIGHT, minWidth: 80 }}
+                      style={{ height: data.rowHeights?.[r] ?? ROW_HEIGHT, minWidth: data.colWidths?.[c] ?? 80 }}
                     >
                       <input
                         ref={el => { inputRefs.current[k] = el; }}
@@ -316,7 +348,7 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
                           else if (e.key === "ArrowLeft" && (e.target as HTMLInputElement).selectionStart === 0) { e.preventDefault(); move(r, c, 0, -1); }
                         }}
                         className="w-full h-full px-1 outline-none bg-transparent text-zinc-800 text-[13px]"
-                        style={{ minWidth: isMerged ? colSpan * 80 : 80, pointerEvents: isDraggingRef.current ? "none" : "auto" }}
+                        style={{ minWidth: isMerged ? colSpan * (data.colWidths?.[c] ?? 80) : (data.colWidths?.[c] ?? 80), pointerEvents: isDraggingRef.current ? "none" : "auto" }}
                       />
                     </td>
                   );
@@ -385,6 +417,10 @@ export default function PageEditor() {
   const spreadsheetClearRef = useRef<(() => void) | null>(null);
   const spreadsheetInsertRowRef = useRef<(() => void) | null>(null);
   const spreadsheetInsertColRef = useRef<(() => void) | null>(null);
+  const spreadsheetCWIncRef = useRef<(() => void) | null>(null);
+  const spreadsheetCWDecRef = useRef<(() => void) | null>(null);
+  const spreadsheetCTIncRef = useRef<(() => void) | null>(null);
+  const spreadsheetCTDecRef = useRef<(() => void) | null>(null);
 
   const lineHeightPx = lineSpacing === "compact" ? 28 : lineSpacing === "relaxed" ? 44 : 36;
 
@@ -932,10 +968,10 @@ export default function PageEditor() {
                     className="w-full h-8 rounded-md border border-purple-400 bg-purple-50 hover:bg-purple-100 active:bg-purple-200 transition-colors text-xs font-bold text-purple-700 flex items-center justify-center gap-1"
                   ><span className="text-sm leading-none">⇄</span> Merge</button>
                   <div className="flex items-center gap-1">
-                    <button className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
-                    <button className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
-                    <button className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
-                    <button className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
+                    <button onClick={() => spreadsheetCWIncRef.current?.()} title="Widen selected column" className="w-8 h-8 rounded-md border border-blue-300 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 transition-colors text-[10px] font-bold text-blue-700 flex items-center justify-center">CW+</button>
+                    <button onClick={() => spreadsheetCWDecRef.current?.()} title="Narrow selected column" className="w-8 h-8 rounded-md border border-blue-300 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 transition-colors text-[10px] font-bold text-blue-700 flex items-center justify-center">CW−</button>
+                    <button onClick={() => spreadsheetCTIncRef.current?.()} title="Increase selected row height" className="w-8 h-8 rounded-md border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 active:bg-emerald-200 transition-colors text-[10px] font-bold text-emerald-700 flex items-center justify-center">CT+</button>
+                    <button onClick={() => spreadsheetCTDecRef.current?.()} title="Decrease selected row height" className="w-8 h-8 rounded-md border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 active:bg-emerald-200 transition-colors text-[10px] font-bold text-emerald-700 flex items-center justify-center">CT−</button>
                   </div>
                 </div>
               </div>
@@ -1145,6 +1181,10 @@ export default function PageEditor() {
                   clearRef={spreadsheetClearRef}
                   insertRowRef={spreadsheetInsertRowRef}
                   insertColRef={spreadsheetInsertColRef}
+                  colWidthIncRef={spreadsheetCWIncRef}
+                  colWidthDecRef={spreadsheetCWDecRef}
+                  rowHeightIncRef={spreadsheetCTIncRef}
+                  rowHeightDecRef={spreadsheetCTDecRef}
                   onChange={(v) => {
                     setContent(v);
                     setSaveStatus("saving");
