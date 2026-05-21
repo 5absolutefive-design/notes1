@@ -932,6 +932,19 @@ export default function PageEditor() {
                 <span className="text-2xl leading-none">⇄</span>
                 <span className="text-[11px] tracking-wide uppercase">Merge</span>
               </button>
+
+              {/* Placeholder box — 1 long top + 4 short bottom */}
+              <div className="border border-zinc-400 rounded-lg p-1.5">
+                <div className="flex flex-col gap-1">
+                  <button className="w-full h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
+                  <div className="flex items-center gap-1">
+                    <button className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
+                    <button className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
+                    <button className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
+                    <button className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
+                  </div>
+                </div>
+              </div>
             </div>
             <DeleteGroup />
           </div>
