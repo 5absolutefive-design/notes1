@@ -126,8 +126,17 @@ export default function PageEditor() {
     if (!hasSelection()) return;
     editorRef.current?.focus();
     document.execCommand(cmd, false);
+    // Collapse cursor to end of selection, then turn off format so future typing is clean
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      const range = sel.getRangeAt(0);
+      range.collapse(false);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+    // Toggle off at collapsed cursor — only affects future typing, not selected text
+    document.execCommand(cmd, false);
     handleEditorInput();
-    // Reset active states after applying — format is applied, not "locked"
     setActiveFormats({ bold: false, underline: false, strikeThrough: false, overline: false });
   };
 
