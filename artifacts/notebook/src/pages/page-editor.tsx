@@ -10,9 +10,10 @@ const VIRT_BUFFER = 30;
 const COL_LABELS = Array.from({ length: COLS }, (_, i) => String.fromCharCode(65 + i));
 
 interface MergeRegion { r1: number; c1: number; r2: number; c2: number; }
-interface SheetData { cells: Record<string, string>; merges: MergeRegion[]; colWidths?: Record<number, number>; rowHeights?: Record<number, number>; cellAligns?: Record<string, "left" | "center" | "right">; }
+type CellFormat = { bold?: boolean; underline?: boolean; strikeThrough?: boolean; overline?: boolean; fontColor?: string; highlightColor?: string; fontSize?: number; fontFamily?: string; };
+interface SheetData { cells: Record<string, string>; merges: MergeRegion[]; colWidths?: Record<number, number>; rowHeights?: Record<number, number>; cellAligns?: Record<string, "left" | "center" | "right">; cellFormats?: Record<string, CellFormat>; }
 
-function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef, insertColRef, colWidthIncRef, colWidthDecRef, rowHeightIncRef, rowHeightDecRef, onActiveSizeChange, cellAlignRef, onActiveCellAlignChange }: {
+function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef, insertColRef, colWidthIncRef, colWidthDecRef, rowHeightIncRef, rowHeightDecRef, onActiveSizeChange, cellAlignRef, onActiveCellAlignChange, cellFormatRef, onActiveCellFormatChange }: {
   content: string;
   onChange: (v: string) => void;
   mergeRef?: MutableRefObject<(() => void) | null>;
@@ -26,12 +27,14 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
   onActiveSizeChange?: (sizes: { colWidth: number; rowHeight: number } | null) => void;
   cellAlignRef?: MutableRefObject<((a: "left" | "center" | "right") => void) | null>;
   onActiveCellAlignChange?: (a: "left" | "center" | "right") => void;
+  cellFormatRef?: MutableRefObject<((fmt: Partial<CellFormat>) => void) | null>;
+  onActiveCellFormatChange?: (fmt: CellFormat) => void;
 }) {
   const parseData = (): SheetData => {
     try {
       const d = JSON.parse(content);
-      return { cells: d.cells ?? {}, merges: d.merges ?? [], colWidths: d.colWidths ?? {}, rowHeights: d.rowHeights ?? {}, cellAligns: d.cellAligns ?? {} };
-    } catch { return { cells: {}, merges: [], colWidths: {}, rowHeights: {} }; }
+      return { cells: d.cells ?? {}, merges: d.merges ?? [], colWidths: d.colWidths ?? {}, rowHeights: d.rowHeights ?? {}, cellAligns: d.cellAligns ?? {}, cellFormats: d.cellFormats ?? {} };
+    } catch { return { cells: {}, merges: [], colWidths: {}, rowHeights: {}, cellAligns: {}, cellFormats: {} }; }
   };
 
   const [data, setData] = useState<SheetData>(parseData);
@@ -227,6 +230,15 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
       const k = key(cell[0], cell[1]);
       setData(prev => ({ ...prev, cellAligns: { ...(prev.cellAligns ?? {}), [k]: a } }));
     };
+    if (cellFormatRef) cellFormatRef.current = (fmt: Partial<CellFormat>) => {
+      const cell = active ?? anchorRef.current;
+      if (!cell) return;
+      const k = key(cell[0], cell[1]);
+      setData(prev => {
+        const existing = prev.cellFormats?.[k] ?? {};
+        return { ...prev, cellFormats: { ...(prev.cellFormats ?? {}), [k]: { ...existing, ...fmt } } };
+      });
+    };
   }, [mergeSelected, clearSelected, insertRow, insertCol, colWidthInc, colWidthDec, rowHeightInc, rowHeightDec, active]);
 
   useEffect(() => {
@@ -245,6 +257,12 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
     if (!cell) return;
     onActiveCellAlignChange(data.cellAligns?.[key(cell[0], cell[1])] ?? "left");
   }, [active, data.cellAligns]);
+
+  useEffect(() => {
+    if (!onActiveCellFormatChange) return;
+    const cell = active ?? anchorRef.current;
+    onActiveCellFormatChange(cell ? (data.cellFormats?.[key(cell[0], cell[1])] ?? {}) : {});
+  }, [active, data.cellFormats]);
 
   const commitDragSelection = useCallback(() => {
     const a = anchorRef.current;
@@ -388,8 +406,22 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
                           else if (e.key === "ArrowRight" && (e.target as HTMLInputElement).selectionStart === (e.target as HTMLInputElement).value.length) { e.preventDefault(); move(r, c, 0, 1); }
                           else if (e.key === "ArrowLeft" && (e.target as HTMLInputElement).selectionStart === 0) { e.preventDefault(); move(r, c, 0, -1); }
                         }}
-                        className="w-full h-full px-1 outline-none bg-transparent text-zinc-800 text-[13px]"
-                        style={{ minWidth: isMerged ? colSpan * (data.colWidths?.[c] ?? 80) : (data.colWidths?.[c] ?? 80), pointerEvents: isDraggingRef.current ? "none" : "auto", textAlign: data.cellAligns?.[k] ?? "left" }}
+                        className="w-full h-full px-1 outline-none bg-transparent text-[13px]"
+                        style={(() => {
+                          const fmt = data.cellFormats?.[k] ?? {};
+                          const td = [fmt.underline && "underline", fmt.strikeThrough && "line-through", fmt.overline && "overline"].filter(Boolean).join(" ");
+                          return {
+                            minWidth: isMerged ? colSpan * (data.colWidths?.[c] ?? 80) : (data.colWidths?.[c] ?? 80),
+                            pointerEvents: isDraggingRef.current ? "none" : "auto",
+                            textAlign: data.cellAligns?.[k] ?? "left",
+                            fontWeight: fmt.bold ? "bold" : undefined,
+                            textDecoration: td || undefined,
+                            color: fmt.fontColor ?? "#27272a",
+                            backgroundColor: fmt.highlightColor ?? "transparent",
+                            fontSize: fmt.fontSize ?? 13,
+                            fontFamily: fmt.fontFamily ?? "monospace",
+                          };
+                        })()}
                       />
                     </td>
                   );
@@ -463,6 +495,7 @@ export default function PageEditor() {
   const spreadsheetCTIncRef = useRef<(() => void) | null>(null);
   const spreadsheetCTDecRef = useRef<(() => void) | null>(null);
   const spreadsheetSetAlignRef = useRef<((a: "left" | "center" | "right") => void) | null>(null);
+  const spreadsheetSetFormatRef = useRef<((fmt: Partial<CellFormat>) => void) | null>(null);
   const [activeSheetSizes, setActiveSheetSizes] = useState<{ colWidth: number; rowHeight: number } | null>(null);
 
   const lineHeightPx = lineSpacing === "compact" ? 28 : lineSpacing === "relaxed" ? 44 : 36;
@@ -567,6 +600,12 @@ export default function PageEditor() {
   };
 
   const execInlineFormat = (cmd: string) => {
+    if (pageType === "spreadsheet") {
+      if (cmd === "bold") spreadsheetSetFormatRef.current?.({ bold: !activeFormats.bold });
+      else if (cmd === "underline") spreadsheetSetFormatRef.current?.({ underline: !activeFormats.underline });
+      else if (cmd === "strikeThrough") spreadsheetSetFormatRef.current?.({ strikeThrough: !activeFormats.strikeThrough });
+      return;
+    }
     if (!hasSelection()) return;
     editorRef.current?.focus();
     document.execCommand(cmd, false);
@@ -592,12 +631,14 @@ export default function PageEditor() {
   const handleFontChange = (f: string) => {
     setFont(f);
     setShowFontMenu(false);
+    if (pageType === "spreadsheet") { spreadsheetSetFormatRef.current?.({ fontFamily: f }); return; }
     execFormat("fontName", f);
   };
 
   const handleFontSizeChange = (delta: number) => {
     const newSize = Math.max(8, Math.min(72, fontSize + delta));
     setFontSize(newSize);
+    if (pageType === "spreadsheet") { spreadsheetSetFormatRef.current?.({ fontSize: newSize }); return; }
     editorRef.current?.focus();
     const size = newSize <= 10 ? 1 : newSize <= 13 ? 2 : newSize <= 16 ? 3 : newSize <= 18 ? 4 : newSize <= 24 ? 5 : newSize <= 32 ? 6 : 7;
     document.execCommand("fontSize", false, String(size));
@@ -623,6 +664,7 @@ export default function PageEditor() {
         return [color, ...filtered].slice(0, 10);
       });
     }
+    if (pageType === "spreadsheet") { spreadsheetSetFormatRef.current?.({ fontColor: color }); return; }
     editorRef.current?.focus();
     if (!hasSelection()) {
       if (!restoreSelection()) return;
@@ -648,6 +690,7 @@ export default function PageEditor() {
         return [color, ...filtered].slice(0, 10);
       });
     }
+    if (pageType === "spreadsheet") { spreadsheetSetFormatRef.current?.({ highlightColor: color }); return; }
     editorRef.current?.focus();
     if (!hasSelection()) {
       if (!restoreSelection()) return;
@@ -1213,6 +1256,14 @@ export default function PageEditor() {
                   onActiveSizeChange={setActiveSheetSizes}
                   cellAlignRef={spreadsheetSetAlignRef}
                   onActiveCellAlignChange={setAlign}
+                  cellFormatRef={spreadsheetSetFormatRef}
+                  onActiveCellFormatChange={(fmt) => {
+                    setActiveFormats({ bold: !!fmt.bold, underline: !!fmt.underline, strikeThrough: !!fmt.strikeThrough, overline: !!fmt.overline });
+                    if (fmt.fontColor) setFontColor(fmt.fontColor);
+                    if (fmt.highlightColor) setHighlightColor(fmt.highlightColor);
+                    if (fmt.fontSize) setFontSize(fmt.fontSize);
+                    if (fmt.fontFamily) setFont(fmt.fontFamily);
+                  }}
                   onChange={(v) => {
                     setContent(v);
                     setSaveStatus("saving");
