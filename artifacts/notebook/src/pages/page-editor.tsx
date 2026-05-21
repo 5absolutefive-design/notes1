@@ -528,6 +528,7 @@ export default function PageEditor() {
               ref={editorRef}
               contentEditable
               suppressContentEditableWarning
+              spellCheck={false}
               onInput={handleEditorInput}
               onKeyUp={updateActiveFormats}
               onMouseUp={updateActiveFormats}
