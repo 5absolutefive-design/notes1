@@ -1,18 +1,23 @@
 import { useParams, useLocation, Redirect } from "wouter";
 import { ChevronLeft, ChevronRight, Trash2, ArchiveRestore, X, RotateCcw } from "lucide-react";
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, type MutableRefObject } from "react";
 import { store, type Book, type Page, type PageType } from "@/lib/store";
 
 const COLS = 26;
 const ROWS = 50;
 const COL_LABELS = Array.from({ length: COLS }, (_, i) => String.fromCharCode(65 + i));
 
-function SpreadsheetEditor({ content, onChange }: { content: string; onChange: (v: string) => void }) {
+function SpreadsheetEditor({ content, onChange, mergeRef }: {
+  content: string;
+  onChange: (v: string) => void;
+  mergeRef?: MutableRefObject<(() => void) | null>;
+}) {
   const parseCells = () => {
     try { return JSON.parse(content).cells ?? {}; } catch { return {}; }
   };
   const [cells, setCells] = useState<Record<string, string>>(parseCells);
   const [active, setActive] = useState<[number, number] | null>(null);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   const key = (r: number, c: number) => `${r}-${c}`;
@@ -30,11 +35,37 @@ function SpreadsheetEditor({ content, onChange }: { content: string; onChange: (
     const nr = Math.max(0, Math.min(ROWS - 1, r + dr));
     const nc = Math.max(0, Math.min(COLS - 1, c + dc));
     setActive([nr, nc]);
+    setSelected(new Set());
     setTimeout(() => inputRefs.current[key(nr, nc)]?.focus(), 0);
   };
 
+  const mergeSelected = () => {
+    if (selected.size < 2) return;
+    const keys = Array.from(selected);
+    const combined = keys.map(k => cells[k] ?? "").filter(Boolean).join(" ");
+    const firstKey = keys[0];
+    setCells(prev => {
+      const next = { ...prev };
+      keys.forEach(k => delete next[k]);
+      if (combined) next[firstKey] = combined;
+      onChange(JSON.stringify({ cells: next }));
+      return next;
+    });
+    setSelected(new Set());
+    setActive(null);
+  };
+
+  useEffect(() => {
+    if (mergeRef) mergeRef.current = mergeSelected;
+  });
+
   return (
     <div className="overflow-auto w-full h-full" style={{ fontFamily: "monospace", fontSize: 13 }}>
+      {selected.size >= 2 && (
+        <div className="px-3 py-1 bg-blue-50 border-b border-blue-200 text-[11px] text-blue-600 font-medium">
+          {selected.size} cells selected — click ⇄ in header to merge
+        </div>
+      )}
       <table className="border-collapse min-w-max">
         <thead>
           <tr>
@@ -53,14 +84,33 @@ function SpreadsheetEditor({ content, onChange }: { content: string; onChange: (
                 {r + 1}
               </td>
               {Array.from({ length: COLS }, (_, c) => {
+                const k = key(r, c);
                 const isActive = active && active[0] === r && active[1] === c;
+                const isSelected = selected.has(k);
                 return (
-                  <td key={c} className={`border border-zinc-200 p-0 ${isActive ? "outline outline-2 outline-blue-500 z-10 relative" : ""}`}>
+                  <td
+                    key={c}
+                    onClick={e => {
+                      if (e.ctrlKey || e.metaKey) {
+                        e.preventDefault();
+                        setSelected(prev => {
+                          const next = new Set(prev);
+                          next.has(k) ? next.delete(k) : next.add(k);
+                          return next;
+                        });
+                      } else {
+                        setSelected(new Set());
+                        setActive([r, c]);
+                        setTimeout(() => inputRefs.current[k]?.focus(), 0);
+                      }
+                    }}
+                    className={`border border-zinc-200 p-0 cursor-pointer ${isActive ? "outline outline-2 outline-blue-500 z-10 relative" : ""} ${isSelected ? "bg-blue-100" : ""}`}
+                  >
                     <input
-                      ref={el => { inputRefs.current[key(r, c)] = el; }}
-                      value={cells[key(r, c)] ?? ""}
+                      ref={el => { inputRefs.current[k] = el; }}
+                      value={cells[k] ?? ""}
                       onChange={e => update(r, c, e.target.value)}
-                      onFocus={() => setActive([r, c])}
+                      onFocus={() => { setActive([r, c]); setSelected(new Set()); }}
                       onKeyDown={e => {
                         if (e.key === "Enter") { e.preventDefault(); move(r, c, 1, 0); }
                         else if (e.key === "Tab") { e.preventDefault(); move(r, c, 0, e.shiftKey ? -1 : 1); }
@@ -129,6 +179,7 @@ export default function PageEditor() {
   const colorPickerRef = useRef<HTMLDivElement>(null);
   const highlightPickerRef = useRef<HTMLDivElement>(null);
   const savedRangeRef = useRef<Range | null>(null);
+  const spreadsheetMergeRef = useRef<(() => void) | null>(null);
 
   const refresh = useCallback(() => {
     setBook(store.getBook(bId) ?? null);
@@ -936,9 +987,26 @@ export default function PageEditor() {
               <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">
                 Page: <span className="text-zinc-700">PAGE {page.pageNumber}</span>
               </span>
-              {(page.pageType ?? "blank") === "lined" && (
-                <div className="flex items-center gap-1 ml-2">
-                  {/* Auto-wrap toggle */}
+              <div className="flex items-center gap-1 ml-2">
+                  {/* First button: ⇄ merge for spreadsheet, ➜] wrap toggle for others */}
+                  {(page.pageType ?? "blank") === "spreadsheet" ? (
+                    <button
+                      onClick={() => spreadsheetMergeRef.current?.()}
+                      title="Merge selected cells (Ctrl+click to select)"
+                      className="flex items-center justify-center rounded"
+                      style={{
+                        width: 22, height: 22,
+                        fontSize: 13,
+                        fontWeight: 700,
+                        border: "1.5px solid #7c3aed",
+                        color: "#7c3aed",
+                        background: "#f5f3ff",
+                        lineHeight: 1,
+                      }}
+                    >
+                      ⇄
+                    </button>
+                  ) : (
                   <button
                     onClick={() => setAutoWrap(v => !v)}
                     title={autoWrap ? "Auto-wrap: ON (click to turn off)" : "Auto-wrap: OFF (click to turn on)"}
@@ -956,6 +1024,7 @@ export default function PageEditor() {
                   >
                     ➜]
                   </button>
+                  )}
                   {/* Zoom out */}
                   <button
                     onClick={() => setZoom(z => Math.max(50, z - 10))}
@@ -991,7 +1060,6 @@ export default function PageEditor() {
                     +
                   </button>
                 </div>
-              )}
             </div>
             <div className="flex items-center gap-2">
               {(() => {
@@ -1039,6 +1107,7 @@ export default function PageEditor() {
             {(page.pageType ?? "blank") === "spreadsheet" ? (
               <SpreadsheetEditor
                 content={content}
+                mergeRef={spreadsheetMergeRef}
                 onChange={(v) => {
                   setContent(v);
                   setSaveStatus("saving");
