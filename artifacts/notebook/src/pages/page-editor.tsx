@@ -899,28 +899,6 @@ export default function PageEditor() {
             <div className="inline-flex items-start gap-2 flex-wrap">
               <CommonGroups />
 
-              {/* Cells group — spreadsheet only */}
-              <div className="border border-zinc-400 rounded-lg p-1.5">
-                <div className="flex flex-col gap-1">
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 text-center px-1">Cells</span>
-                  <div className="flex items-center gap-1">
-                    <button
-                      onClick={() => spreadsheetMergeRef.current?.()}
-                      title="Merge selected cells (drag to select first)"
-                      className="h-8 px-3 rounded-md border border-purple-300 bg-purple-50 hover:bg-purple-100 active:bg-purple-200 transition-colors text-xs font-semibold text-purple-700 flex items-center gap-1.5"
-                    >
-                      <span className="text-base leading-none">⇄</span> Merge
-                    </button>
-                    <button
-                      onClick={() => spreadsheetClearRef.current?.()}
-                      title="Clear active cell or selected cells"
-                      className="h-8 px-3 rounded-md border border-red-200 bg-red-50 hover:bg-red-100 active:bg-red-200 transition-colors text-xs font-semibold text-red-600 flex items-center gap-1.5"
-                    >
-                      <span className="text-base leading-none">✕</span> Clear
-                    </button>
-                  </div>
-                </div>
-              </div>
 
               {/* Insert group — spreadsheet only */}
               <div className="border border-zinc-400 rounded-lg p-1.5">
@@ -945,18 +923,15 @@ export default function PageEditor() {
                 </div>
               </div>
 
-              {/* Placeholder box — 1 long top + 4 short bottom */}
-              <div className="border border-zinc-400 rounded-lg p-1.5">
-                <div className="flex flex-col gap-1">
-                  <button className="w-full h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
-                  <div className="flex items-center gap-1">
-                    <button className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
-                    <button className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
-                    <button className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
-                    <button className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors" />
-                  </div>
-                </div>
-              </div>
+              {/* Merge — big standalone button */}
+              <button
+                onClick={() => spreadsheetMergeRef.current?.()}
+                title="Select cells by dragging, then click to merge"
+                className="h-[62px] px-5 rounded-xl border-2 border-purple-400 bg-purple-50 hover:bg-purple-100 active:bg-purple-200 transition-colors font-bold text-purple-700 flex flex-col items-center justify-center gap-0.5 shadow-sm"
+              >
+                <span className="text-2xl leading-none">⇄</span>
+                <span className="text-[11px] tracking-wide uppercase">Merge</span>
+              </button>
             </div>
             <DeleteGroup />
           </div>
