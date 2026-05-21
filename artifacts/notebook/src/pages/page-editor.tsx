@@ -175,7 +175,12 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
   const colWidthDec = useCallback(() => {
     const c = active ? active[1] : (anchorRef.current ? anchorRef.current[1] : null);
     if (c === null) return;
-    setData(prev => ({ ...prev, colWidths: { ...(prev.colWidths ?? {}), [c]: Math.max(40, (prev.colWidths?.[c] ?? 80) - 20) } }));
+    setData(prev => {
+      const next = Math.max(40, (prev.colWidths?.[c] ?? 80) - 20);
+      const colWidths = { ...(prev.colWidths ?? {}), [c]: next };
+      if (next === 80) delete colWidths[c];
+      return { ...prev, colWidths };
+    });
   }, [active]);
 
   const rowHeightInc = useCallback(() => {
@@ -187,7 +192,12 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
   const rowHeightDec = useCallback(() => {
     const r = active ? active[0] : (anchorRef.current ? anchorRef.current[0] : null);
     if (r === null) return;
-    setData(prev => ({ ...prev, rowHeights: { ...(prev.rowHeights ?? {}), [r]: Math.max(18, (prev.rowHeights?.[r] ?? ROW_HEIGHT) - 10) } }));
+    setData(prev => {
+      const next = Math.max(18, (prev.rowHeights?.[r] ?? ROW_HEIGHT) - 10);
+      const rowHeights = { ...(prev.rowHeights ?? {}), [r]: next };
+      if (next === ROW_HEIGHT) delete rowHeights[r];
+      return { ...prev, rowHeights };
+    });
   }, [active]);
 
   const isFirstRender = useRef(true);
