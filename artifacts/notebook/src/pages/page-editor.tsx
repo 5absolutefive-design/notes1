@@ -831,7 +831,7 @@ export default function PageEditor() {
       )}
 
       {/* Tab bar */}
-      <div className="bg-[#ece9e3] px-4 pt-0 pb-2 shrink-0">
+      <div className="bg-[#ece9e3] px-4 pt-0 pb-2 shrink-0 relative" ref={pageTypePickerRef}>
         <div className="overflow-hidden rounded-xl border border-zinc-700 shadow-sm">
           <div className="bg-[#1a1a1a] text-white flex items-stretch" style={{ minHeight: 44 }}>
             <button
@@ -871,63 +871,62 @@ export default function PageEditor() {
             >
               <ChevronRight className="w-4 h-4" />
             </button>
-            <div className="relative" ref={pageTypePickerRef}>
-              <button
-                onClick={handleCreatePage}
-                className="px-4 py-2 text-sm font-semibold text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors border-l border-zinc-700 whitespace-nowrap uppercase tracking-wider"
-              >
-                + NEW PAGE
-              </button>
-              {showPageTypePicker && (
-                <div className="absolute bottom-full right-0 mb-2 z-50 bg-white border border-zinc-200 rounded-xl shadow-2xl p-4 flex gap-3">
-                  {/* Blank */}
-                  <button
-                    onClick={() => handleCreatePageWithType("blank")}
-                    className="flex flex-col items-center gap-2 p-2 hover:bg-zinc-100 rounded-lg transition-colors group"
-                  >
-                    <div className="w-20 h-24 border-2 border-zinc-200 group-hover:border-zinc-400 rounded bg-white transition-colors shadow-sm" />
-                    <span className="text-xs font-semibold text-zinc-600 group-hover:text-zinc-900">Blank</span>
-                  </button>
-                  {/* Lined */}
-                  <button
-                    onClick={() => handleCreatePageWithType("lined")}
-                    className="flex flex-col items-center gap-2 p-2 hover:bg-zinc-100 rounded-lg transition-colors group"
-                  >
-                    <div className="w-20 h-24 border-2 border-zinc-200 group-hover:border-zinc-400 rounded bg-white overflow-hidden shadow-sm relative">
-                      <div className="absolute top-0 left-5 bottom-0 border-l-2 border-red-400" />
-                      {Array.from({ length: 7 }, (_, i) => (
-                        <div key={i} className="border-b border-blue-200" style={{ height: "13.7px" }} />
-                      ))}
-                    </div>
-                    <span className="text-xs font-semibold text-zinc-600 group-hover:text-zinc-900">Lined</span>
-                  </button>
-                  {/* Spreadsheet */}
-                  <button
-                    onClick={() => handleCreatePageWithType("spreadsheet")}
-                    className="flex flex-col items-center gap-2 p-2 hover:bg-zinc-100 rounded-lg transition-colors group"
-                  >
-                    <div className="w-20 h-24 border-2 border-zinc-200 group-hover:border-zinc-400 rounded bg-white overflow-hidden shadow-sm">
-                      <div className="grid border-b border-zinc-300 bg-zinc-100" style={{ gridTemplateColumns: "16px repeat(4, 1fr)" }}>
-                        {Array.from({ length: 5 }, (_, i) => (
-                          <div key={i} className="border-r border-zinc-300 h-3" />
-                        ))}
-                      </div>
-                      {Array.from({ length: 6 }, (_, r) => (
-                        <div key={r} className="grid border-b border-zinc-200" style={{ gridTemplateColumns: "16px repeat(4, 1fr)" }}>
-                          <div className="border-r border-zinc-300 h-3 bg-zinc-50" />
-                          {Array.from({ length: 4 }, (_, c) => (
-                            <div key={c} className="border-r border-zinc-200 h-3" />
-                          ))}
-                        </div>
-                      ))}
-                    </div>
-                    <span className="text-xs font-semibold text-zinc-600 group-hover:text-zinc-900">Spreadsheet</span>
-                  </button>
-                </div>
-              )}
-            </div>
+            <button
+              onClick={handleCreatePage}
+              className="px-4 py-2 text-sm font-semibold text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors border-l border-zinc-700 whitespace-nowrap uppercase tracking-wider"
+            >
+              + NEW PAGE
+            </button>
           </div>
         </div>
+        {/* Page type picker — outside overflow-hidden so it's not clipped */}
+        {showPageTypePicker && (
+          <div className="absolute bottom-full right-4 mb-1 z-50 bg-white border border-zinc-200 rounded-xl shadow-2xl p-4 flex gap-3">
+            {/* Blank */}
+            <button
+              onClick={() => handleCreatePageWithType("blank")}
+              className="flex flex-col items-center gap-2 p-2 hover:bg-zinc-100 rounded-lg transition-colors group"
+            >
+              <div className="w-20 h-24 border-2 border-zinc-200 group-hover:border-zinc-400 rounded bg-white transition-colors shadow-sm" />
+              <span className="text-xs font-semibold text-zinc-600 group-hover:text-zinc-900">Blank</span>
+            </button>
+            {/* Lined */}
+            <button
+              onClick={() => handleCreatePageWithType("lined")}
+              className="flex flex-col items-center gap-2 p-2 hover:bg-zinc-100 rounded-lg transition-colors group"
+            >
+              <div className="w-20 h-24 border-2 border-zinc-200 group-hover:border-zinc-400 rounded bg-white overflow-hidden shadow-sm relative">
+                <div className="absolute top-0 left-5 bottom-0 border-l-2 border-red-400" />
+                {Array.from({ length: 7 }, (_, i) => (
+                  <div key={i} className="border-b border-blue-200" style={{ height: "13.7px" }} />
+                ))}
+              </div>
+              <span className="text-xs font-semibold text-zinc-600 group-hover:text-zinc-900">Lined</span>
+            </button>
+            {/* Spreadsheet */}
+            <button
+              onClick={() => handleCreatePageWithType("spreadsheet")}
+              className="flex flex-col items-center gap-2 p-2 hover:bg-zinc-100 rounded-lg transition-colors group"
+            >
+              <div className="w-20 h-24 border-2 border-zinc-200 group-hover:border-zinc-400 rounded bg-white overflow-hidden shadow-sm">
+                <div className="grid border-b border-zinc-300 bg-zinc-100" style={{ gridTemplateColumns: "16px repeat(4, 1fr)" }}>
+                  {Array.from({ length: 5 }, (_, i) => (
+                    <div key={i} className="border-r border-zinc-300 h-3" />
+                  ))}
+                </div>
+                {Array.from({ length: 6 }, (_, r) => (
+                  <div key={r} className="grid border-b border-zinc-200" style={{ gridTemplateColumns: "16px repeat(4, 1fr)" }}>
+                    <div className="border-r border-zinc-300 h-3 bg-zinc-50" />
+                    {Array.from({ length: 4 }, (_, c) => (
+                      <div key={c} className="border-r border-zinc-200 h-3" />
+                    ))}
+                  </div>
+                ))}
+              </div>
+              <span className="text-xs font-semibold text-zinc-600 group-hover:text-zinc-900">Spreadsheet</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Paper card */}
