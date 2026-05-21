@@ -353,7 +353,7 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
                       rowSpan={rowSpan}
                       onMouseDown={e => {
                         if (e.button !== 0) return;
-                        if ((e.target as HTMLElement).tagName === "INPUT") return;
+                        if ((e.target as HTMLElement).tagName === "INPUT" && isActive) return;
                         e.preventDefault();
                         anchorRef.current = [r, c];
                         dragEndRef.current = [r, c];
