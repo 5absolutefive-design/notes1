@@ -23,23 +23,31 @@ function SpreadsheetEditor({ content, onChange, mergeRef }: {
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const tableRef = useRef<HTMLDivElement>(null);
 
+  // Always-fresh refs so mergeSelected never reads stale closure values
+  const anchorRef = useRef<[number, number] | null>(null);
+  const dragEndRef = useRef<[number, number] | null>(null);
+  const cellsRef = useRef<Record<string, string>>({});
+  anchorRef.current = anchor;
+  dragEndRef.current = dragEnd;
+  cellsRef.current = cells;
+
   const key = (r: number, c: number) => `${r}-${c}`;
 
-  // Compute selected rectangle from anchor→dragEnd
-  const getSelected = (): Set<string> => {
-    if (!anchor) return new Set();
-    const end = dragEnd ?? anchor;
-    const minR = Math.min(anchor[0], end[0]);
-    const maxR = Math.max(anchor[0], end[0]);
-    const minC = Math.min(anchor[1], end[1]);
-    const maxC = Math.max(anchor[1], end[1]);
-    const s = new Set<string>();
+  const getRectKeys = (a: [number,number], d: [number,number]): string[] => {
+    const minR = Math.min(a[0], d[0]), maxR = Math.max(a[0], d[0]);
+    const minC = Math.min(a[1], d[1]), maxC = Math.max(a[1], d[1]);
+    const ks: string[] = [];
     for (let r = minR; r <= maxR; r++)
       for (let c = minC; c <= maxC; c++)
-        s.add(key(r, c));
-    return s;
+        ks.push(key(r, c));
+    return ks;
   };
-  const selected = getSelected();
+
+  // Compute selected rectangle from anchor→dragEnd (for rendering)
+  const selected = (() => {
+    if (!anchor) return new Set<string>();
+    return new Set<string>(getRectKeys(anchor, dragEnd ?? anchor));
+  })();
   const selCount = selected.size;
 
   const update = (r: number, c: number, val: string) => {
@@ -60,10 +68,14 @@ function SpreadsheetEditor({ content, onChange, mergeRef }: {
     setTimeout(() => inputRefs.current[key(nr, nc)]?.focus(), 0);
   };
 
-  const mergeSelected = () => {
-    if (selCount < 2) return;
-    const keys = Array.from(selected);
-    const combined = keys.map(k => cells[k] ?? "").filter(Boolean).join(" ");
+  // Uses refs — always reads the latest anchor/dragEnd/cells, no stale closure
+  const mergeSelected = useCallback(() => {
+    const a = anchorRef.current;
+    if (!a) return;
+    const d = dragEndRef.current ?? a;
+    const keys = getRectKeys(a, d);
+    if (keys.length < 2) return;
+    const combined = keys.map(k => cellsRef.current[k] ?? "").filter(Boolean).join(" ");
     const firstKey = keys[0];
     setCells(prev => {
       const next = { ...prev };
@@ -75,11 +87,11 @@ function SpreadsheetEditor({ content, onChange, mergeRef }: {
     setAnchor(null);
     setDragEnd(null);
     setActive(null);
-  };
+  }, [onChange]);
 
   useEffect(() => {
     if (mergeRef) mergeRef.current = mergeSelected;
-  });
+  }, [mergeSelected]);
 
   // Global mouseup to end drag
   useEffect(() => {
