@@ -71,9 +71,7 @@ function SpreadsheetEditor({ content, onChange, mergeRef }: {
     setData(prev => {
       const cells = { ...prev.cells, [key(r, c)]: val };
       if (!val) delete cells[key(r, c)];
-      const next = { ...prev, cells };
-      onChange(JSON.stringify(next));
-      return next;
+      return { ...prev, cells };
     });
   };
 
@@ -105,15 +103,20 @@ function SpreadsheetEditor({ content, onChange, mergeRef }: {
         m => !(m.r1 <= rect.r2 && m.r2 >= rect.r1 && m.c1 <= rect.c2 && m.c2 >= rect.c1)
       );
       merges.push(rect);
-      const next = { cells, merges };
-      onChange(JSON.stringify(next));
-      return next;
+      return { cells, merges };
     });
     anchorRef.current = null;
     dragEndRef.current = null;
     setSelection(null);
     setActive(null);
   }, [onChange]);
+
+  // Sync all data changes to parent — avoids calling onChange inside setData updaters
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) { isFirstRender.current = false; return; }
+    onChange(JSON.stringify(data));
+  }, [data]);
 
   useEffect(() => {
     if (mergeRef) mergeRef.current = mergeSelected;
@@ -175,11 +178,6 @@ function SpreadsheetEditor({ content, onChange, mergeRef }: {
         });
       }}
     >
-      {selCount >= 2 && (
-        <div className="px-3 py-1 bg-blue-50 border-b border-blue-200 text-[11px] text-blue-600 font-medium">
-          {selCount} cells selected — click ⇄ in header to merge
-        </div>
-      )}
       <table className="border-collapse min-w-max" style={{ tableLayout: "fixed" }}>
         <thead>
           <tr>
@@ -228,8 +226,6 @@ function SpreadsheetEditor({ content, onChange, mergeRef }: {
                         ? "outline outline-2 outline-blue-500 z-10 relative border-blue-400"
                         : isSelected
                         ? "bg-blue-100 border-blue-300"
-                        : isMerged
-                        ? "bg-blue-50 border-blue-200"
                         : "border-zinc-200"
                     }`}
                     style={{ height: 24, minWidth: 80 }}
