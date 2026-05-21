@@ -12,7 +12,7 @@ const COL_LABELS = Array.from({ length: COLS }, (_, i) => String.fromCharCode(65
 interface MergeRegion { r1: number; c1: number; r2: number; c2: number; }
 interface SheetData { cells: Record<string, string>; merges: MergeRegion[]; colWidths?: Record<number, number>; rowHeights?: Record<number, number>; }
 
-function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef, insertColRef, colWidthIncRef, colWidthDecRef, rowHeightIncRef, rowHeightDecRef }: {
+function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef, insertColRef, colWidthIncRef, colWidthDecRef, rowHeightIncRef, rowHeightDecRef, onActiveSizeChange }: {
   content: string;
   onChange: (v: string) => void;
   mergeRef?: MutableRefObject<(() => void) | null>;
@@ -23,6 +23,7 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
   colWidthDecRef?: MutableRefObject<(() => void) | null>;
   rowHeightIncRef?: MutableRefObject<(() => void) | null>;
   rowHeightDecRef?: MutableRefObject<(() => void) | null>;
+  onActiveSizeChange?: (sizes: { colWidth: number; rowHeight: number } | null) => void;
 }) {
   const parseData = (): SheetData => {
     try {
@@ -205,6 +206,16 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
     if (rowHeightIncRef) rowHeightIncRef.current = rowHeightInc;
     if (rowHeightDecRef) rowHeightDecRef.current = rowHeightDec;
   }, [mergeSelected, clearSelected, insertRow, insertCol, colWidthInc, colWidthDec, rowHeightInc, rowHeightDec]);
+
+  useEffect(() => {
+    if (!onActiveSizeChange) return;
+    const cell = active ?? anchorRef.current;
+    if (!cell) { onActiveSizeChange(null); return; }
+    onActiveSizeChange({
+      colWidth: data.colWidths?.[cell[1]] ?? 80,
+      rowHeight: data.rowHeights?.[cell[0]] ?? ROW_HEIGHT,
+    });
+  }, [active, data.colWidths, data.rowHeights]);
 
   const commitDragSelection = useCallback(() => {
     const a = anchorRef.current;
@@ -421,6 +432,7 @@ export default function PageEditor() {
   const spreadsheetCWDecRef = useRef<(() => void) | null>(null);
   const spreadsheetCTIncRef = useRef<(() => void) | null>(null);
   const spreadsheetCTDecRef = useRef<(() => void) | null>(null);
+  const [activeSheetSizes, setActiveSheetSizes] = useState<{ colWidth: number; rowHeight: number } | null>(null);
 
   const lineHeightPx = lineSpacing === "compact" ? 28 : lineSpacing === "relaxed" ? 44 : 36;
 
@@ -968,10 +980,18 @@ export default function PageEditor() {
                     className="w-full h-8 rounded-md border border-purple-400 bg-purple-50 hover:bg-purple-100 active:bg-purple-200 transition-colors text-xs font-bold text-purple-700 flex items-center justify-center gap-1"
                   ><span className="text-sm leading-none">⇄</span> Merge</button>
                   <div className="flex items-center gap-1">
-                    <button onClick={() => spreadsheetCWIncRef.current?.()} title="Widen selected column" className="w-8 h-8 rounded-md border border-blue-300 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 transition-colors text-[10px] font-bold text-blue-700 flex items-center justify-center">CW+</button>
-                    <button onClick={() => spreadsheetCWDecRef.current?.()} title="Narrow selected column" className="w-8 h-8 rounded-md border border-blue-300 bg-blue-50 hover:bg-blue-100 active:bg-blue-200 transition-colors text-[10px] font-bold text-blue-700 flex items-center justify-center">CW−</button>
-                    <button onClick={() => spreadsheetCTIncRef.current?.()} title="Increase selected row height" className="w-8 h-8 rounded-md border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 active:bg-emerald-200 transition-colors text-[10px] font-bold text-emerald-700 flex items-center justify-center">CT+</button>
-                    <button onClick={() => spreadsheetCTDecRef.current?.()} title="Decrease selected row height" className="w-8 h-8 rounded-md border border-emerald-300 bg-emerald-50 hover:bg-emerald-100 active:bg-emerald-200 transition-colors text-[10px] font-bold text-emerald-700 flex items-center justify-center">CT−</button>
+                    {(() => {
+                      const cw = activeSheetSizes?.colWidth ?? 80;
+                      const rh = activeSheetSizes?.rowHeight ?? 24;
+                      const cwBig = cw > 80; const cwSmall = cw < 80;
+                      const rhBig = rh > 24; const rhSmall = rh < 24;
+                      return (<>
+                        <button onClick={() => spreadsheetCWIncRef.current?.()} title="Widen selected column" className={`w-8 h-8 rounded-md border transition-colors text-[10px] font-bold flex items-center justify-center ${cwBig ? "border-green-400 bg-green-100 text-green-700 shadow-[0_0_6px_2px_rgba(74,222,128,0.5)]" : "border-zinc-300 bg-white text-zinc-600 hover:bg-zinc-50"}`}>CW+</button>
+                        <button onClick={() => spreadsheetCWDecRef.current?.()} title="Narrow selected column" className={`w-8 h-8 rounded-md border transition-colors text-[10px] font-bold flex items-center justify-center ${cwSmall ? "border-red-400 bg-red-100 text-red-700 shadow-[0_0_6px_2px_rgba(248,113,113,0.5)]" : "border-zinc-300 bg-white text-zinc-600 hover:bg-zinc-50"}`}>CW−</button>
+                        <button onClick={() => spreadsheetCTIncRef.current?.()} title="Increase selected row height" className={`w-8 h-8 rounded-md border transition-colors text-[10px] font-bold flex items-center justify-center ${rhBig ? "border-green-400 bg-green-100 text-green-700 shadow-[0_0_6px_2px_rgba(74,222,128,0.5)]" : "border-zinc-300 bg-white text-zinc-600 hover:bg-zinc-50"}`}>CT+</button>
+                        <button onClick={() => spreadsheetCTDecRef.current?.()} title="Decrease selected row height" className={`w-8 h-8 rounded-md border transition-colors text-[10px] font-bold flex items-center justify-center ${rhSmall ? "border-red-400 bg-red-100 text-red-700 shadow-[0_0_6px_2px_rgba(248,113,113,0.5)]" : "border-zinc-300 bg-white text-zinc-600 hover:bg-zinc-50"}`}>CT−</button>
+                      </>);
+                    })()}
                   </div>
                 </div>
               </div>
@@ -1185,6 +1205,7 @@ export default function PageEditor() {
                   colWidthDecRef={spreadsheetCWDecRef}
                   rowHeightIncRef={spreadsheetCTIncRef}
                   rowHeightDecRef={spreadsheetCTDecRef}
+                  onActiveSizeChange={setActiveSheetSizes}
                   onChange={(v) => {
                     setContent(v);
                     setSaveStatus("saving");
