@@ -1,7 +1,87 @@
 import { useParams, useLocation, Redirect } from "wouter";
 import { ChevronLeft, ChevronRight, Trash2, ArchiveRestore, X, RotateCcw } from "lucide-react";
 import { useState, useEffect, useRef, useCallback } from "react";
-import { store, type Book, type Page } from "@/lib/store";
+import { store, type Book, type Page, type PageType } from "@/lib/store";
+
+const COLS = 26;
+const ROWS = 50;
+const COL_LABELS = Array.from({ length: COLS }, (_, i) => String.fromCharCode(65 + i));
+
+function SpreadsheetEditor({ content, onChange }: { content: string; onChange: (v: string) => void }) {
+  const parseCells = () => {
+    try { return JSON.parse(content).cells ?? {}; } catch { return {}; }
+  };
+  const [cells, setCells] = useState<Record<string, string>>(parseCells);
+  const [active, setActive] = useState<[number, number] | null>(null);
+  const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
+
+  const key = (r: number, c: number) => `${r}-${c}`;
+
+  const update = (r: number, c: number, val: string) => {
+    setCells(prev => {
+      const next = { ...prev, [key(r, c)]: val };
+      if (!val) delete next[key(r, c)];
+      onChange(JSON.stringify({ cells: next }));
+      return next;
+    });
+  };
+
+  const move = (r: number, c: number, dr: number, dc: number) => {
+    const nr = Math.max(0, Math.min(ROWS - 1, r + dr));
+    const nc = Math.max(0, Math.min(COLS - 1, c + dc));
+    setActive([nr, nc]);
+    setTimeout(() => inputRefs.current[key(nr, nc)]?.focus(), 0);
+  };
+
+  return (
+    <div className="overflow-auto w-full h-full" style={{ fontFamily: "monospace", fontSize: 13 }}>
+      <table className="border-collapse min-w-max">
+        <thead>
+          <tr>
+            <th className="w-10 min-w-[40px] bg-zinc-100 border border-zinc-300 text-zinc-400 text-[11px] font-medium sticky top-0 left-0 z-20" />
+            {COL_LABELS.map(col => (
+              <th key={col} className="min-w-[80px] bg-zinc-100 border border-zinc-300 text-zinc-600 text-[11px] font-semibold px-1 py-0.5 sticky top-0 z-10 text-center">
+                {col}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {Array.from({ length: ROWS }, (_, r) => (
+            <tr key={r}>
+              <td className="bg-zinc-50 border border-zinc-300 text-zinc-400 text-[11px] text-center font-medium px-1 sticky left-0 z-10 select-none min-w-[40px]">
+                {r + 1}
+              </td>
+              {Array.from({ length: COLS }, (_, c) => {
+                const isActive = active && active[0] === r && active[1] === c;
+                return (
+                  <td key={c} className={`border border-zinc-200 p-0 ${isActive ? "outline outline-2 outline-blue-500 z-10 relative" : ""}`}>
+                    <input
+                      ref={el => { inputRefs.current[key(r, c)] = el; }}
+                      value={cells[key(r, c)] ?? ""}
+                      onChange={e => update(r, c, e.target.value)}
+                      onFocus={() => setActive([r, c])}
+                      onKeyDown={e => {
+                        if (e.key === "Enter") { e.preventDefault(); move(r, c, 1, 0); }
+                        else if (e.key === "Tab") { e.preventDefault(); move(r, c, 0, e.shiftKey ? -1 : 1); }
+                        else if (e.key === "ArrowDown") { e.preventDefault(); move(r, c, 1, 0); }
+                        else if (e.key === "ArrowUp") { e.preventDefault(); move(r, c, -1, 0); }
+                        else if (e.key === "ArrowRight" && (e.target as HTMLInputElement).selectionStart === (e.target as HTMLInputElement).value.length) { e.preventDefault(); move(r, c, 0, 1); }
+                        else if (e.key === "ArrowLeft" && (e.target as HTMLInputElement).selectionStart === 0) { e.preventDefault(); move(r, c, 0, -1); }
+                      }}
+                      className="w-full h-6 px-1 outline-none bg-transparent text-zinc-800 text-[13px]"
+                      style={{ minWidth: 80 }}
+                    />
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
 
 const FONTS = [
   "Inter", "Roboto", "Lato", "Poppins", "Nunito",
@@ -23,6 +103,8 @@ export default function PageEditor() {
   const [pageTitle, setPageTitle] = useState("");
   const [showTrash, setShowTrash] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving">("saved");
+  const [showPageTypePicker, setShowPageTypePicker] = useState(false);
+  const pageTypePickerRef = useRef<HTMLDivElement>(null);
 
   const [font, setFont] = useState("Inter");
   const [fontSize, setFontSize] = useState(16);
@@ -82,6 +164,9 @@ export default function PageEditor() {
       }
       if (highlightPickerRef.current && !highlightPickerRef.current.contains(e.target as Node)) {
         setShowHighlightPicker(false);
+      }
+      if (pageTypePickerRef.current && !pageTypePickerRef.current.contains(e.target as Node)) {
+        setShowPageTypePicker(false);
       }
     };
     document.addEventListener("mousedown", handler);
@@ -290,7 +375,12 @@ export default function PageEditor() {
   };
 
   const handleCreatePage = () => {
-    const newPage = store.createPage(bId, { title: `PAGE ${pages.length + 1}`, content: "" });
+    setShowPageTypePicker(v => !v);
+  };
+
+  const handleCreatePageWithType = (type: PageType) => {
+    setShowPageTypePicker(false);
+    const newPage = store.createPage(bId, { title: `PAGE ${pages.length + 1}`, content: "", pageType: type });
     refresh();
     setLocation(`/books/${bId}/pages/${newPage.id}`);
   };
@@ -781,12 +871,61 @@ export default function PageEditor() {
             >
               <ChevronRight className="w-4 h-4" />
             </button>
-            <button
-              onClick={handleCreatePage}
-              className="px-4 py-2 text-sm font-semibold text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors border-l border-zinc-700 whitespace-nowrap uppercase tracking-wider"
-            >
-              + NEW PAGE
-            </button>
+            <div className="relative" ref={pageTypePickerRef}>
+              <button
+                onClick={handleCreatePage}
+                className="px-4 py-2 text-sm font-semibold text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors border-l border-zinc-700 whitespace-nowrap uppercase tracking-wider"
+              >
+                + NEW PAGE
+              </button>
+              {showPageTypePicker && (
+                <div className="absolute bottom-full right-0 mb-2 z-50 bg-white border border-zinc-200 rounded-xl shadow-2xl p-4 flex gap-3">
+                  {/* Blank */}
+                  <button
+                    onClick={() => handleCreatePageWithType("blank")}
+                    className="flex flex-col items-center gap-2 p-2 hover:bg-zinc-100 rounded-lg transition-colors group"
+                  >
+                    <div className="w-20 h-24 border-2 border-zinc-200 group-hover:border-zinc-400 rounded bg-white transition-colors shadow-sm" />
+                    <span className="text-xs font-semibold text-zinc-600 group-hover:text-zinc-900">Blank</span>
+                  </button>
+                  {/* Lined */}
+                  <button
+                    onClick={() => handleCreatePageWithType("lined")}
+                    className="flex flex-col items-center gap-2 p-2 hover:bg-zinc-100 rounded-lg transition-colors group"
+                  >
+                    <div className="w-20 h-24 border-2 border-zinc-200 group-hover:border-zinc-400 rounded bg-white overflow-hidden shadow-sm relative">
+                      <div className="absolute top-0 left-5 bottom-0 border-l-2 border-red-400" />
+                      {Array.from({ length: 7 }, (_, i) => (
+                        <div key={i} className="border-b border-blue-200" style={{ height: "13.7px" }} />
+                      ))}
+                    </div>
+                    <span className="text-xs font-semibold text-zinc-600 group-hover:text-zinc-900">Lined</span>
+                  </button>
+                  {/* Spreadsheet */}
+                  <button
+                    onClick={() => handleCreatePageWithType("spreadsheet")}
+                    className="flex flex-col items-center gap-2 p-2 hover:bg-zinc-100 rounded-lg transition-colors group"
+                  >
+                    <div className="w-20 h-24 border-2 border-zinc-200 group-hover:border-zinc-400 rounded bg-white overflow-hidden shadow-sm">
+                      <div className="grid border-b border-zinc-300 bg-zinc-100" style={{ gridTemplateColumns: "16px repeat(4, 1fr)" }}>
+                        {Array.from({ length: 5 }, (_, i) => (
+                          <div key={i} className="border-r border-zinc-300 h-3" />
+                        ))}
+                      </div>
+                      {Array.from({ length: 6 }, (_, r) => (
+                        <div key={r} className="grid border-b border-zinc-200" style={{ gridTemplateColumns: "16px repeat(4, 1fr)" }}>
+                          <div className="border-r border-zinc-300 h-3 bg-zinc-50" />
+                          {Array.from({ length: 4 }, (_, c) => (
+                            <div key={c} className="border-r border-zinc-200 h-3" />
+                          ))}
+                        </div>
+                      ))}
+                    </div>
+                    <span className="text-xs font-semibold text-zinc-600 group-hover:text-zinc-900">Spreadsheet</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -804,24 +943,71 @@ export default function PageEditor() {
           </div>
 
           <div className="flex-1 overflow-y-auto bg-white" style={{ scrollbarWidth: "thin" }}>
-            <div
-              ref={editorRef}
-              contentEditable
-              suppressContentEditableWarning
-              spellCheck={false}
-              onInput={handleEditorInput}
-              onKeyUp={updateActiveFormats}
-              onMouseUp={updateActiveFormats}
-              className="w-full min-h-full outline-none px-6 py-4 text-zinc-800"
-              style={{
-                fontFamily: font,
-                fontSize: fontSize,
-                lineHeight: "1.8",
-                minHeight: 600,
-                whiteSpace: "pre-wrap",
-              }}
-              data-placeholder="Start writing..."
-            />
+            {(page.pageType ?? "blank") === "spreadsheet" ? (
+              <SpreadsheetEditor
+                content={content}
+                onChange={(v) => {
+                  setContent(v);
+                  setSaveStatus("saving");
+                }}
+              />
+            ) : (page.pageType ?? "blank") === "lined" ? (
+              <div className="flex w-full" style={{ minHeight: 600 }}>
+                {/* Line numbers + red margin */}
+                <div className="shrink-0 border-r-2 border-red-400 bg-[#fdf8f6] text-right pr-2 pt-4 select-none" style={{ width: 44, minHeight: 600 }}>
+                  {Array.from({ length: 40 }, (_, i) => (
+                    <div key={i} className="text-[11px] text-zinc-400 font-mono leading-[36px]">{i + 1}</div>
+                  ))}
+                </div>
+                {/* Lined editor */}
+                <div className="flex-1 relative" style={{ minHeight: 600 }}>
+                  <div
+                    className="absolute inset-0 pointer-events-none"
+                    style={{
+                      backgroundImage: "repeating-linear-gradient(transparent, transparent 35px, #bfdbfe 35px, #bfdbfe 36px)",
+                      backgroundPositionY: "4px",
+                    }}
+                  />
+                  <div
+                    ref={editorRef}
+                    contentEditable
+                    suppressContentEditableWarning
+                    spellCheck={false}
+                    onInput={handleEditorInput}
+                    onKeyUp={updateActiveFormats}
+                    onMouseUp={updateActiveFormats}
+                    className="relative w-full outline-none px-4 py-1 text-zinc-800 z-10"
+                    style={{
+                      fontFamily: font,
+                      fontSize: fontSize,
+                      lineHeight: "36px",
+                      minHeight: 600,
+                      whiteSpace: "pre-wrap",
+                    }}
+                    data-placeholder="Start writing..."
+                  />
+                </div>
+              </div>
+            ) : (
+              <div
+                ref={editorRef}
+                contentEditable
+                suppressContentEditableWarning
+                spellCheck={false}
+                onInput={handleEditorInput}
+                onKeyUp={updateActiveFormats}
+                onMouseUp={updateActiveFormats}
+                className="w-full min-h-full outline-none px-6 py-4 text-zinc-800"
+                style={{
+                  fontFamily: font,
+                  fontSize: fontSize,
+                  lineHeight: "1.8",
+                  minHeight: 600,
+                  whiteSpace: "pre-wrap",
+                }}
+                data-placeholder="Start writing..."
+              />
+            )}
           </div>
 
           <div className="bg-[#f5f2ee] border-t border-zinc-200 px-4 py-1 flex items-center justify-between text-xs text-zinc-500 shrink-0">

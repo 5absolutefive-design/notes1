@@ -6,11 +6,14 @@ export interface Book {
   updatedAt: string;
 }
 
+export type PageType = "blank" | "lined" | "spreadsheet";
+
 export interface Page {
   id: number;
   bookId: number;
   title: string;
   content: string;
+  pageType: PageType;
   pageNumber: number;
   deletedAt: string | null;
   createdAt: string;
@@ -121,7 +124,7 @@ export const store = {
     return loadPages().find((p) => p.bookId === bookId && p.id === pageId && !p.deletedAt);
   },
 
-  createPage(bookId: number, data: { title: string; content?: string }): Page {
+  createPage(bookId: number, data: { title: string; content?: string; pageType?: PageType }): Page {
     const pages = loadPages();
     const existing = pages.filter((p) => p.bookId === bookId && !p.deletedAt);
     const page: Page = {
@@ -129,6 +132,7 @@ export const store = {
       bookId,
       title: data.title,
       content: data.content ?? "",
+      pageType: data.pageType ?? "blank",
       pageNumber: existing.length + 1,
       deletedAt: null,
       createdAt: now(),
