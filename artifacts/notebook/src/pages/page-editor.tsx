@@ -881,49 +881,45 @@ export default function PageEditor() {
         </div>
         {/* Page type picker — outside overflow-hidden so it's not clipped */}
         {showPageTypePicker && (
-          <div className="absolute bottom-full right-4 mb-1 z-50 bg-white border border-zinc-200 rounded-xl shadow-2xl p-4 flex gap-3">
+          <div className="absolute bottom-full right-4 mb-2 z-50 bg-white border border-zinc-200 rounded-lg shadow-xl p-2 flex gap-1.5">
             {/* Blank */}
             <button
               onClick={() => handleCreatePageWithType("blank")}
-              className="flex flex-col items-center gap-2 p-2 hover:bg-zinc-100 rounded-lg transition-colors group"
+              className="flex flex-col items-center gap-1 px-2 py-1.5 hover:bg-zinc-100 rounded-md transition-colors group"
             >
-              <div className="w-20 h-24 border-2 border-zinc-200 group-hover:border-zinc-400 rounded bg-white transition-colors shadow-sm" />
-              <span className="text-xs font-semibold text-zinc-600 group-hover:text-zinc-900">Blank</span>
+              <div className="w-10 h-12 border border-zinc-300 group-hover:border-zinc-500 rounded-sm bg-white shadow-sm" />
+              <span className="text-[10px] font-semibold text-zinc-500 group-hover:text-zinc-800">Blank</span>
             </button>
             {/* Lined */}
             <button
               onClick={() => handleCreatePageWithType("lined")}
-              className="flex flex-col items-center gap-2 p-2 hover:bg-zinc-100 rounded-lg transition-colors group"
+              className="flex flex-col items-center gap-1 px-2 py-1.5 hover:bg-zinc-100 rounded-md transition-colors group"
             >
-              <div className="w-20 h-24 border-2 border-zinc-200 group-hover:border-zinc-400 rounded bg-white overflow-hidden shadow-sm relative">
-                <div className="absolute top-0 left-5 bottom-0 border-l-2 border-red-400" />
-                {Array.from({ length: 7 }, (_, i) => (
-                  <div key={i} className="border-b border-blue-200" style={{ height: "13.7px" }} />
+              <div className="w-10 h-12 border border-zinc-300 group-hover:border-zinc-500 rounded-sm bg-white overflow-hidden shadow-sm relative">
+                <div className="absolute top-0 left-3 bottom-0 border-l border-red-400" />
+                {Array.from({ length: 8 }, (_, i) => (
+                  <div key={i} className="border-b border-blue-200" style={{ height: "6px" }} />
                 ))}
               </div>
-              <span className="text-xs font-semibold text-zinc-600 group-hover:text-zinc-900">Lined</span>
+              <span className="text-[10px] font-semibold text-zinc-500 group-hover:text-zinc-800">Lined</span>
             </button>
             {/* Spreadsheet */}
             <button
               onClick={() => handleCreatePageWithType("spreadsheet")}
-              className="flex flex-col items-center gap-2 p-2 hover:bg-zinc-100 rounded-lg transition-colors group"
+              className="flex flex-col items-center gap-1 px-2 py-1.5 hover:bg-zinc-100 rounded-md transition-colors group"
             >
-              <div className="w-20 h-24 border-2 border-zinc-200 group-hover:border-zinc-400 rounded bg-white overflow-hidden shadow-sm">
-                <div className="grid border-b border-zinc-300 bg-zinc-100" style={{ gridTemplateColumns: "16px repeat(4, 1fr)" }}>
-                  {Array.from({ length: 5 }, (_, i) => (
-                    <div key={i} className="border-r border-zinc-300 h-3" />
-                  ))}
+              <div className="w-10 h-12 border border-zinc-300 group-hover:border-zinc-500 rounded-sm bg-white overflow-hidden shadow-sm">
+                <div className="grid border-b border-zinc-300 bg-zinc-100" style={{ gridTemplateColumns: "8px repeat(3, 1fr)" }}>
+                  {Array.from({ length: 4 }, (_, i) => <div key={i} className="border-r border-zinc-300 h-2" />)}
                 </div>
-                {Array.from({ length: 6 }, (_, r) => (
-                  <div key={r} className="grid border-b border-zinc-200" style={{ gridTemplateColumns: "16px repeat(4, 1fr)" }}>
-                    <div className="border-r border-zinc-300 h-3 bg-zinc-50" />
-                    {Array.from({ length: 4 }, (_, c) => (
-                      <div key={c} className="border-r border-zinc-200 h-3" />
-                    ))}
+                {Array.from({ length: 8 }, (_, r) => (
+                  <div key={r} className="grid border-b border-zinc-200" style={{ gridTemplateColumns: "8px repeat(3, 1fr)" }}>
+                    <div className="border-r border-zinc-300 h-[5px] bg-zinc-50" />
+                    {Array.from({ length: 3 }, (_, c) => <div key={c} className="border-r border-zinc-200 h-[5px]" />)}
                   </div>
                 ))}
               </div>
-              <span className="text-xs font-semibold text-zinc-600 group-hover:text-zinc-900">Spreadsheet</span>
+              <span className="text-[10px] font-semibold text-zinc-500 group-hover:text-zinc-800">Sheet</span>
             </button>
           </div>
         )}
