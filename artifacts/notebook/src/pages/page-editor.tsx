@@ -10,9 +10,9 @@ const VIRT_BUFFER = 30;
 const COL_LABELS = Array.from({ length: COLS }, (_, i) => String.fromCharCode(65 + i));
 
 interface MergeRegion { r1: number; c1: number; r2: number; c2: number; }
-interface SheetData { cells: Record<string, string>; merges: MergeRegion[]; colWidths?: Record<number, number>; rowHeights?: Record<number, number>; }
+interface SheetData { cells: Record<string, string>; merges: MergeRegion[]; colWidths?: Record<number, number>; rowHeights?: Record<number, number>; cellAligns?: Record<string, "left" | "center" | "right">; }
 
-function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef, insertColRef, colWidthIncRef, colWidthDecRef, rowHeightIncRef, rowHeightDecRef, onActiveSizeChange }: {
+function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef, insertColRef, colWidthIncRef, colWidthDecRef, rowHeightIncRef, rowHeightDecRef, onActiveSizeChange, cellAlignRef, onActiveCellAlignChange }: {
   content: string;
   onChange: (v: string) => void;
   mergeRef?: MutableRefObject<(() => void) | null>;
@@ -24,11 +24,13 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
   rowHeightIncRef?: MutableRefObject<(() => void) | null>;
   rowHeightDecRef?: MutableRefObject<(() => void) | null>;
   onActiveSizeChange?: (sizes: { colWidth: number; rowHeight: number } | null) => void;
+  cellAlignRef?: MutableRefObject<((a: "left" | "center" | "right") => void) | null>;
+  onActiveCellAlignChange?: (a: "left" | "center" | "right") => void;
 }) {
   const parseData = (): SheetData => {
     try {
       const d = JSON.parse(content);
-      return { cells: d.cells ?? {}, merges: d.merges ?? [], colWidths: d.colWidths ?? {}, rowHeights: d.rowHeights ?? {} };
+      return { cells: d.cells ?? {}, merges: d.merges ?? [], colWidths: d.colWidths ?? {}, rowHeights: d.rowHeights ?? {}, cellAligns: d.cellAligns ?? {} };
     } catch { return { cells: {}, merges: [], colWidths: {}, rowHeights: {} }; }
   };
 
@@ -219,7 +221,13 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
     if (colWidthDecRef) colWidthDecRef.current = colWidthDec;
     if (rowHeightIncRef) rowHeightIncRef.current = rowHeightInc;
     if (rowHeightDecRef) rowHeightDecRef.current = rowHeightDec;
-  }, [mergeSelected, clearSelected, insertRow, insertCol, colWidthInc, colWidthDec, rowHeightInc, rowHeightDec]);
+    if (cellAlignRef) cellAlignRef.current = (a: "left" | "center" | "right") => {
+      const cell = active ?? anchorRef.current;
+      if (!cell) return;
+      const k = key(cell[0], cell[1]);
+      setData(prev => ({ ...prev, cellAligns: { ...(prev.cellAligns ?? {}), [k]: a } }));
+    };
+  }, [mergeSelected, clearSelected, insertRow, insertCol, colWidthInc, colWidthDec, rowHeightInc, rowHeightDec, active]);
 
   useEffect(() => {
     if (!onActiveSizeChange) return;
@@ -230,6 +238,13 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
       rowHeight: data.rowHeights?.[cell[0]] ?? ROW_HEIGHT,
     });
   }, [active, data.colWidths, data.rowHeights]);
+
+  useEffect(() => {
+    if (!onActiveCellAlignChange) return;
+    const cell = active ?? anchorRef.current;
+    if (!cell) return;
+    onActiveCellAlignChange(data.cellAligns?.[key(cell[0], cell[1])] ?? "left");
+  }, [active, data.cellAligns]);
 
   const commitDragSelection = useCallback(() => {
     const a = anchorRef.current;
@@ -338,6 +353,7 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
                       rowSpan={rowSpan}
                       onMouseDown={e => {
                         if (e.button !== 0) return;
+                        if ((e.target as HTMLElement).tagName === "INPUT") return;
                         e.preventDefault();
                         anchorRef.current = [r, c];
                         dragEndRef.current = [r, c];
@@ -373,7 +389,7 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
                           else if (e.key === "ArrowLeft" && (e.target as HTMLInputElement).selectionStart === 0) { e.preventDefault(); move(r, c, 0, -1); }
                         }}
                         className="w-full h-full px-1 outline-none bg-transparent text-zinc-800 text-[13px]"
-                        style={{ minWidth: isMerged ? colSpan * (data.colWidths?.[c] ?? 80) : (data.colWidths?.[c] ?? 80), pointerEvents: isDraggingRef.current ? "none" : "auto" }}
+                        style={{ minWidth: isMerged ? colSpan * (data.colWidths?.[c] ?? 80) : (data.colWidths?.[c] ?? 80), pointerEvents: isDraggingRef.current ? "none" : "auto", textAlign: data.cellAligns?.[k] ?? "left" }}
                       />
                     </td>
                   );
@@ -446,6 +462,7 @@ export default function PageEditor() {
   const spreadsheetCWDecRef = useRef<(() => void) | null>(null);
   const spreadsheetCTIncRef = useRef<(() => void) | null>(null);
   const spreadsheetCTDecRef = useRef<(() => void) | null>(null);
+  const spreadsheetSetAlignRef = useRef<((a: "left" | "center" | "right") => void) | null>(null);
   const [activeSheetSizes, setActiveSheetSizes] = useState<{ colWidth: number; rowHeight: number } | null>(null);
 
   const lineHeightPx = lineSpacing === "compact" ? 28 : lineSpacing === "relaxed" ? 44 : 36;
@@ -932,13 +949,13 @@ export default function PageEditor() {
       {/* Group 3 — Align left, right, center, Neutral */}
       <div className="border border-zinc-400 rounded-lg p-1.5">
         <div className="grid grid-cols-2 gap-1">
-          <button onClick={() => { execFormat("justifyLeft"); setAlign("left"); }} title="Align left" className={`${btnSq} ${align === "left" ? btnActive : ""}`}>
+          <button onClick={() => { if (pageType === "spreadsheet") { spreadsheetSetAlignRef.current?.("left"); } else { execFormat("justifyLeft"); } setAlign("left"); }} title="Align left" className={`${btnSq} ${align === "left" ? btnActive : ""}`}>
             <svg viewBox="0 0 16 16" className="w-4 h-4 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="1" y="7" width="9" height="2" rx="1"/><rect x="1" y="12" width="12" height="2" rx="1"/></svg>
           </button>
-          <button onClick={() => { execFormat("justifyRight"); setAlign("right"); }} title="Align right" className={`${btnSq} ${align === "right" ? btnActive : ""}`}>
+          <button onClick={() => { if (pageType === "spreadsheet") { spreadsheetSetAlignRef.current?.("right"); } else { execFormat("justifyRight"); } setAlign("right"); }} title="Align right" className={`${btnSq} ${align === "right" ? btnActive : ""}`}>
             <svg viewBox="0 0 16 16" className="w-4 h-4 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="6" y="7" width="9" height="2" rx="1"/><rect x="3" y="12" width="12" height="2" rx="1"/></svg>
           </button>
-          <button onClick={() => { execFormat("justifyCenter"); setAlign("center"); }} title="Align center" className={`${btnSq} ${align === "center" ? btnActive : ""}`}>
+          <button onClick={() => { if (pageType === "spreadsheet") { spreadsheetSetAlignRef.current?.("center"); } else { execFormat("justifyCenter"); } setAlign("center"); }} title="Align center" className={`${btnSq} ${align === "center" ? btnActive : ""}`}>
             <svg viewBox="0 0 16 16" className="w-4 h-4 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="3.5" y="7" width="9" height="2" rx="1"/><rect x="2" y="12" width="12" height="2" rx="1"/></svg>
           </button>
           <button onClick={handleNeutral} title="Remove all formatting" className={btnSq}><span className="text-sm font-bold text-zinc-600">N</span></button>
@@ -1194,6 +1211,8 @@ export default function PageEditor() {
                   rowHeightIncRef={spreadsheetCTIncRef}
                   rowHeightDecRef={spreadsheetCTDecRef}
                   onActiveSizeChange={setActiveSheetSizes}
+                  cellAlignRef={spreadsheetSetAlignRef}
+                  onActiveCellAlignChange={setAlign}
                   onChange={(v) => {
                     setContent(v);
                     setSaveStatus("saving");
