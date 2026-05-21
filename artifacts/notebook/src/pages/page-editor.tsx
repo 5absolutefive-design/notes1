@@ -754,13 +754,31 @@ export default function PageEditor() {
   // Common groups shared across all 3 toolbars
   const CommonGroups = () => (
     <>
-      {/* Group 1 — Copy, Paste, Undo, Redo */}
+      {/* Box 1 — Copy + Paste (tall, stacked) */}
       <div className="border border-zinc-400 rounded-lg p-1.5">
-        <div className="grid grid-cols-2 gap-1">
-          <button onClick={handleCopy} title="Copy" className={`${btnSq}`} style={{ fontSize: 18 }}>✊🏻</button>
+        <div className="flex flex-col gap-1">
+          <button onClick={handleCopy} title="Copy" className={btnSq} style={{ fontSize: 18 }}>✊🏻</button>
           <button onClick={handlePaste} title="Paste" className={`${btnSq} text-base`}>📑</button>
+        </div>
+      </div>
+
+      {/* Box 2 — Undo + Redo (tall, stacked) */}
+      <div className="border border-zinc-400 rounded-lg p-1.5">
+        <div className="flex flex-col gap-1">
           <button onClick={handleUndo} title="Undo" className={`${btnSq} text-base`}>↩</button>
           <button onClick={handleRedo} title="Redo" className={`${btnSq} text-base`}>↪</button>
+        </div>
+      </div>
+
+      {/* Box 3 — Zoom Out + Zoom In (tall, stacked) */}
+      <div className="border border-zinc-400 rounded-lg p-1.5">
+        <div className="flex flex-col gap-1">
+          <button onClick={() => setZoom(z => Math.min(200, z + 10))} title={`Zoom in (${zoom}%)`} className={btnSq}>
+            <span className="font-bold text-base leading-none text-zinc-600">+</span>
+          </button>
+          <button onClick={() => setZoom(z => Math.max(50, z - 10))} title={`Zoom out (${zoom}%)`} className={btnSq}>
+            <span className="font-bold text-base leading-none text-zinc-600">−</span>
+          </button>
         </div>
       </div>
 
