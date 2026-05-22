@@ -66,6 +66,7 @@ export default defineConfig({
     fs: {
       strict: true,
     },
+
   },
   preview: {
     port,
