@@ -1271,7 +1271,7 @@ export default function PageEditor() {
                 />
               </div>
             ) : pageType === "lined" ? (
-              <div className="flex w-full" style={{ minHeight: 500 * lineHeightPx, backgroundColor: "#faf6ef", zoom: zoom / 100, transformOrigin: "top left" }}>
+              <div className="flex w-full" style={{ minHeight: 500 * lineHeightPx, backgroundColor: "#ffffff", zoom: zoom / 100, transformOrigin: "top left" }}>
                 {/* Line numbers + margin — virtualized */}
                 {(() => {
                   const containerH = pageScrollRef.current?.clientHeight ?? 600;
@@ -1281,7 +1281,7 @@ export default function PageEditor() {
                   const topSp = firstLn * lineHeightPx;
                   const botSp = (499 - lastLn) * lineHeightPx;
                   return (
-                    <div className="shrink-0 select-none" style={{ width: 44, minHeight: 500 * lineHeightPx, backgroundColor: "#faf6ef", borderRight: "2px solid #ddd5c4", paddingTop: 4 }}>
+                    <div className="shrink-0 select-none" style={{ width: 44, minHeight: 500 * lineHeightPx, backgroundColor: "#ffffff", borderRight: "2px solid #ddd5c4", paddingTop: 4 }}>
                       {topSp > 0 && <div style={{ height: topSp }} />}
                       {Array.from({ length: lastLn - firstLn + 1 }, (_, i) => {
                         const ln = firstLn + i;
@@ -1308,8 +1308,8 @@ export default function PageEditor() {
                   className="flex-1 relative"
                   style={{
                     minHeight: 500 * lineHeightPx,
-                    backgroundImage: `repeating-linear-gradient(to bottom, #faf6ef, #faf6ef ${lineHeightPx - 1}px, #e8dfd0 ${lineHeightPx - 1}px, #e8dfd0 ${lineHeightPx}px)`,
-                    backgroundPositionY: "4px",
+                    backgroundImage: `repeating-linear-gradient(to bottom, #ffffff, #ffffff ${lineHeightPx - 1}px, #e8dfd0 ${lineHeightPx - 1}px, #e8dfd0 ${lineHeightPx}px)`,
+                    backgroundPositionY: "0px",
                     backgroundRepeat: "repeat-y",
                     backgroundSize: `100% ${lineHeightPx}px`,
                   }}
