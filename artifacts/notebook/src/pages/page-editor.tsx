@@ -13,7 +13,7 @@ interface MergeRegion { r1: number; c1: number; r2: number; c2: number; }
 type CellFormat = { bold?: boolean; underline?: boolean; strikeThrough?: boolean; overline?: boolean; fontColor?: string; highlightColor?: string; fontSize?: number; fontFamily?: string; };
 interface SheetData { cells: Record<string, string>; merges: MergeRegion[]; colWidths?: Record<number, number>; rowHeights?: Record<number, number>; cellAligns?: Record<string, "left" | "center" | "right">; cellFormats?: Record<string, CellFormat>; }
 
-function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef, insertColRef, colWidthIncRef, colWidthDecRef, rowHeightIncRef, rowHeightDecRef, onActiveSizeChange, cellAlignRef, onActiveCellAlignChange, cellFormatRef, onActiveCellFormatChange }: {
+function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef, insertColRef, colWidthIncRef, colWidthDecRef, rowHeightIncRef, rowHeightDecRef, onActiveSizeChange, cellAlignRef, onActiveCellAlignChange, cellFormatRef, onActiveCellFormatChange, onMergeStateChange }: {
   content: string;
   onChange: (v: string) => void;
   mergeRef?: MutableRefObject<(() => void) | null>;
@@ -29,6 +29,7 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
   onActiveCellAlignChange?: (a: "left" | "center" | "right") => void;
   cellFormatRef?: MutableRefObject<((fmt: Partial<CellFormat>) => void) | null>;
   onActiveCellFormatChange?: (fmt: CellFormat) => void;
+  onMergeStateChange?: (isMergedAnchor: boolean, hasMultiSelection: boolean) => void;
 }) {
   const parseData = (): SheetData => {
     try {
@@ -209,6 +210,21 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
     });
   }, [active]);
 
+  const unmergeActive = useCallback(() => {
+    const cell = active ?? anchorRef.current;
+    if (!cell) return;
+    const merge = dataRef.current.merges.find(m => m.r1 === cell[0] && m.c1 === cell[1]);
+    if (!merge) return;
+    setData(prev => ({
+      ...prev,
+      merges: prev.merges.filter(m => !(m.r1 === merge.r1 && m.c1 === merge.c1 && m.r2 === merge.r2 && m.c2 === merge.c2)),
+    }));
+    setActive(null);
+    setSelection(null);
+    anchorRef.current = null;
+    dragEndRef.current = null;
+  }, [active]);
+
   const isFirstRender = useRef(true);
   useEffect(() => {
     if (isFirstRender.current) { isFirstRender.current = false; return; }
@@ -216,7 +232,16 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
   }, [data]);
 
   useEffect(() => {
-    if (mergeRef) mergeRef.current = mergeSelected;
+    if (mergeRef) mergeRef.current = () => {
+      const cell = active ?? anchorRef.current;
+      if (!cell) return;
+      const isAnchor = dataRef.current.merges.some(m => m.r1 === cell[0] && m.c1 === cell[1]);
+      if (isAnchor) {
+        unmergeActive();
+      } else {
+        mergeSelected();
+      }
+    };
     if (clearRef) clearRef.current = clearSelected;
     if (insertRowRef) insertRowRef.current = insertRow;
     if (insertColRef) insertColRef.current = insertCol;
@@ -239,7 +264,19 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
         return { ...prev, cellFormats: { ...(prev.cellFormats ?? {}), [k]: { ...existing, ...fmt } } };
       });
     };
-  }, [mergeSelected, clearSelected, insertRow, insertCol, colWidthInc, colWidthDec, rowHeightInc, rowHeightDec, active]);
+  }, [mergeSelected, unmergeActive, clearSelected, insertRow, insertCol, colWidthInc, colWidthDec, rowHeightInc, rowHeightDec, active]);
+
+  const onMergeStateChangeRef = useRef(onMergeStateChange);
+  onMergeStateChangeRef.current = onMergeStateChange;
+
+  useEffect(() => {
+    const cell = active ?? anchorRef.current;
+    const isMergedAnchor = !!cell && data.merges.some(m => m.r1 === cell[0] && m.c1 === cell[1]);
+    const hasMultiSelection = !!selection && (
+      selection.anchor[0] !== selection.end[0] || selection.anchor[1] !== selection.end[1]
+    );
+    onMergeStateChangeRef.current?.(isMergedAnchor, hasMultiSelection);
+  }, [active, selection, data.merges]);
 
   useEffect(() => {
     if (!onActiveSizeChange) return;
@@ -497,6 +534,7 @@ export default function PageEditor() {
   const spreadsheetSetAlignRef = useRef<((a: "left" | "center" | "right") => void) | null>(null);
   const spreadsheetSetFormatRef = useRef<((fmt: Partial<CellFormat>) => void) | null>(null);
   const [activeSheetSizes, setActiveSheetSizes] = useState<{ colWidth: number; rowHeight: number } | null>(null);
+  const [mergeState, setMergeState] = useState<{ isMerged: boolean; hasSelection: boolean }>({ isMerged: false, hasSelection: false });
 
   const lineHeightPx = lineSpacing === "compact" ? 28 : lineSpacing === "relaxed" ? 44 : 36;
 
@@ -1027,9 +1065,13 @@ export default function PageEditor() {
                 <div className="flex flex-col gap-1">
                   <button
                     onClick={() => spreadsheetMergeRef.current?.()}
-                    title="Select cells by dragging, then click to merge"
-                    className="w-full h-8 rounded-md border border-purple-400 bg-purple-50 hover:bg-purple-100 active:bg-purple-200 transition-colors text-xs font-bold text-purple-700 flex items-center justify-center gap-1"
-                  ><span className="text-sm leading-none">⇄</span> Merge</button>
+                    title={mergeState.isMerged ? "Click to unmerge cells" : "Select cells by dragging, then click to merge"}
+                    className={`w-full h-8 rounded-md border transition-colors text-xs font-bold flex items-center justify-center gap-1 ${
+                      mergeState.isMerged || mergeState.hasSelection
+                        ? "border-purple-400 bg-purple-50 hover:bg-purple-100 active:bg-purple-200 text-purple-700"
+                        : "border-zinc-300 bg-white hover:bg-zinc-50 active:bg-zinc-100 text-zinc-500"
+                    }`}
+                  ><span className="text-sm leading-none">⇄</span> {mergeState.isMerged ? "Unmerge" : "Merge"}</button>
                   <div className="flex items-center gap-1">
                     {(() => {
                       const cw = activeSheetSizes?.colWidth ?? 80;
@@ -1254,6 +1296,7 @@ export default function PageEditor() {
                   rowHeightIncRef={spreadsheetCTIncRef}
                   rowHeightDecRef={spreadsheetCTDecRef}
                   onActiveSizeChange={setActiveSheetSizes}
+                  onMergeStateChange={(isMerged, hasSelection) => setMergeState({ isMerged, hasSelection })}
                   cellAlignRef={spreadsheetSetAlignRef}
                   onActiveCellAlignChange={setAlign}
                   cellFormatRef={spreadsheetSetFormatRef}
