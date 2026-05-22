@@ -471,7 +471,7 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
                         const bs = data.cellFormats?.[k]?.borderStyle;
                         const borderCss: React.CSSProperties = bs && !isActive && !isSelected ? (() => {
                           if (bs === "single") return { outline: "1.5px solid #374151", outlineOffset: "-1px", position: "relative" as const, zIndex: 1 };
-                          if (bs === "double") return { outline: "1px solid #374151", outlineOffset: "-1px", boxShadow: "inset 0 0 0 2px #fff, inset 0 0 0 3px #374151", position: "relative" as const, zIndex: 1 };
+                          if (bs === "double") return { boxShadow: "inset 0 0 0 1px #374151, inset 0 0 0 3px #fff, inset 0 0 0 4px #374151", position: "relative" as const, zIndex: 1 };
                           if (bs === "bold") return { outline: "3px solid #222", outlineOffset: "-3px", position: "relative" as const, zIndex: 1 };
                           return {};
                         })() : {};
