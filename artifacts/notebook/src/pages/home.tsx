@@ -68,8 +68,11 @@ export default function Home() {
   const [newCoverImg, setNewCoverImg] = useState<string | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState("");
   const [searchFocused, setSearchFocused] = useState(false);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingTitle, setEditingTitle] = useState("");
   const popupRef = useRef<HTMLDivElement>(null);
   const imgInputRef = useRef<HTMLInputElement>(null);
+  const editInputRef = useRef<HTMLInputElement>(null);
 
   const refresh = useCallback(() => {
     const summary = store.getSummary();
@@ -120,6 +123,23 @@ export default function Home() {
     setNewCoverImg(undefined);
     refresh();
   };
+
+  const startEditing = (e: React.MouseEvent, book: { id: number; title: string }) => {
+    e.preventDefault();
+    setEditingId(book.id);
+    setEditingTitle(book.title);
+    setTimeout(() => { editInputRef.current?.select(); }, 30);
+  };
+
+  const saveEditing = () => {
+    if (editingId === null) return;
+    const trimmed = editingTitle.trim();
+    if (trimmed) store.updateBook(editingId, { title: trimmed });
+    setEditingId(null);
+    refresh();
+  };
+
+  const cancelEditing = () => setEditingId(null);
 
   const handleDelete = (e: React.MouseEvent, bookId: number) => {
     e.preventDefault();
@@ -250,8 +270,28 @@ export default function Home() {
               {!(book as any).coverImg && <div className="absolute left-4 top-0 bottom-0 w-px bg-black/20" />}
             </div>
             <div className="px-1 flex justify-between items-start group/text">
-              <div className="flex-1">
-                <h3 className="font-serif font-medium text-sm line-clamp-2">{book.title}</h3>
+              <div className="flex-1 min-w-0">
+                {editingId === book.id ? (
+                  <input
+                    ref={editInputRef}
+                    value={editingTitle}
+                    onChange={(e) => setEditingTitle(e.target.value)}
+                    onBlur={saveEditing}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") saveEditing();
+                      if (e.key === "Escape") cancelEditing();
+                    }}
+                    onClick={(e) => e.preventDefault()}
+                    className="font-serif font-medium text-sm w-full bg-white border-b-2 border-stone-400 outline-none text-stone-800 px-0 py-0.5"
+                    autoFocus
+                  />
+                ) : (
+                  <h3
+                    className="font-serif font-medium text-sm line-clamp-2 cursor-text hover:text-stone-500 transition-colors"
+                    onClick={(e) => startEditing(e, book)}
+                    title="Click to rename"
+                  >{book.title}</h3>
+                )}
                 <p className="text-xs text-muted-foreground mt-0.5">{book.pageCount} pages</p>
               </div>
               <button
