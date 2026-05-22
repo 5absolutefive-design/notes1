@@ -377,6 +377,29 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
   }, []);
 
   useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key !== "Delete" && e.key !== "Backspace") return;
+      const sel = selectionRef.current;
+      if (!sel) return;
+      const r1 = Math.min(sel.anchor[0], sel.end[0]);
+      const r2 = Math.max(sel.anchor[0], sel.end[0]);
+      const c1 = Math.min(sel.anchor[1], sel.end[1]);
+      const c2 = Math.max(sel.anchor[1], sel.end[1]);
+      if (r1 === r2 && c1 === c2) return;
+      e.preventDefault();
+      setData(prev => {
+        const cells = { ...prev.cells };
+        for (let r = r1; r <= r2; r++)
+          for (let c = c1; c <= c2; c++)
+            delete cells[`${r}-${c}`];
+        return { ...prev, cells };
+      });
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
+  useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
     const update = () => setVirtScroll({ top: el.scrollTop, height: el.clientHeight });
