@@ -580,7 +580,7 @@ export default function PageEditor() {
   const [pages, setPages] = useState<Page[]>(() => store.listPages(bId));
   const [page, setPage] = useState<Page | null>(() => store.getPage(bId, pId) ?? null);
   const [trashedPages, setTrashedPages] = useState<Page[]>([]);
-  const [content, setContent] = useState("");
+  const [content, setContent] = useState(() => store.getPage(bId, pId)?.content ?? "");
   const [pageTitle, setPageTitle] = useState("");
   const [showTrash, setShowTrash] = useState(false);
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving">("saved");
@@ -610,7 +610,7 @@ export default function PageEditor() {
   const pageScrollRef = useRef<HTMLDivElement>(null);
 
   const initializedForId = useRef<number | null>(null);
-  const lastSavedContent = useRef("");
+  const lastSavedContent = useRef(store.getPage(bId, pId)?.content ?? "");
   const tabsRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
   const fontMenuRef = useRef<HTMLDivElement>(null);
@@ -709,6 +709,16 @@ export default function PageEditor() {
     }, 800);
     return () => clearTimeout(timer);
   }, [content, pId, savePage]);
+
+  useEffect(() => {
+    const onBeforeUnload = () => {
+      if (content !== lastSavedContent.current) {
+        store.updatePage(bId, pId, { content, title: pageTitle });
+      }
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [content, bId, pId, pageTitle]);
 
   const hasSelection = () => {
     const sel = window.getSelection();
@@ -1472,6 +1482,7 @@ export default function PageEditor() {
             {pageType === "spreadsheet" ? (
               <div style={{ zoom: zoom / 100, transformOrigin: "top left", height: "100%" }}>
                 <SpreadsheetEditor
+                  key={pId}
                   content={content}
                   mergeRef={spreadsheetMergeRef}
                   clearRef={spreadsheetClearRef}
