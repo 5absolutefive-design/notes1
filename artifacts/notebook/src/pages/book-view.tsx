@@ -28,6 +28,9 @@ export default function BookView() {
     const ps = store.listPages(id);
     if (ps.length > 0) {
       setLocation(`/books/${id}/pages/${ps[0].id}`);
+    } else {
+      const newPage = store.createPage(id, { title: "Page 1", content: "" });
+      setLocation(`/books/${id}/pages/${newPage.id}`);
     }
   }, [id, setLocation]);
 
