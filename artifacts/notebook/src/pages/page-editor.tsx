@@ -270,14 +270,21 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
         return { ...prev, cellFormats: { ...(prev.cellFormats ?? {}), [k]: { ...existing, ...fmt } } };
       });
     };
-    if (cellBorderRef) cellBorderRef.current = (bs: BorderStyle | "none") => {
+  }, [mergeSelected, unmergeActive, clearSelected, insertRow, insertCol, colWidthInc, colWidthDec, rowHeightInc, rowHeightDec, active]);
+
+  useEffect(() => {
+    if (!cellBorderRef) return;
+    cellBorderRef.current = (bs: BorderStyle | "none") => {
       const cell = activeRef.current ?? anchorRef.current;
       const sel = selectionRef.current;
       const cells: Array<[number, number]> = [];
       if (sel) {
-        const rect = getRect(sel.anchor, sel.end);
-        for (let r = rect.r1; r <= rect.r2; r++)
-          for (let c = rect.c1; c <= rect.c2; c++)
+        const r1 = Math.min(sel.anchor[0], sel.end[0]);
+        const r2 = Math.max(sel.anchor[0], sel.end[0]);
+        const c1 = Math.min(sel.anchor[1], sel.end[1]);
+        const c2 = Math.max(sel.anchor[1], sel.end[1]);
+        for (let r = r1; r <= r2; r++)
+          for (let c = c1; c <= c2; c++)
             cells.push([r, c]);
       } else if (cell) {
         cells.push(cell);
@@ -286,7 +293,7 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
       setData(prev => {
         const cellFormats = { ...(prev.cellFormats ?? {}) };
         for (const [r, c] of cells) {
-          const k = key(r, c);
+          const k = `${r}-${c}`;
           const existing = cellFormats[k] ?? {};
           if (bs === "none") {
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -299,7 +306,9 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
         return { ...prev, cellFormats };
       });
     };
-  }, [mergeSelected, unmergeActive, clearSelected, insertRow, insertCol, colWidthInc, colWidthDec, rowHeightInc, rowHeightDec, active]);
+    return () => { cellBorderRef.current = null; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const onMergeStateChangeRef = useRef(onMergeStateChange);
   onMergeStateChangeRef.current = onMergeStateChange;
