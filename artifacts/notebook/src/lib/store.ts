@@ -3,6 +3,7 @@ export interface Book {
   title: string;
   color: string;
   pattern?: string;
+  coverImg?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -79,13 +80,14 @@ export const store = {
     return loadBooks().find((b) => b.id === id);
   },
 
-  createBook(data: { title: string; color?: string; pattern?: string }): Book {
+  createBook(data: { title: string; color?: string; pattern?: string; coverImg?: string }): Book {
     const books = loadBooks();
     const book: Book = {
       id: nextBookId(),
       title: data.title,
       color: data.color ?? "#1e293b",
       pattern: data.pattern ?? "solid",
+      coverImg: data.coverImg,
       createdAt: now(),
       updatedAt: now(),
     };

@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Plus, Trash2, Check } from "lucide-react";
+import { Plus, Trash2, Check, ImagePlus, X } from "lucide-react";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { store, type Book } from "@/lib/store";
 
@@ -10,35 +10,41 @@ const PRESET_COLORS = [
 ];
 
 const COVER_PATTERNS = [
-  { id: "solid", label: "Solid" },
-  { id: "dots", label: "Dots" },
-  { id: "lines", label: "Lines" },
-  { id: "grid", label: "Grid" },
+  { id: "solid",    label: "Solid" },
+  { id: "dots",     label: "Dots" },
+  { id: "lines",    label: "Lines" },
+  { id: "grid",     label: "Grid" },
+  { id: "diagonal", label: "Diagonal" },
+  { id: "waves",    label: "Waves" },
+  { id: "cross",    label: "Cross" },
+  { id: "marble",   label: "Marble" },
 ];
 
 function patternStyle(pattern: string, color: string): React.CSSProperties {
   const base: React.CSSProperties = { backgroundColor: color };
-  if (pattern === "dots") {
-    return {
-      ...base,
-      backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.3) 1px, transparent 1px)`,
-      backgroundSize: "12px 12px",
-    };
+  switch (pattern) {
+    case "dots":
+      return { ...base, backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.3) 1px, transparent 1px)`, backgroundSize: "12px 12px" };
+    case "lines":
+      return { ...base, backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 10px, rgba(255,255,255,0.2) 10px, rgba(255,255,255,0.2) 11px)` };
+    case "grid":
+      return { ...base, backgroundImage: `linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px)`, backgroundSize: "12px 12px" };
+    case "diagonal":
+      return { ...base, backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(255,255,255,0.18) 8px, rgba(255,255,255,0.18) 9px)` };
+    case "waves":
+      return { ...base, backgroundImage: `repeating-radial-gradient(ellipse at 0% 50%, transparent 0px, transparent 7px, rgba(255,255,255,0.18) 7px, rgba(255,255,255,0.18) 8px)` };
+    case "cross":
+      return { ...base, backgroundImage: `linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px), linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)`, backgroundSize: "24px 24px, 24px 24px, 6px 6px, 6px 6px" };
+    case "marble":
+      return { ...base, backgroundImage: `repeating-linear-gradient(105deg, transparent, transparent 10px, rgba(255,255,255,0.12) 10px, rgba(255,255,255,0.12) 11px), repeating-linear-gradient(195deg, transparent, transparent 14px, rgba(255,255,255,0.08) 14px, rgba(255,255,255,0.08) 15px)` };
+    default:
+      return base;
   }
-  if (pattern === "lines") {
-    return {
-      ...base,
-      backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 10px, rgba(255,255,255,0.2) 10px, rgba(255,255,255,0.2) 11px)`,
-    };
-  }
-  if (pattern === "grid") {
-    return {
-      ...base,
-      backgroundImage: `linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px)`,
-      backgroundSize: "12px 12px",
-    };
-  }
-  return base;
+}
+
+function coverStyle(pattern: string, color: string, coverImg?: string): React.CSSProperties {
+  if (coverImg) return { backgroundImage: `url(${coverImg})`, backgroundSize: "cover", backgroundPosition: "center" };
+  return patternStyle(pattern, color);
 }
 
 export default function Home() {
@@ -48,7 +54,9 @@ export default function Home() {
   const [newTitle, setNewTitle] = useState("");
   const [newColor, setNewColor] = useState("#3b5bdb");
   const [newPattern, setNewPattern] = useState("solid");
+  const [newCoverImg, setNewCoverImg] = useState<string | undefined>(undefined);
   const popupRef = useRef<HTMLDivElement>(null);
+  const imgInputRef = useRef<HTMLInputElement>(null);
 
   const refresh = useCallback(() => {
     const summary = store.getSummary();
@@ -78,14 +86,25 @@ export default function Home() {
     return () => document.removeEventListener("mousedown", handler);
   }, [showCreate]);
 
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      setNewCoverImg(ev.target?.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleCreate = (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTitle.trim()) return;
-    store.createBook({ title: newTitle.trim(), color: newColor, pattern: newPattern });
+    store.createBook({ title: newTitle.trim(), color: newColor, pattern: newPattern, coverImg: newCoverImg });
     setShowCreate(false);
     setNewTitle("");
     setNewColor("#3b5bdb");
     setNewPattern("solid");
+    setNewCoverImg(undefined);
     refresh();
   };
 
@@ -116,9 +135,9 @@ export default function Home() {
           <Link key={book.id} href={`/books/${book.id}`} className="group flex flex-col gap-3 relative">
             <div
               className="aspect-[3/4] rounded-md shadow-md transition-transform duration-300 group-hover:-translate-y-2 group-hover:shadow-xl relative overflow-hidden"
-              style={patternStyle((book as any).pattern ?? "solid", book.color || "#1e293b")}
+              style={coverStyle((book as any).pattern ?? "solid", book.color || "#1e293b", (book as any).coverImg)}
             >
-              <div className="absolute left-4 top-0 bottom-0 w-px bg-black/20 shadow-[1px_0_2px_rgba(255,255,255,0.1)]" />
+              {!(book as any).coverImg && <div className="absolute left-4 top-0 bottom-0 w-px bg-black/20" />}
             </div>
             <div className="px-1 flex justify-between items-start group/text">
               <div className="flex-1">
@@ -151,14 +170,14 @@ export default function Home() {
 
           {/* Mini Create Popup */}
           {showCreate && (
-            <div className="absolute top-0 left-[calc(100%+12px)] z-50 w-64 bg-white rounded-xl shadow-2xl border border-stone-200 p-4 flex flex-col gap-3">
+            <div className="absolute top-0 left-[calc(100%+12px)] z-50 w-72 bg-white rounded-xl shadow-2xl border border-stone-200 p-4 flex flex-col gap-3 max-h-[90vh] overflow-y-auto">
               {/* Preview */}
               <div className="flex items-center gap-3">
                 <div
                   className="w-10 h-14 rounded-md shadow flex-shrink-0 relative overflow-hidden"
-                  style={patternStyle(newPattern, newColor)}
+                  style={coverStyle(newPattern, newColor, newCoverImg)}
                 >
-                  <div className="absolute left-2 top-0 bottom-0 w-px bg-black/20" />
+                  {!newCoverImg && <div className="absolute left-2 top-0 bottom-0 w-px bg-black/20" />}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-stone-400 mb-1">Preview</p>
@@ -189,20 +208,17 @@ export default function Home() {
                       <button
                         key={c}
                         type="button"
-                        onClick={() => setNewColor(c)}
-                        className="w-7 h-7 rounded-md border-2 transition-all flex items-center justify-center"
-                        style={{
-                          backgroundColor: c,
-                          borderColor: newColor === c ? "#000" : "transparent",
-                        }}
+                        onClick={() => { setNewColor(c); setNewCoverImg(undefined); }}
+                        className="w-8 h-8 rounded-md border-2 transition-all flex items-center justify-center"
+                        style={{ backgroundColor: c, borderColor: newColor === c && !newCoverImg ? "#000" : "transparent" }}
                       >
-                        {newColor === c && <Check className="w-3 h-3 text-white drop-shadow" />}
+                        {newColor === c && !newCoverImg && <Check className="w-3 h-3 text-white drop-shadow" />}
                       </button>
                     ))}
                   </div>
                 </div>
 
-                {/* Pattern */}
+                {/* Cover Design */}
                 <div>
                   <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Cover Design</label>
                   <div className="mt-1.5 grid grid-cols-4 gap-1.5">
@@ -210,8 +226,8 @@ export default function Home() {
                       <button
                         key={p.id}
                         type="button"
-                        onClick={() => setNewPattern(p.id)}
-                        className={`h-8 rounded-md border-2 text-[10px] font-semibold transition-all relative overflow-hidden ${newPattern === p.id ? "border-stone-700" : "border-stone-200"}`}
+                        onClick={() => { setNewPattern(p.id); setNewCoverImg(undefined); }}
+                        className={`h-9 rounded-md border-2 text-[10px] font-semibold transition-all relative overflow-hidden ${newPattern === p.id && !newCoverImg ? "border-stone-700 ring-1 ring-stone-700" : "border-stone-200"}`}
                         style={patternStyle(p.id, newColor)}
                       >
                         <span className="relative z-10 text-white drop-shadow-sm">{p.label}</span>
@@ -220,10 +236,46 @@ export default function Home() {
                   </div>
                 </div>
 
+                {/* Cover Image */}
+                <div>
+                  <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Cover Image</label>
+                  <div className="mt-1.5">
+                    {newCoverImg ? (
+                      <div className="relative">
+                        <img src={newCoverImg} alt="Cover" className="w-full h-24 object-cover rounded-lg border border-stone-200" />
+                        <button
+                          type="button"
+                          onClick={() => setNewCoverImg(undefined)}
+                          className="absolute top-1.5 right-1.5 w-6 h-6 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-black/80 transition-colors"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                        <div className="absolute bottom-1.5 left-1.5 bg-black/50 text-white text-[10px] px-1.5 py-0.5 rounded font-medium">Image selected ✓</div>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => imgInputRef.current?.click()}
+                        className="w-full h-16 border-2 border-dashed border-stone-300 rounded-lg flex flex-col items-center justify-center gap-1 hover:border-stone-400 hover:bg-stone-50 transition-all"
+                      >
+                        <ImagePlus className="w-5 h-5 text-stone-400" />
+                        <span className="text-xs text-stone-400">Upload image</span>
+                      </button>
+                    )}
+                    <input
+                      ref={imgInputRef}
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={handleImageUpload}
+                    />
+                  </div>
+                </div>
+
                 <button
                   type="submit"
                   disabled={!newTitle.trim()}
-                  className="w-full mt-1 bg-stone-800 text-white text-sm font-semibold py-2 rounded-lg hover:bg-stone-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  className="w-full mt-1 bg-stone-800 text-white text-sm font-semibold py-2.5 rounded-lg hover:bg-stone-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 >
                   Create Notebook
                 </button>
