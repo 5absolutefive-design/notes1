@@ -57,14 +57,14 @@
   --elevate-1: rgba(0,0,0, .03);
   --elevate-2: rgba(0,0,0, .08);
 
-  /* Warm parchment background */
-  --background: 40 33% 96%;
+  /* White background */
+  --background: 0 0% 100%;
   /* Dark ink foreground */
   --foreground: 20 12% 20%;
   
   /* Borders and lines */
-  --border: 40 20% 85%;
-  --input: 40 20% 85%;
+  --border: 0 0% 88%;
+  --input: 0 0% 88%;
   --ring: 142 60% 45%;
 
   /* Dark book covers */
