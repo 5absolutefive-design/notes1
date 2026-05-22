@@ -3,6 +3,17 @@ import { Plus, Trash2, Check, ImagePlus, X } from "lucide-react";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { store, type Book } from "@/lib/store";
 
+const DEFAULT_COVER_IMAGES = [
+  { id: "galaxy",   label: "Galaxy",   url: "https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=300&q=80" },
+  { id: "mountain", label: "Mountain", url: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=300&q=80" },
+  { id: "ocean",    label: "Ocean",    url: "https://images.unsplash.com/photo-1505118380757-91f5f5632de0?w=300&q=80" },
+  { id: "forest",   label: "Forest",   url: "https://images.unsplash.com/photo-1448375240586-882707db888b?w=300&q=80" },
+  { id: "flowers",  label: "Flowers",  url: "https://images.unsplash.com/photo-1490750967868-88df5691cc77?w=300&q=80" },
+  { id: "aurora",   label: "Aurora",   url: "https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=300&q=80" },
+  { id: "desert",   label: "Desert",   url: "https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=300&q=80" },
+  { id: "abstract", label: "Abstract", url: "https://images.unsplash.com/photo-1557683316-973673baf926?w=300&q=80" },
+];
+
 const PRESET_COLORS = [
   "#3b5bdb", "#1971c2", "#0ca678", "#2f9e44",
   "#e8590c", "#c2255c", "#9c36b5", "#1e293b",
@@ -239,10 +250,32 @@ export default function Home() {
                 {/* Cover Image */}
                 <div>
                   <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Cover Image</label>
+
+                  {/* Default image thumbnails */}
+                  <div className="mt-1.5 grid grid-cols-4 gap-1.5">
+                    {DEFAULT_COVER_IMAGES.map((img) => (
+                      <button
+                        key={img.id}
+                        type="button"
+                        onClick={() => setNewCoverImg(img.url)}
+                        className={`relative h-14 rounded-md overflow-hidden border-2 transition-all ${newCoverImg === img.url ? "border-stone-700 ring-1 ring-stone-700" : "border-transparent hover:border-stone-400"}`}
+                      >
+                        <img src={img.url} alt={img.label} className="w-full h-full object-cover" />
+                        {newCoverImg === img.url && (
+                          <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
+                            <Check className="w-4 h-4 text-white drop-shadow" />
+                          </div>
+                        )}
+                        <div className="absolute bottom-0 inset-x-0 bg-black/40 text-white text-[9px] text-center py-0.5 font-medium">{img.label}</div>
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Upload custom image */}
                   <div className="mt-1.5">
-                    {newCoverImg ? (
+                    {newCoverImg && !DEFAULT_COVER_IMAGES.find(i => i.url === newCoverImg) ? (
                       <div className="relative">
-                        <img src={newCoverImg} alt="Cover" className="w-full h-24 object-cover rounded-lg border border-stone-200" />
+                        <img src={newCoverImg} alt="Cover" className="w-full h-20 object-cover rounded-lg border border-stone-200" />
                         <button
                           type="button"
                           onClick={() => setNewCoverImg(undefined)}
@@ -250,16 +283,16 @@ export default function Home() {
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
-                        <div className="absolute bottom-1.5 left-1.5 bg-black/50 text-white text-[10px] px-1.5 py-0.5 rounded font-medium">Image selected ✓</div>
+                        <div className="absolute bottom-1.5 left-1.5 bg-black/50 text-white text-[10px] px-1.5 py-0.5 rounded font-medium">Custom image ✓</div>
                       </div>
                     ) : (
                       <button
                         type="button"
                         onClick={() => imgInputRef.current?.click()}
-                        className="w-full h-16 border-2 border-dashed border-stone-300 rounded-lg flex flex-col items-center justify-center gap-1 hover:border-stone-400 hover:bg-stone-50 transition-all"
+                        className="w-full h-10 border-2 border-dashed border-stone-300 rounded-lg flex items-center justify-center gap-2 hover:border-stone-400 hover:bg-stone-50 transition-all"
                       >
-                        <ImagePlus className="w-5 h-5 text-stone-400" />
-                        <span className="text-xs text-stone-400">Upload image</span>
+                        <ImagePlus className="w-4 h-4 text-stone-400" />
+                        <span className="text-xs text-stone-400">Upload your own image</span>
                       </button>
                     )}
                     <input
