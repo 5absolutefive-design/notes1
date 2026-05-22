@@ -198,4 +198,16 @@ export const store = {
       saveBooks(books);
     }
   },
+
+  initDefaults() {
+    const books = loadBooks();
+    if (books.length === 0) {
+      const defaults = [
+        { title: "My Journal", color: "#3b5bdb" },
+        { title: "Ideas", color: "#2f9e44" },
+        { title: "To-Do", color: "#e8590c" },
+      ];
+      defaults.forEach((d) => this.createBook(d));
+    }
+  },
 };

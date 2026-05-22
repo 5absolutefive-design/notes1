@@ -26,6 +26,7 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
+    store.initDefaults();
     refresh();
   }, [refresh]);
 
