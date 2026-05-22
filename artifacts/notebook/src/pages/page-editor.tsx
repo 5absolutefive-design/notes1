@@ -1136,22 +1136,22 @@ export default function PageEditor() {
       </div>
 
       {/* Group 3 — Alignment (2×2 grid: Left, Center, Right, N) */}
-      <div className="border border-zinc-400 rounded-lg p-1">
-        <div className="grid grid-cols-2 gap-0.5">
+      <div className="border border-zinc-400 rounded-lg p-1.5">
+        <div className="grid grid-cols-2 gap-1">
           {/* Left align */}
-          <button onClick={() => { if (pageType === "spreadsheet") { spreadsheetSetAlignRef.current?.("left"); } else { execFormat("justifyLeft"); } setAlign("left"); }} title="Align left" className={`w-6 h-6 rounded flex items-center justify-center hover:bg-zinc-200 transition-colors ${align === "left" ? btnActive : ""}`}>
+          <button onClick={() => { if (pageType === "spreadsheet") { spreadsheetSetAlignRef.current?.("left"); } else { execFormat("justifyLeft"); } setAlign("left"); }} title="Align left" className={`${btnSq} ${align === "left" ? btnActive : ""}`}>
             <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="1" y="7" width="9" height="2" rx="1"/><rect x="1" y="12" width="12" height="2" rx="1"/></svg>
           </button>
           {/* Center align */}
-          <button onClick={() => { if (pageType === "spreadsheet") { spreadsheetSetAlignRef.current?.("center"); } else { execFormat("justifyCenter"); } setAlign("center"); }} title="Align center" className={`w-6 h-6 rounded flex items-center justify-center hover:bg-zinc-200 transition-colors ${align === "center" ? btnActive : ""}`}>
+          <button onClick={() => { if (pageType === "spreadsheet") { spreadsheetSetAlignRef.current?.("center"); } else { execFormat("justifyCenter"); } setAlign("center"); }} title="Align center" className={`${btnSq} ${align === "center" ? btnActive : ""}`}>
             <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="3.5" y="7" width="9" height="2" rx="1"/><rect x="2" y="12" width="12" height="2" rx="1"/></svg>
           </button>
           {/* Right align */}
-          <button onClick={() => { if (pageType === "spreadsheet") { spreadsheetSetAlignRef.current?.("right"); } else { execFormat("justifyRight"); } setAlign("right"); }} title="Align right" className={`w-6 h-6 rounded flex items-center justify-center hover:bg-zinc-200 transition-colors ${align === "right" ? btnActive : ""}`}>
+          <button onClick={() => { if (pageType === "spreadsheet") { spreadsheetSetAlignRef.current?.("right"); } else { execFormat("justifyRight"); } setAlign("right"); }} title="Align right" className={`${btnSq} ${align === "right" ? btnActive : ""}`}>
             <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="6" y="7" width="9" height="2" rx="1"/><rect x="3" y="12" width="12" height="2" rx="1"/></svg>
           </button>
           {/* N — Neutral / clear all formatting */}
-          <button onClick={handleNeutral} title="Clear formatting (Neutral)" className={`w-6 h-6 rounded flex items-center justify-center hover:bg-zinc-200 transition-colors text-[11px] font-bold text-zinc-600`}>
+          <button onClick={handleNeutral} title="Clear formatting (Neutral)" className={`${btnSq} text-[11px] font-bold text-zinc-600`}>
             N
           </button>
         </div>
