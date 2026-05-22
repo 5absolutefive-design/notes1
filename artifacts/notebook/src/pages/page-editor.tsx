@@ -1168,8 +1168,8 @@ export default function PageEditor() {
 
       {pageType === "spreadsheet" ? (
         /* ── SPREADSHEET TOOLBAR ── Common + Cell operations ── */
-        <div className="bg-white px-4 pt-3 pb-2 shrink-0">
-          <div className="bg-white border border-zinc-300 rounded-xl px-3 py-3 shadow-sm flex items-start justify-between">
+        <div className="bg-[#ece9e3] px-4 pt-3 pb-2 shrink-0">
+          <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl px-3 py-3 shadow-sm flex items-start justify-between">
             <div className="inline-flex items-start gap-2 flex-wrap">
               <CommonGroups />
 
@@ -1235,8 +1235,8 @@ export default function PageEditor() {
 
       ) : pageType === "lined" ? (
         /* ── LINED TOOLBAR ── Common + Line Spacing ── */
-        <div className="bg-white px-4 pt-3 pb-2 shrink-0">
-          <div className="bg-white border border-zinc-300 rounded-xl px-3 py-3 shadow-sm flex items-start justify-between">
+        <div className="bg-[#ece9e3] px-4 pt-3 pb-2 shrink-0">
+          <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl px-3 py-3 shadow-sm flex items-start justify-between">
             <div className="inline-flex items-start gap-2 flex-wrap">
               <CommonGroups />
 
@@ -1265,8 +1265,8 @@ export default function PageEditor() {
 
       ) : (
         /* ── BLANK TOOLBAR ── Common buttons only ── */
-        <div className="bg-white px-4 pt-3 pb-2 shrink-0">
-          <div className="bg-white border border-zinc-300 rounded-xl px-3 py-3 shadow-sm flex items-start justify-between">
+        <div className="bg-[#ece9e3] px-4 pt-3 pb-2 shrink-0">
+          <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl px-3 py-3 shadow-sm flex items-start justify-between">
             <div className="inline-flex items-start gap-2 flex-wrap">
               <CommonGroups />
             </div>
@@ -1428,9 +1428,9 @@ export default function PageEditor() {
       </div>
 
       {/* Paper card */}
-      <div className="flex-1 flex flex-col min-h-0 bg-white px-4 pb-4">
+      <div className="flex-1 flex flex-col min-h-0 bg-[#ece9e3] px-4 pb-4">
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden rounded-xl border border-zinc-300 shadow-sm bg-white">
-          <div className="bg-white border-b border-zinc-200 px-4 py-1 flex items-center justify-between shrink-0">
+          <div className="bg-[#f5f2ee] border-b border-zinc-200 px-4 py-1 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">
                 Page: <span className="text-zinc-700">PAGE {page.pageNumber}</span>
@@ -1585,7 +1585,7 @@ export default function PageEditor() {
             )}
           </div>
 
-          <div className="bg-white border-t border-zinc-200 px-4 py-1 flex items-center justify-between text-xs text-zinc-500 shrink-0">
+          <div className="bg-[#f5f2ee] border-t border-zinc-200 px-4 py-1 flex items-center justify-between text-xs text-zinc-500 shrink-0">
             <button onClick={() => prevPage && setLocation(`/books/${bId}/pages/${prevPage.id}`)} disabled={!prevPage} className="disabled:opacity-30 hover:text-zinc-700 transition-colors flex items-center gap-1">
               <ChevronLeft className="w-3 h-3" /> Prev
             </button>
