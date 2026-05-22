@@ -1,5 +1,5 @@
 import { Link } from "wouter";
-import { Plus, Trash2, Check, ImagePlus, X } from "lucide-react";
+import { Plus, Trash2, Check, ImagePlus, X, Search, Download, Upload, BookOpen, FileText } from "lucide-react";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { store, type Book } from "@/lib/store";
 
@@ -66,6 +66,8 @@ export default function Home() {
   const [newColor, setNewColor] = useState("#3b5bdb");
   const [newPattern, setNewPattern] = useState("solid");
   const [newCoverImg, setNewCoverImg] = useState<string | undefined>(undefined);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchFocused, setSearchFocused] = useState(false);
   const popupRef = useRef<HTMLDivElement>(null);
   const imgInputRef = useRef<HTMLInputElement>(null);
 
@@ -127,22 +129,127 @@ export default function Home() {
     }
   };
 
+  const handleDownload = () => {
+    const data = {
+      notebooks: store.listBooks(),
+      pages: store.listBooks().flatMap((b) => store.listPages(b.id).map((p) => ({ ...p, bookId: b.id }))),
+      exportedAt: new Date().toISOString(),
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `my-notebooks-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      try {
+        const data = JSON.parse(ev.target?.result as string);
+        if (!data.notebooks) { alert("Invalid backup file."); return; }
+        if (!confirm(`Import ${data.notebooks.length} notebook(s)? Existing data will be kept.`)) return;
+        data.notebooks.forEach((nb: Book) => {
+          const created = store.createBook({ title: nb.title, color: nb.color, pattern: nb.pattern, coverImg: nb.coverImg });
+          const nbPages = (data.pages ?? []).filter((p: { bookId: number }) => p.bookId === nb.id);
+          nbPages.forEach((pg: { type: string; content: string }) => {
+            store.createPage(created.id, pg.type as "blank" | "lined" | "spreadsheet", pg.content);
+          });
+        });
+        refresh();
+        alert("Import successful!");
+      } catch { alert("Failed to read file."); }
+    };
+    reader.readAsText(file);
+    e.target.value = "";
+  };
+
+  const totalPages = books.reduce((sum, b) => sum + b.pageCount, 0);
+  const filteredBooks = searchQuery.trim()
+    ? books.filter((b) => b.title.toLowerCase().includes(searchQuery.toLowerCase()))
+    : books;
+
   return (
-    <div className="min-h-screen w-full bg-background p-6 md:p-12 max-w-6xl mx-auto">
-      <header className="mb-12 flex flex-col gap-2">
-        <h1 className="text-4xl font-serif font-bold text-foreground">My Notebooks</h1>
-        {recentTitle && (
-          <p className="text-muted-foreground text-sm">
-            Recent edit:{" "}
-            <Link href={`/books/${recentTitle.id}`} className="hover:text-primary transition-colors underline underline-offset-2">
-              {recentTitle.title}
-            </Link>
-          </p>
-        )}
-      </header>
+    <div className="min-h-screen w-full bg-background p-6 md:p-10 max-w-6xl mx-auto">
+
+      {/* Header Card */}
+      <div className="mb-10 rounded-2xl border border-stone-200 bg-white shadow-sm px-6 py-4">
+        <div className="flex items-center justify-between gap-4 flex-wrap">
+
+          {/* Left: Title + info */}
+          <div className="flex flex-col gap-0.5 min-w-0">
+            <h1 className="text-3xl font-serif font-bold text-stone-800 leading-tight">My Notebooks</h1>
+            <div className="flex items-center gap-3 text-xs text-stone-500 mt-0.5 flex-wrap">
+              <span className="flex items-center gap-1"><BookOpen className="w-3.5 h-3.5" />{books.length} notebook{books.length !== 1 ? "s" : ""}</span>
+              <span className="flex items-center gap-1"><FileText className="w-3.5 h-3.5" />{totalPages} page{totalPages !== 1 ? "s" : ""}</span>
+              {recentTitle && (
+                <span className="text-stone-400">
+                  Last edited:{" "}
+                  <Link href={`/books/${recentTitle.id}`} className="text-stone-600 hover:text-stone-800 underline underline-offset-2 transition-colors">
+                    {recentTitle.title}
+                  </Link>
+                </span>
+              )}
+            </div>
+          </div>
+
+          {/* Right: Search + Download + Upload */}
+          <div className="flex items-center gap-2 flex-shrink-0">
+            {/* Search bar */}
+            <div className={`flex items-center gap-2 border rounded-lg bg-stone-50 px-3 py-1.5 transition-all duration-300 ${searchFocused || searchQuery ? "w-48 border-stone-400 bg-white shadow-sm" : "w-28 border-stone-200"}`}>
+              <Search className="w-3.5 h-3.5 text-stone-400 flex-shrink-0" />
+              <input
+                type="text"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onFocus={() => setSearchFocused(true)}
+                onBlur={() => setSearchFocused(false)}
+                className="bg-transparent text-sm text-stone-700 placeholder:text-stone-400 outline-none w-full min-w-0"
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery("")} className="text-stone-400 hover:text-stone-600">
+                  <X className="w-3 h-3" />
+                </button>
+              )}
+            </div>
+
+            {/* Download */}
+            <button
+              onClick={handleDownload}
+              title="Download backup"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-stone-200 bg-stone-50 hover:bg-stone-100 hover:border-stone-300 text-stone-600 text-xs font-medium transition-all"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Backup</span>
+            </button>
+
+            {/* Upload */}
+            <label
+              title="Import backup"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-stone-200 bg-stone-50 hover:bg-stone-100 hover:border-stone-300 text-stone-600 text-xs font-medium transition-all cursor-pointer"
+            >
+              <Upload className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Import</span>
+              <input type="file" accept=".json" className="hidden" onChange={handleUpload} />
+            </label>
+          </div>
+        </div>
+      </div>
+
+      {searchQuery && filteredBooks.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-16 text-stone-400 gap-2">
+          <Search className="w-8 h-8 opacity-30" />
+          <p className="text-sm">No notebooks found for "<span className="font-medium text-stone-500">{searchQuery}</span>"</p>
+        </div>
+      )}
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-10">
-        {books.map((book) => (
+        {filteredBooks.map((book) => (
           <Link key={book.id} href={`/books/${book.id}`} className="group flex flex-col gap-3 relative">
             <div
               className="aspect-[3/4] rounded-md shadow-md transition-transform duration-300 group-hover:-translate-y-2 group-hover:shadow-xl relative overflow-hidden"
