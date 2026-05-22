@@ -1209,23 +1209,23 @@ export default function PageEditor() {
                   <button
                     onClick={() => spreadsheetCellBorderRef.current?.("none")}
                     title="Remove border"
-                    className="w-9 h-9 rounded-md border border-zinc-300 bg-white hover:bg-zinc-50 active:bg-zinc-100 transition-colors flex items-center justify-center text-xs font-bold text-zinc-500"
+                    className={`${btnSq} text-xs font-bold text-zinc-500`}
                   >N</button>
                   <button
                     onClick={() => spreadsheetCellBorderRef.current?.("single")}
                     title="Single thin border"
-                    className="w-9 h-9 rounded-md border border-zinc-300 bg-white hover:bg-zinc-50 active:bg-zinc-100 transition-colors flex items-center justify-center"
-                  ><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1.5" y="1.5" width="15" height="15" rx="1" stroke="#444" strokeWidth="1.5"/></svg></button>
+                    className={btnSq}
+                  ><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="1.5" y="1.5" width="15" height="15" rx="1" stroke="#444" strokeWidth="1.5"/></svg></button>
                   <button
                     onClick={() => spreadsheetCellBorderRef.current?.("double")}
                     title="Double border"
-                    className="w-9 h-9 rounded-md border border-zinc-300 bg-white hover:bg-zinc-50 active:bg-zinc-100 transition-colors flex items-center justify-center"
-                  ><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="16" height="16" rx="1" stroke="#444" strokeWidth="1"/><rect x="3.5" y="3.5" width="11" height="11" rx="0.5" stroke="#444" strokeWidth="1"/></svg></button>
+                    className={btnSq}
+                  ><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="16" height="16" rx="1" stroke="#444" strokeWidth="1"/><rect x="3.5" y="3.5" width="11" height="11" rx="0.5" stroke="#444" strokeWidth="1"/></svg></button>
                   <button
                     onClick={() => spreadsheetCellBorderRef.current?.("bold")}
                     title="Bold thick border"
-                    className="w-9 h-9 rounded-md border border-zinc-300 bg-white hover:bg-zinc-50 active:bg-zinc-100 transition-colors flex items-center justify-center"
-                  ><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="14" height="14" rx="1" stroke="#222" strokeWidth="3.5"/></svg></button>
+                    className={btnSq}
+                  ><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="14" height="14" rx="1" stroke="#222" strokeWidth="3.5"/></svg></button>
                 </div>
               </div>
             </div>
