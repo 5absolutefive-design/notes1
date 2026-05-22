@@ -52,6 +52,8 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
   dataRef.current = data;
   const selectionRef = useRef(selection);
   selectionRef.current = selection;
+  const activeRef = useRef(active);
+  activeRef.current = active;
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [virtScroll, setVirtScroll] = useState({ top: 0, height: 600 });
@@ -269,7 +271,7 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
       });
     };
     if (cellBorderRef) cellBorderRef.current = (bs: BorderStyle | "none") => {
-      const cell = active ?? anchorRef.current;
+      const cell = activeRef.current ?? anchorRef.current;
       const sel = selectionRef.current;
       const cells: Array<[number, number]> = [];
       if (sel) {
@@ -1133,9 +1135,7 @@ export default function PageEditor() {
 
               {/* Border Style box */}
               <div className="border border-zinc-400 rounded-lg p-1.5">
-                <div className="flex flex-col gap-1">
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 text-center px-1">Border</span>
-                  <div className="grid grid-cols-2 gap-1">
+                <div className="grid grid-cols-2 gap-1">
                     {([
                       { bs: "dotted" as BorderStyle, title: "Dotted border", svg: (
                         <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1.5" y="1.5" width="15" height="15" rx="1" stroke="#555" strokeWidth="1.2" strokeDasharray="2 2"/></svg>
@@ -1157,7 +1157,6 @@ export default function PageEditor() {
                         className="w-9 h-9 rounded-md border border-zinc-300 bg-white hover:bg-zinc-50 active:bg-zinc-100 transition-colors flex items-center justify-center"
                       >{svg}</button>
                     ))}
-                  </div>
                 </div>
               </div>
             </div>
