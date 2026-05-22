@@ -24,6 +24,13 @@ export default function BookView() {
     refresh();
   }, [refresh]);
 
+  useEffect(() => {
+    const ps = store.listPages(id);
+    if (ps.length > 0) {
+      setLocation(`/books/${id}/pages/${ps[0].id}`);
+    }
+  }, [id, setLocation]);
+
   const handleCreatePage = () => {
     const newPage = store.createPage(id, { title: `PAGE ${pages.length + 1}`, content: "" });
     refresh();
