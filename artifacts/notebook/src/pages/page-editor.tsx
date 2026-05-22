@@ -469,11 +469,12 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
                       }`}
                       style={(() => {
                         const bs = data.cellFormats?.[k]?.borderStyle;
-                        const borderCss: React.CSSProperties = bs && !isActive && !isSelected ? {
-                          borderStyle: bs === "dotted" ? "dotted" : bs === "double" ? "double" : "solid",
-                          borderWidth: bs === "bold" ? 2 : bs === "double" ? 3 : 1,
-                          borderColor: "#374151",
-                        } : {};
+                        const borderCss: React.CSSProperties = bs && !isActive && !isSelected ? (() => {
+                          if (bs === "single") return { outline: "1.5px solid #374151", outlineOffset: "-1px", position: "relative" as const, zIndex: 1 };
+                          if (bs === "double") return { outline: "1px solid #374151", outlineOffset: "-1px", boxShadow: "inset 0 0 0 4px #fff, inset 0 0 0 5px #374151", position: "relative" as const, zIndex: 1 };
+                          if (bs === "bold") return { outline: "3px solid #222", outlineOffset: "-3px", position: "relative" as const, zIndex: 1 };
+                          return {};
+                        })() : {};
                         return { height: data.rowHeights?.[r] ?? ROW_HEIGHT, minWidth: data.colWidths?.[c] ?? 80, ...borderCss };
                       })()}
                     >
@@ -1145,27 +1146,26 @@ export default function PageEditor() {
               {/* Border Style box */}
               <div className="border border-zinc-400 rounded-lg p-1.5">
                 <div className="grid grid-cols-2 gap-1">
-                    {([
-                      { bs: "dotted" as BorderStyle, title: "Dotted border", svg: (
-                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1.5" y="1.5" width="15" height="15" rx="1" stroke="#555" strokeWidth="1.2" strokeDasharray="2 2"/></svg>
-                      )},
-                      { bs: "single" as BorderStyle, title: "Single thin border", svg: (
-                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1.5" y="1.5" width="15" height="15" rx="1" stroke="#555" strokeWidth="1.2"/></svg>
-                      )},
-                      { bs: "double" as BorderStyle, title: "Double border", svg: (
-                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="16" height="16" rx="1" stroke="#555" strokeWidth="1"/><rect x="3.5" y="3.5" width="11" height="11" rx="0.5" stroke="#555" strokeWidth="1"/></svg>
-                      )},
-                      { bs: "bold" as BorderStyle, title: "Bold thick border", svg: (
-                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1.5" y="1.5" width="15" height="15" rx="1" stroke="#333" strokeWidth="3"/></svg>
-                      )},
-                    ] as const).map(({ bs, title, svg }) => (
-                      <button
-                        key={bs}
-                        onClick={() => spreadsheetCellBorderRef.current?.(bs)}
-                        title={title}
-                        className="w-9 h-9 rounded-md border border-zinc-300 bg-white hover:bg-zinc-50 active:bg-zinc-100 transition-colors flex items-center justify-center"
-                      >{svg}</button>
-                    ))}
+                  <button
+                    onClick={() => spreadsheetCellBorderRef.current?.("none")}
+                    title="Remove border"
+                    className="w-9 h-9 rounded-md border border-zinc-300 bg-white hover:bg-zinc-50 active:bg-zinc-100 transition-colors flex items-center justify-center text-xs font-bold text-zinc-500"
+                  >N</button>
+                  <button
+                    onClick={() => spreadsheetCellBorderRef.current?.("single")}
+                    title="Single thin border"
+                    className="w-9 h-9 rounded-md border border-zinc-300 bg-white hover:bg-zinc-50 active:bg-zinc-100 transition-colors flex items-center justify-center"
+                  ><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1.5" y="1.5" width="15" height="15" rx="1" stroke="#444" strokeWidth="1.5"/></svg></button>
+                  <button
+                    onClick={() => spreadsheetCellBorderRef.current?.("double")}
+                    title="Double border"
+                    className="w-9 h-9 rounded-md border border-zinc-300 bg-white hover:bg-zinc-50 active:bg-zinc-100 transition-colors flex items-center justify-center"
+                  ><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="16" height="16" rx="1" stroke="#444" strokeWidth="1"/><rect x="3.5" y="3.5" width="11" height="11" rx="0.5" stroke="#444" strokeWidth="1"/></svg></button>
+                  <button
+                    onClick={() => spreadsheetCellBorderRef.current?.("bold")}
+                    title="Bold thick border"
+                    className="w-9 h-9 rounded-md border border-zinc-300 bg-white hover:bg-zinc-50 active:bg-zinc-100 transition-colors flex items-center justify-center"
+                  ><svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="14" height="14" rx="1" stroke="#222" strokeWidth="3.5"/></svg></button>
                 </div>
               </div>
             </div>
