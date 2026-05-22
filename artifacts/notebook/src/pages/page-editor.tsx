@@ -1312,7 +1312,7 @@ export default function PageEditor() {
       )}
 
       {/* Tab bar */}
-      <div className="bg-white px-4 pt-0 pb-1 shrink-0 relative flex items-center gap-1.5" ref={pageTypePickerRef}>
+      <div className="bg-[#ece9e3] px-4 pt-0 pb-1 shrink-0 relative flex items-center gap-1.5" ref={pageTypePickerRef}>
         {/* Card 1: Back button */}
         <div className="overflow-hidden rounded-lg border border-zinc-700 shadow-sm shrink-0">
           <div className="bg-[#1a1a1a] text-white flex items-stretch" style={{ minHeight: 15 }}>
