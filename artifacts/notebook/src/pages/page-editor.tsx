@@ -610,6 +610,7 @@ export default function PageEditor() {
   const pageScrollRef = useRef<HTMLDivElement>(null);
 
   const initializedForId = useRef<number | null>(null);
+  const [contentReadyForPid, setContentReadyForPid] = useState<number>(pId);
   const lastSavedContent = useRef(store.getPage(bId, pId)?.content ?? "");
   const tabsRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
@@ -650,6 +651,7 @@ export default function PageEditor() {
       setContent(c);
       setPageTitle(page.title);
       lastSavedContent.current = c;
+      setContentReadyForPid(pId);
       if (editorRef.current) {
         editorRef.current.innerHTML = c;
       }
@@ -1481,6 +1483,7 @@ export default function PageEditor() {
           >
             {pageType === "spreadsheet" ? (
               <div style={{ zoom: zoom / 100, transformOrigin: "top left", height: "100%" }}>
+                {contentReadyForPid === pId && (
                 <SpreadsheetEditor
                   key={pId}
                   content={content}
@@ -1512,6 +1515,7 @@ export default function PageEditor() {
                     setSaveStatus("saving");
                   }}
                 />
+                )}
               </div>
             ) : pageType === "lined" ? (
               <div className="flex w-full" style={{ minHeight: 500 * lineHeightPx, backgroundColor: "#ffffff", zoom: zoom / 100, transformOrigin: "top left" }}>
