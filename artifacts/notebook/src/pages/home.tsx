@@ -181,26 +181,18 @@ export default function Home() {
         <div className="flex items-center justify-between gap-4 flex-wrap">
 
           {/* Left: Title + info */}
-          <div className="flex flex-col gap-0.5 min-w-0">
+          <div className="flex items-center gap-3 flex-wrap min-w-0">
             <h1 className="text-3xl font-serif font-bold text-stone-800 leading-tight">My Notebooks</h1>
-            <div className="flex items-center gap-3 text-xs text-stone-500 mt-0.5 flex-wrap">
-              <span className="flex items-center gap-1"><BookOpen className="w-3.5 h-3.5" />{books.length} notebook{books.length !== 1 ? "s" : ""}</span>
-              <span className="flex items-center gap-1"><FileText className="w-3.5 h-3.5" />{totalPages} page{totalPages !== 1 ? "s" : ""}</span>
-              {recentTitle && (
-                <span className="text-stone-400">
-                  Last edited:{" "}
-                  <Link href={`/books/${recentTitle.id}`} className="text-stone-600 hover:text-stone-800 underline underline-offset-2 transition-colors">
-                    {recentTitle.title}
-                  </Link>
-                </span>
-              )}
+            <div className="flex items-center gap-2 text-xs text-stone-500 flex-wrap">
+              <span className="flex items-center gap-1 bg-stone-100 rounded-full px-2 py-0.5"><BookOpen className="w-3 h-3" />{books.length} notebook{books.length !== 1 ? "s" : ""}</span>
+              <span className="flex items-center gap-1 bg-stone-100 rounded-full px-2 py-0.5"><FileText className="w-3 h-3" />{totalPages} page{totalPages !== 1 ? "s" : ""}</span>
             </div>
           </div>
 
           {/* Right: Search + Download + Upload */}
           <div className="flex items-center gap-2 flex-shrink-0">
             {/* Search bar */}
-            <div className={`flex items-center gap-2 border rounded-lg bg-stone-50 px-3 py-1.5 transition-all duration-300 ${searchFocused || searchQuery ? "w-48 border-stone-400 bg-white shadow-sm" : "w-28 border-stone-200"}`}>
+            <div className={`flex items-center gap-2 border rounded-lg bg-stone-50 px-3 py-1.5 transition-all duration-300 ${searchFocused || searchQuery ? "w-72 border-stone-400 bg-white shadow-sm" : "w-52 border-stone-200"}`}>
               <Search className="w-3.5 h-3.5 text-stone-400 flex-shrink-0" />
               <input
                 type="text"
