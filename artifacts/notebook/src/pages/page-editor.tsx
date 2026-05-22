@@ -510,7 +510,7 @@ export default function PageEditor() {
   useEffect(() => { refresh(); }, [refresh]);
 
   useEffect(() => {
-    if (page && initializedForId.current !== pId) {
+    if (page && page.id === pId && initializedForId.current !== pId) {
       initializedForId.current = pId;
       const c = page.content;
       setContent(c);
