@@ -10,10 +10,11 @@ const VIRT_BUFFER = 30;
 const COL_LABELS = Array.from({ length: COLS }, (_, i) => String.fromCharCode(65 + i));
 
 interface MergeRegion { r1: number; c1: number; r2: number; c2: number; }
-type CellFormat = { bold?: boolean; underline?: boolean; strikeThrough?: boolean; overline?: boolean; fontColor?: string; highlightColor?: string; fontSize?: number; fontFamily?: string; };
+type BorderStyle = "dotted" | "single" | "double" | "bold";
+type CellFormat = { bold?: boolean; underline?: boolean; strikeThrough?: boolean; overline?: boolean; fontColor?: string; highlightColor?: string; fontSize?: number; fontFamily?: string; borderStyle?: BorderStyle; };
 interface SheetData { cells: Record<string, string>; merges: MergeRegion[]; colWidths?: Record<number, number>; rowHeights?: Record<number, number>; cellAligns?: Record<string, "left" | "center" | "right">; cellFormats?: Record<string, CellFormat>; }
 
-function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef, insertColRef, colWidthIncRef, colWidthDecRef, rowHeightIncRef, rowHeightDecRef, onActiveSizeChange, cellAlignRef, onActiveCellAlignChange, cellFormatRef, onActiveCellFormatChange, onMergeStateChange }: {
+function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef, insertColRef, colWidthIncRef, colWidthDecRef, rowHeightIncRef, rowHeightDecRef, onActiveSizeChange, cellAlignRef, onActiveCellAlignChange, cellFormatRef, onActiveCellFormatChange, onMergeStateChange, cellBorderRef }: {
   content: string;
   onChange: (v: string) => void;
   mergeRef?: MutableRefObject<(() => void) | null>;
@@ -30,6 +31,7 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
   cellFormatRef?: MutableRefObject<((fmt: Partial<CellFormat>) => void) | null>;
   onActiveCellFormatChange?: (fmt: CellFormat) => void;
   onMergeStateChange?: (isMergedAnchor: boolean, hasMultiSelection: boolean) => void;
+  cellBorderRef?: MutableRefObject<((bs: BorderStyle | "none") => void) | null>;
 }) {
   const parseData = (): SheetData => {
     try {
@@ -48,6 +50,8 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
   const inputRefs = useRef<Record<string, HTMLInputElement | null>>({});
   const dataRef = useRef<SheetData>(data);
   dataRef.current = data;
+  const selectionRef = useRef(selection);
+  selectionRef.current = selection;
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [virtScroll, setVirtScroll] = useState({ top: 0, height: 600 });
@@ -264,6 +268,35 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
         return { ...prev, cellFormats: { ...(prev.cellFormats ?? {}), [k]: { ...existing, ...fmt } } };
       });
     };
+    if (cellBorderRef) cellBorderRef.current = (bs: BorderStyle | "none") => {
+      const cell = active ?? anchorRef.current;
+      const sel = selectionRef.current;
+      const cells: Array<[number, number]> = [];
+      if (sel) {
+        const rect = getRect(sel.anchor, sel.end);
+        for (let r = rect.r1; r <= rect.r2; r++)
+          for (let c = rect.c1; c <= rect.c2; c++)
+            cells.push([r, c]);
+      } else if (cell) {
+        cells.push(cell);
+      }
+      if (!cells.length) return;
+      setData(prev => {
+        const cellFormats = { ...(prev.cellFormats ?? {}) };
+        for (const [r, c] of cells) {
+          const k = key(r, c);
+          const existing = cellFormats[k] ?? {};
+          if (bs === "none") {
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            const { borderStyle: _bs, ...rest } = existing;
+            cellFormats[k] = rest;
+          } else {
+            cellFormats[k] = { ...existing, borderStyle: bs };
+          }
+        }
+        return { ...prev, cellFormats };
+      });
+    };
   }, [mergeSelected, unmergeActive, clearSelected, insertRow, insertCol, colWidthInc, colWidthDec, rowHeightInc, rowHeightDec, active]);
 
   const onMergeStateChangeRef = useRef(onMergeStateChange);
@@ -423,7 +456,15 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
                           ? "bg-blue-100 border-blue-300"
                           : "border-zinc-200"
                       }`}
-                      style={{ height: data.rowHeights?.[r] ?? ROW_HEIGHT, minWidth: data.colWidths?.[c] ?? 80 }}
+                      style={(() => {
+                        const bs = data.cellFormats?.[k]?.borderStyle;
+                        const borderCss: React.CSSProperties = bs && !isActive && !isSelected ? {
+                          borderStyle: bs === "dotted" ? "dotted" : bs === "double" ? "double" : "solid",
+                          borderWidth: bs === "bold" ? 2 : bs === "double" ? 3 : 1,
+                          borderColor: "#374151",
+                        } : {};
+                        return { height: data.rowHeights?.[r] ?? ROW_HEIGHT, minWidth: data.colWidths?.[c] ?? 80, ...borderCss };
+                      })()}
                     >
                       <input
                         ref={el => { inputRefs.current[k] = el; }}
@@ -535,6 +576,7 @@ export default function PageEditor() {
   const spreadsheetSetFormatRef = useRef<((fmt: Partial<CellFormat>) => void) | null>(null);
   const [activeSheetSizes, setActiveSheetSizes] = useState<{ colWidth: number; rowHeight: number } | null>(null);
   const [mergeState, setMergeState] = useState<{ isMerged: boolean; hasSelection: boolean }>({ isMerged: false, hasSelection: false });
+  const spreadsheetCellBorderRef = useRef<((bs: BorderStyle | "none") => void) | null>(null);
 
   const lineHeightPx = lineSpacing === "compact" ? 28 : lineSpacing === "relaxed" ? 44 : 36;
 
@@ -1060,7 +1102,7 @@ export default function PageEditor() {
               <CommonGroups />
 
 
-              {/* Placeholder box — 1 long top + 4 short bottom */}
+              {/* Merge + CW/CT box */}
               <div className="border border-zinc-400 rounded-lg p-1.5">
                 <div className="flex flex-col gap-1">
                   <button
@@ -1085,6 +1127,36 @@ export default function PageEditor() {
                         <button onClick={() => spreadsheetCTDecRef.current?.()} title="Decrease selected row height" className={`w-8 h-8 rounded-md border transition-colors text-[10px] font-bold flex items-center justify-center ${rhSmall ? "border-red-400 bg-red-100 text-red-700 shadow-[0_0_6px_2px_rgba(248,113,113,0.5)]" : "border-zinc-300 bg-white text-zinc-600 hover:bg-zinc-50"}`}>CT−</button>
                       </>);
                     })()}
+                  </div>
+                </div>
+              </div>
+
+              {/* Border Style box */}
+              <div className="border border-zinc-400 rounded-lg p-1.5">
+                <div className="flex flex-col gap-1">
+                  <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 text-center px-1">Border</span>
+                  <div className="grid grid-cols-2 gap-1">
+                    {([
+                      { bs: "dotted" as BorderStyle, title: "Dotted border", svg: (
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1.5" y="1.5" width="15" height="15" rx="1" stroke="#555" strokeWidth="1.2" strokeDasharray="2 2"/></svg>
+                      )},
+                      { bs: "single" as BorderStyle, title: "Single thin border", svg: (
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1.5" y="1.5" width="15" height="15" rx="1" stroke="#555" strokeWidth="1.2"/></svg>
+                      )},
+                      { bs: "double" as BorderStyle, title: "Double border", svg: (
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="16" height="16" rx="1" stroke="#555" strokeWidth="1"/><rect x="3.5" y="3.5" width="11" height="11" rx="0.5" stroke="#555" strokeWidth="1"/></svg>
+                      )},
+                      { bs: "bold" as BorderStyle, title: "Bold thick border", svg: (
+                        <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><rect x="1.5" y="1.5" width="15" height="15" rx="1" stroke="#333" strokeWidth="3"/></svg>
+                      )},
+                    ] as const).map(({ bs, title, svg }) => (
+                      <button
+                        key={bs}
+                        onClick={() => spreadsheetCellBorderRef.current?.(bs)}
+                        title={title}
+                        className="w-9 h-9 rounded-md border border-zinc-300 bg-white hover:bg-zinc-50 active:bg-zinc-100 transition-colors flex items-center justify-center"
+                      >{svg}</button>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -1297,6 +1369,7 @@ export default function PageEditor() {
                   rowHeightDecRef={spreadsheetCTDecRef}
                   onActiveSizeChange={setActiveSheetSizes}
                   onMergeStateChange={(isMerged, hasSelection) => setMergeState({ isMerged, hasSelection })}
+                  cellBorderRef={spreadsheetCellBorderRef}
                   cellAlignRef={spreadsheetSetAlignRef}
                   onActiveCellAlignChange={setAlign}
                   cellFormatRef={spreadsheetSetFormatRef}
