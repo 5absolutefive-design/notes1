@@ -548,6 +548,8 @@ export default function PageEditor() {
   const [saveStatus, setSaveStatus] = useState<"saved" | "saving">("saved");
   const [showPageTypePicker, setShowPageTypePicker] = useState(false);
   const pageTypePickerRef = useRef<HTMLDivElement>(null);
+  const [editingTabId, setEditingTabId] = useState<number | null>(null);
+  const [editingTabValue, setEditingTabValue] = useState("");
 
   const [font, setFont] = useState("Inter");
   const [fontSize, setFontSize] = useState(16);
@@ -1270,17 +1272,54 @@ export default function PageEditor() {
             </button>
             <div ref={tabsRef} className="flex items-stretch overflow-x-auto flex-1 min-w-0" style={{ scrollbarWidth: "none" }}>
               {pages.map((p, index) => (
-                <button
+                <div
                   key={p.id}
-                  onClick={() => setLocation(`/books/${bId}/pages/${p.id}`)}
-                  className={`px-3 py-0 text-[10px] font-semibold uppercase tracking-widest whitespace-nowrap transition-colors border-r border-zinc-700 ${
+                  className={`flex items-center border-r border-zinc-700 ${
                     p.id === pId
-                      ? "bg-[#2a2a2a] text-white border-b-2 border-b-white"
-                      : "text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800"
+                      ? "bg-[#2a2a2a] border-b-2 border-b-white"
+                      : "hover:bg-zinc-800"
                   }`}
                 >
-                  PAGE {index + 1}
-                </button>
+                  {editingTabId === p.id ? (
+                    <input
+                      autoFocus
+                      value={editingTabValue}
+                      onChange={e => setEditingTabValue(e.target.value)}
+                      onBlur={() => {
+                        const trimmed = editingTabValue.trim();
+                        if (trimmed) store.updatePage(bId, p.id, { title: trimmed });
+                        setEditingTabId(null);
+                        refresh();
+                      }}
+                      onKeyDown={e => {
+                        if (e.key === "Enter") {
+                          const trimmed = editingTabValue.trim();
+                          if (trimmed) store.updatePage(bId, p.id, { title: trimmed });
+                          setEditingTabId(null);
+                          refresh();
+                        } else if (e.key === "Escape") {
+                          setEditingTabId(null);
+                        }
+                      }}
+                      className="px-2 py-0 text-[10px] font-semibold uppercase tracking-widest bg-transparent text-white outline-none border-b border-white w-24"
+                      style={{ minWidth: 60 }}
+                    />
+                  ) : (
+                    <button
+                      onClick={() => setLocation(`/books/${bId}/pages/${p.id}`)}
+                      onDoubleClick={e => {
+                        e.preventDefault();
+                        setEditingTabId(p.id);
+                        setEditingTabValue(p.title || `Page ${index + 1}`);
+                      }}
+                      className={`px-3 py-0 text-[10px] font-semibold uppercase tracking-widest whitespace-nowrap transition-colors h-full ${
+                        p.id === pId ? "text-white" : "text-zinc-400 hover:text-zinc-200"
+                      }`}
+                    >
+                      {p.title || `PAGE ${index + 1}`}
+                    </button>
+                  )}
+                </div>
               ))}
             </div>
             <button onClick={() => scrollTabs("right")} className="px-1.5 flex items-center text-zinc-400 hover:text-white transition-colors border-l border-zinc-700 shrink-0">
