@@ -1,45 +1,51 @@
-# [Project name]
+# My Notebooks
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A browser-based notebook app where users can create, organize, and write in notebooks — all data is saved locally in the browser using localStorage. No server or database required.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `bash start.sh` — start the app (runs the frontend on port 5000)
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
 
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+- Frontend: React 19 + Vite + Tailwind CSS 4 + Radix UI
+- Routing: wouter
+- Data storage: browser localStorage (no backend, no database)
+- Build: Vite
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/notebook/` — the React frontend (the entire app)
+- `artifacts/notebook/src/lib/store.ts` — localStorage store (source of truth for all data)
+- `artifacts/notebook/src/pages/` — Home, BookView, PageEditor pages
+- `lib/` — unused library packages (api-server, db, api-spec) kept for reference only
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- **100% browser-based**: All data lives in `localStorage` under keys `nb_books` and `nb_pages`. No API calls are made.
+- **No login system**: Each user's data is isolated to their own browser. Different users on different browsers see different data.
+- **Backup/Import**: Users can export their data as a JSON file and re-import it to avoid data loss on cache clear.
+- **API server not used**: The `artifacts/api-server` and `lib/db` packages exist in the repo but are not started or used.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Create colorful notebooks with custom covers (colors, patterns, images)
+- Write pages inside each notebook with different page types (blank, lined, spreadsheet)
+- Soft-delete pages to trash and restore or permanently delete
+- Search notebooks by title
+- Backup all data to a JSON file and import it back
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- App should be browser-based (localStorage only), not server-based
+- No login system needed
+- Server/backend should not run
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
-
-## Pointers
-
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+- Data is lost if the user clears browser cache/localStorage — remind users to use the Backup button
+- The `artifacts/api-server` code exists but is NOT started — `start.sh` only runs the frontend
+- `DATABASE_URL` env var is provisioned but not used by the app
