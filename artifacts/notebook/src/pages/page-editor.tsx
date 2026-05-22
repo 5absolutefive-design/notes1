@@ -366,7 +366,7 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
           setActive([a[0], a[1]]);
           anchorRef.current = null;
           dragEndRef.current = null;
-          setTimeout(() => inputRefs.current[key(a[0], a[1])]?.focus(), 0);
+          inputRefs.current[key(a[0], a[1])]?.focus();
         } else {
           setSelection({ anchor: a, end: d });
         }
