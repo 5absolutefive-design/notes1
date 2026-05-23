@@ -4,16 +4,20 @@ import { useState, useEffect, useRef, useCallback, type MutableRefObject } from 
 import { createPortal } from "react-dom";
 import { store, type Book, type Page, type PageType } from "@/lib/store";
 
-function PortalPopup({ anchorRef, open, children }: {
+function PortalPopup({ anchorRef, open, children, align = "left" }: {
   anchorRef: { current: HTMLElement | null };
   open: boolean;
   children: React.ReactNode;
+  align?: "left" | "right";
 }) {
   if (!open) return null;
   const rect = anchorRef.current?.getBoundingClientRect();
   if (!rect) return null;
+  const posStyle: React.CSSProperties = align === "right"
+    ? { position: "fixed", top: rect.bottom + 4, right: window.innerWidth - rect.right, zIndex: 9999 }
+    : { position: "fixed", top: rect.bottom + 4, left: rect.left, zIndex: 9999 };
   return createPortal(
-    <div data-portal-popup="true" style={{ position: "fixed", top: rect.bottom + 4, left: rect.left, zIndex: 9999 }}>
+    <div data-portal-popup="true" style={posStyle}>
       {children}
     </div>,
     document.body
@@ -1785,8 +1789,8 @@ export default function PageEditor() {
                 title="Set table rows & columns"
                 className={`${btnSq} text-[10px] font-bold border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50`}
               >NRC</button>
-              {showNRCPopup && (
-                <div className="absolute right-0 top-full mt-1 z-50 bg-white border border-zinc-300 rounded-lg shadow-xl p-3" style={{ minWidth: 220 }}>
+              <PortalPopup anchorRef={nrcPopupRef} open={showNRCPopup} align="right">
+                <div className="bg-white border border-zinc-300 rounded-lg shadow-xl p-3" style={{ minWidth: 220 }}>
                   <div className="text-[11px] font-semibold text-zinc-500 mb-2 text-center">
                     {nrcHover ? `${nrcHover.r} × ${nrcHover.c} Table` : "Hover to pick size"}
                   </div>
@@ -1818,7 +1822,7 @@ export default function PageEditor() {
                   </div>
                   <div className="text-[10px] text-zinc-400 text-center mt-2">Max 10 × 10</div>
                 </div>
-              )}
+              </PortalPopup>
             </div>
 
             <div className="flex-1" />
