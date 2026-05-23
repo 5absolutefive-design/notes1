@@ -607,119 +607,6 @@ const FONTS = [
   "Source Code Pro", "Courier Prime",
 ];
 
-interface TableData { cells: Record<string, string>; rows: number; cols: number; cellFormats?: Record<string, CellFormat>; cellAligns?: Record<string, "left" | "center" | "right">; }
-
-function TableEditor({ content, onChange, insertRowRef, insertColRef, deleteRowRef, deleteColRef, cellFormatRef, onActiveCellFormatChange, cellAlignRef, onActiveCellAlignChange }: {
-  content: string; onChange: (v: string) => void;
-  insertRowRef?: MutableRefObject<(() => void) | null>;
-  insertColRef?: MutableRefObject<(() => void) | null>;
-  deleteRowRef?: MutableRefObject<(() => void) | null>;
-  deleteColRef?: MutableRefObject<(() => void) | null>;
-  cellFormatRef?: MutableRefObject<((fmt: Partial<CellFormat>) => void) | null>;
-  onActiveCellFormatChange?: (fmt: CellFormat) => void;
-  cellAlignRef?: MutableRefObject<((a: "left" | "center" | "right") => void) | null>;
-  onActiveCellAlignChange?: (a: "left" | "center" | "right") => void;
-}) {
-  const parseData = (): TableData => {
-    try {
-      const d = JSON.parse(content);
-      return { cells: d.cells ?? {}, rows: d.rows ?? 5, cols: d.cols ?? 5, cellFormats: d.cellFormats ?? {}, cellAligns: d.cellAligns ?? {} };
-    } catch { return { cells: {}, rows: 5, cols: 5, cellFormats: {}, cellAligns: {} }; }
-  };
-  const [data, setData] = useState<TableData>(parseData);
-  const [activeCell, setActiveCell] = useState<[number, number] | null>(null);
-  const activeCellRef = useRef(activeCell);
-  activeCellRef.current = activeCell;
-  const dataRef = useRef(data);
-  dataRef.current = data;
-  const COL_LABELS = Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i));
-  const ck = (r: number, c: number) => `${r}-${c}`;
-  const isFirst = useRef(true);
-  useEffect(() => { if (isFirst.current) { isFirst.current = false; return; } onChange(JSON.stringify(data)); }, [data]);
-  useEffect(() => {
-    if (insertRowRef) insertRowRef.current = () => setData(p => ({ ...p, rows: p.rows + 1 }));
-    if (insertColRef) insertColRef.current = () => setData(p => ({ ...p, cols: Math.min(26, p.cols + 1) }));
-    if (deleteRowRef) deleteRowRef.current = () => setData(p => {
-      if (p.rows <= 2) return p;
-      const cells = { ...p.cells }; const cf = { ...(p.cellFormats ?? {}) }; const ca = { ...(p.cellAligns ?? {}) };
-      const r = p.rows - 1; for (let c = 0; c < p.cols; c++) { delete cells[ck(r,c)]; delete cf[ck(r,c)]; delete ca[ck(r,c)]; }
-      return { ...p, rows: p.rows - 1, cells, cellFormats: cf, cellAligns: ca };
-    });
-    if (deleteColRef) deleteColRef.current = () => setData(p => {
-      if (p.cols <= 1) return p;
-      const cells = { ...p.cells }; const cf = { ...(p.cellFormats ?? {}) }; const ca = { ...(p.cellAligns ?? {}) };
-      const c = p.cols - 1; for (let r = 0; r < p.rows; r++) { delete cells[ck(r,c)]; delete cf[ck(r,c)]; delete ca[ck(r,c)]; }
-      return { ...p, cols: p.cols - 1, cells, cellFormats: cf, cellAligns: ca };
-    });
-    if (cellFormatRef) cellFormatRef.current = (fmt: Partial<CellFormat>) => {
-      const cell = activeCellRef.current; if (!cell) return;
-      const k = ck(cell[0], cell[1]);
-      setData(p => ({ ...p, cellFormats: { ...(p.cellFormats ?? {}), [k]: { ...(p.cellFormats?.[k] ?? {}), ...fmt } } }));
-    };
-    if (cellAlignRef) cellAlignRef.current = (a: "left" | "center" | "right") => {
-      const cell = activeCellRef.current; if (!cell) return;
-      setData(p => ({ ...p, cellAligns: { ...(p.cellAligns ?? {}), [ck(cell[0], cell[1])]: a } }));
-    };
-    return () => {
-      if (insertRowRef) insertRowRef.current = null; if (insertColRef) insertColRef.current = null;
-      if (deleteRowRef) deleteRowRef.current = null; if (deleteColRef) deleteColRef.current = null;
-      if (cellFormatRef) cellFormatRef.current = null; if (cellAlignRef) cellAlignRef.current = null;
-    };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-  useEffect(() => {
-    if (!activeCell) return;
-    onActiveCellFormatChange?.(data.cellFormats?.[ck(activeCell[0], activeCell[1])] ?? {});
-    onActiveCellAlignChange?.(data.cellAligns?.[ck(activeCell[0], activeCell[1])] ?? "left");
-  }, [activeCell, data.cellFormats, data.cellAligns]);
-  return (
-    <div className="p-4 overflow-auto w-full h-full">
-      <table className="border-collapse" style={{ tableLayout: "fixed" }}>
-        <thead>
-          <tr>
-            <th className="bg-zinc-100 border border-zinc-300 sticky top-0 left-0 z-20" style={{ width: 32, minWidth: 32 }} />
-            {Array.from({ length: data.cols }, (_, c) => (
-              <th key={c} className="bg-zinc-100 border border-zinc-300 text-zinc-600 text-[10px] font-semibold px-1 py-0.5 sticky top-0 z-10 text-center" style={{ width: 100, minWidth: 60 }}>
-                {COL_LABELS[c]}
-              </th>
-            ))}
-          </tr>
-        </thead>
-        <tbody>
-          {Array.from({ length: data.rows }, (_, r) => (
-            <tr key={r}>
-              <td className="bg-zinc-50 border border-zinc-300 text-zinc-400 text-[10px] text-center font-medium sticky left-0 z-10 select-none" style={{ width: 32, height: r === 0 ? 30 : 26 }}>
-                {r + 1}
-              </td>
-              {Array.from({ length: data.cols }, (_, c) => {
-                const key = ck(r, c);
-                const isActive = activeCell?.[0] === r && activeCell?.[1] === c;
-                const fmt = data.cellFormats?.[key] ?? {};
-                const align = data.cellAligns?.[key] ?? "left";
-                return (
-                  <td key={c} className={`p-0 ${isActive ? "outline outline-2 outline-blue-500 z-10 relative border-blue-400" : "border border-zinc-300"} ${r === 0 ? "bg-zinc-50" : "bg-white"}`} style={{ height: r === 0 ? 30 : 26 }}>
-                    <input
-                      value={data.cells[key] ?? ""}
-                      onFocus={() => setActiveCell([r, c])}
-                      onBlur={() => setActiveCell(prev => prev?.[0] === r && prev?.[1] === c ? null : prev)}
-                      onChange={e => {
-                        const val = e.target.value;
-                        setData(p => { const cells = { ...p.cells }; if (val) cells[key] = val; else delete cells[key]; return { ...p, cells }; });
-                      }}
-                      className="w-full h-full outline-none bg-transparent"
-                      style={{ padding: "0 6px", fontSize: fmt.fontSize ?? 13, fontFamily: fmt.fontFamily ?? "inherit", fontWeight: fmt.bold ? "bold" : r === 0 ? "600" : "normal", fontStyle: fmt.italic ? "italic" : "normal", textDecoration: [fmt.underline && "underline", fmt.strikeThrough && "line-through"].filter(Boolean).join(" ") || "none", color: fmt.fontColor ?? "#3a2e20", backgroundColor: fmt.highlightColor ?? "transparent", textAlign: align }}
-                    />
-                  </td>
-                );
-              })}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-}
-
 export default function PageEditor() {
   const { bookId, pageId } = useParams();
   const [, setLocation] = useLocation();
@@ -789,12 +676,7 @@ export default function PageEditor() {
   const [mergeState, setMergeState] = useState<{ isMerged: boolean; hasSelection: boolean }>({ isMerged: false, hasSelection: false });
   const spreadsheetCellBorderRef = useRef<((bs: BorderStyle | "none") => void) | null>(null);
   const spreadsheetCutRef = useRef<(() => void) | null>(null);
-  const tableInsertRowRef = useRef<(() => void) | null>(null);
-  const tableInsertColRef = useRef<(() => void) | null>(null);
-  const tableDeleteRowRef = useRef<(() => void) | null>(null);
-  const tableDeleteColRef = useRef<(() => void) | null>(null);
-  const tableSetFormatRef = useRef<((fmt: Partial<CellFormat>) => void) | null>(null);
-  const tableSetAlignRef = useRef<((a: "left" | "center" | "right") => void) | null>(null);
+
   const [showFontSizePopup, setShowFontSizePopup] = useState(false);
   const [showBorderPopup, setShowBorderPopup] = useState(false);
   const [selectedBorderStyle, setSelectedBorderStyle] = useState<BorderStyle | "none">("single");
@@ -927,18 +809,11 @@ export default function PageEditor() {
   };
 
   const execInlineFormat = (cmd: string) => {
-    if (pageType === "spreadsheet") {
+    if (pageType === "spreadsheet" || pageType === "table") {
       if (cmd === "bold") spreadsheetSetFormatRef.current?.({ bold: !activeFormats.bold });
       else if (cmd === "italic") spreadsheetSetFormatRef.current?.({ italic: !activeFormats.italic });
       else if (cmd === "underline") spreadsheetSetFormatRef.current?.({ underline: !activeFormats.underline });
       else if (cmd === "strikeThrough") spreadsheetSetFormatRef.current?.({ strikeThrough: !activeFormats.strikeThrough });
-      return;
-    }
-    if (pageType === "table") {
-      if (cmd === "bold") tableSetFormatRef.current?.({ bold: !activeFormats.bold });
-      else if (cmd === "italic") tableSetFormatRef.current?.({ italic: !activeFormats.italic });
-      else if (cmd === "underline") tableSetFormatRef.current?.({ underline: !activeFormats.underline });
-      else if (cmd === "strikeThrough") tableSetFormatRef.current?.({ strikeThrough: !activeFormats.strikeThrough });
       return;
     }
     if (!hasSelection()) return;
@@ -958,16 +833,14 @@ export default function PageEditor() {
   const handleFontChange = (f: string) => {
     setFont(f);
     setShowFontMenu(false);
-    if (pageType === "spreadsheet") { spreadsheetSetFormatRef.current?.({ fontFamily: f }); return; }
-    if (pageType === "table") { tableSetFormatRef.current?.({ fontFamily: f }); return; }
+    if (pageType === "spreadsheet" || pageType === "table") { spreadsheetSetFormatRef.current?.({ fontFamily: f }); return; }
     execFormat("fontName", f);
   };
 
   const handleFontSizeChange = (delta: number) => {
     const newSize = Math.max(8, Math.min(72, fontSize + delta));
     setFontSize(newSize);
-    if (pageType === "spreadsheet") { spreadsheetSetFormatRef.current?.({ fontSize: newSize }); return; }
-    if (pageType === "table") { tableSetFormatRef.current?.({ fontSize: newSize }); return; }
+    if (pageType === "spreadsheet" || pageType === "table") { spreadsheetSetFormatRef.current?.({ fontSize: newSize }); return; }
     editorRef.current?.focus();
     const size = newSize <= 10 ? 1 : newSize <= 13 ? 2 : newSize <= 16 ? 3 : newSize <= 18 ? 4 : newSize <= 24 ? 5 : newSize <= 32 ? 6 : 7;
     document.execCommand("fontSize", false, String(size));
@@ -993,8 +866,7 @@ export default function PageEditor() {
         return [color, ...filtered].slice(0, 10);
       });
     }
-    if (pageType === "spreadsheet") { spreadsheetSetFormatRef.current?.({ fontColor: color }); return; }
-    if (pageType === "table") { tableSetFormatRef.current?.({ fontColor: color }); return; }
+    if (pageType === "spreadsheet" || pageType === "table") { spreadsheetSetFormatRef.current?.({ fontColor: color }); return; }
     editorRef.current?.focus();
     if (!hasSelection()) {
       if (!restoreSelection()) return;
@@ -1046,8 +918,7 @@ export default function PageEditor() {
         return [color, ...filtered].slice(0, 10);
       });
     }
-    if (pageType === "spreadsheet") { spreadsheetSetFormatRef.current?.({ highlightColor: color }); return; }
-    if (pageType === "table") { tableSetFormatRef.current?.({ highlightColor: color }); return; }
+    if (pageType === "spreadsheet" || pageType === "table") { spreadsheetSetFormatRef.current?.({ highlightColor: color }); return; }
     editorRef.current?.focus();
     if (!hasSelection()) {
       if (!restoreSelection()) return;
@@ -1730,11 +1601,9 @@ export default function PageEditor() {
         </div>
 
       ) : pageType === "table" ? (
-        /* ── TABLE TOOLBAR — exact same 2-row card as Sheet ── */
+        /* ── TABLE TOOLBAR — 100% identical to Sheet toolbar ── */
         <div className="bg-[#ece9e3] px-3 pt-2 pb-1.5 shrink-0">
           <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl shadow-sm">
-
-            {/* ROW 1 — inactive placeholder boxes (identical to Sheet) */}
             <div className="flex items-center gap-2 px-3 pt-2 pb-1.5">
               <button onClick={() => setLocation("/")} className="w-28 h-7 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center gap-1.5 text-[11px] font-semibold text-zinc-600 shrink-0">🏠 My Notebooks</button>
               <div className="flex-1" />
@@ -1746,143 +1615,98 @@ export default function PageEditor() {
               <div className="w-52 h-7 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none">inactive</div>
               <button onClick={handleCreatePage} className="w-28 h-7 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-[11px] font-semibold text-zinc-600 shrink-0">+ New Page</button>
             </div>
-
-            {/* ROW 2 — flat toolbar (identical layout to Sheet, table-adapted refs) */}
-            <div className="px-3 py-1.5 flex items-center gap-1 overflow-x-auto">
-
-              {/* copy | paste */}
-              <button onClick={handleCopy} title="Copy" className={`${btnSq} text-base`}>🗐</button>
-              <button onClick={handlePaste} title="Paste" className={`${btnSq} text-base`}>📝</button>
-
-              <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
-
-              {/* undo | redo */}
-              <button onClick={handleUndo} title="Undo" className={`${btnSq} text-base`}>↻</button>
-              <button onClick={handleRedo} title="Redo" className={`${btnSq} text-base`}>↺</button>
-
-              <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
-
-              {/* zoom in | zoom out */}
-              <button onClick={() => setZoom(z => Math.min(200, z + 10))} title="Zoom in" className={`${btnSq} text-base`}>⌞+</button>
-              <button onClick={() => setZoom(z => Math.max(50, z - 10))} title="Zoom out" className={`${btnSq} text-base`}>–⌝</button>
-
-              <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
-
-              {/* Font family */}
-              <div className="relative shrink-0" ref={fontMenuRef as React.RefObject<HTMLDivElement>}>
-                <button onClick={() => setShowFontMenu(v => !v)} className="h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-left text-sm font-medium text-zinc-700 truncate w-[144px]" style={{ fontFamily: font }}>
-                  {font}
-                </button>
-                <PortalPopup anchorRef={fontMenuRef} open={showFontMenu}>
-                  <div className="bg-white border border-zinc-300 rounded-lg shadow-lg overflow-y-auto max-h-52 w-44">
-                    {FONTS.map(f => (
-                      <button key={f} onClick={() => handleFontChange(f)} className={`w-full text-left px-3 py-1.5 text-sm hover:bg-zinc-100 transition-colors ${font === f ? "bg-zinc-100 font-semibold" : ""}`} style={{ fontFamily: f }}>{f}</button>
-                    ))}
-                  </div>
-                </PortalPopup>
-              </div>
-
-              {/* Font size */}
-              <div className="relative flex items-center gap-0.5" ref={fontSizePopupRef as React.RefObject<HTMLDivElement>}>
-                <button onClick={() => setShowFontSizePopup(v => !v)} title="Font size" className="w-9 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-xs font-semibold text-zinc-700 flex items-center justify-center">{fontSize}</button>
-                <PortalPopup anchorRef={fontSizePopupRef} open={showFontSizePopup}>
-                  <div className="bg-white border border-zinc-300 rounded-lg shadow-xl p-1.5 w-24 grid grid-cols-2 gap-1">
-                    {[8,9,10,11,12,14,16,18,20,22,24,28,32,36,48,72].map(s => (
-                      <button key={s} onClick={() => { handleFontSizeChange(s - fontSize); setShowFontSizePopup(false); }} className={`h-7 rounded text-xs font-medium transition-colors ${fontSize === s ? "bg-zinc-800 text-white" : "hover:bg-zinc-100 text-zinc-700"}`}>{s}</button>
-                    ))}
-                  </div>
-                </PortalPopup>
-                <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className={btnSq}><span className="font-bold text-base leading-none">A</span></button>
-                <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className={btnSq}><span className="font-bold text-xs leading-none">A</span></button>
-              </div>
-
-              {/* AB — All Caps toggle */}
-              <button onClick={handleAllCaps} title="All caps (toggle)" className={`${btnSq} ${isAllCaps ? btnActive : ""}`}><span className="font-black text-[11px] tracking-tight">AB</span></button>
-
-              <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
-
-              {/* B I U Ŭ */}
-              <button onClick={() => execInlineFormat("bold")} title="Bold" className={`${btnSq} ${activeFormats.bold ? btnActive : ""}`}><span className="font-black text-sm">B</span></button>
-              <button onClick={() => execInlineFormat("italic")} title="Italic" className={`${btnSq} ${activeFormats.italic ? btnActive : ""}`}><span className="italic font-bold text-sm">I</span></button>
-              <button onClick={() => execInlineFormat("underline")} title="Underline" className={`${btnSq} ${activeFormats.underline ? btnActive : ""}`}><span className="text-sm underline decoration-red-500 decoration-[3px]">U</span></button>
-              <button onClick={() => execInlineFormat("strikeThrough")} title="Strikethrough" className={`${btnSq} ${activeFormats.strikeThrough ? btnActive : ""}`}><span className="text-sm line-through decoration-red-500 decoration-[3px]">U</span></button>
-
-              {/* Font color */}
-              <div className="relative" ref={colorPickerRef as React.RefObject<HTMLDivElement>}>
-                <button onClick={handleFontColorButtonClick} onDoubleClick={handleFontColorButtonDblClick} title="Font color (single-click: apply, double-click: pick color)" className={btnSq}>
-                  <div className="flex flex-col items-center justify-center gap-0.5">
-                    <span className="font-bold text-sm leading-none" style={{ color: fontColor }}>A</span>
-                    <div className="w-5 h-1 rounded-sm" style={{ backgroundColor: fontColor }} />
-                  </div>
-                </button>
-                <PortalPopup anchorRef={colorPickerRef} open={showColorPicker}>
-                  <FontColorPanel noAbsolute />
-                </PortalPopup>
-              </div>
-
-              {/* Highlight color */}
-              <div className="relative" ref={highlightPickerRef as React.RefObject<HTMLDivElement>}>
-                <button onClick={() => setShowHighlightPicker(v => !v)} title="Highlight color" className={`${btnSq} ${isHighlighterMode ? btnActive : ""}`}>
-                  <div className="flex flex-col items-center justify-center gap-0.5">
-                    <span className="font-bold text-sm leading-none text-zinc-700">A</span>
-                    <div className="w-5 h-1.5 rounded-sm" style={{ backgroundColor: highlightColor }} />
-                  </div>
-                </button>
-                <PortalPopup anchorRef={highlightPickerRef} open={showHighlightPicker}>
-                  <HighlightPanel noAbsolute />
-                </PortalPopup>
-              </div>
-
-              {/* N — Neutral / clear formatting */}
-              <button onClick={handleNeutral} title="Clear formatting" className={`${btnSq} text-[11px] font-bold text-zinc-600`}>N</button>
-
-              <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
-
-              {/* Align popup */}
-              <div className="relative" ref={alignPopupRef}>
-                <button onClick={() => setShowAlignPopup(v => !v)} title="Text alignment" className={`${btnSq} ${align !== "left" ? btnActive : ""}`}>
-                  {align === "center" ? (
-                    <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="3.5" y="7" width="9" height="2" rx="1"/><rect x="2" y="12" width="12" height="2" rx="1"/></svg>
-                  ) : align === "right" ? (
-                    <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="6" y="7" width="9" height="2" rx="1"/><rect x="3" y="12" width="12" height="2" rx="1"/></svg>
-                  ) : (
-                    <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="1" y="7" width="9" height="2" rx="1"/><rect x="1" y="12" width="12" height="2" rx="1"/></svg>
-                  )}
-                </button>
-                <PortalPopup anchorRef={alignPopupRef} open={showAlignPopup}>
-                  <div className="flex items-center gap-1 p-1.5">
-                    <button onClick={() => { tableSetAlignRef.current?.("left"); setAlign("left"); setShowAlignPopup(false); }} title="Align left" className={`${btnSq} ${align === "left" ? btnActive : ""}`}>
-                      <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="1" y="7" width="9" height="2" rx="1"/><rect x="1" y="12" width="12" height="2" rx="1"/></svg>
-                    </button>
-                    <button onClick={() => { tableSetAlignRef.current?.("center"); setAlign("center"); setShowAlignPopup(false); }} title="Align center" className={`${btnSq} ${align === "center" ? btnActive : ""}`}>
-                      <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="3.5" y="7" width="9" height="2" rx="1"/><rect x="2" y="12" width="12" height="2" rx="1"/></svg>
-                    </button>
-                    <button onClick={() => { tableSetAlignRef.current?.("right"); setAlign("right"); setShowAlignPopup(false); }} title="Align right" className={`${btnSq} ${align === "right" ? btnActive : ""}`}>
-                      <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="6" y="7" width="9" height="2" rx="1"/><rect x="3" y="12" width="12" height="2" rx="1"/></svg>
-                    </button>
-                    <button onClick={() => { tableSetAlignRef.current?.("left"); setAlign("left"); setShowAlignPopup(false); }} title="Neutral (reset alignment)" className={`${btnSq} text-[11px] font-bold text-zinc-600`}>N</button>
-                  </div>
-                </PortalPopup>
-              </div>
-
-              <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
-
-              {/* +Row −Row +Col −Col (table-specific, replaces MERGE/Border/CW/CT) */}
-              <button onClick={() => tableInsertRowRef.current?.()} title="Add row" className={`h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-50 text-xs font-bold text-zinc-600 transition-colors`}>+Row</button>
-              <button onClick={() => tableDeleteRowRef.current?.()} title="Delete last row" className={`h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-50 text-xs font-bold text-zinc-600 transition-colors`}>−Row</button>
-              <button onClick={() => tableInsertColRef.current?.()} title="Add column" className={`h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-50 text-xs font-bold text-zinc-600 transition-colors`}>+Col</button>
-              <button onClick={() => tableDeleteColRef.current?.()} title="Delete last column" className={`h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-50 text-xs font-bold text-zinc-600 transition-colors`}>−Col</button>
-
-              {/* Spacer push DEL/TRASH to right */}
-              <div className="flex-1" />
-
-              {/* DEL + TRASH group */}
-              <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-                <button onClick={handleDelete} title="Move page to trash" className="h-8 px-3 text-base text-zinc-600 bg-white hover:bg-red-50 hover:text-red-600 transition-colors border-r border-zinc-300 flex items-center justify-center">🗑️</button>
-                <button onClick={() => setShowTrash(true)} title="Open trash" className="h-8 px-3 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center">♻</button>
-              </div>
-
-            </div>{/* end ROW 2 */}
+          <div className="px-3 py-1.5 flex items-center gap-1 overflow-x-auto">
+            <button onClick={handleCopy} title="Copy" className={`${btnSq} text-base`}>🗐</button>
+            <button onClick={handlePaste} title="Paste" className={`${btnSq} text-base`}>📝</button>
+            <button onClick={() => spreadsheetCutRef.current?.()} title="Cut (copy + clear)" className={`${btnSq} text-base`}>✂</button>
+            <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+            <button onClick={handleUndo} title="Undo" className={`${btnSq} text-base`}>↻</button>
+            <button onClick={handleRedo} title="Redo" className={`${btnSq} text-base`}>↺</button>
+            <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+            <button onClick={() => setZoom(z => Math.min(200, z + 10))} title="Zoom in" className={`${btnSq} text-base`}>⌞+</button>
+            <button onClick={() => setZoom(z => Math.max(50, z - 10))} title="Zoom out" className={`${btnSq} text-base`}>–⌝</button>
+            <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+            <div className="relative shrink-0" ref={fontMenuRef as React.RefObject<HTMLDivElement>}>
+              <button onClick={() => setShowFontMenu(v => !v)} className="h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-left text-sm font-medium text-zinc-700 truncate w-[144px]" style={{ fontFamily: font }}>{font}</button>
+              <PortalPopup anchorRef={fontMenuRef} open={showFontMenu}>
+                <div className="bg-white border border-zinc-300 rounded-lg shadow-lg overflow-y-auto max-h-52 w-44">
+                  {FONTS.map(f => (<button key={f} onClick={() => handleFontChange(f)} className={`w-full text-left px-3 py-1.5 text-sm hover:bg-zinc-100 transition-colors ${font === f ? "bg-zinc-100 font-semibold" : ""}`} style={{ fontFamily: f }}>{f}</button>))}
+                </div>
+              </PortalPopup>
+            </div>
+            <div className="relative flex items-center gap-0.5" ref={fontSizePopupRef as React.RefObject<HTMLDivElement>}>
+              <button onClick={() => setShowFontSizePopup(v => !v)} title="Font size" className="w-9 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-xs font-semibold text-zinc-700 flex items-center justify-center">{fontSize}</button>
+              <PortalPopup anchorRef={fontSizePopupRef} open={showFontSizePopup}>
+                <div className="bg-white border border-zinc-300 rounded-lg shadow-xl p-1.5 w-24 grid grid-cols-2 gap-1">
+                  {[8,9,10,11,12,14,16,18,20,22,24,28,32,36,48,72].map(s => (<button key={s} onClick={() => { handleFontSizeChange(s - fontSize); setShowFontSizePopup(false); }} className={`h-7 rounded text-xs font-medium transition-colors ${fontSize === s ? "bg-zinc-800 text-white" : "hover:bg-zinc-100 text-zinc-700"}`}>{s}</button>))}
+                </div>
+              </PortalPopup>
+              <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className={btnSq}><span className="font-bold text-base leading-none">A</span></button>
+              <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className={btnSq}><span className="font-bold text-xs leading-none">A</span></button>
+            </div>
+            <button onClick={handleAllCaps} title="All caps (toggle)" className={`${btnSq} ${isAllCaps ? btnActive : ""}`}><span className="font-black text-[11px] tracking-tight">AB</span></button>
+            <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+            <button onClick={() => execInlineFormat("bold")} title="Bold" className={`${btnSq} ${activeFormats.bold ? btnActive : ""}`}><span className="font-black text-sm">B</span></button>
+            <button onClick={() => execInlineFormat("italic")} title="Italic" className={`${btnSq} ${activeFormats.italic ? btnActive : ""}`}><span className="italic font-bold text-sm">I</span></button>
+            <button onClick={() => execInlineFormat("underline")} title="Underline" className={`${btnSq} ${activeFormats.underline ? btnActive : ""}`}><span className="text-sm underline decoration-red-500 decoration-[3px]">U</span></button>
+            <button onClick={() => execInlineFormat("strikeThrough")} title="Strikethrough" className={`${btnSq} ${activeFormats.strikeThrough ? btnActive : ""}`}><span className="text-sm line-through decoration-red-500 decoration-[3px]">U</span></button>
+            <div className="relative" ref={colorPickerRef as React.RefObject<HTMLDivElement>}>
+              <button onClick={handleFontColorButtonClick} onDoubleClick={handleFontColorButtonDblClick} title="Font color" className={btnSq}>
+                <div className="flex flex-col items-center justify-center gap-0.5"><span className="font-bold text-sm leading-none" style={{ color: fontColor }}>A</span><div className="w-5 h-1 rounded-sm" style={{ backgroundColor: fontColor }} /></div>
+              </button>
+              <PortalPopup anchorRef={colorPickerRef} open={showColorPicker}><FontColorPanel noAbsolute /></PortalPopup>
+            </div>
+            <div className="relative" ref={highlightPickerRef as React.RefObject<HTMLDivElement>}>
+              <button onClick={() => setShowHighlightPicker(v => !v)} title="Highlight color" className={`${btnSq} ${isHighlighterMode ? btnActive : ""}`}>
+                <div className="flex flex-col items-center justify-center gap-0.5"><span className="font-bold text-sm leading-none text-zinc-700">A</span><div className="w-5 h-1.5 rounded-sm" style={{ backgroundColor: highlightColor }} /></div>
+              </button>
+              <PortalPopup anchorRef={highlightPickerRef} open={showHighlightPicker}><HighlightPanel noAbsolute /></PortalPopup>
+            </div>
+            <button onClick={handleNeutral} title="Clear formatting" className={`${btnSq} text-[11px] font-bold text-zinc-600`}>N</button>
+            <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+            <div className="relative" ref={alignPopupRef}>
+              <button onClick={() => setShowAlignPopup(v => !v)} title="Text alignment" className={`${btnSq} ${align !== "left" ? btnActive : ""}`}>
+                {align === "center" ? (<svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="3.5" y="7" width="9" height="2" rx="1"/><rect x="2" y="12" width="12" height="2" rx="1"/></svg>) : align === "right" ? (<svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="6" y="7" width="9" height="2" rx="1"/><rect x="3" y="12" width="12" height="2" rx="1"/></svg>) : (<svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="1" y="7" width="9" height="2" rx="1"/><rect x="1" y="12" width="12" height="2" rx="1"/></svg>)}
+              </button>
+              <PortalPopup anchorRef={alignPopupRef} open={showAlignPopup}>
+                <div className="flex items-center gap-1 p-1.5">
+                  <button onClick={() => { spreadsheetSetAlignRef.current?.("left"); setAlign("left"); setShowAlignPopup(false); }} title="Align left" className={`${btnSq} ${align === "left" ? btnActive : ""}`}><svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="1" y="7" width="9" height="2" rx="1"/><rect x="1" y="12" width="12" height="2" rx="1"/></svg></button>
+                  <button onClick={() => { spreadsheetSetAlignRef.current?.("center"); setAlign("center"); setShowAlignPopup(false); }} title="Align center" className={`${btnSq} ${align === "center" ? btnActive : ""}`}><svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="3.5" y="7" width="9" height="2" rx="1"/><rect x="2" y="12" width="12" height="2" rx="1"/></svg></button>
+                  <button onClick={() => { spreadsheetSetAlignRef.current?.("right"); setAlign("right"); setShowAlignPopup(false); }} title="Align right" className={`${btnSq} ${align === "right" ? btnActive : ""}`}><svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="6" y="7" width="9" height="2" rx="1"/><rect x="3" y="12" width="12" height="2" rx="1"/></svg></button>
+                  <button onClick={() => { spreadsheetSetAlignRef.current?.("left"); setAlign("left"); setShowAlignPopup(false); }} title="Neutral" className={`${btnSq} text-[11px] font-bold text-zinc-600`}>N</button>
+                </div>
+              </PortalPopup>
+            </div>
+            <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+            <button onClick={() => spreadsheetMergeRef.current?.()} title={mergeState.isMerged ? "Unmerge cells" : "Merge selected cells"} className={`h-8 px-2 rounded-md border transition-colors text-xs font-bold flex items-center justify-center gap-1 ${mergeState.isMerged || mergeState.hasSelection ? "border-purple-400 bg-purple-50 hover:bg-purple-100 text-purple-700" : "border-zinc-300 bg-white hover:bg-zinc-50 text-zinc-600"}`}>MERGE</button>
+            <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+            <div className="relative flex items-center" ref={borderPopupRef as React.RefObject<HTMLDivElement>}>
+              <button onClick={() => setShowBorderPopup(v => !v)} title="Pick border style" className="h-8 px-1.5 rounded-l-md border border-r-0 border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-zinc-600 flex items-center justify-center"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,8 5,11 12,4" stroke="#444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></button>
+              <button onClick={() => spreadsheetCellBorderRef.current?.(selectedBorderStyle)} title="Apply selected border style" className="h-8 px-1.5 rounded-r-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-zinc-600 flex items-center justify-center"><svg width="15" height="15" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="16" height="16" rx="1.5" stroke="#444" strokeWidth="1.5"/><line x1="5" y1="1" x2="5" y2="17" stroke="#444" strokeWidth="0.7"/><line x1="9" y1="1" x2="9" y2="17" stroke="#444" strokeWidth="0.7"/><line x1="13" y1="1" x2="13" y2="17" stroke="#444" strokeWidth="0.7"/><line x1="1" y1="5" x2="17" y2="5" stroke="#444" strokeWidth="0.7"/><line x1="1" y1="9" x2="17" y2="9" stroke="#444" strokeWidth="0.7"/><line x1="1" y1="13" x2="17" y2="13" stroke="#444" strokeWidth="0.7"/></svg></button>
+              <PortalPopup anchorRef={borderPopupRef} open={showBorderPopup}>
+                <div className="bg-white border border-zinc-300 rounded-lg shadow-xl p-2 flex flex-col gap-1 w-36">
+                  {([{ style: "none" as const, label: "No border", icon: <span className="text-xs font-bold text-zinc-500">N</span> },{ style: "single" as const, label: "Single border", icon: <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="1.5" y="1.5" width="15" height="15" rx="1" stroke="#444" strokeWidth="1.5"/></svg> },{ style: "double" as const, label: "Double border", icon: <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="16" height="16" rx="1" stroke="#444" strokeWidth="1"/><rect x="3.5" y="3.5" width="11" height="11" rx="0.5" stroke="#444" strokeWidth="1"/></svg> },{ style: "bold" as const, label: "Bold border", icon: <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="14" height="14" rx="1" stroke="#222" strokeWidth="3.5"/></svg> }]).map(({ style, label, icon }) => (
+                    <button key={style} onClick={() => { setSelectedBorderStyle(style); setShowBorderPopup(false); }} className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-xs transition-colors ${selectedBorderStyle === style ? "bg-zinc-200 font-semibold" : "hover:bg-zinc-100"}`}><span className="w-4 h-4 flex items-center justify-center shrink-0">{icon}</span><span>{label}</span></button>
+                  ))}
+                </div>
+              </PortalPopup>
+            </div>
+            <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+            {(() => {
+              const cw = activeSheetSizes?.colWidth ?? 80; const rh = activeSheetSizes?.rowHeight ?? 24;
+              return (<>
+                <button onClick={() => spreadsheetCWIncRef.current?.()} title="Widen column" className={`${btnSq} text-[10px] font-bold ${(cw>80)?"border-green-400 bg-green-100 text-green-700":"border-zinc-300 bg-white text-zinc-600"}`}>CW+</button>
+                <button onClick={() => spreadsheetCWDecRef.current?.()} title="Narrow column" className={`${btnSq} text-[10px] font-bold ${(cw<80)?"border-red-400 bg-red-100 text-red-700":"border-zinc-300 bg-white text-zinc-600"}`}>CW-</button>
+                <button onClick={() => spreadsheetCTIncRef.current?.()} title="Increase row height" className={`${btnSq} text-[10px] font-bold ${(rh>24)?"border-green-400 bg-green-100 text-green-700":"border-zinc-300 bg-white text-zinc-600"}`}>CT+</button>
+                <button onClick={() => spreadsheetCTDecRef.current?.()} title="Decrease row height" className={`${btnSq} text-[10px] font-bold ${(rh<24)?"border-red-400 bg-red-100 text-red-700":"border-zinc-300 bg-white text-zinc-600"}`}>CT-</button>
+              </>);
+            })()}
+            <div className="flex-1" />
+            <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
+              <button onClick={handleDelete} title="Move page to trash" className="h-8 px-3 text-base text-zinc-600 bg-white hover:bg-red-50 hover:text-red-600 transition-colors border-r border-zinc-300 flex items-center justify-center">🗑️</button>
+              <button onClick={() => setShowTrash(true)} title="Open trash" className="h-8 px-3 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center">♻</button>
+            </div>
+          </div>{/* end ROW 2 */}
           </div>{/* end CARD */}
         </div>
 
@@ -2387,25 +2211,35 @@ export default function PageEditor() {
                 )}
               </div>
             ) : pageType === "table" ? (
-              <div style={{ zoom: zoom / 100, transformOrigin: "top left", height: "100%", overflow: "auto" }}>
+              <div style={{ zoom: zoom / 100, transformOrigin: "top left", height: "100%" }}>
                 {contentReadyForPid === pId && (
-                  <TableEditor
+                  <SpreadsheetEditor
                     key={pId}
                     content={content}
-                    insertRowRef={tableInsertRowRef}
-                    insertColRef={tableInsertColRef}
-                    deleteRowRef={tableDeleteRowRef}
-                    deleteColRef={tableDeleteColRef}
-                    cellFormatRef={tableSetFormatRef}
+                    mergeRef={spreadsheetMergeRef}
+                    clearRef={spreadsheetClearRef}
+                    cutRef={spreadsheetCutRef}
+                    insertRowRef={spreadsheetInsertRowRef}
+                    insertColRef={spreadsheetInsertColRef}
+                    colWidthIncRef={spreadsheetCWIncRef}
+                    colWidthDecRef={spreadsheetCWDecRef}
+                    rowHeightIncRef={spreadsheetCTIncRef}
+                    rowHeightDecRef={spreadsheetCTDecRef}
+                    onActiveSizeChange={setActiveSheetSizes}
+                    onMergeStateChange={(isMerged, hasSelection) => setMergeState({ isMerged, hasSelection })}
+                    cellBorderRef={spreadsheetCellBorderRef}
+                    cellAlignRef={spreadsheetSetAlignRef}
+                    onActiveCellAlignChange={setAlign}
+                    cellValignRef={spreadsheetSetValignRef}
+                    onActiveCellValignChange={setValign}
+                    cellFormatRef={spreadsheetSetFormatRef}
                     onActiveCellFormatChange={(fmt) => {
-                      setActiveFormats({ bold: !!fmt.bold, italic: !!fmt.italic, underline: !!fmt.underline, strikeThrough: !!fmt.strikeThrough, overline: false });
+                      setActiveFormats({ bold: !!fmt.bold, italic: !!fmt.italic, underline: !!fmt.underline, strikeThrough: !!fmt.strikeThrough, overline: !!fmt.overline });
                       if (fmt.fontColor) setFontColor(fmt.fontColor);
                       if (fmt.highlightColor) setHighlightColor(fmt.highlightColor);
                       if (fmt.fontSize) setFontSize(fmt.fontSize);
                       if (fmt.fontFamily) setFont(fmt.fontFamily);
                     }}
-                    cellAlignRef={tableSetAlignRef}
-                    onActiveCellAlignChange={setAlign}
                     onChange={(v) => {
                       setContent(v);
                       setSaveStatus("saving");
