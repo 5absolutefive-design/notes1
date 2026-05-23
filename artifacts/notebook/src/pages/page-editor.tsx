@@ -2436,7 +2436,7 @@ export default function PageEditor() {
             onScroll={e => pageType === "lined" && setLinedScroll((e.currentTarget as HTMLDivElement).scrollTop)}
           >
             {pageType === "spreadsheet" ? (
-              <div style={{ zoom: zoom / 100, transformOrigin: "top left", height: "100%" }}>
+              <div key="spreadsheet" style={{ zoom: zoom / 100, transformOrigin: "top left", height: "100%" }}>
                 {contentReadyForPid === pId && (
                 <SpreadsheetEditor
                   key={pId}
@@ -2473,7 +2473,7 @@ export default function PageEditor() {
                 )}
               </div>
             ) : pageType === "table" ? (
-              <div className="w-full h-full bg-white overflow-auto">
+              <div key="table" className="w-full h-full bg-white overflow-auto">
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minWidth: "100%", minHeight: "100%", padding: "24px", boxSizing: "border-box" }}>
                 <div style={{ transform: `scale(${zoom / 100})`, transformOrigin: "center center" }}>
                 {contentReadyForPid === pId && (
@@ -2516,7 +2516,7 @@ export default function PageEditor() {
                 </div>
               </div>
             ) : pageType === "lined" ? (
-              <div className="flex w-full" style={{ minHeight: 500 * lineHeightPx, backgroundColor: "#ffffff", zoom: zoom / 100, transformOrigin: "top left" }}>
+              <div key="lined" className="flex w-full" style={{ minHeight: 500 * lineHeightPx, backgroundColor: "#ffffff", zoom: zoom / 100, transformOrigin: "top left" }}>
                 {/* Line numbers + margin — virtualized */}
                 {(() => {
                   const containerH = pageScrollRef.current?.clientHeight ?? 600;
@@ -2575,7 +2575,7 @@ export default function PageEditor() {
                 </div>
               </div>
             ) : (
-              <div style={{ zoom: zoom / 100, transformOrigin: "top left" }}>
+              <div key="blank" style={{ zoom: zoom / 100, transformOrigin: "top left" }}>
                 <div
                   ref={editorRef}
                   contentEditable
