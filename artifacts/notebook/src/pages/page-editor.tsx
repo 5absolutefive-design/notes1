@@ -639,6 +639,8 @@ export default function PageEditor() {
   const [highlightColor, setHighlightColor] = useState("#FFFF00");
   const [showHighlightPicker, setShowHighlightPicker] = useState(false);
   const [recentHighlights, setRecentHighlights] = useState<string[]>([]);
+  const [isHighlighterMode, setIsHighlighterMode] = useState(false);
+  const lastKeyRef = useRef<string>("");
 
   const [zoom, setZoom] = useState(100);
   const [autoWrap, setAutoWrap] = useState(true);
@@ -926,25 +928,40 @@ export default function PageEditor() {
       sel.addRange(range);
     }
     savedRangeRef.current = null;
+    // Enter highlighter mode — new typing will stay highlighted.
+    // Double space will exit the mode.
+    setIsHighlighterMode(true);
+    lastKeyRef.current = "";
     handleEditorInput();
-    // Blur then re-focus to fully reset the browser's internal typing state
-    // (including background/highlight color). Restoring the saved range puts
-    // the cursor back at the end of the highlighted text so new typing is clean.
-    setTimeout(() => {
-      if (!editorRef.current) return;
-      const sel = window.getSelection();
-      let savedRange: Range | null = null;
-      if (sel && sel.rangeCount > 0) {
-        savedRange = sel.getRangeAt(0).cloneRange();
-      }
-      editorRef.current.blur();
-      editorRef.current.focus();
-      if (savedRange && sel) {
-        sel.removeAllRanges();
-        sel.addRange(savedRange);
-      }
-    }, 0);
   };
+
+  const exitHighlighterMode = useCallback(() => {
+    setIsHighlighterMode(false);
+    lastKeyRef.current = "";
+    if (!editorRef.current) return;
+    const sel = window.getSelection();
+    let savedRange: Range | null = null;
+    if (sel && sel.rangeCount > 0) {
+      savedRange = sel.getRangeAt(0).cloneRange();
+    }
+    editorRef.current.blur();
+    editorRef.current.focus();
+    if (savedRange && sel) {
+      sel.removeAllRanges();
+      sel.addRange(savedRange);
+    }
+  }, []);
+
+  const handleEditorKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (isHighlighterMode && e.key === " " && lastKeyRef.current === " ") {
+      // Double space → delete the first space already inserted, then exit mode
+      e.preventDefault();
+      document.execCommand("delete", false);
+      exitHighlighterMode();
+      return;
+    }
+    lastKeyRef.current = e.key;
+  }, [isHighlighterMode, exitHighlighterMode]);
 
   const handleNeutral = () => {
     editorRef.current?.focus();
@@ -1209,7 +1226,7 @@ export default function PageEditor() {
               {showColorPicker && <FontColorPanel />}
             </div>
             <div className="relative" ref={highlightPickerRef}>
-              <button onClick={() => setShowHighlightPicker(v => !v)} title="Highlight color" className={btnSq}>
+              <button onClick={() => setShowHighlightPicker(v => !v)} title="Highlight color (double-space to exit mode)" className={`${btnSq} ${isHighlighterMode ? btnActive : ""}`}>
                 <div className="flex flex-col items-center justify-center gap-0.5">
                   <span className="font-bold text-sm leading-none text-zinc-700">A</span>
                   <div className="w-5 h-1.5 rounded-sm" style={{ backgroundColor: highlightColor }} />
@@ -1360,7 +1377,7 @@ export default function PageEditor() {
 
             {/* Highlight color */}
             <div className="relative" ref={highlightPickerRef as React.RefObject<HTMLDivElement>}>
-              <button onClick={() => setShowHighlightPicker(v => !v)} title="Highlight color" className={btnSq}>
+              <button onClick={() => setShowHighlightPicker(v => !v)} title="Highlight color (double-space to exit mode)" className={`${btnSq} ${isHighlighterMode ? btnActive : ""}`}>
                 <div className="flex flex-col items-center justify-center gap-0.5">
                   <span className="font-bold text-sm leading-none text-zinc-700">A</span>
                   <div className="w-5 h-1.5 rounded-sm" style={{ backgroundColor: highlightColor }} />
@@ -1590,7 +1607,7 @@ export default function PageEditor() {
               </div>
               {/* Highlight color */}
               <div className="relative shrink-0" ref={highlightPickerRef as React.RefObject<HTMLDivElement>}>
-                <button onClick={() => setShowHighlightPicker(v => !v)} title="Highlight color" className={btnSq}>
+                <button onClick={() => setShowHighlightPicker(v => !v)} title="Highlight color (double-space to exit mode)" className={`${btnSq} ${isHighlighterMode ? btnActive : ""}`}>
                   <div className="flex flex-col items-center justify-center gap-0.5">
                     <span className="font-bold text-sm leading-none text-zinc-700">A</span>
                     <div className="w-5 h-1.5 rounded-sm" style={{ backgroundColor: highlightColor }} />
@@ -1724,7 +1741,7 @@ export default function PageEditor() {
               </div>
               {/* Highlight color */}
               <div className="relative shrink-0" ref={highlightPickerRef as React.RefObject<HTMLDivElement>}>
-                <button onClick={() => setShowHighlightPicker(v => !v)} title="Highlight color" className={btnSq}>
+                <button onClick={() => setShowHighlightPicker(v => !v)} title="Highlight color (double-space to exit mode)" className={`${btnSq} ${isHighlighterMode ? btnActive : ""}`}>
                   <div className="flex flex-col items-center justify-center gap-0.5">
                     <span className="font-bold text-sm leading-none text-zinc-700">A</span>
                     <div className="w-5 h-1.5 rounded-sm" style={{ backgroundColor: highlightColor }} />
@@ -2058,6 +2075,7 @@ export default function PageEditor() {
                     suppressContentEditableWarning
                     spellCheck={false}
                     onInput={handleEditorInput}
+                    onKeyDown={handleEditorKeyDown}
                     onKeyUp={updateActiveFormats}
                     onMouseUp={updateActiveFormats}
                     className="relative w-full outline-none px-4"
@@ -2074,6 +2092,7 @@ export default function PageEditor() {
                   suppressContentEditableWarning
                   spellCheck={false}
                   onInput={handleEditorInput}
+                  onKeyDown={handleEditorKeyDown}
                   onKeyUp={updateActiveFormats}
                   onMouseUp={updateActiveFormats}
                   className="w-full min-h-full outline-none px-6 py-4 text-zinc-800"
