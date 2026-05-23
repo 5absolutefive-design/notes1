@@ -1488,11 +1488,7 @@ export default function PageEditor() {
             <div className="flex items-center gap-2 px-3 pt-2 pb-1.5">
               <button onClick={() => setLocation("/")} className="w-28 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center gap-1.5 text-[11px] font-semibold text-zinc-600 shrink-0">🏠 My Notebooks</button>
               <div className="flex-1" />
-              <div className="flex items-center gap-1.5">
-                <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none">in</div>
-                <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none">in</div>
-                <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none">in</div>
-              </div>
+
               <div className="w-52 h-8 rounded border border-zinc-300 bg-white flex items-center px-2 gap-1 shrink-0"><span className="text-zinc-400 text-xs">🔍</span><input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search in page..." className="flex-1 bg-transparent text-[11px] text-zinc-700 outline-none placeholder:text-zinc-400" />{searchTerm && <button onClick={() => setSearchTerm("")} className="text-zinc-400 hover:text-zinc-600 text-xs leading-none">✕</button>}</div>
               <button onClick={handleCreatePage} className="w-28 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-[11px] font-semibold text-zinc-600 shrink-0">+ New Page</button>
             </div>
@@ -1735,11 +1731,7 @@ export default function PageEditor() {
           <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl shadow-sm">
             <div className="flex items-center gap-2 px-3 pt-2 pb-1.5">
               <div className="flex-1" />
-              <div className="flex items-center gap-1.5">
-                <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none">in</div>
-                <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none">in</div>
-                <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none">in</div>
-              </div>
+
               <div className="w-52 h-8 rounded border border-zinc-300 bg-white flex items-center px-2 gap-1 shrink-0"><span className="text-zinc-400 text-xs">🔍</span><input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search in page..." className="flex-1 bg-transparent text-[11px] text-zinc-700 outline-none placeholder:text-zinc-400" />{searchTerm && <button onClick={() => setSearchTerm("")} className="text-zinc-400 hover:text-zinc-600 text-xs leading-none">✕</button>}</div>
               <button onClick={handleCreatePage} className="w-28 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-[11px] font-semibold text-zinc-600 shrink-0">+ New Page</button>
             </div>
@@ -1945,11 +1937,7 @@ export default function PageEditor() {
             <div className="flex items-center gap-2 px-3 pt-2 pb-1.5">
               <button onClick={() => setLocation("/")} className="w-28 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center gap-1.5 text-[11px] font-semibold text-zinc-600 shrink-0">🏠 My Notebooks</button>
               <div className="flex-1" />
-              <div className="flex items-center gap-1.5">
-                <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none">in</div>
-                <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none">in</div>
-                <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none">in</div>
-              </div>
+
               <div className="w-52 h-8 rounded border border-zinc-300 bg-white flex items-center px-2 gap-1 shrink-0"><span className="text-zinc-400 text-xs">🔍</span><input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search in page..." className="flex-1 bg-transparent text-[11px] text-zinc-700 outline-none placeholder:text-zinc-400" />{searchTerm && <button onClick={() => setSearchTerm("")} className="text-zinc-400 hover:text-zinc-600 text-xs leading-none">✕</button>}</div>
               <button onClick={handleCreatePage} className="w-28 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-[11px] font-semibold text-zinc-600 shrink-0">+ New Page</button>
             </div>
@@ -2078,11 +2066,7 @@ export default function PageEditor() {
             <div className="flex items-center gap-2 px-3 pt-2 pb-1.5">
               <button onClick={() => setLocation("/")} className="w-28 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center gap-1.5 text-[11px] font-semibold text-zinc-600 shrink-0">🏠 My Notebooks</button>
               <div className="flex-1" />
-              <div className="flex items-center gap-1.5">
-                <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none">in</div>
-                <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none">in</div>
-                <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none">in</div>
-              </div>
+
               <div className="w-52 h-8 rounded border border-zinc-300 bg-white flex items-center px-2 gap-1 shrink-0"><span className="text-zinc-400 text-xs">🔍</span><input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search in page..." className="flex-1 bg-transparent text-[11px] text-zinc-700 outline-none placeholder:text-zinc-400" />{searchTerm && <button onClick={() => setSearchTerm("")} className="text-zinc-400 hover:text-zinc-600 text-xs leading-none">✕</button>}</div>
               <button onClick={handleCreatePage} className="w-28 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-[11px] font-semibold text-zinc-600 shrink-0">+ New Page</button>
             </div>
