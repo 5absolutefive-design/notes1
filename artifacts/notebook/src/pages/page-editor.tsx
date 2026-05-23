@@ -2089,12 +2089,14 @@ export default function PageEditor() {
               </div>
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
               {/* Line Spacing — lined only */}
-              {(["compact", "normal", "relaxed"] as const).map(s => (
-                <button key={s} onClick={() => setLineSpacing(s)} title={`Line spacing: ${s}`}
-                  className={`h-8 px-2 rounded-md border transition-colors text-[10px] font-bold flex items-center justify-center shrink-0 ${lineSpacing === s ? "bg-zinc-200 border-zinc-500 text-zinc-800" : "border-zinc-300 bg-white hover:bg-zinc-100 text-zinc-600"}`}>
-                  {s === "compact" ? "C" : s === "normal" ? "N" : "R"}
-                </button>
-              ))}
+              <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
+                {(["compact", "normal", "relaxed"] as const).map((s, i) => (
+                  <button key={s} onClick={() => setLineSpacing(s)} title={`Line spacing: ${s}`}
+                    className={`h-8 px-2.5 text-[10px] font-bold transition-colors flex items-center justify-center ${i < 2 ? "border-r border-zinc-300" : ""} ${lineSpacing === s ? "bg-zinc-200 text-zinc-800" : "bg-white hover:bg-zinc-100 text-zinc-600"}`}>
+                    {s === "compact" ? "C" : s === "normal" ? "N" : "R"}
+                  </button>
+                ))}
+              </div>
               {/* Spacer */}
               <div className="flex-1" />
               {/* DEL + TRASH */}
