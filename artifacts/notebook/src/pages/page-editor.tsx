@@ -1568,6 +1568,8 @@ export default function PageEditor() {
               <button onClick={() => execInlineFormat("strikeThrough")} title="Strikethrough" className={`w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center ${activeFormats.strikeThrough ? "bg-zinc-200" : ""}`}><span className="text-sm line-through decoration-red-500 decoration-[3px]">U</span></button>
             </div>
 
+            <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+
             {/* Font color */}
             <div className="relative" ref={colorPickerRef as React.RefObject<HTMLDivElement>}>
               <button onClick={handleFontColorButtonClick} onDoubleClick={handleFontColorButtonDblClick} title="Font color (single-click: apply, double-click: pick color)" className={btnSq}>
