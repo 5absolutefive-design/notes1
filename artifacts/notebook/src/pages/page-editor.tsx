@@ -927,6 +927,13 @@ export default function PageEditor() {
     }
     savedRangeRef.current = null;
     handleEditorInput();
+    // Defer the highlight reset so the browser finishes processing the
+    // selection first — doing it synchronously locks the cursor.
+    setTimeout(() => {
+      if (!editorRef.current) return;
+      editorRef.current.focus();
+      document.execCommand("hiliteColor", false, "transparent");
+    }, 0);
   };
 
   const handleNeutral = () => {
