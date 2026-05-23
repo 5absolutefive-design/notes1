@@ -1498,25 +1498,25 @@ export default function PageEditor() {
 
             {/* copy | paste | cut — joined */}
             <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-              <button onClick={handleCopy} title="Copy" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center">🗐</button>
-              <button onClick={handlePaste} title="Paste" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center">📝</button>
-              <button onClick={() => spreadsheetCutRef.current?.()} title="Cut" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center">✂</button>
+              <button onClick={handleCopy} title="Copy" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center">🗐</button>
+              <button onClick={handlePaste} title="Paste" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center">📝</button>
+              <button onClick={() => spreadsheetCutRef.current?.()} title="Cut" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center">✂</button>
             </div>
 
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
 
             {/* undo | redo — joined */}
             <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-              <button onClick={handleUndo} title="Undo" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center">↻</button>
-              <button onClick={handleRedo} title="Redo" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center">↺</button>
+              <button onClick={handleUndo} title="Undo" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center">↻</button>
+              <button onClick={handleRedo} title="Redo" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center">↺</button>
             </div>
 
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
 
             {/* zoom in | zoom out — joined */}
             <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-              <button onClick={() => setZoom(z => Math.min(200, z + 10))} title="Zoom in" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center">⌞+</button>
-              <button onClick={() => setZoom(z => Math.max(50, z - 10))} title="Zoom out" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center">–⌝</button>
+              <button onClick={() => setZoom(z => Math.min(200, z + 10))} title="Zoom in" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center">⌞+</button>
+              <button onClick={() => setZoom(z => Math.max(50, z - 10))} title="Zoom out" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center">–⌝</button>
             </div>
 
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
@@ -1550,8 +1550,8 @@ export default function PageEditor() {
                 </div>
               </PortalPopup>
               <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-                <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className="h-8 px-2 text-zinc-600 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><span className="font-bold text-base leading-none">A</span></button>
-                <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className="h-8 px-2 text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center"><span className="font-bold text-xs leading-none">A</span></button>
+                <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><span className="font-bold text-base leading-none">A</span></button>
+                <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center"><span className="font-bold text-xs leading-none">A</span></button>
               </div>
             </div>
 
@@ -1562,12 +1562,12 @@ export default function PageEditor() {
 
             {/* B I U Ŭ + font color + highlight */}
             <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-              <button onClick={() => execInlineFormat("bold")} title="Bold" className={`h-8 px-2.5 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center ${activeFormats.bold ? "bg-zinc-200" : ""}`}><span className="font-black text-sm">B</span></button>
-              <button onClick={() => execInlineFormat("italic")} title="Italic" className={`h-8 px-2.5 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center ${activeFormats.italic ? "bg-zinc-200" : ""}`}><span className="italic font-bold text-sm">I</span></button>
+              <button onClick={() => execInlineFormat("bold")} title="Bold" className={`w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center ${activeFormats.bold ? "bg-zinc-200" : ""}`}><span className="font-black text-sm">B</span></button>
+              <button onClick={() => execInlineFormat("italic")} title="Italic" className={`w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center ${activeFormats.italic ? "bg-zinc-200" : ""}`}><span className="italic font-bold text-sm">I</span></button>
             </div>
             <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-              <button onClick={() => execInlineFormat("underline")} title="Underline" className={`h-8 px-2.5 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center ${activeFormats.underline ? "bg-zinc-200" : ""}`}><span className="text-sm underline decoration-red-500 decoration-[3px]">U</span></button>
-              <button onClick={() => execInlineFormat("strikeThrough")} title="Strikethrough" className={`h-8 px-2.5 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center ${activeFormats.strikeThrough ? "bg-zinc-200" : ""}`}><span className="text-sm line-through decoration-red-500 decoration-[3px]">U</span></button>
+              <button onClick={() => execInlineFormat("underline")} title="Underline" className={`w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center ${activeFormats.underline ? "bg-zinc-200" : ""}`}><span className="text-sm underline decoration-red-500 decoration-[3px]">U</span></button>
+              <button onClick={() => execInlineFormat("strikeThrough")} title="Strikethrough" className={`w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center ${activeFormats.strikeThrough ? "bg-zinc-200" : ""}`}><span className="text-sm line-through decoration-red-500 decoration-[3px]">U</span></button>
             </div>
 
             {/* Font color */}
@@ -1714,12 +1714,12 @@ export default function PageEditor() {
               const rhBig = rh > 24; const rhSmall = rh < 24;
               return (<>
                 <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-                  <button onClick={() => spreadsheetCWIncRef.current?.()} title="Widen column" className={`h-8 px-2 text-[10px] font-bold flex items-center justify-center border-r border-zinc-300 transition-colors ${cwBig ? "bg-green-100 text-green-700" : "bg-white text-zinc-600 hover:bg-zinc-100"}`}>CW+</button>
-                  <button onClick={() => spreadsheetCWDecRef.current?.()} title="Narrow column" className={`h-8 px-2 text-[10px] font-bold flex items-center justify-center transition-colors ${cwSmall ? "bg-red-100 text-red-700" : "bg-white text-zinc-600 hover:bg-zinc-100"}`}>CW-</button>
+                  <button onClick={() => spreadsheetCWIncRef.current?.()} title="Widen column" className={`w-8 h-8 text-[10px] font-bold flex items-center justify-center border-r border-zinc-300 transition-colors ${cwBig ? "bg-green-100 text-green-700" : "bg-white text-zinc-600 hover:bg-zinc-100"}`}>CW+</button>
+                  <button onClick={() => spreadsheetCWDecRef.current?.()} title="Narrow column" className={`w-8 h-8 text-[10px] font-bold flex items-center justify-center transition-colors ${cwSmall ? "bg-red-100 text-red-700" : "bg-white text-zinc-600 hover:bg-zinc-100"}`}>CW-</button>
                 </div>
                 <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-                  <button onClick={() => spreadsheetCTIncRef.current?.()} title="Increase row height" className={`h-8 px-2 text-[10px] font-bold flex items-center justify-center border-r border-zinc-300 transition-colors ${rhBig ? "bg-green-100 text-green-700" : "bg-white text-zinc-600 hover:bg-zinc-100"}`}>CT+</button>
-                  <button onClick={() => spreadsheetCTDecRef.current?.()} title="Decrease row height" className={`h-8 px-2 text-[10px] font-bold flex items-center justify-center transition-colors ${rhSmall ? "bg-red-100 text-red-700" : "bg-white text-zinc-600 hover:bg-zinc-100"}`}>CT-</button>
+                  <button onClick={() => spreadsheetCTIncRef.current?.()} title="Increase row height" className={`w-8 h-8 text-[10px] font-bold flex items-center justify-center border-r border-zinc-300 transition-colors ${rhBig ? "bg-green-100 text-green-700" : "bg-white text-zinc-600 hover:bg-zinc-100"}`}>CT+</button>
+                  <button onClick={() => spreadsheetCTDecRef.current?.()} title="Decrease row height" className={`w-8 h-8 text-[10px] font-bold flex items-center justify-center transition-colors ${rhSmall ? "bg-red-100 text-red-700" : "bg-white text-zinc-600 hover:bg-zinc-100"}`}>CT-</button>
                 </div>
               </>);
             })()}
@@ -1778,19 +1778,19 @@ export default function PageEditor() {
                 </div>
               </PortalPopup>
               <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-                <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className="h-8 px-2 text-zinc-600 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><span className="font-bold text-base leading-none">A</span></button>
-                <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className="h-8 px-2 text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center"><span className="font-bold text-xs leading-none">A</span></button>
+                <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><span className="font-bold text-base leading-none">A</span></button>
+                <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center"><span className="font-bold text-xs leading-none">A</span></button>
               </div>
             </div>
             <button onClick={handleAllCaps} title="All caps (toggle)" className={`${btnSq} ${isAllCaps ? btnActive : ""}`}><span className="font-black text-[11px] tracking-tight">AB</span></button>
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
             <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-              <button onClick={() => execInlineFormat("bold")} title="Bold" className={`h-8 px-2.5 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center ${activeFormats.bold ? "bg-zinc-200" : ""}`}><span className="font-black text-sm">B</span></button>
-              <button onClick={() => execInlineFormat("italic")} title="Italic" className={`h-8 px-2.5 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center ${activeFormats.italic ? "bg-zinc-200" : ""}`}><span className="italic font-bold text-sm">I</span></button>
+              <button onClick={() => execInlineFormat("bold")} title="Bold" className={`w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center ${activeFormats.bold ? "bg-zinc-200" : ""}`}><span className="font-black text-sm">B</span></button>
+              <button onClick={() => execInlineFormat("italic")} title="Italic" className={`w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center ${activeFormats.italic ? "bg-zinc-200" : ""}`}><span className="italic font-bold text-sm">I</span></button>
             </div>
             <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-              <button onClick={() => execInlineFormat("underline")} title="Underline" className={`h-8 px-2.5 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center ${activeFormats.underline ? "bg-zinc-200" : ""}`}><span className="text-sm underline decoration-red-500 decoration-[3px]">U</span></button>
-              <button onClick={() => execInlineFormat("strikeThrough")} title="Strikethrough" className={`h-8 px-2.5 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center ${activeFormats.strikeThrough ? "bg-zinc-200" : ""}`}><span className="text-sm line-through decoration-red-500 decoration-[3px]">U</span></button>
+              <button onClick={() => execInlineFormat("underline")} title="Underline" className={`w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center ${activeFormats.underline ? "bg-zinc-200" : ""}`}><span className="text-sm underline decoration-red-500 decoration-[3px]">U</span></button>
+              <button onClick={() => execInlineFormat("strikeThrough")} title="Strikethrough" className={`w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center ${activeFormats.strikeThrough ? "bg-zinc-200" : ""}`}><span className="text-sm line-through decoration-red-500 decoration-[3px]">U</span></button>
             </div>
             <div className="relative" ref={colorPickerRef as React.RefObject<HTMLDivElement>}>
               <button onClick={handleFontColorButtonClick} onDoubleClick={handleFontColorButtonDblClick} title="Font color" className={btnSq}>
@@ -1967,21 +1967,21 @@ export default function PageEditor() {
             <div className="mx-3 mb-2 bg-[#f0ede8] border border-zinc-200/80 rounded-xl shadow-[inset_0_2px_3px_rgba(0,0,0,0.05)] px-3 py-1.5 flex items-center gap-1 overflow-x-auto">
               {/* copy | paste | cut — joined */}
               <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-                <button onClick={handleCopy} title="Copy" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center">🗐</button>
-                <button onClick={handlePaste} title="Paste" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center">📝</button>
-                <button onClick={() => document.execCommand("cut")} title="Cut" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center">✂</button>
+                <button onClick={handleCopy} title="Copy" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center">🗐</button>
+                <button onClick={handlePaste} title="Paste" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center">📝</button>
+                <button onClick={() => document.execCommand("cut")} title="Cut" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center">✂</button>
               </div>
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
               {/* undo | redo — joined */}
               <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-                <button onClick={handleUndo} title="Undo" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center">↻</button>
-                <button onClick={handleRedo} title="Redo" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center">↺</button>
+                <button onClick={handleUndo} title="Undo" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center">↻</button>
+                <button onClick={handleRedo} title="Redo" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center">↺</button>
               </div>
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
               {/* zoom in | zoom out — joined */}
               <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-                <button onClick={() => setZoom(z => Math.min(200, z + 10))} title="Zoom in" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center">⌞+</button>
-                <button onClick={() => setZoom(z => Math.max(50, z - 10))} title="Zoom out" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center">–⌝</button>
+                <button onClick={() => setZoom(z => Math.min(200, z + 10))} title="Zoom in" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center">⌞+</button>
+                <button onClick={() => setZoom(z => Math.max(50, z - 10))} title="Zoom out" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center">–⌝</button>
               </div>
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
               {/* Font family */}
@@ -2102,21 +2102,21 @@ export default function PageEditor() {
             <div className="mx-3 mb-2 bg-[#f0ede8] border border-zinc-200/80 rounded-xl shadow-[inset_0_2px_3px_rgba(0,0,0,0.05)] px-3 py-1.5 flex items-center gap-1 overflow-x-auto">
               {/* copy | paste | cut — joined */}
               <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-                <button onClick={handleCopy} title="Copy" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center">🗐</button>
-                <button onClick={handlePaste} title="Paste" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center">📝</button>
-                <button onClick={() => document.execCommand("cut")} title="Cut" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center">✂</button>
+                <button onClick={handleCopy} title="Copy" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center">🗐</button>
+                <button onClick={handlePaste} title="Paste" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center">📝</button>
+                <button onClick={() => document.execCommand("cut")} title="Cut" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center">✂</button>
               </div>
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
               {/* undo | redo — joined */}
               <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-                <button onClick={handleUndo} title="Undo" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center">↻</button>
-                <button onClick={handleRedo} title="Redo" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center">↺</button>
+                <button onClick={handleUndo} title="Undo" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center">↻</button>
+                <button onClick={handleRedo} title="Redo" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center">↺</button>
               </div>
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
               {/* zoom in | zoom out — joined */}
               <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-                <button onClick={() => setZoom(z => Math.min(200, z + 10))} title="Zoom in" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center">⌞+</button>
-                <button onClick={() => setZoom(z => Math.max(50, z - 10))} title="Zoom out" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center">–⌝</button>
+                <button onClick={() => setZoom(z => Math.min(200, z + 10))} title="Zoom in" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center">⌞+</button>
+                <button onClick={() => setZoom(z => Math.max(50, z - 10))} title="Zoom out" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center">–⌝</button>
               </div>
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
               {/* Font family */}
