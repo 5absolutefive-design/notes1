@@ -808,16 +808,8 @@ export default function PageEditor() {
     if (!hasSelection()) return;
     editorRef.current?.focus();
     document.execCommand(cmd, false);
-    const sel = window.getSelection();
-    if (sel && sel.rangeCount > 0) {
-      const range = sel.getRangeAt(0);
-      range.collapse(false);
-      sel.removeAllRanges();
-      sel.addRange(range);
-    }
-    document.execCommand(cmd, false);
     handleEditorInput();
-    setActiveFormats({ bold: false, italic: false, underline: false, strikeThrough: false, overline: false });
+    updateActiveFormats();
   };
 
   const execFormat = (cmd: string, value?: string) => {
@@ -1529,6 +1521,9 @@ export default function PageEditor() {
                 <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className={btnSq}><span className="font-bold text-base leading-none">A</span></button>
                 <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className={btnSq}><span className="font-bold text-xs leading-none">A</span></button>
               </div>
+              {/* 2 inactive placeholder buttons */}
+              <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none shrink-0">in</div>
+              <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none shrink-0">in</div>
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
               {/* B I U S + font color + highlight */}
               <button onClick={() => execInlineFormat("bold")} title="Bold" className={`${btnSq} ${activeFormats.bold ? btnActive : ""}`}><span className="font-black text-sm">B</span></button>
@@ -1660,6 +1655,9 @@ export default function PageEditor() {
                 <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className={btnSq}><span className="font-bold text-base leading-none">A</span></button>
                 <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className={btnSq}><span className="font-bold text-xs leading-none">A</span></button>
               </div>
+              {/* 2 inactive placeholder buttons */}
+              <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none shrink-0">in</div>
+              <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none shrink-0">in</div>
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
               {/* B I U S + font color + highlight */}
               <button onClick={() => execInlineFormat("bold")} title="Bold" className={`${btnSq} ${activeFormats.bold ? btnActive : ""}`}><span className="font-black text-sm">B</span></button>
