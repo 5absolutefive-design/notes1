@@ -1618,7 +1618,7 @@ export default function PageEditor() {
                 )}
               </button>
               <PortalPopup anchorRef={alignPopupRef} open={showAlignPopup}>
-                <div className="flex items-center gap-1 p-1.5">
+                <div className="bg-white border border-zinc-200 rounded-lg shadow-xl p-1.5 flex items-center gap-1">
                   {/* Left */}
                   <button
                     onClick={() => { spreadsheetSetAlignRef.current?.("left"); setAlign("left"); setShowAlignPopup(false); }}
@@ -1821,7 +1821,7 @@ export default function PageEditor() {
                 {align === "center" ? (<svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="3.5" y="7" width="9" height="2" rx="1"/><rect x="2" y="12" width="12" height="2" rx="1"/></svg>) : align === "right" ? (<svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="6" y="7" width="9" height="2" rx="1"/><rect x="3" y="12" width="12" height="2" rx="1"/></svg>) : (<svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="1" y="7" width="9" height="2" rx="1"/><rect x="1" y="12" width="12" height="2" rx="1"/></svg>)}
               </button>
               <PortalPopup anchorRef={alignPopupRef} open={showAlignPopup}>
-                <div className="flex items-center gap-1 p-1.5">
+                <div className="bg-white border border-zinc-200 rounded-lg shadow-xl p-1.5 flex items-center gap-1">
                   <button onClick={() => { spreadsheetSetAlignRef.current?.("left"); setAlign("left"); setShowAlignPopup(false); }} title="Align left" className={`${btnSq} ${align === "left" ? btnActive : ""}`}><svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="1" y="7" width="9" height="2" rx="1"/><rect x="1" y="12" width="12" height="2" rx="1"/></svg></button>
                   <button onClick={() => { spreadsheetSetAlignRef.current?.("center"); setAlign("center"); setShowAlignPopup(false); }} title="Align center" className={`${btnSq} ${align === "center" ? btnActive : ""}`}><svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="3.5" y="7" width="9" height="2" rx="1"/><rect x="2" y="12" width="12" height="2" rx="1"/></svg></button>
                   <button onClick={() => { spreadsheetSetAlignRef.current?.("right"); setAlign("right"); setShowAlignPopup(false); }} title="Align right" className={`${btnSq} ${align === "right" ? btnActive : ""}`}><svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="6" y="7" width="9" height="2" rx="1"/><rect x="3" y="12" width="12" height="2" rx="1"/></svg></button>
@@ -2073,7 +2073,7 @@ export default function PageEditor() {
                   )}
                 </button>
                 <PortalPopup anchorRef={alignPopupRef} open={showAlignPopup}>
-                  <div className="flex items-center gap-1 p-1.5">
+                  <div className="bg-white border border-zinc-200 rounded-lg shadow-xl p-1.5 flex items-center gap-1">
                     <button onClick={() => { execFormat("justifyLeft"); setAlign("left"); setShowAlignPopup(false); }} title="Align left" className={`${btnSq} ${align === "left" ? btnActive : ""}`}>
                       <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="1" y="7" width="9" height="2" rx="1"/><rect x="1" y="12" width="12" height="2" rx="1"/></svg>
                     </button>
@@ -2214,7 +2214,7 @@ export default function PageEditor() {
                   )}
                 </button>
                 <PortalPopup anchorRef={alignPopupRef} open={showAlignPopup}>
-                  <div className="flex items-center gap-1 p-1.5">
+                  <div className="bg-white border border-zinc-200 rounded-lg shadow-xl p-1.5 flex items-center gap-1">
                     <button onClick={() => { execFormat("justifyLeft"); setAlign("left"); setShowAlignPopup(false); }} title="Align left" className={`${btnSq} ${align === "left" ? btnActive : ""}`}>
                       <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="1" y="7" width="9" height="2" rx="1"/><rect x="1" y="12" width="12" height="2" rx="1"/></svg>
                     </button>
