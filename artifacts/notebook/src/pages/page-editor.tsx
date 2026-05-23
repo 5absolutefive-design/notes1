@@ -2256,9 +2256,8 @@ export default function PageEditor() {
                 )}
               </div>
             ) : pageType === "table" ? (
-              <div className="w-full h-full overflow-auto" style={{ background: "#e8e4de" }}>
-                <div className="min-h-full flex items-start justify-center py-14 px-10">
-                  <div className="bg-white shadow-lg" style={{ transform: `scale(${zoom / 100})`, transformOrigin: "top center", padding: "48px 56px" }}>
+              <div className="w-full h-full bg-white flex items-center justify-center overflow-auto">
+                <div style={{ transform: `scale(${zoom / 100})`, transformOrigin: "center center" }}>
                 {contentReadyForPid === pId && (
                   <SpreadsheetEditor
                     key={pId}
@@ -2294,7 +2293,6 @@ export default function PageEditor() {
                     }}
                   />
                 )}
-                  </div>
                 </div>
               </div>
             ) : pageType === "lined" ? (
