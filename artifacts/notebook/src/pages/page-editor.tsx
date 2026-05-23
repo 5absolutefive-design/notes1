@@ -991,7 +991,7 @@ export default function PageEditor() {
   if (!page) return <Redirect to="/" />;
 
   const pageType = page.pageType ?? "blank";
-  const btnBase = "rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center";
+  const btnBase = "rounded-md border border-zinc-300 bg-white hover:bg-blue-50 hover:border-blue-300 active:bg-blue-100 transition-colors flex items-center justify-center";
   const btnSq = `w-8 h-8 ${btnBase}`;
   const btnActive = "bg-zinc-200 border-zinc-500";
 
