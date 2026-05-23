@@ -673,6 +673,48 @@ function SpreadsheetEditor({ content, onChange, tableMode, mergeRef, clearRef, c
   );
 }
 
+const SEARCH_ATTR = "data-sh";
+
+function removeSearchHighlights(root: HTMLElement) {
+  root.querySelectorAll(`[${SEARCH_ATTR}]`).forEach(el => {
+    const parent = el.parentNode;
+    if (!parent) return;
+    while (el.firstChild) parent.insertBefore(el.firstChild, el);
+    parent.removeChild(el);
+    parent.normalize();
+  });
+}
+
+function applySearchHighlights(root: HTMLElement, term: string) {
+  removeSearchHighlights(root);
+  if (!term.trim()) return;
+  const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const regex = new RegExp(escaped, "gi");
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+  const textNodes: Text[] = [];
+  let node: Node | null;
+  while ((node = walker.nextNode())) textNodes.push(node as Text);
+  textNodes.forEach(textNode => {
+    const text = textNode.textContent ?? "";
+    const matches = [...text.matchAll(regex)];
+    if (!matches.length) return;
+    const frag = document.createDocumentFragment();
+    let lastIdx = 0;
+    matches.forEach(m => {
+      const idx = m.index!;
+      if (idx > lastIdx) frag.appendChild(document.createTextNode(text.slice(lastIdx, idx)));
+      const mark = document.createElement("mark");
+      mark.setAttribute(SEARCH_ATTR, "true");
+      mark.style.cssText = "background:#ef4444;color:white;border-radius:2px;padding:0 1px;";
+      mark.textContent = m[0];
+      frag.appendChild(mark);
+      lastIdx = idx + m[0].length;
+    });
+    if (lastIdx < text.length) frag.appendChild(document.createTextNode(text.slice(lastIdx)));
+    textNode.parentNode?.replaceChild(frag, textNode);
+  });
+}
+
 const FONTS = [
   "Inter", "Roboto", "Lato", "Poppins", "Nunito",
   "Merriweather", "Playfair Display", "EB Garamond",
@@ -762,6 +804,7 @@ export default function PageEditor() {
   const borderPopupRef = useRef<HTMLDivElement>(null);
   const [showAlignPopup, setShowAlignPopup] = useState(false);
   const alignPopupRef = useRef<HTMLDivElement>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const lineHeightPx = lineSpacing === "compact" ? 28 : lineSpacing === "relaxed" ? 44 : 36;
 
@@ -832,8 +875,16 @@ export default function PageEditor() {
     [bId, pId, pageTitle]
   );
 
+  useEffect(() => {
+    if (!editorRef.current) return;
+    applySearchHighlights(editorRef.current, searchTerm);
+  }, [searchTerm]);
+
   const handleEditorInput = () => {
-    const html = editorRef.current?.innerHTML ?? "";
+    if (!editorRef.current) return;
+    const clone = editorRef.current.cloneNode(true) as HTMLElement;
+    removeSearchHighlights(clone);
+    const html = clone.innerHTML;
     setContent(html);
     const plain = editorRef.current?.innerText ?? "";
     const lt = plain.replace(/\s/g, "").length;
@@ -1442,7 +1493,7 @@ export default function PageEditor() {
                 <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none">in</div>
                 <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none">in</div>
               </div>
-              <div className="w-52 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none">inactive</div>
+              <div className="w-52 h-8 rounded border border-zinc-300 bg-white flex items-center px-2 gap-1 shrink-0"><span className="text-zinc-400 text-xs">🔍</span><input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search in page..." className="flex-1 bg-transparent text-[11px] text-zinc-700 outline-none placeholder:text-zinc-400" />{searchTerm && <button onClick={() => setSearchTerm("")} className="text-zinc-400 hover:text-zinc-600 text-xs leading-none">✕</button>}</div>
               <button onClick={handleCreatePage} className="w-28 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-[11px] font-semibold text-zinc-600 shrink-0">+ New Page</button>
             </div>
 
@@ -1690,7 +1741,7 @@ export default function PageEditor() {
                 <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none">in</div>
                 <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none">in</div>
               </div>
-              <div className="w-52 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none">inactive</div>
+              <div className="w-52 h-8 rounded border border-zinc-300 bg-white flex items-center px-2 gap-1 shrink-0"><span className="text-zinc-400 text-xs">🔍</span><input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search in page..." className="flex-1 bg-transparent text-[11px] text-zinc-700 outline-none placeholder:text-zinc-400" />{searchTerm && <button onClick={() => setSearchTerm("")} className="text-zinc-400 hover:text-zinc-600 text-xs leading-none">✕</button>}</div>
               <button onClick={handleCreatePage} className="w-28 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-[11px] font-semibold text-zinc-600 shrink-0">+ New Page</button>
             </div>
           <div className="px-3 py-1.5 flex items-center gap-1 overflow-x-auto">
@@ -1900,7 +1951,7 @@ export default function PageEditor() {
                 <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none">in</div>
                 <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none">in</div>
               </div>
-              <div className="w-52 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none">inactive</div>
+              <div className="w-52 h-8 rounded border border-zinc-300 bg-white flex items-center px-2 gap-1 shrink-0"><span className="text-zinc-400 text-xs">🔍</span><input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search in page..." className="flex-1 bg-transparent text-[11px] text-zinc-700 outline-none placeholder:text-zinc-400" />{searchTerm && <button onClick={() => setSearchTerm("")} className="text-zinc-400 hover:text-zinc-600 text-xs leading-none">✕</button>}</div>
               <button onClick={handleCreatePage} className="w-28 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-[11px] font-semibold text-zinc-600 shrink-0">+ New Page</button>
             </div>
             {/* ROW 2 — flat toolbar */}
@@ -2033,7 +2084,7 @@ export default function PageEditor() {
                 <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none">in</div>
                 <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none">in</div>
               </div>
-              <div className="w-52 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none">inactive</div>
+              <div className="w-52 h-8 rounded border border-zinc-300 bg-white flex items-center px-2 gap-1 shrink-0"><span className="text-zinc-400 text-xs">🔍</span><input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search in page..." className="flex-1 bg-transparent text-[11px] text-zinc-700 outline-none placeholder:text-zinc-400" />{searchTerm && <button onClick={() => setSearchTerm("")} className="text-zinc-400 hover:text-zinc-600 text-xs leading-none">✕</button>}</div>
               <button onClick={handleCreatePage} className="w-28 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-[11px] font-semibold text-zinc-600 shrink-0">+ New Page</button>
             </div>
             {/* ROW 2 — flat toolbar */}
