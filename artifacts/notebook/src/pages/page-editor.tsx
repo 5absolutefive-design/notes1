@@ -870,8 +870,27 @@ export default function PageEditor() {
     if (sel && sel.rangeCount > 0) {
       const range = sel.getRangeAt(0);
       range.collapse(false);
-      sel.removeAllRanges();
-      sel.addRange(range);
+      // Move cursor outside any colored span so subsequent typing uses default color
+      let node: Node | null = range.startContainer;
+      while (node && node !== editorRef.current) {
+        const el = node as HTMLElement;
+        if (
+          node.nodeType === Node.ELEMENT_NODE &&
+          (el.getAttribute("color") || el.style?.color)
+        ) {
+          const newRange = document.createRange();
+          newRange.setStartAfter(node);
+          newRange.collapse(true);
+          sel.removeAllRanges();
+          sel.addRange(newRange);
+          break;
+        }
+        node = node.parentNode;
+      }
+      if (node === editorRef.current || !node) {
+        sel.removeAllRanges();
+        sel.addRange(range);
+      }
     }
     savedRangeRef.current = null;
     handleEditorInput();
