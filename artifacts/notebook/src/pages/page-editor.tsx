@@ -2279,19 +2279,19 @@ export default function PageEditor() {
       {/* Tab bar */}
       <div className="bg-[#ece9e3] px-4 pt-0 pb-1 shrink-0 relative flex items-center gap-1.5" ref={pageTypePickerRef}>
         {/* Card 2: Page tabs */}
-        <div className="overflow-hidden rounded-lg border border-zinc-700 shadow-sm flex-1 min-w-0">
-          <div className="bg-[#1a1a1a] text-white flex items-stretch" style={{ minHeight: 15 }}>
-            <button onClick={() => scrollTabs("left")} className="px-1.5 flex items-center text-zinc-400 hover:text-white transition-colors border-r border-zinc-700 shrink-0">
+        <div className="overflow-hidden rounded-lg border border-zinc-200 shadow-sm flex-1 min-w-0">
+          <div className="bg-[#fafaf8] text-zinc-800 flex items-stretch border-b border-zinc-200" style={{ minHeight: 15 }}>
+            <button onClick={() => scrollTabs("left")} className="px-1.5 flex items-center text-zinc-400 hover:text-zinc-800 transition-colors border-r border-zinc-200 shrink-0">
               <ChevronLeft className="w-3 h-3" />
             </button>
             <div ref={tabsRef} className="flex items-stretch overflow-x-auto flex-1 min-w-0" style={{ scrollbarWidth: "none" }}>
               {pages.map((p, index) => (
                 <div
                   key={p.id}
-                  className={`flex items-center border-r border-zinc-700 ${
+                  className={`flex items-center border-r border-zinc-200 ${
                     p.id === pId
-                      ? "bg-[#2a2a2a] border-b-2 border-b-white"
-                      : "hover:bg-zinc-800"
+                      ? "bg-white border-b-2 border-b-zinc-900"
+                      : "hover:bg-zinc-100"
                   }`}
                 >
                   {editingTabId === p.id ? (
@@ -2315,7 +2315,7 @@ export default function PageEditor() {
                           setEditingTabId(null);
                         }
                       }}
-                      className="px-2 py-0 text-[10px] font-semibold uppercase tracking-widest bg-transparent text-white outline-none border-b border-white w-24"
+                      className="px-2 py-0 text-[10px] font-semibold uppercase tracking-widest bg-transparent text-zinc-900 outline-none border-b border-zinc-800 w-24"
                       style={{ minWidth: 60 }}
                     />
                   ) : (
@@ -2327,7 +2327,7 @@ export default function PageEditor() {
                         setEditingTabValue(p.title || `Page ${index + 1}`);
                       }}
                       className={`px-3 py-0 text-[10px] font-semibold uppercase tracking-widest whitespace-nowrap transition-colors h-full ${
-                        p.id === pId ? "text-white" : "text-zinc-400 hover:text-zinc-200"
+                        p.id === pId ? "text-zinc-900" : "text-zinc-500 hover:text-zinc-800"
                       }`}
                     >
                       {p.title || `PAGE ${index + 1}`}
@@ -2336,7 +2336,7 @@ export default function PageEditor() {
                 </div>
               ))}
             </div>
-            <button onClick={() => scrollTabs("right")} className="px-1.5 flex items-center text-zinc-400 hover:text-white transition-colors border-l border-zinc-700 shrink-0">
+            <button onClick={() => scrollTabs("right")} className="px-1.5 flex items-center text-zinc-400 hover:text-zinc-800 transition-colors border-l border-zinc-200 shrink-0">
               <ChevronRight className="w-3 h-3" />
             </button>
           </div>
