@@ -514,10 +514,11 @@ function SpreadsheetEditor({ content, onChange, tableMode, mergeRef, clearRef, c
             : ""
         }`}
         style={(() => {
+          const colW = data.colWidths?.[c] ?? 80;
           return {
             border: isActive ? "1px solid #3b82f6" : isSelected ? "1px solid #93c5fd" : (defaultBorder ?? "1px solid #e4e4e7"),
             height: data.rowHeights?.[r] ?? ROW_HEIGHT,
-            minWidth: data.colWidths?.[c] ?? 80,
+            ...(tableMode ? { width: colW } : { minWidth: colW }),
             verticalAlign: data.cellValigns?.[k] ?? "middle",
             ...borderCss,
           };
@@ -545,8 +546,9 @@ function SpreadsheetEditor({ content, onChange, tableMode, mergeRef, clearRef, c
           style={(() => {
             const fmt = data.cellFormats?.[k] ?? {};
             const td = [fmt.underline && "underline", fmt.strikeThrough && "line-through", fmt.overline && "overline"].filter(Boolean).join(" ");
+            const cellW = isMerged ? colSpan * (data.colWidths?.[c] ?? 80) : (data.colWidths?.[c] ?? 80);
             return {
-              minWidth: isMerged ? colSpan * (data.colWidths?.[c] ?? 80) : (data.colWidths?.[c] ?? 80),
+              ...(tableMode ? { width: cellW } : { minWidth: cellW }),
               pointerEvents: isDraggingRef.current ? "none" : "auto",
               textAlign: data.cellAligns?.[k] ?? "left",
               fontWeight: fmt.bold ? "bold" : undefined,
@@ -581,7 +583,7 @@ function SpreadsheetEditor({ content, onChange, tableMode, mergeRef, clearRef, c
           rafRef.current = requestAnimationFrame(() => { rafRef.current = null; commitDragSelection(); });
         }}
       >
-        <table className="border-collapse" style={{ tableLayout: "fixed", borderTop: "2px solid #1f2937", borderLeft: "2px solid #1f2937", borderRight: "2px solid #1f2937", borderBottom: "2px solid #1f2937" }}>
+        <table className="border-collapse" style={{ borderTop: "2px solid #1f2937", borderLeft: "2px solid #1f2937", borderRight: "2px solid #1f2937", borderBottom: "2px solid #1f2937" }}>
           <tbody>
             {Array.from({ length: effectiveRows }, (_, r) => (
               <tr key={r}>
