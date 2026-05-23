@@ -1505,15 +1505,19 @@ export default function PageEditor() {
 
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
 
-            {/* undo | redo */}
-            <button onClick={handleUndo} title="Undo" className={`${btnSq} text-base`}>↻</button>
-            <button onClick={handleRedo} title="Redo" className={`${btnSq} text-base`}>↺</button>
+            {/* undo | redo — joined */}
+            <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
+              <button onClick={handleUndo} title="Undo" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center">↻</button>
+              <button onClick={handleRedo} title="Redo" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center">↺</button>
+            </div>
 
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
 
-            {/* zoom in | zoom out */}
-            <button onClick={() => setZoom(z => Math.min(200, z + 10))} title="Zoom in" className={`${btnSq} text-base`}>⌞+</button>
-            <button onClick={() => setZoom(z => Math.max(50, z - 10))} title="Zoom out" className={`${btnSq} text-base`}>–⌝</button>
+            {/* zoom in | zoom out — joined */}
+            <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
+              <button onClick={() => setZoom(z => Math.min(200, z + 10))} title="Zoom in" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center">⌞+</button>
+              <button onClick={() => setZoom(z => Math.max(50, z - 10))} title="Zoom out" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center">–⌝</button>
+            </div>
 
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
 
@@ -1952,13 +1956,17 @@ export default function PageEditor() {
                 <button onClick={() => document.execCommand("cut")} title="Cut" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center">✂</button>
               </div>
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
-              {/* undo | redo */}
-              <button onClick={handleUndo} title="Undo" className={`${btnSq} text-base`}>↻</button>
-              <button onClick={handleRedo} title="Redo" className={`${btnSq} text-base`}>↺</button>
+              {/* undo | redo — joined */}
+              <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
+                <button onClick={handleUndo} title="Undo" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center">↻</button>
+                <button onClick={handleRedo} title="Redo" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center">↺</button>
+              </div>
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
-              {/* zoom in | zoom out */}
-              <button onClick={() => setZoom(z => Math.min(200, z + 10))} title="Zoom in" className={`${btnSq} text-base`}>⌞+</button>
-              <button onClick={() => setZoom(z => Math.max(50, z - 10))} title="Zoom out" className={`${btnSq} text-base`}>–⌝</button>
+              {/* zoom in | zoom out — joined */}
+              <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
+                <button onClick={() => setZoom(z => Math.min(200, z + 10))} title="Zoom in" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center">⌞+</button>
+                <button onClick={() => setZoom(z => Math.max(50, z - 10))} title="Zoom out" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center">–⌝</button>
+              </div>
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
               {/* Font family */}
               <div className="relative shrink-0" ref={fontMenuRef as React.RefObject<HTMLDivElement>}>
@@ -2083,13 +2091,17 @@ export default function PageEditor() {
                 <button onClick={() => document.execCommand("cut")} title="Cut" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center">✂</button>
               </div>
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
-              {/* undo | redo */}
-              <button onClick={handleUndo} title="Undo" className={`${btnSq} text-base`}>↻</button>
-              <button onClick={handleRedo} title="Redo" className={`${btnSq} text-base`}>↺</button>
+              {/* undo | redo — joined */}
+              <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
+                <button onClick={handleUndo} title="Undo" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center">↻</button>
+                <button onClick={handleRedo} title="Redo" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center">↺</button>
+              </div>
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
-              {/* zoom in | zoom out */}
-              <button onClick={() => setZoom(z => Math.min(200, z + 10))} title="Zoom in" className={`${btnSq} text-base`}>⌞+</button>
-              <button onClick={() => setZoom(z => Math.max(50, z - 10))} title="Zoom out" className={`${btnSq} text-base`}>–⌝</button>
+              {/* zoom in | zoom out — joined */}
+              <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
+                <button onClick={() => setZoom(z => Math.min(200, z + 10))} title="Zoom in" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center">⌞+</button>
+                <button onClick={() => setZoom(z => Math.max(50, z - 10))} title="Zoom out" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center">–⌝</button>
+              </div>
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
               {/* Font family */}
               <div className="relative shrink-0" ref={fontMenuRef as React.RefObject<HTMLDivElement>}>
