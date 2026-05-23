@@ -1747,12 +1747,12 @@ export default function PageEditor() {
             </div>
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
             {(() => {
-              const cw = activeSheetSizes?.colWidth ?? 80; const rh = activeSheetSizes?.rowHeight ?? 24;
+              const cw = activeSheetSizes?.colWidth ?? TABLE_COL_WIDTH; const rh = activeSheetSizes?.rowHeight ?? TABLE_ROW_HEIGHT;
               return (<>
-                <button onClick={() => spreadsheetCWIncRef.current?.()} title="Widen column" className={`${btnSq} text-[10px] font-bold ${(cw>80)?"border-green-400 bg-green-100 text-green-700":"border-zinc-300 bg-white text-zinc-600"}`}>CW+</button>
-                <button onClick={() => spreadsheetCWDecRef.current?.()} title="Narrow column" className={`${btnSq} text-[10px] font-bold ${(cw<80)?"border-red-400 bg-red-100 text-red-700":"border-zinc-300 bg-white text-zinc-600"}`}>CW-</button>
-                <button onClick={() => spreadsheetCTIncRef.current?.()} title="Increase row height" className={`${btnSq} text-[10px] font-bold ${(rh>24)?"border-green-400 bg-green-100 text-green-700":"border-zinc-300 bg-white text-zinc-600"}`}>CT+</button>
-                <button onClick={() => spreadsheetCTDecRef.current?.()} title="Decrease row height" className={`${btnSq} text-[10px] font-bold ${(rh<24)?"border-red-400 bg-red-100 text-red-700":"border-zinc-300 bg-white text-zinc-600"}`}>CT-</button>
+                <button onClick={() => spreadsheetCWIncRef.current?.()} title="Widen column" className={`${btnSq} text-[10px] font-bold ${(cw>TABLE_COL_WIDTH)?"border-green-400 bg-green-100 text-green-700":"border-zinc-300 bg-white text-zinc-600"}`}>CW+</button>
+                <button onClick={() => spreadsheetCWDecRef.current?.()} title="Narrow column" className={`${btnSq} text-[10px] font-bold ${(cw<TABLE_COL_WIDTH)?"border-red-400 bg-red-100 text-red-700":"border-zinc-300 bg-white text-zinc-600"}`}>CW-</button>
+                <button onClick={() => spreadsheetCTIncRef.current?.()} title="Increase row height" className={`${btnSq} text-[10px] font-bold ${(rh>TABLE_ROW_HEIGHT)?"border-green-400 bg-green-100 text-green-700":"border-zinc-300 bg-white text-zinc-600"}`}>CT+</button>
+                <button onClick={() => spreadsheetCTDecRef.current?.()} title="Decrease row height" className={`${btnSq} text-[10px] font-bold ${(rh<TABLE_ROW_HEIGHT)?"border-red-400 bg-red-100 text-red-700":"border-zinc-300 bg-white text-zinc-600"}`}>CT-</button>
               </>);
             })()}
             <div className="flex-1" />
