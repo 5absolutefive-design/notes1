@@ -1795,12 +1795,12 @@ export default function PageEditor() {
                     {nrcHover ? `${nrcHover.r} × ${nrcHover.c} Table` : "Hover to pick size"}
                   </div>
                   <div
-                    className="grid gap-[3px]"
-                    style={{ gridTemplateColumns: `repeat(10, 1fr)` }}
+                    className="grid gap-[2px]"
+                    style={{ gridTemplateColumns: `repeat(15, 1fr)` }}
                     onMouseLeave={() => setNrcHover(null)}
                   >
-                    {Array.from({ length: 10 }, (_, ri) =>
-                      Array.from({ length: 10 }, (_, ci) => {
+                    {Array.from({ length: 15 }, (_, ri) =>
+                      Array.from({ length: 15 }, (_, ci) => {
                         const r = ri + 1; const c = ci + 1;
                         const isHighlighted = nrcHover ? r <= nrcHover.r && c <= nrcHover.c : false;
                         return (
@@ -1820,7 +1820,7 @@ export default function PageEditor() {
                       })
                     )}
                   </div>
-                  <div className="text-[10px] text-zinc-400 text-center mt-2">Max 10 × 10 (grid)</div>
+                  <div className="text-[10px] text-zinc-400 text-center mt-2">Max 15 × 15 (grid)</div>
                   <div className="mt-3 pt-3 border-t border-zinc-200">
                     <div className="text-[11px] font-semibold text-zinc-500 mb-2 text-center">Custom</div>
                     <div className="flex items-center gap-1.5 justify-center">
@@ -1828,7 +1828,6 @@ export default function PageEditor() {
                       <input
                         type="number"
                         min={1}
-                        max={200}
                         value={nrcCustomRows}
                         placeholder="—"
                         onChange={e => setNrcCustomRows(e.target.value)}
@@ -1836,7 +1835,7 @@ export default function PageEditor() {
                           if (e.key === "Enter") {
                             const r = parseInt(nrcCustomRows); const c = parseInt(nrcCustomCols);
                             if (!isNaN(r) && !isNaN(c) && r >= 1 && c >= 1) {
-                              tableResizeRef.current?.(Math.min(r, 200), Math.min(c, 100));
+                              tableResizeRef.current?.(Math.min(r, 999), Math.min(c, 200));
                               setNrcCustomRows(""); setNrcCustomCols(""); setShowNRCPopup(false);
                             }
                           }
@@ -1847,7 +1846,7 @@ export default function PageEditor() {
                       <input
                         type="number"
                         min={1}
-                        max={100}
+                        max={200}
                         value={nrcCustomCols}
                         placeholder="—"
                         onChange={e => setNrcCustomCols(e.target.value)}
@@ -1855,7 +1854,7 @@ export default function PageEditor() {
                           if (e.key === "Enter") {
                             const r = parseInt(nrcCustomRows); const c = parseInt(nrcCustomCols);
                             if (!isNaN(r) && !isNaN(c) && r >= 1 && c >= 1) {
-                              tableResizeRef.current?.(Math.min(r, 200), Math.min(c, 100));
+                              tableResizeRef.current?.(Math.min(r, 999), Math.min(c, 200));
                               setNrcCustomRows(""); setNrcCustomCols(""); setShowNRCPopup(false);
                             }
                           }
@@ -1866,13 +1865,14 @@ export default function PageEditor() {
                         onClick={() => {
                           const r = parseInt(nrcCustomRows); const c = parseInt(nrcCustomCols);
                           if (!isNaN(r) && !isNaN(c) && r >= 1 && c >= 1) {
-                            tableResizeRef.current?.(Math.min(r, 200), Math.min(c, 100));
+                            tableResizeRef.current?.(Math.min(r, 999), Math.min(c, 200));
                             setNrcCustomRows(""); setNrcCustomCols(""); setShowNRCPopup(false);
                           }
                         }}
                         className="h-6 px-2.5 text-[11px] font-semibold rounded bg-orange-400 text-white hover:bg-orange-500 transition-colors"
                       >Apply</button>
                     </div>
+                    <div className="text-[10px] text-zinc-400 text-center mt-1.5">Rows: unlimited · Cols: max 200</div>
                   </div>
                 </div>
               </PortalPopup>
@@ -2388,7 +2388,8 @@ export default function PageEditor() {
                 )}
               </div>
             ) : pageType === "table" ? (
-              <div className="w-full h-full bg-white flex items-center justify-center overflow-auto">
+              <div className="w-full h-full bg-white overflow-auto">
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minWidth: "100%", minHeight: "100%", padding: "24px", boxSizing: "border-box" }}>
                 <div style={{ transform: `scale(${zoom / 100})`, transformOrigin: "center center" }}>
                 {contentReadyForPid === pId && (
                   <SpreadsheetEditor
@@ -2426,6 +2427,7 @@ export default function PageEditor() {
                     }}
                   />
                 )}
+                </div>
                 </div>
               </div>
             ) : pageType === "lined" ? (
