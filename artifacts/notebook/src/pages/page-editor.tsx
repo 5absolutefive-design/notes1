@@ -1730,33 +1730,160 @@ export default function PageEditor() {
         </div>
 
       ) : pageType === "table" ? (
-        /* ── TABLE TOOLBAR ── flat single-row card ── */
+        /* ── TABLE TOOLBAR — exact same 2-row card as Sheet ── */
         <div className="bg-[#ece9e3] px-3 pt-2 pb-1.5 shrink-0">
           <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl shadow-sm">
-            <div className="flex items-center gap-1.5 px-3 py-1.5 flex-wrap">
+
+            {/* ROW 1 — inactive placeholder boxes (identical to Sheet) */}
+            <div className="flex items-center gap-2 px-3 pt-2 pb-1.5">
               <button onClick={() => setLocation("/")} className="w-28 h-7 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center gap-1.5 text-[11px] font-semibold text-zinc-600 shrink-0">🏠 My Notebooks</button>
-              <div className="w-px h-5 bg-zinc-300 mx-0.5 shrink-0" />
-              {/* Bold / Italic / Underline / Strikethrough */}
-              <button onMouseDown={e=>{e.preventDefault();execInlineFormat("bold");}} className={`${btnSq} font-bold text-sm ${activeFormats.bold ? btnActive : btnBase}`} title="Bold">B</button>
-              <button onMouseDown={e=>{e.preventDefault();execInlineFormat("italic");}} className={`${btnSq} italic text-sm ${activeFormats.italic ? btnActive : btnBase}`} title="Italic">I</button>
-              <button onMouseDown={e=>{e.preventDefault();execInlineFormat("underline");}} className={`${btnSq} underline text-sm ${activeFormats.underline ? btnActive : btnBase}`} title="Underline">U</button>
-              <button onMouseDown={e=>{e.preventDefault();execInlineFormat("strikeThrough");}} className={`${btnSq} line-through text-sm ${activeFormats.strikeThrough ? btnActive : btnBase}`} title="Strikethrough">S</button>
-              <div className="w-px h-5 bg-zinc-300 mx-0.5 shrink-0" />
-              {/* Align */}
-              <button onMouseDown={e=>{e.preventDefault();tableSetAlignRef.current?.("left");setAlign("left");}} className={`${btnSq} ${align==="left"?btnActive:btnBase}`} title="Align Left">⬅</button>
-              <button onMouseDown={e=>{e.preventDefault();tableSetAlignRef.current?.("center");setAlign("center");}} className={`${btnSq} ${align==="center"?btnActive:btnBase}`} title="Align Center">↔</button>
-              <button onMouseDown={e=>{e.preventDefault();tableSetAlignRef.current?.("right");setAlign("right");}} className={`${btnSq} ${align==="right"?btnActive:btnBase}`} title="Align Right">➡</button>
-              <div className="w-px h-5 bg-zinc-300 mx-0.5 shrink-0" />
-              {/* Insert / Delete Row */}
-              <button onMouseDown={e=>{e.preventDefault();tableInsertRowRef.current?.();}} className={`h-7 px-2.5 rounded border text-[11px] font-semibold ${btnBase}`} title="Add Row">+Row</button>
-              <button onMouseDown={e=>{e.preventDefault();tableDeleteRowRef.current?.();}} className={`h-7 px-2.5 rounded border text-[11px] font-semibold ${btnBase}`} title="Delete Last Row">−Row</button>
-              {/* Insert / Delete Col */}
-              <button onMouseDown={e=>{e.preventDefault();tableInsertColRef.current?.();}} className={`h-7 px-2.5 rounded border text-[11px] font-semibold ${btnBase}`} title="Add Column">+Col</button>
-              <button onMouseDown={e=>{e.preventDefault();tableDeleteColRef.current?.();}} className={`h-7 px-2.5 rounded border text-[11px] font-semibold ${btnBase}`} title="Delete Last Column">−Col</button>
               <div className="flex-1" />
+              <div className="flex items-center gap-1.5">
+                <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none">in</div>
+                <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none">in</div>
+                <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none">in</div>
+              </div>
+              <div className="w-52 h-7 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none">inactive</div>
               <button onClick={handleCreatePage} className="w-28 h-7 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-[11px] font-semibold text-zinc-600 shrink-0">+ New Page</button>
             </div>
-          </div>
+
+            {/* ROW 2 — flat toolbar (identical layout to Sheet, table-adapted refs) */}
+            <div className="px-3 py-1.5 flex items-center gap-1 overflow-x-auto">
+
+              {/* copy | paste */}
+              <button onClick={handleCopy} title="Copy" className={`${btnSq} text-base`}>🗐</button>
+              <button onClick={handlePaste} title="Paste" className={`${btnSq} text-base`}>📝</button>
+
+              <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+
+              {/* undo | redo */}
+              <button onClick={handleUndo} title="Undo" className={`${btnSq} text-base`}>↻</button>
+              <button onClick={handleRedo} title="Redo" className={`${btnSq} text-base`}>↺</button>
+
+              <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+
+              {/* zoom in | zoom out */}
+              <button onClick={() => setZoom(z => Math.min(200, z + 10))} title="Zoom in" className={`${btnSq} text-base`}>⌞+</button>
+              <button onClick={() => setZoom(z => Math.max(50, z - 10))} title="Zoom out" className={`${btnSq} text-base`}>–⌝</button>
+
+              <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+
+              {/* Font family */}
+              <div className="relative shrink-0" ref={fontMenuRef as React.RefObject<HTMLDivElement>}>
+                <button onClick={() => setShowFontMenu(v => !v)} className="h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-left text-sm font-medium text-zinc-700 truncate w-[144px]" style={{ fontFamily: font }}>
+                  {font}
+                </button>
+                <PortalPopup anchorRef={fontMenuRef} open={showFontMenu}>
+                  <div className="bg-white border border-zinc-300 rounded-lg shadow-lg overflow-y-auto max-h-52 w-44">
+                    {FONTS.map(f => (
+                      <button key={f} onClick={() => handleFontChange(f)} className={`w-full text-left px-3 py-1.5 text-sm hover:bg-zinc-100 transition-colors ${font === f ? "bg-zinc-100 font-semibold" : ""}`} style={{ fontFamily: f }}>{f}</button>
+                    ))}
+                  </div>
+                </PortalPopup>
+              </div>
+
+              {/* Font size */}
+              <div className="relative flex items-center gap-0.5" ref={fontSizePopupRef as React.RefObject<HTMLDivElement>}>
+                <button onClick={() => setShowFontSizePopup(v => !v)} title="Font size" className="w-9 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-xs font-semibold text-zinc-700 flex items-center justify-center">{fontSize}</button>
+                <PortalPopup anchorRef={fontSizePopupRef} open={showFontSizePopup}>
+                  <div className="bg-white border border-zinc-300 rounded-lg shadow-xl p-1.5 w-24 grid grid-cols-2 gap-1">
+                    {[8,9,10,11,12,14,16,18,20,22,24,28,32,36,48,72].map(s => (
+                      <button key={s} onClick={() => { handleFontSizeChange(s - fontSize); setShowFontSizePopup(false); }} className={`h-7 rounded text-xs font-medium transition-colors ${fontSize === s ? "bg-zinc-800 text-white" : "hover:bg-zinc-100 text-zinc-700"}`}>{s}</button>
+                    ))}
+                  </div>
+                </PortalPopup>
+                <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className={btnSq}><span className="font-bold text-base leading-none">A</span></button>
+                <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className={btnSq}><span className="font-bold text-xs leading-none">A</span></button>
+              </div>
+
+              {/* AB — All Caps toggle */}
+              <button onClick={handleAllCaps} title="All caps (toggle)" className={`${btnSq} ${isAllCaps ? btnActive : ""}`}><span className="font-black text-[11px] tracking-tight">AB</span></button>
+
+              <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+
+              {/* B I U Ŭ */}
+              <button onClick={() => execInlineFormat("bold")} title="Bold" className={`${btnSq} ${activeFormats.bold ? btnActive : ""}`}><span className="font-black text-sm">B</span></button>
+              <button onClick={() => execInlineFormat("italic")} title="Italic" className={`${btnSq} ${activeFormats.italic ? btnActive : ""}`}><span className="italic font-bold text-sm">I</span></button>
+              <button onClick={() => execInlineFormat("underline")} title="Underline" className={`${btnSq} ${activeFormats.underline ? btnActive : ""}`}><span className="text-sm underline decoration-red-500 decoration-[3px]">U</span></button>
+              <button onClick={() => execInlineFormat("strikeThrough")} title="Strikethrough" className={`${btnSq} ${activeFormats.strikeThrough ? btnActive : ""}`}><span className="text-sm line-through decoration-red-500 decoration-[3px]">U</span></button>
+
+              {/* Font color */}
+              <div className="relative" ref={colorPickerRef as React.RefObject<HTMLDivElement>}>
+                <button onClick={handleFontColorButtonClick} onDoubleClick={handleFontColorButtonDblClick} title="Font color (single-click: apply, double-click: pick color)" className={btnSq}>
+                  <div className="flex flex-col items-center justify-center gap-0.5">
+                    <span className="font-bold text-sm leading-none" style={{ color: fontColor }}>A</span>
+                    <div className="w-5 h-1 rounded-sm" style={{ backgroundColor: fontColor }} />
+                  </div>
+                </button>
+                <PortalPopup anchorRef={colorPickerRef} open={showColorPicker}>
+                  <FontColorPanel noAbsolute />
+                </PortalPopup>
+              </div>
+
+              {/* Highlight color */}
+              <div className="relative" ref={highlightPickerRef as React.RefObject<HTMLDivElement>}>
+                <button onClick={() => setShowHighlightPicker(v => !v)} title="Highlight color" className={`${btnSq} ${isHighlighterMode ? btnActive : ""}`}>
+                  <div className="flex flex-col items-center justify-center gap-0.5">
+                    <span className="font-bold text-sm leading-none text-zinc-700">A</span>
+                    <div className="w-5 h-1.5 rounded-sm" style={{ backgroundColor: highlightColor }} />
+                  </div>
+                </button>
+                <PortalPopup anchorRef={highlightPickerRef} open={showHighlightPicker}>
+                  <HighlightPanel noAbsolute />
+                </PortalPopup>
+              </div>
+
+              {/* N — Neutral / clear formatting */}
+              <button onClick={handleNeutral} title="Clear formatting" className={`${btnSq} text-[11px] font-bold text-zinc-600`}>N</button>
+
+              <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+
+              {/* Align popup */}
+              <div className="relative" ref={alignPopupRef}>
+                <button onClick={() => setShowAlignPopup(v => !v)} title="Text alignment" className={`${btnSq} ${align !== "left" ? btnActive : ""}`}>
+                  {align === "center" ? (
+                    <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="3.5" y="7" width="9" height="2" rx="1"/><rect x="2" y="12" width="12" height="2" rx="1"/></svg>
+                  ) : align === "right" ? (
+                    <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="6" y="7" width="9" height="2" rx="1"/><rect x="3" y="12" width="12" height="2" rx="1"/></svg>
+                  ) : (
+                    <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="1" y="7" width="9" height="2" rx="1"/><rect x="1" y="12" width="12" height="2" rx="1"/></svg>
+                  )}
+                </button>
+                <PortalPopup anchorRef={alignPopupRef} open={showAlignPopup}>
+                  <div className="flex items-center gap-1 p-1.5">
+                    <button onClick={() => { tableSetAlignRef.current?.("left"); setAlign("left"); setShowAlignPopup(false); }} title="Align left" className={`${btnSq} ${align === "left" ? btnActive : ""}`}>
+                      <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="1" y="7" width="9" height="2" rx="1"/><rect x="1" y="12" width="12" height="2" rx="1"/></svg>
+                    </button>
+                    <button onClick={() => { tableSetAlignRef.current?.("center"); setAlign("center"); setShowAlignPopup(false); }} title="Align center" className={`${btnSq} ${align === "center" ? btnActive : ""}`}>
+                      <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="3.5" y="7" width="9" height="2" rx="1"/><rect x="2" y="12" width="12" height="2" rx="1"/></svg>
+                    </button>
+                    <button onClick={() => { tableSetAlignRef.current?.("right"); setAlign("right"); setShowAlignPopup(false); }} title="Align right" className={`${btnSq} ${align === "right" ? btnActive : ""}`}>
+                      <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="6" y="7" width="9" height="2" rx="1"/><rect x="3" y="12" width="12" height="2" rx="1"/></svg>
+                    </button>
+                    <button onClick={() => { tableSetAlignRef.current?.("left"); setAlign("left"); setShowAlignPopup(false); }} title="Neutral (reset alignment)" className={`${btnSq} text-[11px] font-bold text-zinc-600`}>N</button>
+                  </div>
+                </PortalPopup>
+              </div>
+
+              <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+
+              {/* +Row −Row +Col −Col (table-specific, replaces MERGE/Border/CW/CT) */}
+              <button onClick={() => tableInsertRowRef.current?.()} title="Add row" className={`h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-50 text-xs font-bold text-zinc-600 transition-colors`}>+Row</button>
+              <button onClick={() => tableDeleteRowRef.current?.()} title="Delete last row" className={`h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-50 text-xs font-bold text-zinc-600 transition-colors`}>−Row</button>
+              <button onClick={() => tableInsertColRef.current?.()} title="Add column" className={`h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-50 text-xs font-bold text-zinc-600 transition-colors`}>+Col</button>
+              <button onClick={() => tableDeleteColRef.current?.()} title="Delete last column" className={`h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-50 text-xs font-bold text-zinc-600 transition-colors`}>−Col</button>
+
+              {/* Spacer push DEL/TRASH to right */}
+              <div className="flex-1" />
+
+              {/* DEL + TRASH group */}
+              <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
+                <button onClick={handleDelete} title="Move page to trash" className="h-8 px-3 text-base text-zinc-600 bg-white hover:bg-red-50 hover:text-red-600 transition-colors border-r border-zinc-300 flex items-center justify-center">🗑️</button>
+                <button onClick={() => setShowTrash(true)} title="Open trash" className="h-8 px-3 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center">♻</button>
+              </div>
+
+            </div>{/* end ROW 2 */}
+          </div>{/* end CARD */}
         </div>
 
       ) : pageType === "lined" ? (
