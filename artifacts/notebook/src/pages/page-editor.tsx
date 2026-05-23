@@ -877,11 +877,12 @@ export default function PageEditor() {
     handleEditorInput();
   };
 
-  // Single click → apply saved fontColor directly to selected text
+  // Single click → apply saved fontColor to selected text only (no selection = do nothing)
   const handleFontColorButtonClick = () => {
     if (fontColorClickTimerRef.current) return; // double-click in progress
     fontColorClickTimerRef.current = setTimeout(() => {
       fontColorClickTimerRef.current = null;
+      if (!hasSelection()) return;
       handleFontColor(fontColor);
     }, 220);
   };
