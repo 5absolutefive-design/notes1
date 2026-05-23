@@ -1312,7 +1312,7 @@ export default function PageEditor() {
 
             {/* ROW 1 — inactive placeholder boxes */}
             <div className="flex items-center gap-2 px-3 pt-2 pb-1.5">
-              <div className="w-28 h-7 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none shrink-0">inactive</div>
+              <button onClick={() => setLocation("/")} className="w-28 h-7 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center gap-1.5 text-[11px] font-semibold text-zinc-600 shrink-0">🏠 My Notebooks</button>
               <div className="flex-1" />
               <div className="flex items-center gap-1.5">
                 <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none">in</div>
@@ -1562,7 +1562,7 @@ export default function PageEditor() {
           <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl shadow-sm">
             {/* ROW 1 — inactive placeholder boxes */}
             <div className="flex items-center gap-2 px-3 pt-2 pb-1.5">
-              <div className="w-28 h-7 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none shrink-0">inactive</div>
+              <button onClick={() => setLocation("/")} className="w-28 h-7 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center gap-1.5 text-[11px] font-semibold text-zinc-600 shrink-0">🏠 My Notebooks</button>
               <div className="flex-1" />
               <div className="flex items-center gap-1.5">
                 <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none">in</div>
@@ -1696,7 +1696,7 @@ export default function PageEditor() {
           <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl shadow-sm">
             {/* ROW 1 — inactive placeholder boxes */}
             <div className="flex items-center gap-2 px-3 pt-2 pb-1.5">
-              <div className="w-28 h-7 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none shrink-0">inactive</div>
+              <button onClick={() => setLocation("/")} className="w-28 h-7 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center gap-1.5 text-[11px] font-semibold text-zinc-600 shrink-0">🏠 My Notebooks</button>
               <div className="flex-1" />
               <div className="flex items-center gap-1.5">
                 <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none">in</div>
