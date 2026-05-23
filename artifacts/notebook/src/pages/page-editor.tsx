@@ -1,7 +1,24 @@
 import { useParams, useLocation, Redirect } from "wouter";
 import { ChevronLeft, ChevronRight, Trash2, ArchiveRestore, X, RotateCcw } from "lucide-react";
 import { useState, useEffect, useRef, useCallback, type MutableRefObject } from "react";
+import { createPortal } from "react-dom";
 import { store, type Book, type Page, type PageType } from "@/lib/store";
+
+function PortalPopup({ anchorRef, open, children }: {
+  anchorRef: { current: HTMLElement | null };
+  open: boolean;
+  children: React.ReactNode;
+}) {
+  if (!open) return null;
+  const rect = anchorRef.current?.getBoundingClientRect();
+  if (!rect) return null;
+  return createPortal(
+    <div style={{ position: "fixed", top: rect.bottom + 4, left: rect.left, zIndex: 9999 }}>
+      {children}
+    </div>,
+    document.body
+  );
+}
 
 const COLS = 26;
 const ROWS = 500;
@@ -989,8 +1006,8 @@ export default function PageEditor() {
   ];
   const standardColors = ["#C00000","#FF0000","#FFC000","#FFFF00","#92D050","#00B050","#00B0F0","#0070C0","#002060","#7030A0"];
 
-  const FontColorPanel = () => (
-    <div className="absolute top-full left-0 mt-1 z-50 bg-white border border-zinc-300 rounded-lg shadow-xl p-3 w-[220px]">
+  const FontColorPanel = ({ noAbsolute }: { noAbsolute?: boolean } = {}) => (
+    <div className={(noAbsolute ? "" : "absolute top-full left-0 mt-1 z-50 ") + "bg-white border border-zinc-300 rounded-lg shadow-xl p-3 w-[220px]"}>
       <button onClick={() => handleFontColor("#000000")} className="flex items-center gap-2 w-full px-1 py-1 hover:bg-zinc-100 rounded text-xs text-zinc-700 mb-2 border border-zinc-200">
         <div className="w-5 h-5 border border-zinc-400 bg-black shrink-0" />
         <span className="font-medium">Automatic</span>
@@ -1031,8 +1048,8 @@ export default function PageEditor() {
     </div>
   );
 
-  const HighlightPanel = () => (
-    <div className="absolute top-full left-0 mt-1 z-50 bg-white border border-zinc-300 rounded-lg shadow-xl p-3 w-[220px]">
+  const HighlightPanel = ({ noAbsolute }: { noAbsolute?: boolean } = {}) => (
+    <div className={(noAbsolute ? "" : "absolute top-full left-0 mt-1 z-50 ") + "bg-white border border-zinc-300 rounded-lg shadow-xl p-3 w-[220px]"}>
       <button onClick={() => handleHighlightColor("transparent")} className="flex items-center gap-2 w-full px-1 py-1 hover:bg-zinc-100 rounded text-xs text-zinc-700 mb-2 border border-zinc-200">
         <div className="w-5 h-5 border border-zinc-400 bg-white shrink-0 relative overflow-hidden">
           <div className="absolute inset-0 flex items-center justify-center text-red-400 font-bold text-xs">∅</div>
@@ -1243,33 +1260,33 @@ export default function PageEditor() {
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
 
             {/* Font family */}
-            <div className="relative" ref={fontMenuRef}>
+            <div className="relative" ref={fontMenuRef as React.RefObject<HTMLDivElement>}>
               <button onClick={() => setShowFontMenu(v => !v)} className="h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-left text-sm font-medium text-zinc-700 truncate min-w-[80px]" style={{ fontFamily: font }}>
                 {font}
               </button>
-              {showFontMenu && (
-                <div className="absolute top-full left-0 mt-1 z-50 bg-white border border-zinc-300 rounded-lg shadow-lg overflow-y-auto max-h-52 w-44">
+              <PortalPopup anchorRef={fontMenuRef} open={showFontMenu}>
+                <div className="bg-white border border-zinc-300 rounded-lg shadow-lg overflow-y-auto max-h-52 w-44">
                   {FONTS.map(f => (
                     <button key={f} onClick={() => handleFontChange(f)} className={`w-full text-left px-3 py-1.5 text-sm hover:bg-zinc-100 transition-colors ${font === f ? "bg-zinc-100 font-semibold" : ""}`} style={{ fontFamily: f }}>{f}</button>
                   ))}
                 </div>
-              )}
+              </PortalPopup>
             </div>
 
             {/* Font size: current size button (click→popup) + A↑ A↓ */}
-            <div className="relative flex items-center gap-0.5" ref={fontSizePopupRef}>
+            <div className="relative flex items-center gap-0.5" ref={fontSizePopupRef as React.RefObject<HTMLDivElement>}>
               <button
                 onClick={() => setShowFontSizePopup(v => !v)}
                 title="Font size"
                 className="w-9 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-xs font-semibold text-zinc-700 flex items-center justify-center"
               >{fontSize}</button>
-              {showFontSizePopup && (
-                <div className="absolute top-full left-0 mt-1 z-50 bg-white border border-zinc-300 rounded-lg shadow-xl p-1.5 w-24 grid grid-cols-2 gap-1">
+              <PortalPopup anchorRef={fontSizePopupRef} open={showFontSizePopup}>
+                <div className="bg-white border border-zinc-300 rounded-lg shadow-xl p-1.5 w-24 grid grid-cols-2 gap-1">
                   {[8,9,10,11,12,14,16,18,20,22,24,28,32,36,48,72].map(s => (
                     <button key={s} onClick={() => { handleFontSizeChange(s - fontSize); setShowFontSizePopup(false); }} className={`h-7 rounded text-xs font-medium transition-colors ${fontSize === s ? "bg-zinc-800 text-white" : "hover:bg-zinc-100 text-zinc-700"}`}>{s}</button>
                   ))}
                 </div>
-              )}
+              </PortalPopup>
               <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className={btnSq}><span className="font-bold text-base leading-none">A</span></button>
               <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className={btnSq}><span className="font-bold text-xs leading-none">A</span></button>
             </div>
@@ -1286,25 +1303,29 @@ export default function PageEditor() {
             <button onClick={() => execInlineFormat("strikeThrough")} title="Strikethrough" className={`${btnSq} ${activeFormats.strikeThrough ? btnActive : ""}`}><span className="text-sm line-through decoration-red-500 decoration-[3px]">U</span></button>
 
             {/* Font color */}
-            <div className="relative" ref={colorPickerRef}>
+            <div className="relative" ref={colorPickerRef as React.RefObject<HTMLDivElement>}>
               <button onClick={() => setShowColorPicker(v => !v)} title="Font color" className={btnSq}>
                 <div className="flex flex-col items-center justify-center gap-0.5">
                   <span className="font-bold text-sm leading-none" style={{ color: fontColor }}>A</span>
                   <div className="w-5 h-1 rounded-sm" style={{ backgroundColor: fontColor }} />
                 </div>
               </button>
-              {showColorPicker && <FontColorPanel />}
+              <PortalPopup anchorRef={colorPickerRef} open={showColorPicker}>
+                <FontColorPanel noAbsolute />
+              </PortalPopup>
             </div>
 
             {/* Highlight color */}
-            <div className="relative" ref={highlightPickerRef}>
+            <div className="relative" ref={highlightPickerRef as React.RefObject<HTMLDivElement>}>
               <button onClick={() => setShowHighlightPicker(v => !v)} title="Highlight color" className={btnSq}>
                 <div className="flex flex-col items-center justify-center gap-0.5">
                   <span className="font-bold text-sm leading-none text-zinc-700">A</span>
                   <div className="w-5 h-1.5 rounded-sm" style={{ backgroundColor: highlightColor }} />
                 </div>
               </button>
-              {showHighlightPicker && <HighlightPanel />}
+              <PortalPopup anchorRef={highlightPickerRef} open={showHighlightPicker}>
+                <HighlightPanel noAbsolute />
+              </PortalPopup>
             </div>
 
             {/* N — Neutral / clear formatting */}
@@ -1339,7 +1360,7 @@ export default function PageEditor() {
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
 
             {/* Border split button: ✓ (opens popup) | ⊞ (applies selected style) */}
-            <div className="relative flex items-center" ref={borderPopupRef}>
+            <div className="relative flex items-center" ref={borderPopupRef as React.RefObject<HTMLDivElement>}>
               <button
                 onClick={() => setShowBorderPopup(v => !v)}
                 title="Pick border style"
@@ -1354,8 +1375,8 @@ export default function PageEditor() {
               >
                 <svg width="15" height="15" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="16" height="16" rx="1.5" stroke="#444" strokeWidth="1.5"/><line x1="5" y1="1" x2="5" y2="17" stroke="#444" strokeWidth="0.7"/><line x1="9" y1="1" x2="9" y2="17" stroke="#444" strokeWidth="0.7"/><line x1="13" y1="1" x2="13" y2="17" stroke="#444" strokeWidth="0.7"/><line x1="1" y1="5" x2="17" y2="5" stroke="#444" strokeWidth="0.7"/><line x1="1" y1="9" x2="17" y2="9" stroke="#444" strokeWidth="0.7"/><line x1="1" y1="13" x2="17" y2="13" stroke="#444" strokeWidth="0.7"/></svg>
               </button>
-              {showBorderPopup && (
-                <div className="absolute top-full left-0 mt-1 z-50 bg-white border border-zinc-300 rounded-lg shadow-xl p-2 flex flex-col gap-1 w-36">
+              <PortalPopup anchorRef={borderPopupRef} open={showBorderPopup}>
+                <div className="bg-white border border-zinc-300 rounded-lg shadow-xl p-2 flex flex-col gap-1 w-36">
                   {([
                     { style: "none" as const, label: "No border", icon: <span className="text-xs font-bold text-zinc-500">N</span> },
                     { style: "single" as const, label: "Single border", icon: <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="1.5" y="1.5" width="15" height="15" rx="1" stroke="#444" strokeWidth="1.5"/></svg> },
@@ -1372,7 +1393,7 @@ export default function PageEditor() {
                     </button>
                   ))}
                 </div>
-              )}
+              </PortalPopup>
             </div>
 
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
