@@ -1320,7 +1320,7 @@ export default function PageEditor() {
                 <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none">in</div>
               </div>
               <div className="w-52 h-7 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none">inactive</div>
-              <div className="w-28 h-7 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none">inactive</div>
+              <button onClick={handleCreatePage} className="w-28 h-7 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-[11px] font-semibold text-zinc-600 shrink-0">+ New Page</button>
             </div>
 
             {/* ROW 2 — single flat horizontal toolbar */}
@@ -1570,7 +1570,7 @@ export default function PageEditor() {
                 <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none">in</div>
               </div>
               <div className="w-52 h-7 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none">inactive</div>
-              <div className="w-28 h-7 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none">inactive</div>
+              <button onClick={handleCreatePage} className="w-28 h-7 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-[11px] font-semibold text-zinc-600 shrink-0">+ New Page</button>
             </div>
             {/* ROW 2 — flat toolbar */}
             <div className="px-3 py-1.5 flex items-center gap-1 overflow-x-auto">
@@ -1704,7 +1704,7 @@ export default function PageEditor() {
                 <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none">in</div>
               </div>
               <div className="w-52 h-7 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none">inactive</div>
-              <div className="w-28 h-7 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none">inactive</div>
+              <button onClick={handleCreatePage} className="w-28 h-7 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-[11px] font-semibold text-zinc-600 shrink-0">+ New Page</button>
             </div>
             {/* ROW 2 — flat toolbar */}
             <div className="px-3 py-1.5 flex items-center gap-1 overflow-x-auto">
@@ -1928,14 +1928,6 @@ export default function PageEditor() {
           </div>
         </div>
 
-        {/* Card 3: New page button */}
-        <div className="overflow-hidden rounded-lg border border-zinc-700 shadow-sm shrink-0">
-          <div className="bg-[#1a1a1a] text-white flex items-stretch" style={{ minHeight: 15 }}>
-            <button onClick={handleCreatePage} className="px-3 py-0 text-[10px] font-semibold text-zinc-300 hover:text-white hover:bg-zinc-700 transition-colors whitespace-nowrap uppercase tracking-wider">
-              + NEW PAGE
-            </button>
-          </div>
-        </div>
         {showPageTypePicker && (
           <div className="absolute top-full right-0 mt-1 z-50 bg-white border border-zinc-200 rounded-lg shadow-xl p-2 flex gap-1.5">
             <button onClick={() => handleCreatePageWithType("blank")} className="flex flex-col items-center gap-1 px-2 py-1.5 hover:bg-zinc-100 rounded-md transition-colors group">
