@@ -1496,10 +1496,12 @@ export default function PageEditor() {
             {/* ROW 2 — single flat horizontal toolbar */}
           <div className="mx-3 mb-2 bg-[#f0ede8] border border-zinc-200/80 rounded-xl shadow-[inset_0_2px_3px_rgba(0,0,0,0.05)] px-3 py-1.5 flex items-center gap-1 overflow-x-auto">
 
-            {/* copy | paste | cut */}
-            <button onClick={handleCopy} title="Copy" className={`${btnSq} text-base`}>🗐</button>
-            <button onClick={handlePaste} title="Paste" className={`${btnSq} text-base`}>📝</button>
-            <button onClick={() => spreadsheetCutRef.current?.()} title="Cut (copy + clear)" className={`${btnSq} text-base`}>✂</button>
+            {/* copy | paste | cut — joined */}
+            <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
+              <button onClick={handleCopy} title="Copy" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center">🗐</button>
+              <button onClick={handlePaste} title="Paste" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center">📝</button>
+              <button onClick={() => spreadsheetCutRef.current?.()} title="Cut" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center">✂</button>
+            </div>
 
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
 
@@ -1943,10 +1945,12 @@ export default function PageEditor() {
             </div>
             {/* ROW 2 — flat toolbar */}
             <div className="mx-3 mb-2 bg-[#f0ede8] border border-zinc-200/80 rounded-xl shadow-[inset_0_2px_3px_rgba(0,0,0,0.05)] px-3 py-1.5 flex items-center gap-1 overflow-x-auto">
-              {/* copy | paste | cut */}
-              <button onClick={handleCopy} title="Copy" className={`${btnSq} text-base`}>🗐</button>
-              <button onClick={handlePaste} title="Paste" className={`${btnSq} text-base`}>📝</button>
-              <button onClick={() => document.execCommand("cut")} title="Cut" className={`${btnSq} text-base`}>✂</button>
+              {/* copy | paste | cut — joined */}
+              <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
+                <button onClick={handleCopy} title="Copy" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center">🗐</button>
+                <button onClick={handlePaste} title="Paste" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center">📝</button>
+                <button onClick={() => document.execCommand("cut")} title="Cut" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center">✂</button>
+              </div>
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
               {/* undo | redo */}
               <button onClick={handleUndo} title="Undo" className={`${btnSq} text-base`}>↻</button>
@@ -2072,10 +2076,12 @@ export default function PageEditor() {
             </div>
             {/* ROW 2 — flat toolbar */}
             <div className="mx-3 mb-2 bg-[#f0ede8] border border-zinc-200/80 rounded-xl shadow-[inset_0_2px_3px_rgba(0,0,0,0.05)] px-3 py-1.5 flex items-center gap-1 overflow-x-auto">
-              {/* copy | paste | cut */}
-              <button onClick={handleCopy} title="Copy" className={`${btnSq} text-base`}>🗐</button>
-              <button onClick={handlePaste} title="Paste" className={`${btnSq} text-base`}>📝</button>
-              <button onClick={() => document.execCommand("cut")} title="Cut" className={`${btnSq} text-base`}>✂</button>
+              {/* copy | paste | cut — joined */}
+              <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
+                <button onClick={handleCopy} title="Copy" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center">🗐</button>
+                <button onClick={handlePaste} title="Paste" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center">📝</button>
+                <button onClick={() => document.execCommand("cut")} title="Cut" className="h-8 px-2.5 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center">✂</button>
+              </div>
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
               {/* undo | redo */}
               <button onClick={handleUndo} title="Undo" className={`${btnSq} text-base`}>↻</button>
