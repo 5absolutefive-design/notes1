@@ -1204,21 +1204,24 @@ export default function PageEditor() {
         /* ── SPREADSHEET TOOLBAR — new flat single-row design ── */
         <div className="bg-[#ece9e3] px-3 pt-2 pb-1.5 shrink-0">
 
-          {/* TOP ROW — inactive placeholder boxes */}
-          <div className="flex items-center mb-1.5 gap-2">
-            <div className="w-32 h-6 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none shrink-0">inactive</div>
-            <div className="flex-1" />
-            <div className="flex items-center gap-1.5">
-              <div className="w-20 h-6 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none">inactive</div>
-              <div className="w-20 h-6 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none">inactive</div>
-              <div className="w-20 h-6 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none">inactive</div>
-            </div>
-            <div className="w-40 h-6 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none">inactive</div>
-            <div className="w-32 h-6 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none">inactive</div>
-          </div>
+          {/* SINGLE CARD — top row (inactive) + bottom row (toolbar) */}
+          <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl shadow-sm overflow-hidden">
 
-          {/* BOTTOM ROW — single flat horizontal toolbar */}
-          <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl px-3 py-1.5 shadow-sm flex items-center gap-1 overflow-x-auto">
+            {/* ROW 1 — inactive placeholder boxes */}
+            <div className="flex items-center gap-2 px-3 pt-2 pb-1.5 border-b border-zinc-200">
+              <div className="w-28 h-7 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none shrink-0">inactive</div>
+              <div className="flex-1" />
+              <div className="flex items-center gap-1.5">
+                <div className="w-16 h-7 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none">inactive</div>
+                <div className="w-16 h-7 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none">inactive</div>
+                <div className="w-16 h-7 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none">inactive</div>
+              </div>
+              <div className="w-48 h-7 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none">inactive</div>
+              <div className="w-28 h-7 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none">inactive</div>
+            </div>
+
+            {/* ROW 2 — single flat horizontal toolbar */}
+          <div className="px-3 py-1.5 flex items-center gap-1 overflow-x-auto">
 
             {/* copy | paste | cut */}
             <button onClick={handleCopy} title="Copy" className={`${btnSq} text-xs font-semibold text-zinc-600`}>copy</button>
@@ -1401,7 +1404,8 @@ export default function PageEditor() {
               </button>
             </div>
 
-          </div>
+          </div>{/* end ROW 2 */}
+          </div>{/* end CARD */}
         </div>
 
       ) : pageType === "lined" ? (
