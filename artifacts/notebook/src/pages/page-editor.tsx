@@ -1243,21 +1243,21 @@ export default function PageEditor() {
           <div className="px-3 py-1.5 flex items-center gap-1 overflow-x-auto">
 
             {/* copy | paste | cut */}
-            <button onClick={handleCopy} title="Copy" className={`${btnSq} text-xs font-semibold text-zinc-600`}>copy</button>
-            <button onClick={handlePaste} title="Paste" className={`${btnSq} text-xs font-semibold text-zinc-600`}>paste</button>
-            <button onClick={() => spreadsheetCutRef.current?.()} title="Cut (copy + clear)" className={`${btnSq} text-xs font-semibold text-zinc-600`}>cut</button>
+            <button onClick={handleCopy} title="Copy" className={`${btnSq} text-base`}>🗐</button>
+            <button onClick={handlePaste} title="Paste" className={`${btnSq} text-base`}>📝</button>
+            <button onClick={() => spreadsheetCutRef.current?.()} title="Cut (copy + clear)" className={`${btnSq} text-base`}>✂</button>
 
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
 
             {/* undo | redo */}
-            <button onClick={handleUndo} title="Undo" className={`${btnSq} text-base`}>↩</button>
-            <button onClick={handleRedo} title="Redo" className={`${btnSq} text-base`}>↪</button>
+            <button onClick={handleUndo} title="Undo" className={`${btnSq} text-base`}>↻</button>
+            <button onClick={handleRedo} title="Redo" className={`${btnSq} text-base`}>↺</button>
 
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
 
             {/* zoom in | zoom out */}
-            <button onClick={() => setZoom(z => Math.min(200, z + 10))} title="Zoom in" className={`${btnSq} text-xs font-semibold text-zinc-600`}>zoom in</button>
-            <button onClick={() => setZoom(z => Math.max(50, z - 10))} title="Zoom out" className={`${btnSq} text-xs font-semibold text-zinc-600`}>zoom out</button>
+            <button onClick={() => setZoom(z => Math.min(200, z + 10))} title="Zoom in" className={`${btnSq} text-base`}>⌞+</button>
+            <button onClick={() => setZoom(z => Math.max(50, z - 10))} title="Zoom out" className={`${btnSq} text-base`}>–⌝</button>
 
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
 
@@ -1460,11 +1460,11 @@ export default function PageEditor() {
 
             {/* DEL + TRASH group */}
             <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-              <button onClick={handleDelete} title="Move page to trash" className="h-8 px-2 text-[10px] font-bold text-zinc-600 bg-white hover:bg-red-50 hover:text-red-600 transition-colors border-r border-zinc-300 flex flex-col items-center justify-center leading-none">
-                <span>DEL</span><span>ETE</span>
+              <button onClick={handleDelete} title="Move page to trash" className="h-8 px-3 text-base text-zinc-600 bg-white hover:bg-red-50 hover:text-red-600 transition-colors border-r border-zinc-300 flex items-center justify-center">
+                🗑️
               </button>
-              <button onClick={() => setShowTrash(true)} title="Open trash" className="h-8 px-2 text-[10px] font-bold text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex flex-col items-center justify-center leading-none">
-                <span>TRA</span><span>SH</span>
+              <button onClick={() => setShowTrash(true)} title="Open trash" className="h-8 px-3 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center">
+                ♻
               </button>
             </div>
 
