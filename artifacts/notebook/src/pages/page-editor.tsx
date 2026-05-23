@@ -11,14 +11,15 @@ const COL_LABELS = Array.from({ length: COLS }, (_, i) => String.fromCharCode(65
 
 interface MergeRegion { r1: number; c1: number; r2: number; c2: number; }
 type BorderStyle = "dotted" | "single" | "double" | "bold";
-type CellFormat = { bold?: boolean; underline?: boolean; strikeThrough?: boolean; overline?: boolean; fontColor?: string; highlightColor?: string; fontSize?: number; fontFamily?: string; borderStyle?: BorderStyle; };
+type CellFormat = { bold?: boolean; italic?: boolean; underline?: boolean; strikeThrough?: boolean; overline?: boolean; fontColor?: string; highlightColor?: string; fontSize?: number; fontFamily?: string; borderStyle?: BorderStyle; };
 interface SheetData { cells: Record<string, string>; merges: MergeRegion[]; colWidths?: Record<number, number>; rowHeights?: Record<number, number>; cellAligns?: Record<string, "left" | "center" | "right">; cellValigns?: Record<string, "top" | "middle" | "bottom">; cellFormats?: Record<string, CellFormat>; }
 
-function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef, insertColRef, colWidthIncRef, colWidthDecRef, rowHeightIncRef, rowHeightDecRef, onActiveSizeChange, cellAlignRef, onActiveCellAlignChange, cellValignRef, onActiveCellValignChange, cellFormatRef, onActiveCellFormatChange, onMergeStateChange, cellBorderRef }: {
+function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, cutRef, insertRowRef, insertColRef, colWidthIncRef, colWidthDecRef, rowHeightIncRef, rowHeightDecRef, onActiveSizeChange, cellAlignRef, onActiveCellAlignChange, cellValignRef, onActiveCellValignChange, cellFormatRef, onActiveCellFormatChange, onMergeStateChange, cellBorderRef }: {
   content: string;
   onChange: (v: string) => void;
   mergeRef?: MutableRefObject<(() => void) | null>;
   clearRef?: MutableRefObject<(() => void) | null>;
+  cutRef?: MutableRefObject<(() => void) | null>;
   insertRowRef?: MutableRefObject<(() => void) | null>;
   insertColRef?: MutableRefObject<(() => void) | null>;
   colWidthIncRef?: MutableRefObject<(() => void) | null>;
@@ -251,6 +252,24 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
       }
     };
     if (clearRef) clearRef.current = clearSelected;
+    if (cutRef) cutRef.current = async () => {
+      const sel = selectionRef.current;
+      const act = activeRef.current ?? anchorRef.current;
+      const textParts: string[] = [];
+      if (sel) {
+        const r1 = Math.min(sel.anchor[0], sel.end[0]); const r2 = Math.max(sel.anchor[0], sel.end[0]);
+        const c1 = Math.min(sel.anchor[1], sel.end[1]); const c2 = Math.max(sel.anchor[1], sel.end[1]);
+        for (let r = r1; r <= r2; r++) {
+          const row: string[] = [];
+          for (let c = c1; c <= c2; c++) row.push(dataRef.current.cells[`${r}-${c}`] ?? "");
+          textParts.push(row.join("\t"));
+        }
+      } else if (act) {
+        textParts.push(dataRef.current.cells[`${act[0]}-${act[1]}`] ?? "");
+      }
+      try { await navigator.clipboard.writeText(textParts.join("\n")); } catch { /* ignore */ }
+      clearSelected();
+    };
     if (insertRowRef) insertRowRef.current = insertRow;
     if (insertColRef) insertColRef.current = insertCol;
     if (colWidthIncRef) colWidthIncRef.current = colWidthInc;
@@ -543,6 +562,7 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, insertRowRef
                             pointerEvents: isDraggingRef.current ? "none" : "auto",
                             textAlign: data.cellAligns?.[k] ?? "left",
                             fontWeight: fmt.bold ? "bold" : undefined,
+                            fontStyle: fmt.italic ? "italic" : undefined,
                             textDecoration: td || undefined,
                             color: fmt.fontColor ?? "#27272a",
                             backgroundColor: fmt.highlightColor ?? "transparent",
@@ -592,7 +612,7 @@ export default function PageEditor() {
   const [font, setFont] = useState("Inter");
   const [fontSize, setFontSize] = useState(16);
   const [showFontMenu, setShowFontMenu] = useState(false);
-  const [activeFormats, setActiveFormats] = useState({ bold: false, underline: false, strikeThrough: false, overline: false });
+  const [activeFormats, setActiveFormats] = useState({ bold: false, italic: false, underline: false, strikeThrough: false, overline: false });
   const [align, setAlign] = useState<"left" | "center" | "right">("left");
   const [valign, setValign] = useState<"top" | "middle" | "bottom">("middle");
   const [fontColor, setFontColor] = useState("#000000");
@@ -632,6 +652,12 @@ export default function PageEditor() {
   const [activeSheetSizes, setActiveSheetSizes] = useState<{ colWidth: number; rowHeight: number } | null>(null);
   const [mergeState, setMergeState] = useState<{ isMerged: boolean; hasSelection: boolean }>({ isMerged: false, hasSelection: false });
   const spreadsheetCellBorderRef = useRef<((bs: BorderStyle | "none") => void) | null>(null);
+  const spreadsheetCutRef = useRef<(() => void) | null>(null);
+  const [showFontSizePopup, setShowFontSizePopup] = useState(false);
+  const [showBorderPopup, setShowBorderPopup] = useState(false);
+  const [selectedBorderStyle, setSelectedBorderStyle] = useState<BorderStyle | "none">("single");
+  const fontSizePopupRef = useRef<HTMLDivElement>(null);
+  const borderPopupRef = useRef<HTMLDivElement>(null);
 
   const lineHeightPx = lineSpacing === "compact" ? 28 : lineSpacing === "relaxed" ? 44 : 36;
 
@@ -672,6 +698,12 @@ export default function PageEditor() {
       }
       if (highlightPickerRef.current && !highlightPickerRef.current.contains(e.target as Node)) {
         setShowHighlightPicker(false);
+      }
+      if (fontSizePopupRef.current && !fontSizePopupRef.current.contains(e.target as Node)) {
+        setShowFontSizePopup(false);
+      }
+      if (borderPopupRef.current && !borderPopupRef.current.contains(e.target as Node)) {
+        setShowBorderPopup(false);
       }
       if (pageTypePickerRef.current && !pageTypePickerRef.current.contains(e.target as Node)) {
         setShowPageTypePicker(false);
@@ -731,6 +763,7 @@ export default function PageEditor() {
     const selected = hasSelection();
     setActiveFormats({
       bold: selected ? document.queryCommandState("bold") : false,
+      italic: selected ? document.queryCommandState("italic") : false,
       underline: selected ? document.queryCommandState("underline") : false,
       strikeThrough: selected ? document.queryCommandState("strikeThrough") : false,
       overline: false,
@@ -748,6 +781,7 @@ export default function PageEditor() {
   const execInlineFormat = (cmd: string) => {
     if (pageType === "spreadsheet") {
       if (cmd === "bold") spreadsheetSetFormatRef.current?.({ bold: !activeFormats.bold });
+      else if (cmd === "italic") spreadsheetSetFormatRef.current?.({ italic: !activeFormats.italic });
       else if (cmd === "underline") spreadsheetSetFormatRef.current?.({ underline: !activeFormats.underline });
       else if (cmd === "strikeThrough") spreadsheetSetFormatRef.current?.({ strikeThrough: !activeFormats.strikeThrough });
       return;
@@ -764,7 +798,7 @@ export default function PageEditor() {
     }
     document.execCommand(cmd, false);
     handleEditorInput();
-    setActiveFormats({ bold: false, underline: false, strikeThrough: false, overline: false });
+    setActiveFormats({ bold: false, italic: false, underline: false, strikeThrough: false, overline: false });
   };
 
   const execFormat = (cmd: string, value?: string) => {
@@ -857,7 +891,7 @@ export default function PageEditor() {
     editorRef.current?.focus();
     document.execCommand("removeFormat", false);
     document.execCommand("justifyLeft", false);
-    setActiveFormats({ bold: false, underline: false, strikeThrough: false, overline: false });
+    setActiveFormats({ bold: false, italic: false, underline: false, strikeThrough: false, overline: false });
     setAlign("left");
     handleEditorInput();
   };
@@ -1167,69 +1201,206 @@ export default function PageEditor() {
           ═══════════════════════════════════════════════════════ */}
 
       {pageType === "spreadsheet" ? (
-        /* ── SPREADSHEET TOOLBAR ── Common + Cell operations ── */
-        <div className="bg-[#ece9e3] px-4 pt-3 pb-2 shrink-0">
-          <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl px-3 py-3 shadow-sm flex items-start justify-between">
-            <div className="inline-flex items-start gap-2 flex-wrap">
-              <CommonGroups />
+        /* ── SPREADSHEET TOOLBAR — new flat single-row design ── */
+        <div className="bg-[#ece9e3] px-3 pt-2 pb-1.5 shrink-0">
 
-
-              {/* Merge + CW/CT box */}
-              <div className="border border-zinc-400 rounded-lg p-1.5">
-                <div className="flex flex-col gap-1">
-                  <button
-                    onClick={() => spreadsheetMergeRef.current?.()}
-                    title={mergeState.isMerged ? "Click to unmerge cells" : "Select cells by dragging, then click to merge"}
-                    className={`w-full h-8 rounded-md border transition-colors text-xs font-bold flex items-center justify-center gap-1 ${
-                      mergeState.isMerged || mergeState.hasSelection
-                        ? "border-purple-400 bg-purple-50 hover:bg-purple-100 active:bg-purple-200 text-purple-700"
-                        : "border-zinc-300 bg-white hover:bg-zinc-50 active:bg-zinc-100 text-zinc-500"
-                    }`}
-                  ><span className="text-sm leading-none">⇄</span> {mergeState.isMerged ? "Unmerge" : "Merge"}</button>
-                  <div className="flex items-center gap-1">
-                    {(() => {
-                      const cw = activeSheetSizes?.colWidth ?? 80;
-                      const rh = activeSheetSizes?.rowHeight ?? 24;
-                      const cwBig = cw > 80; const cwSmall = cw < 80;
-                      const rhBig = rh > 24; const rhSmall = rh < 24;
-                      return (<>
-                        <button onClick={() => spreadsheetCWIncRef.current?.()} title="Widen selected column" className={`w-8 h-8 rounded-md border transition-colors text-[10px] font-bold flex items-center justify-center ${cwBig ? "border-green-400 bg-green-100 text-green-700 shadow-[0_0_6px_2px_rgba(74,222,128,0.5)]" : "border-zinc-300 bg-white text-zinc-600 hover:bg-zinc-50"}`}>CW+</button>
-                        <button onClick={() => spreadsheetCWDecRef.current?.()} title="Narrow selected column" className={`w-8 h-8 rounded-md border transition-colors text-[10px] font-bold flex items-center justify-center ${cwSmall ? "border-red-400 bg-red-100 text-red-700 shadow-[0_0_6px_2px_rgba(248,113,113,0.5)]" : "border-zinc-300 bg-white text-zinc-600 hover:bg-zinc-50"}`}>CW−</button>
-                        <button onClick={() => spreadsheetCTIncRef.current?.()} title="Increase selected row height" className={`w-8 h-8 rounded-md border transition-colors text-[10px] font-bold flex items-center justify-center ${rhBig ? "border-green-400 bg-green-100 text-green-700 shadow-[0_0_6px_2px_rgba(74,222,128,0.5)]" : "border-zinc-300 bg-white text-zinc-600 hover:bg-zinc-50"}`}>CT+</button>
-                        <button onClick={() => spreadsheetCTDecRef.current?.()} title="Decrease selected row height" className={`w-8 h-8 rounded-md border transition-colors text-[10px] font-bold flex items-center justify-center ${rhSmall ? "border-red-400 bg-red-100 text-red-700 shadow-[0_0_6px_2px_rgba(248,113,113,0.5)]" : "border-zinc-300 bg-white text-zinc-600 hover:bg-zinc-50"}`}>CT−</button>
-                      </>);
-                    })()}
-                  </div>
-                </div>
-              </div>
-
-              {/* Border Style box */}
-              <div className="border border-zinc-400 rounded-lg p-1.5">
-                <div className="grid grid-cols-2 gap-1">
-                  <button
-                    onClick={() => spreadsheetCellBorderRef.current?.("none")}
-                    title="Remove border"
-                    className={`${btnSq} text-xs font-bold text-zinc-500`}
-                  >N</button>
-                  <button
-                    onClick={() => spreadsheetCellBorderRef.current?.("single")}
-                    title="Single thin border"
-                    className={btnSq}
-                  ><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="1.5" y="1.5" width="15" height="15" rx="1" stroke="#444" strokeWidth="1.5"/></svg></button>
-                  <button
-                    onClick={() => spreadsheetCellBorderRef.current?.("double")}
-                    title="Double border"
-                    className={btnSq}
-                  ><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="16" height="16" rx="1" stroke="#444" strokeWidth="1"/><rect x="3.5" y="3.5" width="11" height="11" rx="0.5" stroke="#444" strokeWidth="1"/></svg></button>
-                  <button
-                    onClick={() => spreadsheetCellBorderRef.current?.("bold")}
-                    title="Bold thick border"
-                    className={btnSq}
-                  ><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="14" height="14" rx="1" stroke="#222" strokeWidth="3.5"/></svg></button>
-                </div>
-              </div>
+          {/* TOP ROW — inactive placeholder boxes */}
+          <div className="flex items-center mb-1.5 gap-2">
+            <div className="w-32 h-6 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none shrink-0">inactive</div>
+            <div className="flex-1" />
+            <div className="flex items-center gap-1.5">
+              <div className="w-20 h-6 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none">inactive</div>
+              <div className="w-20 h-6 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none">inactive</div>
+              <div className="w-20 h-6 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none">inactive</div>
             </div>
-            <DeleteGroup />
+            <div className="w-40 h-6 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none">inactive</div>
+            <div className="w-32 h-6 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none">inactive</div>
+          </div>
+
+          {/* BOTTOM ROW — single flat horizontal toolbar */}
+          <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl px-3 py-1.5 shadow-sm flex items-center gap-1 overflow-x-auto">
+
+            {/* copy | paste | cut */}
+            <button onClick={handleCopy} title="Copy" className={`${btnSq} text-xs font-semibold text-zinc-600`}>copy</button>
+            <button onClick={handlePaste} title="Paste" className={`${btnSq} text-xs font-semibold text-zinc-600`}>paste</button>
+            <button onClick={() => spreadsheetCutRef.current?.()} title="Cut (copy + clear)" className={`${btnSq} text-xs font-semibold text-zinc-600`}>cut</button>
+
+            <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+
+            {/* undo | redo */}
+            <button onClick={handleUndo} title="Undo" className={`${btnSq} text-base`}>↩</button>
+            <button onClick={handleRedo} title="Redo" className={`${btnSq} text-base`}>↪</button>
+
+            <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+
+            {/* zoom in | zoom out */}
+            <button onClick={() => setZoom(z => Math.min(200, z + 10))} title="Zoom in" className={`${btnSq} text-xs font-semibold text-zinc-600`}>zoom in</button>
+            <button onClick={() => setZoom(z => Math.max(50, z - 10))} title="Zoom out" className={`${btnSq} text-xs font-semibold text-zinc-600`}>zoom out</button>
+
+            <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+
+            {/* Font family */}
+            <div className="relative" ref={fontMenuRef}>
+              <button onClick={() => setShowFontMenu(v => !v)} className="h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-left text-sm font-medium text-zinc-700 truncate min-w-[80px]" style={{ fontFamily: font }}>
+                {font}
+              </button>
+              {showFontMenu && (
+                <div className="absolute top-9 left-0 z-50 bg-white border border-zinc-300 rounded-lg shadow-lg overflow-y-auto max-h-52 w-44">
+                  {FONTS.map(f => (
+                    <button key={f} onClick={() => handleFontChange(f)} className={`w-full text-left px-3 py-1.5 text-sm hover:bg-zinc-100 transition-colors ${font === f ? "bg-zinc-100 font-semibold" : ""}`} style={{ fontFamily: f }}>{f}</button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Font size: current size button (click→popup) + A↑ A↓ */}
+            <div className="relative flex items-center gap-0.5" ref={fontSizePopupRef}>
+              <button
+                onClick={() => setShowFontSizePopup(v => !v)}
+                title="Font size"
+                className="w-9 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-xs font-semibold text-zinc-700 flex items-center justify-center"
+              >{fontSize}</button>
+              {showFontSizePopup && (
+                <div className="absolute top-9 left-0 z-50 bg-white border border-zinc-300 rounded-lg shadow-xl p-1.5 w-24 grid grid-cols-2 gap-1">
+                  {[8,9,10,11,12,14,16,18,20,22,24,28,32,36,48,72].map(s => (
+                    <button key={s} onClick={() => { handleFontSizeChange(s - fontSize); setShowFontSizePopup(false); }} className={`h-7 rounded text-xs font-medium transition-colors ${fontSize === s ? "bg-zinc-800 text-white" : "hover:bg-zinc-100 text-zinc-700"}`}>{s}</button>
+                  ))}
+                </div>
+              )}
+              <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className={btnSq}><span className="font-bold text-base leading-none">A</span></button>
+              <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className={btnSq}><span className="font-bold text-xs leading-none">A</span></button>
+            </div>
+
+            {/* Inactive placeholder (future task) */}
+            <div className="w-16 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none shrink-0">inactive</div>
+
+            <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+
+            {/* B I U Ŭ + font color + highlight */}
+            <button onClick={() => execInlineFormat("bold")} title="Bold" className={`${btnSq} ${activeFormats.bold ? btnActive : ""}`}><span className="font-black text-sm">B</span></button>
+            <button onClick={() => execInlineFormat("italic")} title="Italic" className={`${btnSq} ${activeFormats.italic ? btnActive : ""}`}><span className="italic font-bold text-sm">I</span></button>
+            <button onClick={() => execInlineFormat("underline")} title="Underline" className={`${btnSq} ${activeFormats.underline ? btnActive : ""}`}><span className="text-sm underline decoration-red-500 decoration-[3px]">U</span></button>
+            <button onClick={() => execInlineFormat("strikeThrough")} title="Strikethrough" className={`${btnSq} ${activeFormats.strikeThrough ? btnActive : ""}`}><span className="text-sm line-through decoration-red-500 decoration-[3px]">U</span></button>
+
+            {/* Font color */}
+            <div className="relative" ref={colorPickerRef}>
+              <button onClick={() => setShowColorPicker(v => !v)} title="Font color" className={btnSq}>
+                <div className="flex flex-col items-center justify-center gap-0.5">
+                  <span className="font-bold text-sm leading-none" style={{ color: fontColor }}>A</span>
+                  <div className="w-5 h-1 rounded-sm" style={{ backgroundColor: fontColor }} />
+                </div>
+              </button>
+              {showColorPicker && <FontColorPanel />}
+            </div>
+
+            {/* Highlight color */}
+            <div className="relative" ref={highlightPickerRef}>
+              <button onClick={() => setShowHighlightPicker(v => !v)} title="Highlight color" className={btnSq}>
+                <div className="flex flex-col items-center justify-center gap-0.5">
+                  <span className="font-bold text-sm leading-none text-zinc-700">A</span>
+                  <div className="w-5 h-1.5 rounded-sm" style={{ backgroundColor: highlightColor }} />
+                </div>
+              </button>
+              {showHighlightPicker && <HighlightPanel />}
+            </div>
+
+            {/* N — Neutral / clear formatting */}
+            <button onClick={handleNeutral} title="Clear formatting" className={`${btnSq} text-[11px] font-bold text-zinc-600`}>N</button>
+
+            <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+
+            {/* Align left | center | right */}
+            <button onClick={() => { spreadsheetSetAlignRef.current?.("left"); setAlign("left"); }} title="Align left" className={`${btnSq} ${align === "left" ? btnActive : ""}`}>
+              <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="1" y="7" width="9" height="2" rx="1"/><rect x="1" y="12" width="12" height="2" rx="1"/></svg>
+            </button>
+            <button onClick={() => { spreadsheetSetAlignRef.current?.("center"); setAlign("center"); }} title="Align center" className={`${btnSq} ${align === "center" ? btnActive : ""}`}>
+              <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="3.5" y="7" width="9" height="2" rx="1"/><rect x="2" y="12" width="12" height="2" rx="1"/></svg>
+            </button>
+            <button onClick={() => { spreadsheetSetAlignRef.current?.("right"); setAlign("right"); }} title="Align right" className={`${btnSq} ${align === "right" ? btnActive : ""}`}>
+              <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="6" y="7" width="9" height="2" rx="1"/><rect x="3" y="12" width="12" height="2" rx="1"/></svg>
+            </button>
+
+            <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+
+            {/* MERGE */}
+            <button
+              onClick={() => spreadsheetMergeRef.current?.()}
+              title={mergeState.isMerged ? "Unmerge cells" : "Merge selected cells"}
+              className={`h-8 px-2 rounded-md border transition-colors text-xs font-bold flex items-center justify-center gap-1 ${
+                mergeState.isMerged || mergeState.hasSelection
+                  ? "border-purple-400 bg-purple-50 hover:bg-purple-100 text-purple-700"
+                  : "border-zinc-300 bg-white hover:bg-zinc-50 text-zinc-600"
+              }`}
+            >MERGE</button>
+
+            <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+
+            {/* Border split button: ✓ (opens popup) | ⊞ (applies selected style) */}
+            <div className="relative flex items-center" ref={borderPopupRef}>
+              <button
+                onClick={() => setShowBorderPopup(v => !v)}
+                title="Pick border style"
+                className="h-8 px-1.5 rounded-l-md border border-r-0 border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-zinc-600 flex items-center justify-center"
+              >
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,8 5,11 12,4" stroke="#444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              </button>
+              <button
+                onClick={() => spreadsheetCellBorderRef.current?.(selectedBorderStyle)}
+                title="Apply selected border style"
+                className="h-8 px-1.5 rounded-r-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-zinc-600 flex items-center justify-center"
+              >
+                <svg width="15" height="15" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="16" height="16" rx="1.5" stroke="#444" strokeWidth="1.5"/><line x1="5" y1="1" x2="5" y2="17" stroke="#444" strokeWidth="0.7"/><line x1="9" y1="1" x2="9" y2="17" stroke="#444" strokeWidth="0.7"/><line x1="13" y1="1" x2="13" y2="17" stroke="#444" strokeWidth="0.7"/><line x1="1" y1="5" x2="17" y2="5" stroke="#444" strokeWidth="0.7"/><line x1="1" y1="9" x2="17" y2="9" stroke="#444" strokeWidth="0.7"/><line x1="1" y1="13" x2="17" y2="13" stroke="#444" strokeWidth="0.7"/></svg>
+              </button>
+              {showBorderPopup && (
+                <div className="absolute top-9 left-0 z-50 bg-white border border-zinc-300 rounded-lg shadow-xl p-2 flex flex-col gap-1 w-36">
+                  {([
+                    { style: "none" as const, label: "No border", icon: <span className="text-xs font-bold text-zinc-500">N</span> },
+                    { style: "single" as const, label: "Single border", icon: <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="1.5" y="1.5" width="15" height="15" rx="1" stroke="#444" strokeWidth="1.5"/></svg> },
+                    { style: "double" as const, label: "Double border", icon: <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="16" height="16" rx="1" stroke="#444" strokeWidth="1"/><rect x="3.5" y="3.5" width="11" height="11" rx="0.5" stroke="#444" strokeWidth="1"/></svg> },
+                    { style: "bold" as const, label: "Bold border", icon: <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="14" height="14" rx="1" stroke="#222" strokeWidth="3.5"/></svg> },
+                  ]).map(({ style, label, icon }) => (
+                    <button
+                      key={style}
+                      onClick={() => { setSelectedBorderStyle(style); setShowBorderPopup(false); }}
+                      className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-xs transition-colors ${selectedBorderStyle === style ? "bg-zinc-200 font-semibold" : "hover:bg-zinc-100"}`}
+                    >
+                      <span className="w-4 h-4 flex items-center justify-center shrink-0">{icon}</span>
+                      <span>{label}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+
+            {/* CW+ CW- CT+ CT- */}
+            {(() => {
+              const cw = activeSheetSizes?.colWidth ?? 80;
+              const rh = activeSheetSizes?.rowHeight ?? 24;
+              const cwBig = cw > 80; const cwSmall = cw < 80;
+              const rhBig = rh > 24; const rhSmall = rh < 24;
+              return (<>
+                <button onClick={() => spreadsheetCWIncRef.current?.()} title="Widen column" className={`${btnSq} text-[10px] font-bold ${cwBig ? "border-green-400 bg-green-100 text-green-700" : "border-zinc-300 bg-white text-zinc-600"}`}>CW+</button>
+                <button onClick={() => spreadsheetCWDecRef.current?.()} title="Narrow column" className={`${btnSq} text-[10px] font-bold ${cwSmall ? "border-red-400 bg-red-100 text-red-700" : "border-zinc-300 bg-white text-zinc-600"}`}>CW-</button>
+                <button onClick={() => spreadsheetCTIncRef.current?.()} title="Increase row height" className={`${btnSq} text-[10px] font-bold ${rhBig ? "border-green-400 bg-green-100 text-green-700" : "border-zinc-300 bg-white text-zinc-600"}`}>CT+</button>
+                <button onClick={() => spreadsheetCTDecRef.current?.()} title="Decrease row height" className={`${btnSq} text-[10px] font-bold ${rhSmall ? "border-red-400 bg-red-100 text-red-700" : "border-zinc-300 bg-white text-zinc-600"}`}>CT-</button>
+              </>);
+            })()}
+
+            {/* Spacer push DEL/TRASH to right */}
+            <div className="flex-1" />
+
+            {/* DEL + TRASH group */}
+            <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
+              <button onClick={handleDelete} title="Move page to trash" className="h-8 px-2 text-[10px] font-bold text-zinc-600 bg-white hover:bg-red-50 hover:text-red-600 transition-colors border-r border-zinc-300 flex flex-col items-center justify-center leading-none">
+                <span>DEL</span><span>ETE</span>
+              </button>
+              <button onClick={() => setShowTrash(true)} title="Open trash" className="h-8 px-2 text-[10px] font-bold text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex flex-col items-center justify-center leading-none">
+                <span>TRA</span><span>SH</span>
+              </button>
+            </div>
+
           </div>
         </div>
 
@@ -1481,6 +1652,7 @@ export default function PageEditor() {
                   content={content}
                   mergeRef={spreadsheetMergeRef}
                   clearRef={spreadsheetClearRef}
+                  cutRef={spreadsheetCutRef}
                   insertRowRef={spreadsheetInsertRowRef}
                   insertColRef={spreadsheetInsertColRef}
                   colWidthIncRef={spreadsheetCWIncRef}
@@ -1496,7 +1668,7 @@ export default function PageEditor() {
                   onActiveCellValignChange={setValign}
                   cellFormatRef={spreadsheetSetFormatRef}
                   onActiveCellFormatChange={(fmt) => {
-                    setActiveFormats({ bold: !!fmt.bold, underline: !!fmt.underline, strikeThrough: !!fmt.strikeThrough, overline: !!fmt.overline });
+                    setActiveFormats({ bold: !!fmt.bold, italic: !!fmt.italic, underline: !!fmt.underline, strikeThrough: !!fmt.strikeThrough, overline: !!fmt.overline });
                     if (fmt.fontColor) setFontColor(fmt.fontColor);
                     if (fmt.highlightColor) setHighlightColor(fmt.highlightColor);
                     if (fmt.fontSize) setFontSize(fmt.fontSize);

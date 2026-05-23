@@ -177,7 +177,7 @@ export default function Home() {
           const created = store.createBook({ title: nb.title, color: nb.color, pattern: nb.pattern, coverImg: nb.coverImg });
           const nbPages = (data.pages ?? []).filter((p: { bookId: number }) => p.bookId === nb.id);
           nbPages.forEach((pg: { type: string; content: string }) => {
-            store.createPage(created.id, pg.type as "blank" | "lined" | "spreadsheet", pg.content);
+            store.createPage(created.id, { title: "Imported page", pageType: pg.type as "blank" | "lined" | "spreadsheet", content: pg.content });
           });
         });
         refresh();
