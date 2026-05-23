@@ -675,6 +675,8 @@ export default function PageEditor() {
   const [selectedBorderStyle, setSelectedBorderStyle] = useState<BorderStyle | "none">("single");
   const fontSizePopupRef = useRef<HTMLDivElement>(null);
   const borderPopupRef = useRef<HTMLDivElement>(null);
+  const [showAlignPopup, setShowAlignPopup] = useState(false);
+  const alignPopupRef = useRef<HTMLDivElement>(null);
 
   const lineHeightPx = lineSpacing === "compact" ? 28 : lineSpacing === "relaxed" ? 44 : 36;
 
@@ -1334,16 +1336,56 @@ export default function PageEditor() {
 
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
 
-            {/* Align left | center | right */}
-            <button onClick={() => { spreadsheetSetAlignRef.current?.("left"); setAlign("left"); }} title="Align left" className={`${btnSq} ${align === "left" ? btnActive : ""}`}>
-              <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="1" y="7" width="9" height="2" rx="1"/><rect x="1" y="12" width="12" height="2" rx="1"/></svg>
-            </button>
-            <button onClick={() => { spreadsheetSetAlignRef.current?.("center"); setAlign("center"); }} title="Align center" className={`${btnSq} ${align === "center" ? btnActive : ""}`}>
-              <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="3.5" y="7" width="9" height="2" rx="1"/><rect x="2" y="12" width="12" height="2" rx="1"/></svg>
-            </button>
-            <button onClick={() => { spreadsheetSetAlignRef.current?.("right"); setAlign("right"); }} title="Align right" className={`${btnSq} ${align === "right" ? btnActive : ""}`}>
-              <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="6" y="7" width="9" height="2" rx="1"/><rect x="3" y="12" width="12" height="2" rx="1"/></svg>
-            </button>
+            {/* Align — single button opens popup */}
+            <div className="relative" ref={alignPopupRef}>
+              <button
+                onClick={() => setShowAlignPopup(v => !v)}
+                title="Text alignment"
+                className={`${btnSq} ${align !== "left" ? btnActive : ""}`}
+              >
+                {align === "center" ? (
+                  <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="3.5" y="7" width="9" height="2" rx="1"/><rect x="2" y="12" width="12" height="2" rx="1"/></svg>
+                ) : align === "right" ? (
+                  <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="6" y="7" width="9" height="2" rx="1"/><rect x="3" y="12" width="12" height="2" rx="1"/></svg>
+                ) : (
+                  <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="1" y="7" width="9" height="2" rx="1"/><rect x="1" y="12" width="12" height="2" rx="1"/></svg>
+                )}
+              </button>
+              <PortalPopup anchorRef={alignPopupRef} open={showAlignPopup}>
+                <div className="flex items-center gap-1 p-1.5">
+                  {/* Left */}
+                  <button
+                    onClick={() => { spreadsheetSetAlignRef.current?.("left"); setAlign("left"); setShowAlignPopup(false); }}
+                    title="Align left"
+                    className={`${btnSq} ${align === "left" ? btnActive : ""}`}
+                  >
+                    <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="1" y="7" width="9" height="2" rx="1"/><rect x="1" y="12" width="12" height="2" rx="1"/></svg>
+                  </button>
+                  {/* Center */}
+                  <button
+                    onClick={() => { spreadsheetSetAlignRef.current?.("center"); setAlign("center"); setShowAlignPopup(false); }}
+                    title="Align center"
+                    className={`${btnSq} ${align === "center" ? btnActive : ""}`}
+                  >
+                    <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="3.5" y="7" width="9" height="2" rx="1"/><rect x="2" y="12" width="12" height="2" rx="1"/></svg>
+                  </button>
+                  {/* Right */}
+                  <button
+                    onClick={() => { spreadsheetSetAlignRef.current?.("right"); setAlign("right"); setShowAlignPopup(false); }}
+                    title="Align right"
+                    className={`${btnSq} ${align === "right" ? btnActive : ""}`}
+                  >
+                    <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="6" y="7" width="9" height="2" rx="1"/><rect x="3" y="12" width="12" height="2" rx="1"/></svg>
+                  </button>
+                  {/* N — Neutral / reset to left */}
+                  <button
+                    onClick={() => { spreadsheetSetAlignRef.current?.("left"); setAlign("left"); setShowAlignPopup(false); }}
+                    title="Neutral (reset alignment)"
+                    className={`${btnSq} text-[11px] font-bold text-zinc-600`}
+                  >N</button>
+                </div>
+              </PortalPopup>
+            </div>
 
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
 
