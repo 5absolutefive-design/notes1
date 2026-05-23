@@ -2234,6 +2234,15 @@ export default function PageEditor() {
 
       {/* Tab bar */}
       <div className="bg-[#ece9e3] px-4 pt-0 pb-1 shrink-0 relative flex items-center gap-1.5" ref={pageTypePickerRef}>
+        {/* Card 1: Back button */}
+        <div className="overflow-hidden rounded-lg border border-zinc-700 shadow-sm shrink-0">
+          <div className="bg-[#1a1a1a] text-white flex items-stretch" style={{ minHeight: 15 }}>
+            <button onClick={() => setLocation("/")} className="px-2 flex items-center text-zinc-400 hover:text-white transition-colors">
+              <ChevronLeft className="w-3 h-3" />
+            </button>
+          </div>
+        </div>
+
         {/* Card 2: Page tabs */}
         <div className="overflow-hidden rounded-lg border border-zinc-700 shadow-sm flex-1 min-w-0">
           <div className="bg-[#1a1a1a] text-white flex items-stretch" style={{ minHeight: 15 }}>
