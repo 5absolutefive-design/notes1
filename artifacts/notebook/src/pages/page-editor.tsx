@@ -607,6 +607,119 @@ const FONTS = [
   "Source Code Pro", "Courier Prime",
 ];
 
+interface TableData { cells: Record<string, string>; rows: number; cols: number; cellFormats?: Record<string, CellFormat>; cellAligns?: Record<string, "left" | "center" | "right">; }
+
+function TableEditor({ content, onChange, insertRowRef, insertColRef, deleteRowRef, deleteColRef, cellFormatRef, onActiveCellFormatChange, cellAlignRef, onActiveCellAlignChange }: {
+  content: string; onChange: (v: string) => void;
+  insertRowRef?: MutableRefObject<(() => void) | null>;
+  insertColRef?: MutableRefObject<(() => void) | null>;
+  deleteRowRef?: MutableRefObject<(() => void) | null>;
+  deleteColRef?: MutableRefObject<(() => void) | null>;
+  cellFormatRef?: MutableRefObject<((fmt: Partial<CellFormat>) => void) | null>;
+  onActiveCellFormatChange?: (fmt: CellFormat) => void;
+  cellAlignRef?: MutableRefObject<((a: "left" | "center" | "right") => void) | null>;
+  onActiveCellAlignChange?: (a: "left" | "center" | "right") => void;
+}) {
+  const parseData = (): TableData => {
+    try {
+      const d = JSON.parse(content);
+      return { cells: d.cells ?? {}, rows: d.rows ?? 5, cols: d.cols ?? 5, cellFormats: d.cellFormats ?? {}, cellAligns: d.cellAligns ?? {} };
+    } catch { return { cells: {}, rows: 5, cols: 5, cellFormats: {}, cellAligns: {} }; }
+  };
+  const [data, setData] = useState<TableData>(parseData);
+  const [activeCell, setActiveCell] = useState<[number, number] | null>(null);
+  const activeCellRef = useRef(activeCell);
+  activeCellRef.current = activeCell;
+  const dataRef = useRef(data);
+  dataRef.current = data;
+  const COL_LABELS = Array.from({ length: 26 }, (_, i) => String.fromCharCode(65 + i));
+  const ck = (r: number, c: number) => `${r}-${c}`;
+  const isFirst = useRef(true);
+  useEffect(() => { if (isFirst.current) { isFirst.current = false; return; } onChange(JSON.stringify(data)); }, [data]);
+  useEffect(() => {
+    if (insertRowRef) insertRowRef.current = () => setData(p => ({ ...p, rows: p.rows + 1 }));
+    if (insertColRef) insertColRef.current = () => setData(p => ({ ...p, cols: Math.min(26, p.cols + 1) }));
+    if (deleteRowRef) deleteRowRef.current = () => setData(p => {
+      if (p.rows <= 2) return p;
+      const cells = { ...p.cells }; const cf = { ...(p.cellFormats ?? {}) }; const ca = { ...(p.cellAligns ?? {}) };
+      const r = p.rows - 1; for (let c = 0; c < p.cols; c++) { delete cells[ck(r,c)]; delete cf[ck(r,c)]; delete ca[ck(r,c)]; }
+      return { ...p, rows: p.rows - 1, cells, cellFormats: cf, cellAligns: ca };
+    });
+    if (deleteColRef) deleteColRef.current = () => setData(p => {
+      if (p.cols <= 1) return p;
+      const cells = { ...p.cells }; const cf = { ...(p.cellFormats ?? {}) }; const ca = { ...(p.cellAligns ?? {}) };
+      const c = p.cols - 1; for (let r = 0; r < p.rows; r++) { delete cells[ck(r,c)]; delete cf[ck(r,c)]; delete ca[ck(r,c)]; }
+      return { ...p, cols: p.cols - 1, cells, cellFormats: cf, cellAligns: ca };
+    });
+    if (cellFormatRef) cellFormatRef.current = (fmt: Partial<CellFormat>) => {
+      const cell = activeCellRef.current; if (!cell) return;
+      const k = ck(cell[0], cell[1]);
+      setData(p => ({ ...p, cellFormats: { ...(p.cellFormats ?? {}), [k]: { ...(p.cellFormats?.[k] ?? {}), ...fmt } } }));
+    };
+    if (cellAlignRef) cellAlignRef.current = (a: "left" | "center" | "right") => {
+      const cell = activeCellRef.current; if (!cell) return;
+      setData(p => ({ ...p, cellAligns: { ...(p.cellAligns ?? {}), [ck(cell[0], cell[1])]: a } }));
+    };
+    return () => {
+      if (insertRowRef) insertRowRef.current = null; if (insertColRef) insertColRef.current = null;
+      if (deleteRowRef) deleteRowRef.current = null; if (deleteColRef) deleteColRef.current = null;
+      if (cellFormatRef) cellFormatRef.current = null; if (cellAlignRef) cellAlignRef.current = null;
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+  useEffect(() => {
+    if (!activeCell) return;
+    onActiveCellFormatChange?.(data.cellFormats?.[ck(activeCell[0], activeCell[1])] ?? {});
+    onActiveCellAlignChange?.(data.cellAligns?.[ck(activeCell[0], activeCell[1])] ?? "left");
+  }, [activeCell, data.cellFormats, data.cellAligns]);
+  return (
+    <div className="p-4 overflow-auto w-full h-full">
+      <table className="border-collapse" style={{ tableLayout: "fixed" }}>
+        <thead>
+          <tr>
+            <th className="bg-zinc-100 border border-zinc-300 sticky top-0 left-0 z-20" style={{ width: 32, minWidth: 32 }} />
+            {Array.from({ length: data.cols }, (_, c) => (
+              <th key={c} className="bg-zinc-100 border border-zinc-300 text-zinc-600 text-[10px] font-semibold px-1 py-0.5 sticky top-0 z-10 text-center" style={{ width: 100, minWidth: 60 }}>
+                {COL_LABELS[c]}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {Array.from({ length: data.rows }, (_, r) => (
+            <tr key={r}>
+              <td className="bg-zinc-50 border border-zinc-300 text-zinc-400 text-[10px] text-center font-medium sticky left-0 z-10 select-none" style={{ width: 32, height: r === 0 ? 30 : 26 }}>
+                {r + 1}
+              </td>
+              {Array.from({ length: data.cols }, (_, c) => {
+                const key = ck(r, c);
+                const isActive = activeCell?.[0] === r && activeCell?.[1] === c;
+                const fmt = data.cellFormats?.[key] ?? {};
+                const align = data.cellAligns?.[key] ?? "left";
+                return (
+                  <td key={c} className={`p-0 ${isActive ? "outline outline-2 outline-blue-500 z-10 relative border-blue-400" : "border border-zinc-300"} ${r === 0 ? "bg-zinc-50" : "bg-white"}`} style={{ height: r === 0 ? 30 : 26 }}>
+                    <input
+                      value={data.cells[key] ?? ""}
+                      onFocus={() => setActiveCell([r, c])}
+                      onBlur={() => setActiveCell(prev => prev?.[0] === r && prev?.[1] === c ? null : prev)}
+                      onChange={e => {
+                        const val = e.target.value;
+                        setData(p => { const cells = { ...p.cells }; if (val) cells[key] = val; else delete cells[key]; return { ...p, cells }; });
+                      }}
+                      className="w-full h-full outline-none bg-transparent"
+                      style={{ padding: "0 6px", fontSize: fmt.fontSize ?? 13, fontFamily: fmt.fontFamily ?? "inherit", fontWeight: fmt.bold ? "bold" : r === 0 ? "600" : "normal", fontStyle: fmt.italic ? "italic" : "normal", textDecoration: [fmt.underline && "underline", fmt.strikeThrough && "line-through"].filter(Boolean).join(" ") || "none", color: fmt.fontColor ?? "#3a2e20", backgroundColor: fmt.highlightColor ?? "transparent", textAlign: align }}
+                    />
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 export default function PageEditor() {
   const { bookId, pageId } = useParams();
   const [, setLocation] = useLocation();
@@ -676,6 +789,12 @@ export default function PageEditor() {
   const [mergeState, setMergeState] = useState<{ isMerged: boolean; hasSelection: boolean }>({ isMerged: false, hasSelection: false });
   const spreadsheetCellBorderRef = useRef<((bs: BorderStyle | "none") => void) | null>(null);
   const spreadsheetCutRef = useRef<(() => void) | null>(null);
+  const tableInsertRowRef = useRef<(() => void) | null>(null);
+  const tableInsertColRef = useRef<(() => void) | null>(null);
+  const tableDeleteRowRef = useRef<(() => void) | null>(null);
+  const tableDeleteColRef = useRef<(() => void) | null>(null);
+  const tableSetFormatRef = useRef<((fmt: Partial<CellFormat>) => void) | null>(null);
+  const tableSetAlignRef = useRef<((a: "left" | "center" | "right") => void) | null>(null);
   const [showFontSizePopup, setShowFontSizePopup] = useState(false);
   const [showBorderPopup, setShowBorderPopup] = useState(false);
   const [selectedBorderStyle, setSelectedBorderStyle] = useState<BorderStyle | "none">("single");
@@ -815,6 +934,13 @@ export default function PageEditor() {
       else if (cmd === "strikeThrough") spreadsheetSetFormatRef.current?.({ strikeThrough: !activeFormats.strikeThrough });
       return;
     }
+    if (pageType === "table") {
+      if (cmd === "bold") tableSetFormatRef.current?.({ bold: !activeFormats.bold });
+      else if (cmd === "italic") tableSetFormatRef.current?.({ italic: !activeFormats.italic });
+      else if (cmd === "underline") tableSetFormatRef.current?.({ underline: !activeFormats.underline });
+      else if (cmd === "strikeThrough") tableSetFormatRef.current?.({ strikeThrough: !activeFormats.strikeThrough });
+      return;
+    }
     if (!hasSelection()) return;
     editorRef.current?.focus();
     document.execCommand(cmd, false);
@@ -833,6 +959,7 @@ export default function PageEditor() {
     setFont(f);
     setShowFontMenu(false);
     if (pageType === "spreadsheet") { spreadsheetSetFormatRef.current?.({ fontFamily: f }); return; }
+    if (pageType === "table") { tableSetFormatRef.current?.({ fontFamily: f }); return; }
     execFormat("fontName", f);
   };
 
@@ -840,6 +967,7 @@ export default function PageEditor() {
     const newSize = Math.max(8, Math.min(72, fontSize + delta));
     setFontSize(newSize);
     if (pageType === "spreadsheet") { spreadsheetSetFormatRef.current?.({ fontSize: newSize }); return; }
+    if (pageType === "table") { tableSetFormatRef.current?.({ fontSize: newSize }); return; }
     editorRef.current?.focus();
     const size = newSize <= 10 ? 1 : newSize <= 13 ? 2 : newSize <= 16 ? 3 : newSize <= 18 ? 4 : newSize <= 24 ? 5 : newSize <= 32 ? 6 : 7;
     document.execCommand("fontSize", false, String(size));
@@ -866,6 +994,7 @@ export default function PageEditor() {
       });
     }
     if (pageType === "spreadsheet") { spreadsheetSetFormatRef.current?.({ fontColor: color }); return; }
+    if (pageType === "table") { tableSetFormatRef.current?.({ fontColor: color }); return; }
     editorRef.current?.focus();
     if (!hasSelection()) {
       if (!restoreSelection()) return;
@@ -918,6 +1047,7 @@ export default function PageEditor() {
       });
     }
     if (pageType === "spreadsheet") { spreadsheetSetFormatRef.current?.({ highlightColor: color }); return; }
+    if (pageType === "table") { tableSetFormatRef.current?.({ highlightColor: color }); return; }
     editorRef.current?.focus();
     if (!hasSelection()) {
       if (!restoreSelection()) return;
@@ -1599,6 +1729,36 @@ export default function PageEditor() {
           </div>{/* end CARD */}
         </div>
 
+      ) : pageType === "table" ? (
+        /* ── TABLE TOOLBAR ── flat single-row card ── */
+        <div className="bg-[#ece9e3] px-3 pt-2 pb-1.5 shrink-0">
+          <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl shadow-sm">
+            <div className="flex items-center gap-1.5 px-3 py-1.5 flex-wrap">
+              <button onClick={() => setLocation("/")} className="w-28 h-7 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center gap-1.5 text-[11px] font-semibold text-zinc-600 shrink-0">🏠 My Notebooks</button>
+              <div className="w-px h-5 bg-zinc-300 mx-0.5 shrink-0" />
+              {/* Bold / Italic / Underline / Strikethrough */}
+              <button onMouseDown={e=>{e.preventDefault();execInlineFormat("bold");}} className={`${btnSq} font-bold text-sm ${activeFormats.bold ? btnActive : btnBase}`} title="Bold">B</button>
+              <button onMouseDown={e=>{e.preventDefault();execInlineFormat("italic");}} className={`${btnSq} italic text-sm ${activeFormats.italic ? btnActive : btnBase}`} title="Italic">I</button>
+              <button onMouseDown={e=>{e.preventDefault();execInlineFormat("underline");}} className={`${btnSq} underline text-sm ${activeFormats.underline ? btnActive : btnBase}`} title="Underline">U</button>
+              <button onMouseDown={e=>{e.preventDefault();execInlineFormat("strikeThrough");}} className={`${btnSq} line-through text-sm ${activeFormats.strikeThrough ? btnActive : btnBase}`} title="Strikethrough">S</button>
+              <div className="w-px h-5 bg-zinc-300 mx-0.5 shrink-0" />
+              {/* Align */}
+              <button onMouseDown={e=>{e.preventDefault();tableSetAlignRef.current?.("left");setAlign("left");}} className={`${btnSq} ${align==="left"?btnActive:btnBase}`} title="Align Left">⬅</button>
+              <button onMouseDown={e=>{e.preventDefault();tableSetAlignRef.current?.("center");setAlign("center");}} className={`${btnSq} ${align==="center"?btnActive:btnBase}`} title="Align Center">↔</button>
+              <button onMouseDown={e=>{e.preventDefault();tableSetAlignRef.current?.("right");setAlign("right");}} className={`${btnSq} ${align==="right"?btnActive:btnBase}`} title="Align Right">➡</button>
+              <div className="w-px h-5 bg-zinc-300 mx-0.5 shrink-0" />
+              {/* Insert / Delete Row */}
+              <button onMouseDown={e=>{e.preventDefault();tableInsertRowRef.current?.();}} className={`h-7 px-2.5 rounded border text-[11px] font-semibold ${btnBase}`} title="Add Row">+Row</button>
+              <button onMouseDown={e=>{e.preventDefault();tableDeleteRowRef.current?.();}} className={`h-7 px-2.5 rounded border text-[11px] font-semibold ${btnBase}`} title="Delete Last Row">−Row</button>
+              {/* Insert / Delete Col */}
+              <button onMouseDown={e=>{e.preventDefault();tableInsertColRef.current?.();}} className={`h-7 px-2.5 rounded border text-[11px] font-semibold ${btnBase}`} title="Add Column">+Col</button>
+              <button onMouseDown={e=>{e.preventDefault();tableDeleteColRef.current?.();}} className={`h-7 px-2.5 rounded border text-[11px] font-semibold ${btnBase}`} title="Delete Last Column">−Col</button>
+              <div className="flex-1" />
+              <button onClick={handleCreatePage} className="w-28 h-7 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-[11px] font-semibold text-zinc-600 shrink-0">+ New Page</button>
+            </div>
+          </div>
+        </div>
+
       ) : pageType === "lined" ? (
         /* ── LINED TOOLBAR ── flat single-row card (same design as spreadsheet) ── */
         <div className="bg-[#ece9e3] px-3 pt-2 pb-1.5 shrink-0">
@@ -1998,6 +2158,20 @@ export default function PageEditor() {
               </div>
               <span className="text-[10px] font-semibold text-zinc-500 group-hover:text-zinc-800">Sheet</span>
             </button>
+            <button onClick={() => handleCreatePageWithType("table")} className="flex flex-col items-center gap-1 px-2 py-1.5 hover:bg-zinc-100 rounded-md transition-colors group">
+              <div className="w-10 h-12 border border-zinc-300 group-hover:border-zinc-500 rounded-sm bg-white overflow-hidden shadow-sm">
+                <div className="grid border-b border-zinc-300 bg-zinc-100" style={{ gridTemplateColumns: "8px repeat(3, 1fr)" }}>
+                  {Array.from({ length: 4 }, (_, i) => <div key={i} className="border-r border-zinc-300 h-2 flex items-center justify-center text-[4px] text-zinc-400 font-bold">{i===0?"":String.fromCharCode(64+i)}</div>)}
+                </div>
+                {Array.from({ length: 7 }, (_, r) => (
+                  <div key={r} className="grid border-b border-zinc-200" style={{ gridTemplateColumns: "8px repeat(3, 1fr)" }}>
+                    <div className="border-r border-zinc-300 h-[5px] bg-zinc-50 flex items-center justify-center text-[4px] text-zinc-400">{r+1}</div>
+                    {Array.from({ length: 3 }, (_, c) => <div key={c} className="border-r border-zinc-200 h-[5px]" />)}
+                  </div>
+                ))}
+              </div>
+              <span className="text-[10px] font-semibold text-zinc-500 group-hover:text-zinc-800">Table</span>
+            </button>
           </div>
         )}
       </div>
@@ -2011,7 +2185,7 @@ export default function PageEditor() {
                 Page: <span className="text-zinc-700">PAGE {page.pageNumber}</span>
               </span>
               <div className="flex items-center gap-1 ml-2">
-                {pageType !== "spreadsheet" && (
+                {pageType !== "spreadsheet" && pageType !== "table" && (
                   <button
                     onClick={() => setAutoWrap(v => !v)}
                     title={autoWrap ? "Auto-wrap: ON (click to turn off)" : "Auto-wrap: OFF (click to turn on)"}
@@ -2044,7 +2218,7 @@ export default function PageEditor() {
             className="flex-1 bg-white"
             style={{
               scrollbarWidth: "thin",
-              overflow: pageType === "spreadsheet" ? "hidden" : "auto",
+              overflow: pageType === "spreadsheet" || pageType === "table" ? "hidden" : "auto",
             }}
             onScroll={e => pageType === "lined" && setLinedScroll((e.currentTarget as HTMLDivElement).scrollTop)}
           >
@@ -2083,6 +2257,33 @@ export default function PageEditor() {
                     setSaveStatus("saving");
                   }}
                 />
+                )}
+              </div>
+            ) : pageType === "table" ? (
+              <div style={{ zoom: zoom / 100, transformOrigin: "top left", height: "100%", overflow: "auto" }}>
+                {contentReadyForPid === pId && (
+                  <TableEditor
+                    key={pId}
+                    content={content}
+                    insertRowRef={tableInsertRowRef}
+                    insertColRef={tableInsertColRef}
+                    deleteRowRef={tableDeleteRowRef}
+                    deleteColRef={tableDeleteColRef}
+                    cellFormatRef={tableSetFormatRef}
+                    onActiveCellFormatChange={(fmt) => {
+                      setActiveFormats({ bold: !!fmt.bold, italic: !!fmt.italic, underline: !!fmt.underline, strikeThrough: !!fmt.strikeThrough, overline: false });
+                      if (fmt.fontColor) setFontColor(fmt.fontColor);
+                      if (fmt.highlightColor) setHighlightColor(fmt.highlightColor);
+                      if (fmt.fontSize) setFontSize(fmt.fontSize);
+                      if (fmt.fontFamily) setFont(fmt.fontFamily);
+                    }}
+                    cellAlignRef={tableSetAlignRef}
+                    onActiveCellAlignChange={setAlign}
+                    onChange={(v) => {
+                      setContent(v);
+                      setSaveStatus("saving");
+                    }}
+                  />
                 )}
               </div>
             ) : pageType === "lined" ? (

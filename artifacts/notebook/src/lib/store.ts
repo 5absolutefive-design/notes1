@@ -8,7 +8,7 @@ export interface Book {
   updatedAt: string;
 }
 
-export type PageType = "blank" | "lined" | "spreadsheet";
+export type PageType = "blank" | "lined" | "spreadsheet" | "table";
 
 export interface Page {
   id: number;
