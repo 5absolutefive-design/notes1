@@ -1205,10 +1205,10 @@ export default function PageEditor() {
         <div className="bg-[#ece9e3] px-3 pt-2 pb-1.5 shrink-0">
 
           {/* SINGLE CARD — top row (inactive) + bottom row (toolbar) */}
-          <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl shadow-sm overflow-hidden">
+          <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl shadow-sm">
 
             {/* ROW 1 — inactive placeholder boxes */}
-            <div className="flex items-center gap-2 px-3 pt-2 pb-1.5 border-b border-zinc-200">
+            <div className="flex items-center gap-2 px-3 pt-2 pb-1.5">
               <div className="w-28 h-7 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none shrink-0">inactive</div>
               <div className="flex-1" />
               <div className="flex items-center gap-1.5">
