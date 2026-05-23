@@ -1774,6 +1774,7 @@ export default function PageEditor() {
         <div className="px-3 pt-2 pb-1.5 shrink-0" style={{ backgroundColor: tc.outer }}>
           <div className="border border-zinc-300 rounded-xl shadow-sm" style={{ backgroundColor: tc.card }}>
             <div className="flex items-center gap-2 px-3 pt-2 pb-1.5">
+              <button onClick={() => setLocation("/")} className="w-28 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center gap-1.5 text-[11px] font-semibold text-zinc-600 shrink-0">🏠 My Notebooks</button>
               <div className="flex-1" />
 
               <div className="relative shrink-0" ref={themePopupRef}>
