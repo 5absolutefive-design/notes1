@@ -1729,10 +1729,10 @@ export default function PageEditor() {
 
             {/* DEL + TRASH group */}
             <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-              <button onClick={handleDelete} title="Move page to trash" className="h-8 px-3 text-base text-zinc-600 bg-white hover:bg-red-50 hover:text-red-600 transition-colors border-r border-zinc-300 flex items-center justify-center">
+              <button onClick={handleDelete} title="Move page to trash" className="w-8 h-8 text-base text-zinc-600 bg-white hover:bg-red-50 hover:text-red-600 transition-colors border-r border-zinc-300 flex items-center justify-center">
                 🗑️
               </button>
-              <button onClick={() => setShowTrash(true)} title="Open trash" className="h-8 px-3 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center">
+              <button onClick={() => setShowTrash(true)} title="Open trash" className="w-8 h-8 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center">
                 ♻
               </button>
             </div>
@@ -1956,8 +1956,8 @@ export default function PageEditor() {
 
             <div className="flex-1" />
             <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-              <button onClick={handleDelete} title="Move page to trash" className="h-8 px-3 text-base text-zinc-600 bg-white hover:bg-red-50 hover:text-red-600 transition-colors border-r border-zinc-300 flex items-center justify-center">🗑️</button>
-              <button onClick={() => setShowTrash(true)} title="Open trash" className="h-8 px-3 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center">♻</button>
+              <button onClick={handleDelete} title="Move page to trash" className="w-8 h-8 text-base text-zinc-600 bg-white hover:bg-red-50 hover:text-red-600 transition-colors border-r border-zinc-300 flex items-center justify-center">🗑️</button>
+              <button onClick={() => setShowTrash(true)} title="Open trash" className="w-8 h-8 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center">♻</button>
             </div>
           </div>{/* end ROW 2 */}
           </div>{/* end CARD */}
@@ -2096,8 +2096,8 @@ export default function PageEditor() {
               <div className="flex-1" />
               {/* DEL + TRASH */}
               <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-                <button onClick={handleDelete} title="Move page to trash" className="h-8 px-3 text-base text-zinc-600 bg-white hover:bg-red-50 hover:text-red-600 transition-colors border-r border-zinc-300 flex items-center justify-center">🗑️</button>
-                <button onClick={() => setShowTrash(true)} title="Open trash" className="h-8 px-3 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center">♻</button>
+                <button onClick={handleDelete} title="Move page to trash" className="w-8 h-8 text-base text-zinc-600 bg-white hover:bg-red-50 hover:text-red-600 transition-colors border-r border-zinc-300 flex items-center justify-center">🗑️</button>
+                <button onClick={() => setShowTrash(true)} title="Open trash" className="w-8 h-8 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center">♻</button>
               </div>
             </div>
           </div>
@@ -2228,8 +2228,8 @@ export default function PageEditor() {
               <div className="flex-1" />
               {/* DEL + TRASH */}
               <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-                <button onClick={handleDelete} title="Move page to trash" className="h-8 px-3 text-base text-zinc-600 bg-white hover:bg-red-50 hover:text-red-600 transition-colors border-r border-zinc-300 flex items-center justify-center">🗑️</button>
-                <button onClick={() => setShowTrash(true)} title="Open trash" className="h-8 px-3 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center">♻</button>
+                <button onClick={handleDelete} title="Move page to trash" className="w-8 h-8 text-base text-zinc-600 bg-white hover:bg-red-50 hover:text-red-600 transition-colors border-r border-zinc-300 flex items-center justify-center">🗑️</button>
+                <button onClick={() => setShowTrash(true)} title="Open trash" className="w-8 h-8 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center">♻</button>
               </div>
             </div>
           </div>
