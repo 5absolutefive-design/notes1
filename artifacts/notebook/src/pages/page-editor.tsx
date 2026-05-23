@@ -748,6 +748,8 @@ export default function PageEditor() {
   const [showNRCPopup, setShowNRCPopup] = useState(false);
   const [nrcHover, setNrcHover] = useState<{ r: number; c: number } | null>(null);
   const nrcPopupRef = useRef<HTMLDivElement>(null);
+  const [nrcCustomRows, setNrcCustomRows] = useState<string>("");
+  const [nrcCustomCols, setNrcCustomCols] = useState<string>("");
 
   const [showFontSizePopup, setShowFontSizePopup] = useState(false);
   const [showBorderPopup, setShowBorderPopup] = useState(false);
@@ -1783,8 +1785,8 @@ export default function PageEditor() {
                 title="Set table rows & columns"
                 className={`${btnSq} text-[10px] font-bold border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50`}
               >NRC</button>
-              <PortalPopup anchorRef={nrcPopupRef} open={showNRCPopup}>
-                <div className="bg-white border border-zinc-300 rounded-lg shadow-xl p-3" style={{ minWidth: 220 }}>
+              {showNRCPopup && (
+                <div className="absolute right-0 top-full mt-1 z-50 bg-white border border-zinc-300 rounded-lg shadow-xl p-3" style={{ minWidth: 220 }}>
                   <div className="text-[11px] font-semibold text-zinc-500 mb-2 text-center">
                     {nrcHover ? `${nrcHover.r} × ${nrcHover.c} Table` : "Hover to pick size"}
                   </div>
@@ -1816,7 +1818,7 @@ export default function PageEditor() {
                   </div>
                   <div className="text-[10px] text-zinc-400 text-center mt-2">Max 10 × 10</div>
                 </div>
-              </PortalPopup>
+              )}
             </div>
 
             <div className="flex-1" />
@@ -2367,6 +2369,41 @@ export default function PageEditor() {
                     }}
                   />
                 )}
+                </div>
+                {/* Manual row/col resize widget */}
+                <div className="flex items-center gap-2 mt-3 px-2 py-1.5 bg-zinc-50 border border-zinc-200 rounded-lg select-none" style={{ transform: `scale(${zoom / 100})`, transformOrigin: "top center" }}>
+                  <span className="text-[11px] text-zinc-400 font-medium">Rows</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={50}
+                    value={nrcCustomRows}
+                    placeholder="—"
+                    onChange={e => setNrcCustomRows(e.target.value)}
+                    className="w-12 h-6 text-center text-[12px] border border-zinc-300 rounded bg-white focus:outline-none focus:border-orange-400"
+                  />
+                  <span className="text-[11px] text-zinc-400 font-medium">Cols</span>
+                  <input
+                    type="number"
+                    min={1}
+                    max={26}
+                    value={nrcCustomCols}
+                    placeholder="—"
+                    onChange={e => setNrcCustomCols(e.target.value)}
+                    className="w-12 h-6 text-center text-[12px] border border-zinc-300 rounded bg-white focus:outline-none focus:border-orange-400"
+                  />
+                  <button
+                    onClick={() => {
+                      const r = parseInt(nrcCustomRows);
+                      const c = parseInt(nrcCustomCols);
+                      if (!isNaN(r) && !isNaN(c) && r >= 1 && c >= 1) {
+                        tableResizeRef.current?.(Math.min(r, 50), Math.min(c, 26));
+                        setNrcCustomRows("");
+                        setNrcCustomCols("");
+                      }
+                    }}
+                    className="h-6 px-2.5 text-[11px] font-semibold rounded bg-orange-400 text-white hover:bg-orange-500 transition-colors"
+                  >Apply</button>
                 </div>
               </div>
             ) : pageType === "lined" ? (
