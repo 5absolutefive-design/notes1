@@ -1291,8 +1291,9 @@ export default function PageEditor() {
               <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className={btnSq}><span className="font-bold text-xs leading-none">A</span></button>
             </div>
 
-            {/* Inactive placeholder (future task) */}
-            <div className="w-16 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none shrink-0">inactive</div>
+            {/* 2 inactive placeholder buttons */}
+            <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none shrink-0">in</div>
+            <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none shrink-0">in</div>
 
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
 
