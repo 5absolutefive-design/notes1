@@ -33,9 +33,9 @@ const TABLE_ROW_HEIGHT = 48;
 interface MergeRegion { r1: number; c1: number; r2: number; c2: number; }
 type BorderStyle = "dotted" | "single" | "double" | "bold";
 type CellFormat = { bold?: boolean; italic?: boolean; underline?: boolean; strikeThrough?: boolean; overline?: boolean; fontColor?: string; highlightColor?: string; fontSize?: number; fontFamily?: string; borderStyle?: BorderStyle; };
-interface SheetData { cells: Record<string, string>; merges: MergeRegion[]; colWidths?: Record<number, number>; rowHeights?: Record<number, number>; cellAligns?: Record<string, "left" | "center" | "right">; cellValigns?: Record<string, "top" | "middle" | "bottom">; cellFormats?: Record<string, CellFormat>; }
+interface SheetData { cells: Record<string, string>; merges: MergeRegion[]; colWidths?: Record<number, number>; rowHeights?: Record<number, number>; cellAligns?: Record<string, "left" | "center" | "right">; cellValigns?: Record<string, "top" | "middle" | "bottom">; cellFormats?: Record<string, CellFormat>; tableSize?: { rows: number; cols: number }; }
 
-function SpreadsheetEditor({ content, onChange, tableMode, mergeRef, clearRef, cutRef, insertRowRef, insertColRef, colWidthIncRef, colWidthDecRef, rowHeightIncRef, rowHeightDecRef, onActiveSizeChange, cellAlignRef, onActiveCellAlignChange, cellValignRef, onActiveCellValignChange, cellFormatRef, onActiveCellFormatChange, onMergeStateChange, cellBorderRef }: {
+function SpreadsheetEditor({ content, onChange, tableMode, mergeRef, clearRef, cutRef, insertRowRef, insertColRef, colWidthIncRef, colWidthDecRef, rowHeightIncRef, rowHeightDecRef, onActiveSizeChange, cellAlignRef, onActiveCellAlignChange, cellValignRef, onActiveCellValignChange, cellFormatRef, onActiveCellFormatChange, onMergeStateChange, cellBorderRef, resizeTableRef }: {
   content: string;
   onChange: (v: string) => void;
   tableMode?: boolean;
@@ -57,20 +57,23 @@ function SpreadsheetEditor({ content, onChange, tableMode, mergeRef, clearRef, c
   onActiveCellFormatChange?: (fmt: CellFormat) => void;
   onMergeStateChange?: (isMergedAnchor: boolean, hasMultiSelection: boolean) => void;
   cellBorderRef?: MutableRefObject<((bs: BorderStyle | "none") => void) | null>;
+  resizeTableRef?: MutableRefObject<((rows: number, cols: number) => void) | null>;
 }) {
-  const effectiveCols = tableMode ? TABLE_COLS : COLS;
-  const effectiveRows = tableMode ? TABLE_ROWS : ROWS;
   const defColW = tableMode ? TABLE_COL_WIDTH : 80;
   const defRowH = tableMode ? TABLE_ROW_HEIGHT : ROW_HEIGHT;
 
   const parseData = (): SheetData => {
     try {
       const d = JSON.parse(content);
-      return { cells: d.cells ?? {}, merges: d.merges ?? [], colWidths: d.colWidths ?? {}, rowHeights: d.rowHeights ?? {}, cellAligns: d.cellAligns ?? {}, cellValigns: d.cellValigns ?? {}, cellFormats: d.cellFormats ?? {} };
+      return { cells: d.cells ?? {}, merges: d.merges ?? [], colWidths: d.colWidths ?? {}, rowHeights: d.rowHeights ?? {}, cellAligns: d.cellAligns ?? {}, cellValigns: d.cellValigns ?? {}, cellFormats: d.cellFormats ?? {}, tableSize: d.tableSize ?? undefined };
     } catch { return { cells: {}, merges: [], colWidths: {}, rowHeights: {}, cellAligns: {}, cellValigns: {}, cellFormats: {} }; }
   };
 
   const [data, setData] = useState<SheetData>(parseData);
+
+  const effectiveCols = tableMode ? (data.tableSize?.cols ?? TABLE_COLS) : COLS;
+  const effectiveRows = tableMode ? (data.tableSize?.rows ?? TABLE_ROWS) : ROWS;
+
   const [active, setActive] = useState<[number, number] | null>(null);
   const anchorRef = useRef<[number, number] | null>(null);
   const dragEndRef = useRef<[number, number] | null>(null);
@@ -361,6 +364,17 @@ function SpreadsheetEditor({ content, onChange, tableMode, mergeRef, clearRef, c
       });
     };
     return () => { cellBorderRef.current = null; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (!resizeTableRef) return;
+    resizeTableRef.current = (rows: number, cols: number) => {
+      setData(prev => ({ ...prev, tableSize: { rows, cols } }));
+      setActive(null);
+      setSelection(null);
+    };
+    return () => { if (resizeTableRef) resizeTableRef.current = null; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -730,6 +744,10 @@ export default function PageEditor() {
   const [mergeState, setMergeState] = useState<{ isMerged: boolean; hasSelection: boolean }>({ isMerged: false, hasSelection: false });
   const spreadsheetCellBorderRef = useRef<((bs: BorderStyle | "none") => void) | null>(null);
   const spreadsheetCutRef = useRef<(() => void) | null>(null);
+  const tableResizeRef = useRef<((rows: number, cols: number) => void) | null>(null);
+  const [showNRCPopup, setShowNRCPopup] = useState(false);
+  const [nrcHover, setNrcHover] = useState<{ r: number; c: number } | null>(null);
+  const nrcPopupRef = useRef<HTMLDivElement>(null);
 
   const [showFontSizePopup, setShowFontSizePopup] = useState(false);
   const [showBorderPopup, setShowBorderPopup] = useState(false);
@@ -1755,6 +1773,52 @@ export default function PageEditor() {
                 <button onClick={() => spreadsheetCTDecRef.current?.()} title="Decrease row height" className={`${btnSq} text-[10px] font-bold ${(rh<TABLE_ROW_HEIGHT)?"border-red-400 bg-red-100 text-red-700":"border-zinc-300 bg-white text-zinc-600"}`}>CT-</button>
               </>);
             })()}
+
+            <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+
+            {/* NRC — New Row/Column picker */}
+            <div className="relative shrink-0" ref={nrcPopupRef}>
+              <button
+                onClick={() => setShowNRCPopup(v => !v)}
+                title="Set table rows & columns"
+                className={`${btnSq} text-[10px] font-bold border-zinc-300 bg-white text-zinc-700 hover:bg-zinc-50`}
+              >NRC</button>
+              <PortalPopup anchorRef={nrcPopupRef} open={showNRCPopup}>
+                <div className="bg-white border border-zinc-300 rounded-lg shadow-xl p-3" style={{ minWidth: 220 }}>
+                  <div className="text-[11px] font-semibold text-zinc-500 mb-2 text-center">
+                    {nrcHover ? `${nrcHover.r} × ${nrcHover.c} Table` : "Hover to pick size"}
+                  </div>
+                  <div
+                    className="grid gap-[3px]"
+                    style={{ gridTemplateColumns: `repeat(10, 1fr)` }}
+                    onMouseLeave={() => setNrcHover(null)}
+                  >
+                    {Array.from({ length: 10 }, (_, ri) =>
+                      Array.from({ length: 10 }, (_, ci) => {
+                        const r = ri + 1; const c = ci + 1;
+                        const isHighlighted = nrcHover ? r <= nrcHover.r && c <= nrcHover.c : false;
+                        return (
+                          <div
+                            key={`${r}-${c}`}
+                            className={`w-5 h-5 border cursor-pointer transition-colors rounded-sm ${isHighlighted ? "bg-orange-200 border-orange-400" : "bg-zinc-100 border-zinc-300 hover:bg-orange-100 hover:border-orange-300"}`}
+                            onMouseEnter={() => setNrcHover({ r, c })}
+                            onClick={() => {
+                              if (nrcHover) {
+                                tableResizeRef.current?.(nrcHover.r, nrcHover.c);
+                                setShowNRCPopup(false);
+                                setNrcHover(null);
+                              }
+                            }}
+                          />
+                        );
+                      })
+                    )}
+                  </div>
+                  <div className="text-[10px] text-zinc-400 text-center mt-2">Max 10 × 10</div>
+                </div>
+              </PortalPopup>
+            </div>
+
             <div className="flex-1" />
             <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
               <button onClick={handleDelete} title="Move page to trash" className="h-8 px-3 text-base text-zinc-600 bg-white hover:bg-red-50 hover:text-red-600 transition-colors border-r border-zinc-300 flex items-center justify-center">🗑️</button>
@@ -2281,6 +2345,7 @@ export default function PageEditor() {
                     colWidthDecRef={spreadsheetCWDecRef}
                     rowHeightIncRef={spreadsheetCTIncRef}
                     rowHeightDecRef={spreadsheetCTDecRef}
+                    resizeTableRef={tableResizeRef}
                     onActiveSizeChange={setActiveSheetSizes}
                     onMergeStateChange={(isMerged, hasSelection) => setMergeState({ isMerged, hasSelection })}
                     cellBorderRef={spreadsheetCellBorderRef}
