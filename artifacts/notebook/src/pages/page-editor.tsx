@@ -1536,12 +1536,17 @@ export default function PageEditor() {
             </div>
 
             {/* Font size: current size button (click→popup) + A↑ A↓ */}
-            <div className="relative flex items-center gap-0.5" ref={fontSizePopupRef as React.RefObject<HTMLDivElement>}>
-              <button
-                onClick={() => setShowFontSizePopup(v => !v)}
-                title="Font size"
-                className="w-9 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-xs font-semibold text-zinc-700 flex items-center justify-center"
-              >{fontSize}</button>
+            <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+            <div className="relative shrink-0" ref={fontSizePopupRef as React.RefObject<HTMLDivElement>}>
+              <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
+                <button
+                  onClick={() => setShowFontSizePopup(v => !v)}
+                  title="Font size"
+                  className="w-9 h-8 bg-white hover:bg-zinc-100 transition-colors text-xs font-semibold text-zinc-700 flex items-center justify-center border-r border-zinc-300"
+                >{fontSize}</button>
+                <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><span className="font-bold text-base leading-none">A</span></button>
+                <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center"><span className="font-bold text-xs leading-none">A</span></button>
+              </div>
               <PortalPopup anchorRef={fontSizePopupRef} open={showFontSizePopup}>
                 <div className="bg-white border border-zinc-300 rounded-lg shadow-xl p-1.5 w-24 grid grid-cols-2 gap-1">
                   {[8,9,10,11,12,14,16,18,20,22,24,28,32,36,48,72].map(s => (
@@ -1549,10 +1554,6 @@ export default function PageEditor() {
                   ))}
                 </div>
               </PortalPopup>
-              <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-                <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><span className="font-bold text-base leading-none">A</span></button>
-                <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center"><span className="font-bold text-xs leading-none">A</span></button>
-              </div>
             </div>
 
             {/* AB — All Caps toggle */}
@@ -1779,17 +1780,18 @@ export default function PageEditor() {
                 </div>
               </PortalPopup>
             </div>
-            <div className="relative flex items-center gap-0.5" ref={fontSizePopupRef as React.RefObject<HTMLDivElement>}>
-              <button onClick={() => setShowFontSizePopup(v => !v)} title="Font size" className="w-9 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-xs font-semibold text-zinc-700 flex items-center justify-center">{fontSize}</button>
+            <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+            <div className="relative shrink-0" ref={fontSizePopupRef as React.RefObject<HTMLDivElement>}>
+              <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
+                <button onClick={() => setShowFontSizePopup(v => !v)} title="Font size" className="w-9 h-8 bg-white hover:bg-zinc-100 transition-colors text-xs font-semibold text-zinc-700 flex items-center justify-center border-r border-zinc-300">{fontSize}</button>
+                <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><span className="font-bold text-base leading-none">A</span></button>
+                <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center"><span className="font-bold text-xs leading-none">A</span></button>
+              </div>
               <PortalPopup anchorRef={fontSizePopupRef} open={showFontSizePopup}>
                 <div className="bg-white border border-zinc-300 rounded-lg shadow-xl p-1.5 w-24 grid grid-cols-2 gap-1">
                   {[8,9,10,11,12,14,16,18,20,22,24,28,32,36,48,72].map(s => (<button key={s} onClick={() => { handleFontSizeChange(s - fontSize); setShowFontSizePopup(false); }} className={`h-7 rounded text-xs font-medium transition-colors ${fontSize === s ? "bg-zinc-800 text-white" : "hover:bg-zinc-100 text-zinc-700"}`}>{s}</button>))}
                 </div>
               </PortalPopup>
-              <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-                <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><span className="font-bold text-base leading-none">A</span></button>
-                <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center"><span className="font-bold text-xs leading-none">A</span></button>
-              </div>
             </div>
             <button onClick={handleAllCaps} title="All caps (toggle)" className={`${btnSq} ${isAllCaps ? btnActive : ""}`}><span className="font-black text-[11px] tracking-tight">AB</span></button>
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
@@ -2010,8 +2012,13 @@ export default function PageEditor() {
                 </PortalPopup>
               </div>
               {/* Font size */}
-              <div className="relative flex items-center gap-0.5 shrink-0" ref={fontSizePopupRef as React.RefObject<HTMLDivElement>}>
-                <button onClick={() => setShowFontSizePopup(v => !v)} title="Font size" className="w-9 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-xs font-semibold text-zinc-700 flex items-center justify-center">{fontSize}</button>
+              <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+              <div className="relative shrink-0" ref={fontSizePopupRef as React.RefObject<HTMLDivElement>}>
+                <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
+                  <button onClick={() => setShowFontSizePopup(v => !v)} title="Font size" className="w-9 h-8 bg-white hover:bg-zinc-100 transition-colors text-xs font-semibold text-zinc-700 flex items-center justify-center border-r border-zinc-300">{fontSize}</button>
+                  <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><span className="font-bold text-base leading-none">A</span></button>
+                  <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center"><span className="font-bold text-xs leading-none">A</span></button>
+                </div>
                 <PortalPopup anchorRef={fontSizePopupRef} open={showFontSizePopup}>
                   <div className="bg-white border border-zinc-300 rounded-lg shadow-xl p-1.5 w-24 grid grid-cols-2 gap-1">
                     {[8,9,10,11,12,14,16,18,20,22,24,28,32,36,48,72].map(s => (
@@ -2019,10 +2026,6 @@ export default function PageEditor() {
                     ))}
                   </div>
                 </PortalPopup>
-                <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-                  <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><span className="font-bold text-base leading-none">A</span></button>
-                  <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center"><span className="font-bold text-xs leading-none">A</span></button>
-                </div>
               </div>
               {/* AB — All Caps toggle */}
               <button onClick={handleAllCaps} title="All caps (toggle)" className={`${btnSq} ${isAllCaps ? btnActive : ""}`}><span className="font-black text-[11px] tracking-tight">AB</span></button>
@@ -2150,8 +2153,13 @@ export default function PageEditor() {
                 </PortalPopup>
               </div>
               {/* Font size */}
-              <div className="relative flex items-center gap-0.5 shrink-0" ref={fontSizePopupRef as React.RefObject<HTMLDivElement>}>
-                <button onClick={() => setShowFontSizePopup(v => !v)} title="Font size" className="w-9 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-xs font-semibold text-zinc-700 flex items-center justify-center">{fontSize}</button>
+              <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+              <div className="relative shrink-0" ref={fontSizePopupRef as React.RefObject<HTMLDivElement>}>
+                <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
+                  <button onClick={() => setShowFontSizePopup(v => !v)} title="Font size" className="w-9 h-8 bg-white hover:bg-zinc-100 transition-colors text-xs font-semibold text-zinc-700 flex items-center justify-center border-r border-zinc-300">{fontSize}</button>
+                  <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><span className="font-bold text-base leading-none">A</span></button>
+                  <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center"><span className="font-bold text-xs leading-none">A</span></button>
+                </div>
                 <PortalPopup anchorRef={fontSizePopupRef} open={showFontSizePopup}>
                   <div className="bg-white border border-zinc-300 rounded-lg shadow-xl p-1.5 w-24 grid grid-cols-2 gap-1">
                     {[8,9,10,11,12,14,16,18,20,22,24,28,32,36,48,72].map(s => (
@@ -2159,10 +2167,6 @@ export default function PageEditor() {
                     ))}
                   </div>
                 </PortalPopup>
-                <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-                  <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><span className="font-bold text-base leading-none">A</span></button>
-                  <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center"><span className="font-bold text-xs leading-none">A</span></button>
-                </div>
               </div>
               {/* AB — All Caps toggle */}
               <button onClick={handleAllCaps} title="All caps (toggle)" className={`${btnSq} ${isAllCaps ? btnActive : ""}`}><span className="font-black text-[11px] tracking-tight">AB</span></button>
