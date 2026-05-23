@@ -927,12 +927,22 @@ export default function PageEditor() {
     }
     savedRangeRef.current = null;
     handleEditorInput();
-    // Defer the highlight reset so the browser finishes processing the
-    // selection first — doing it synchronously locks the cursor.
+    // Blur then re-focus to fully reset the browser's internal typing state
+    // (including background/highlight color). Restoring the saved range puts
+    // the cursor back at the end of the highlighted text so new typing is clean.
     setTimeout(() => {
       if (!editorRef.current) return;
+      const sel = window.getSelection();
+      let savedRange: Range | null = null;
+      if (sel && sel.rangeCount > 0) {
+        savedRange = sel.getRangeAt(0).cloneRange();
+      }
+      editorRef.current.blur();
       editorRef.current.focus();
-      document.execCommand("hiliteColor", false, "transparent");
+      if (savedRange && sel) {
+        sel.removeAllRanges();
+        sel.addRange(savedRange);
+      }
     }, 0);
   };
 
