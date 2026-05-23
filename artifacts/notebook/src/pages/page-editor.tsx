@@ -2392,7 +2392,7 @@ export default function PageEditor() {
       {/* Paper card */}
       <div className="flex-1 flex flex-col min-h-0 bg-[#ece9e3] px-4 pb-4">
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden rounded-xl border border-zinc-300 shadow-sm bg-white">
-          <div className="bg-[#f5f2ee] border-b border-zinc-200 px-4 py-1 flex items-center justify-between shrink-0">
+          <div className="bg-[#fafaf8] border-b border-zinc-200 px-4 py-1 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">
                 Page: <span className="text-zinc-700">PAGE {page.pageNumber}</span>
