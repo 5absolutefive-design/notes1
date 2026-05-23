@@ -27,6 +27,8 @@ const VIRT_BUFFER = 30;
 const COL_LABELS = Array.from({ length: COLS }, (_, i) => String.fromCharCode(65 + i));
 const TABLE_COLS = 5;
 const TABLE_ROWS = 12;
+const TABLE_COL_WIDTH = 160;
+const TABLE_ROW_HEIGHT = 48;
 
 interface MergeRegion { r1: number; c1: number; r2: number; c2: number; }
 type BorderStyle = "dotted" | "single" | "double" | "bold";
@@ -58,6 +60,9 @@ function SpreadsheetEditor({ content, onChange, tableMode, mergeRef, clearRef, c
 }) {
   const effectiveCols = tableMode ? TABLE_COLS : COLS;
   const effectiveRows = tableMode ? TABLE_ROWS : ROWS;
+  const defColW = tableMode ? TABLE_COL_WIDTH : 80;
+  const defRowH = tableMode ? TABLE_ROW_HEIGHT : ROW_HEIGHT;
+
   const parseData = (): SheetData => {
     try {
       const d = JSON.parse(content);
@@ -206,18 +211,18 @@ function SpreadsheetEditor({ content, onChange, tableMode, mergeRef, clearRef, c
   const colWidthInc = useCallback(() => {
     const c = active ? active[1] : (anchorRef.current ? anchorRef.current[1] : null);
     if (c === null) return;
-    setData(prev => ({ ...prev, colWidths: { ...(prev.colWidths ?? {}), [c]: (prev.colWidths?.[c] ?? 80) + 20 } }));
+    setData(prev => ({ ...prev, colWidths: { ...(prev.colWidths ?? {}), [c]: (prev.colWidths?.[c] ?? defColW) + 20 } }));
   }, [active]);
 
   const colWidthDec = useCallback(() => {
     const c = active ? active[1] : (anchorRef.current ? anchorRef.current[1] : null);
     if (c === null) return;
     setData(prev => {
-      const cur = prev.colWidths?.[c] ?? 80;
+      const cur = prev.colWidths?.[c] ?? defColW;
       const raw = cur - 20;
-      const next = cur > 80 && raw < 80 ? 80 : Math.max(40, raw);
+      const next = cur > defColW && raw < defColW ? defColW : Math.max(40, raw);
       const colWidths = { ...(prev.colWidths ?? {}), [c]: next };
-      if (next === 80) delete colWidths[c];
+      if (next === defColW) delete colWidths[c];
       return { ...prev, colWidths };
     });
   }, [active]);
@@ -225,18 +230,18 @@ function SpreadsheetEditor({ content, onChange, tableMode, mergeRef, clearRef, c
   const rowHeightInc = useCallback(() => {
     const r = active ? active[0] : (anchorRef.current ? anchorRef.current[0] : null);
     if (r === null) return;
-    setData(prev => ({ ...prev, rowHeights: { ...(prev.rowHeights ?? {}), [r]: (prev.rowHeights?.[r] ?? ROW_HEIGHT) + 10 } }));
+    setData(prev => ({ ...prev, rowHeights: { ...(prev.rowHeights ?? {}), [r]: (prev.rowHeights?.[r] ?? defRowH) + 10 } }));
   }, [active]);
 
   const rowHeightDec = useCallback(() => {
     const r = active ? active[0] : (anchorRef.current ? anchorRef.current[0] : null);
     if (r === null) return;
     setData(prev => {
-      const cur = prev.rowHeights?.[r] ?? ROW_HEIGHT;
+      const cur = prev.rowHeights?.[r] ?? defRowH;
       const raw = cur - 10;
-      const next = cur > ROW_HEIGHT && raw < ROW_HEIGHT ? ROW_HEIGHT : Math.max(18, raw);
+      const next = cur > defRowH && raw < defRowH ? defRowH : Math.max(18, raw);
       const rowHeights = { ...(prev.rowHeights ?? {}), [r]: next };
-      if (next === ROW_HEIGHT) delete rowHeights[r];
+      if (next === defRowH) delete rowHeights[r];
       return { ...prev, rowHeights };
     });
   }, [active]);
@@ -376,8 +381,8 @@ function SpreadsheetEditor({ content, onChange, tableMode, mergeRef, clearRef, c
     const cell = active ?? anchorRef.current;
     if (!cell) { onActiveSizeChange(null); return; }
     onActiveSizeChange({
-      colWidth: data.colWidths?.[cell[1]] ?? 80,
-      rowHeight: data.rowHeights?.[cell[0]] ?? ROW_HEIGHT,
+      colWidth: data.colWidths?.[cell[1]] ?? defColW,
+      rowHeight: data.rowHeights?.[cell[0]] ?? defRowH,
     });
   }, [active, data.colWidths, data.rowHeights]);
 
@@ -514,12 +519,14 @@ function SpreadsheetEditor({ content, onChange, tableMode, mergeRef, clearRef, c
             : ""
         }`}
         style={(() => {
-          const colW = data.colWidths?.[c] ?? 80;
+          const colW = data.colWidths?.[c] ?? defColW;
+          const firstRowBg = tableMode && r === 0 ? "#FFF8EE" : undefined;
           return {
             border: isActive ? "1px solid #3b82f6" : isSelected ? "1px solid #93c5fd" : (defaultBorder ?? "1px solid #e4e4e7"),
-            height: data.rowHeights?.[r] ?? ROW_HEIGHT,
+            height: data.rowHeights?.[r] ?? defRowH,
             ...(tableMode ? { width: colW } : { minWidth: colW }),
             verticalAlign: data.cellValigns?.[k] ?? "middle",
+            ...(firstRowBg ? { backgroundColor: firstRowBg } : {}),
             ...borderCss,
           };
         })()}
@@ -546,7 +553,7 @@ function SpreadsheetEditor({ content, onChange, tableMode, mergeRef, clearRef, c
           style={(() => {
             const fmt = data.cellFormats?.[k] ?? {};
             const td = [fmt.underline && "underline", fmt.strikeThrough && "line-through", fmt.overline && "overline"].filter(Boolean).join(" ");
-            const cellW = isMerged ? colSpan * (data.colWidths?.[c] ?? 80) : (data.colWidths?.[c] ?? 80);
+            const cellW = isMerged ? colSpan * (data.colWidths?.[c] ?? defColW) : (data.colWidths?.[c] ?? defColW);
             return {
               ...(tableMode ? { width: cellW } : { minWidth: cellW }),
               pointerEvents: isDraggingRef.current ? "none" : "auto",
