@@ -13,7 +13,7 @@ function PortalPopup({ anchorRef, open, children }: {
   const rect = anchorRef.current?.getBoundingClientRect();
   if (!rect) return null;
   return createPortal(
-    <div style={{ position: "fixed", top: rect.bottom + 4, left: rect.left, zIndex: 9999 }}>
+    <div data-portal-popup="true" style={{ position: "fixed", top: rect.bottom + 4, left: rect.left, zIndex: 9999 }}>
       {children}
     </div>,
     document.body
@@ -709,22 +709,26 @@ export default function PageEditor() {
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (fontMenuRef.current && !fontMenuRef.current.contains(e.target as Node)) {
+      const target = e.target as Node;
+      // If the click is inside a portal popup, let the click through — don't close anything.
+      // (Portal popups are rendered in document.body outside the anchor refs.)
+      if ((e.target as HTMLElement).closest?.('[data-portal-popup]')) return;
+      if (fontMenuRef.current && !fontMenuRef.current.contains(target)) {
         setShowFontMenu(false);
       }
-      if (colorPickerRef.current && !colorPickerRef.current.contains(e.target as Node)) {
+      if (colorPickerRef.current && !colorPickerRef.current.contains(target)) {
         setShowColorPicker(false);
       }
-      if (highlightPickerRef.current && !highlightPickerRef.current.contains(e.target as Node)) {
+      if (highlightPickerRef.current && !highlightPickerRef.current.contains(target)) {
         setShowHighlightPicker(false);
       }
-      if (fontSizePopupRef.current && !fontSizePopupRef.current.contains(e.target as Node)) {
+      if (fontSizePopupRef.current && !fontSizePopupRef.current.contains(target)) {
         setShowFontSizePopup(false);
       }
-      if (borderPopupRef.current && !borderPopupRef.current.contains(e.target as Node)) {
+      if (borderPopupRef.current && !borderPopupRef.current.contains(target)) {
         setShowBorderPopup(false);
       }
-      if (pageTypePickerRef.current && !pageTypePickerRef.current.contains(e.target as Node)) {
+      if (pageTypePickerRef.current && !pageTypePickerRef.current.contains(target)) {
         setShowPageTypePicker(false);
       }
     };
