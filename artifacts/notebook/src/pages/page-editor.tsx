@@ -1820,7 +1820,60 @@ export default function PageEditor() {
                       })
                     )}
                   </div>
-                  <div className="text-[10px] text-zinc-400 text-center mt-2">Max 10 × 10</div>
+                  <div className="text-[10px] text-zinc-400 text-center mt-2">Max 10 × 10 (grid)</div>
+                  <div className="mt-3 pt-3 border-t border-zinc-200">
+                    <div className="text-[11px] font-semibold text-zinc-500 mb-2 text-center">Custom</div>
+                    <div className="flex items-center gap-1.5 justify-center">
+                      <span className="text-[11px] text-zinc-400">Rows</span>
+                      <input
+                        type="number"
+                        min={1}
+                        max={200}
+                        value={nrcCustomRows}
+                        placeholder="—"
+                        onChange={e => setNrcCustomRows(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === "Enter") {
+                            const r = parseInt(nrcCustomRows); const c = parseInt(nrcCustomCols);
+                            if (!isNaN(r) && !isNaN(c) && r >= 1 && c >= 1) {
+                              tableResizeRef.current?.(Math.min(r, 200), Math.min(c, 100));
+                              setNrcCustomRows(""); setNrcCustomCols(""); setShowNRCPopup(false);
+                            }
+                          }
+                        }}
+                        className="w-14 h-6 text-center text-[12px] border border-zinc-300 rounded bg-white focus:outline-none focus:border-orange-400"
+                      />
+                      <span className="text-[11px] text-zinc-400">Cols</span>
+                      <input
+                        type="number"
+                        min={1}
+                        max={100}
+                        value={nrcCustomCols}
+                        placeholder="—"
+                        onChange={e => setNrcCustomCols(e.target.value)}
+                        onKeyDown={e => {
+                          if (e.key === "Enter") {
+                            const r = parseInt(nrcCustomRows); const c = parseInt(nrcCustomCols);
+                            if (!isNaN(r) && !isNaN(c) && r >= 1 && c >= 1) {
+                              tableResizeRef.current?.(Math.min(r, 200), Math.min(c, 100));
+                              setNrcCustomRows(""); setNrcCustomCols(""); setShowNRCPopup(false);
+                            }
+                          }
+                        }}
+                        className="w-14 h-6 text-center text-[12px] border border-zinc-300 rounded bg-white focus:outline-none focus:border-orange-400"
+                      />
+                      <button
+                        onClick={() => {
+                          const r = parseInt(nrcCustomRows); const c = parseInt(nrcCustomCols);
+                          if (!isNaN(r) && !isNaN(c) && r >= 1 && c >= 1) {
+                            tableResizeRef.current?.(Math.min(r, 200), Math.min(c, 100));
+                            setNrcCustomRows(""); setNrcCustomCols(""); setShowNRCPopup(false);
+                          }
+                        }}
+                        className="h-6 px-2.5 text-[11px] font-semibold rounded bg-orange-400 text-white hover:bg-orange-500 transition-colors"
+                      >Apply</button>
+                    </div>
+                  </div>
                 </div>
               </PortalPopup>
             </div>
