@@ -634,6 +634,7 @@ export default function PageEditor() {
   const [valign, setValign] = useState<"top" | "middle" | "bottom">("middle");
   const [fontColor, setFontColor] = useState("#000000");
   const [showColorPicker, setShowColorPicker] = useState(false);
+  const fontColorClickTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [recentColors, setRecentColors] = useState<string[]>([]);
   const [highlightColor, setHighlightColor] = useState("#FFFF00");
   const [showHighlightPicker, setShowHighlightPicker] = useState(false);
@@ -874,6 +875,24 @@ export default function PageEditor() {
     }
     savedRangeRef.current = null;
     handleEditorInput();
+  };
+
+  // Single click → apply saved fontColor directly to selected text
+  const handleFontColorButtonClick = () => {
+    if (fontColorClickTimerRef.current) return; // double-click in progress
+    fontColorClickTimerRef.current = setTimeout(() => {
+      fontColorClickTimerRef.current = null;
+      handleFontColor(fontColor);
+    }, 220);
+  };
+
+  // Double click → open color picker
+  const handleFontColorButtonDblClick = () => {
+    if (fontColorClickTimerRef.current) {
+      clearTimeout(fontColorClickTimerRef.current);
+      fontColorClickTimerRef.current = null;
+    }
+    setShowColorPicker(v => !v);
   };
 
   const handleHighlightColor = (color: string, addToRecent = false) => {
@@ -1156,7 +1175,7 @@ export default function PageEditor() {
           </div>
           <div className="flex items-center gap-1">
             <div className="relative" ref={colorPickerRef}>
-              <button onClick={() => setShowColorPicker(v => !v)} title="Font color" className={btnSq}>
+              <button onClick={handleFontColorButtonClick} onDoubleClick={handleFontColorButtonDblClick} title="Font color (single-click: apply, double-click: pick color)" className={btnSq}>
                 <div className="flex flex-col items-center justify-center gap-0.5">
                   <span className="font-bold text-sm leading-none" style={{ color: fontColor }}>A</span>
                   <div className="w-5 h-1 rounded-sm" style={{ backgroundColor: fontColor }} />
@@ -1303,7 +1322,7 @@ export default function PageEditor() {
 
             {/* Font color */}
             <div className="relative" ref={colorPickerRef as React.RefObject<HTMLDivElement>}>
-              <button onClick={() => setShowColorPicker(v => !v)} title="Font color" className={btnSq}>
+              <button onClick={handleFontColorButtonClick} onDoubleClick={handleFontColorButtonDblClick} title="Font color (single-click: apply, double-click: pick color)" className={btnSq}>
                 <div className="flex flex-col items-center justify-center gap-0.5">
                   <span className="font-bold text-sm leading-none" style={{ color: fontColor }}>A</span>
                   <div className="w-5 h-1 rounded-sm" style={{ backgroundColor: fontColor }} />
@@ -1536,7 +1555,7 @@ export default function PageEditor() {
               <button onClick={() => execInlineFormat("strikeThrough")} title="Strikethrough" className={`${btnSq} ${activeFormats.strikeThrough ? btnActive : ""}`}><span className="text-sm line-through decoration-red-500 decoration-[3px]">U</span></button>
               {/* Font color */}
               <div className="relative shrink-0" ref={colorPickerRef as React.RefObject<HTMLDivElement>}>
-                <button onClick={() => setShowColorPicker(v => !v)} title="Font color" className={btnSq}>
+                <button onClick={handleFontColorButtonClick} onDoubleClick={handleFontColorButtonDblClick} title="Font color (single-click: apply, double-click: pick color)" className={btnSq}>
                   <div className="flex flex-col items-center justify-center gap-0.5">
                     <span className="font-bold text-sm leading-none" style={{ color: fontColor }}>A</span>
                     <div className="w-5 h-1 rounded-sm" style={{ backgroundColor: fontColor }} />
@@ -1670,7 +1689,7 @@ export default function PageEditor() {
               <button onClick={() => execInlineFormat("strikeThrough")} title="Strikethrough" className={`${btnSq} ${activeFormats.strikeThrough ? btnActive : ""}`}><span className="text-sm line-through decoration-red-500 decoration-[3px]">U</span></button>
               {/* Font color */}
               <div className="relative shrink-0" ref={colorPickerRef as React.RefObject<HTMLDivElement>}>
-                <button onClick={() => setShowColorPicker(v => !v)} title="Font color" className={btnSq}>
+                <button onClick={handleFontColorButtonClick} onDoubleClick={handleFontColorButtonDblClick} title="Font color (single-click: apply, double-click: pick color)" className={btnSq}>
                   <div className="flex flex-col items-center justify-center gap-0.5">
                     <span className="font-bold text-sm leading-none" style={{ color: fontColor }}>A</span>
                     <div className="w-5 h-1 rounded-sm" style={{ backgroundColor: fontColor }} />
