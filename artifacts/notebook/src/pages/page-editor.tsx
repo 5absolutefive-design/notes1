@@ -1263,7 +1263,7 @@ export default function PageEditor() {
 
             {/* Font family */}
             <div className="relative" ref={fontMenuRef as React.RefObject<HTMLDivElement>}>
-              <button onClick={() => setShowFontMenu(v => !v)} className="h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-left text-sm font-medium text-zinc-700 truncate min-w-[80px]" style={{ fontFamily: font }}>
+              <button onClick={() => setShowFontMenu(v => !v)} className="h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-left text-sm font-medium text-zinc-700 truncate w-[96px]" style={{ fontFamily: font }}>
                 {font}
               </button>
               <PortalPopup anchorRef={fontMenuRef} open={showFontMenu}>
