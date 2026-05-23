@@ -1494,7 +1494,7 @@ export default function PageEditor() {
             </div>
 
             {/* ROW 2 — single flat horizontal toolbar */}
-          <div className="mx-3 mb-2 bg-[#e8e4de] border border-zinc-300/60 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.08)] px-3 py-1.5 flex items-center gap-1 overflow-x-auto">
+          <div className="mx-3 mb-2 bg-[#f0ede8] border border-zinc-200/80 rounded-xl shadow-[inset_0_2px_3px_rgba(0,0,0,0.05)] px-3 py-1.5 flex items-center gap-1 overflow-x-auto">
 
             {/* copy | paste | cut */}
             <button onClick={handleCopy} title="Copy" className={`${btnSq} text-base`}>🗐</button>
@@ -1735,7 +1735,7 @@ export default function PageEditor() {
               <div className="w-52 h-8 rounded border border-zinc-300 bg-white flex items-center px-2 gap-1 shrink-0"><span className="text-zinc-400 text-xs">🔍</span><input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search in page..." className="flex-1 bg-transparent text-[11px] text-zinc-700 outline-none placeholder:text-zinc-400" />{searchTerm && <button onClick={() => setSearchTerm("")} className="text-zinc-400 hover:text-zinc-600 text-xs leading-none">✕</button>}</div>
               <button onClick={handleCreatePage} className="w-28 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-[11px] font-semibold text-zinc-600 shrink-0">+ New Page</button>
             </div>
-          <div className="mx-3 mb-2 bg-[#e8e4de] border border-zinc-300/60 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.08)] px-3 py-1.5 flex items-center gap-1 overflow-x-auto">
+          <div className="mx-3 mb-2 bg-[#f0ede8] border border-zinc-200/80 rounded-xl shadow-[inset_0_2px_3px_rgba(0,0,0,0.05)] px-3 py-1.5 flex items-center gap-1 overflow-x-auto">
             <button onClick={handleCopy} title="Copy" className={`${btnSq} text-base`}>🗐</button>
             <button onClick={handlePaste} title="Paste" className={`${btnSq} text-base`}>📝</button>
             <button onClick={() => spreadsheetCutRef.current?.()} title="Cut (copy + clear)" className={`${btnSq} text-base`}>✂</button>
@@ -1942,7 +1942,7 @@ export default function PageEditor() {
               <button onClick={handleCreatePage} className="w-28 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-[11px] font-semibold text-zinc-600 shrink-0">+ New Page</button>
             </div>
             {/* ROW 2 — flat toolbar */}
-            <div className="mx-3 mb-2 bg-[#e8e4de] border border-zinc-300/60 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.08)] px-3 py-1.5 flex items-center gap-1 overflow-x-auto">
+            <div className="mx-3 mb-2 bg-[#f0ede8] border border-zinc-200/80 rounded-xl shadow-[inset_0_2px_3px_rgba(0,0,0,0.05)] px-3 py-1.5 flex items-center gap-1 overflow-x-auto">
               {/* copy | paste | cut */}
               <button onClick={handleCopy} title="Copy" className={`${btnSq} text-base`}>🗐</button>
               <button onClick={handlePaste} title="Paste" className={`${btnSq} text-base`}>📝</button>
@@ -2071,7 +2071,7 @@ export default function PageEditor() {
               <button onClick={handleCreatePage} className="w-28 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-[11px] font-semibold text-zinc-600 shrink-0">+ New Page</button>
             </div>
             {/* ROW 2 — flat toolbar */}
-            <div className="mx-3 mb-2 bg-[#e8e4de] border border-zinc-300/60 rounded-xl shadow-[inset_0_2px_4px_rgba(0,0,0,0.08)] px-3 py-1.5 flex items-center gap-1 overflow-x-auto">
+            <div className="mx-3 mb-2 bg-[#f0ede8] border border-zinc-200/80 rounded-xl shadow-[inset_0_2px_3px_rgba(0,0,0,0.05)] px-3 py-1.5 flex items-center gap-1 overflow-x-auto">
               {/* copy | paste | cut */}
               <button onClick={handleCopy} title="Copy" className={`${btnSq} text-base`}>🗐</button>
               <button onClick={handlePaste} title="Paste" className={`${btnSq} text-base`}>📝</button>
