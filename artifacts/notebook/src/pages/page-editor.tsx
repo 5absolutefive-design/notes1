@@ -939,17 +939,44 @@ export default function PageEditor() {
     setIsHighlighterMode(false);
     lastKeyRef.current = "";
     if (!editorRef.current) return;
-    const sel = window.getSelection();
-    let savedRange: Range | null = null;
-    if (sel && sel.rangeCount > 0) {
-      savedRange = sel.getRangeAt(0).cloneRange();
-    }
-    editorRef.current.blur();
+
     editorRef.current.focus();
-    if (savedRange && sel) {
-      sel.removeAllRanges();
-      sel.addRange(savedRange);
+
+    // Move cursor outside any background-colored (highlighted) ancestor span
+    // so new typed characters don't inherit the highlight color.
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      let node: Node | null = sel.getRangeAt(0).endContainer;
+      while (node && node !== editorRef.current) {
+        if (node.nodeType === Node.ELEMENT_NODE) {
+          const el = node as HTMLElement;
+          const bg = el.style.backgroundColor;
+          if (bg && bg !== "transparent" && bg !== "rgba(0, 0, 0, 0)") {
+            const parent = el.parentNode;
+            if (parent) {
+              const newRange = document.createRange();
+              const idx = Array.from(parent.childNodes).indexOf(el as ChildNode);
+              newRange.setStart(parent, idx + 1);
+              newRange.collapse(true);
+              sel.removeAllRanges();
+              sel.addRange(newRange);
+            }
+            break;
+          }
+        }
+        node = node.parentNode as Node;
+      }
     }
+
+    // Defer so the browser finishes DOM updates, then fully reset typing state:
+    // removeFormat clears the browser's "next-char background" cache,
+    // foreColor re-pins new text to black.
+    setTimeout(() => {
+      if (!editorRef.current) return;
+      editorRef.current.focus();
+      document.execCommand("removeFormat", false);
+      document.execCommand("foreColor", false, "#000000");
+    }, 0);
   }, []);
 
   const handleEditorKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
