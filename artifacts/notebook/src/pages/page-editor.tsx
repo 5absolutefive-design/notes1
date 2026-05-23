@@ -1489,7 +1489,7 @@ export default function PageEditor() {
               <button onClick={() => setLocation("/")} className="w-28 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center gap-1.5 text-[11px] font-semibold text-zinc-600 shrink-0">🏠 My Notebooks</button>
               <div className="flex-1" />
 
-              <div className="w-52 h-8 rounded border border-zinc-300 bg-white flex items-center px-2 gap-1 shrink-0"><span className="text-zinc-400 text-xs">🔍</span><input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search in page..." className="flex-1 bg-transparent text-[11px] text-zinc-700 outline-none placeholder:text-zinc-400" />{searchTerm && <button onClick={() => setSearchTerm("")} className="text-zinc-400 hover:text-zinc-600 text-xs leading-none">✕</button>}</div>
+              <div className="w-64 h-8 rounded border border-zinc-300 bg-white flex items-center px-2 gap-1 shrink-0"><span className="text-zinc-400 text-xs">🔍</span><input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search in page..." className="flex-1 bg-transparent text-[11px] text-zinc-700 outline-none placeholder:text-zinc-400" />{searchTerm && <button onClick={() => setSearchTerm("")} className="text-zinc-400 hover:text-zinc-600 text-xs leading-none">✕</button>}</div>
               <button onClick={handleCreatePage} className="w-28 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-[11px] font-semibold text-zinc-600 shrink-0">+ New Page</button>
             </div>
 
@@ -1523,7 +1523,7 @@ export default function PageEditor() {
 
             {/* Font family */}
             <div className="relative shrink-0" ref={fontMenuRef as React.RefObject<HTMLDivElement>}>
-              <button onClick={() => setShowFontMenu(v => !v)} className="h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-left text-sm font-medium text-zinc-700 truncate w-[144px]" style={{ fontFamily: font }}>
+              <button onClick={() => setShowFontMenu(v => !v)} className="h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-left text-sm font-medium text-zinc-700 truncate w-[152px]" style={{ fontFamily: font }}>
                 {font}
               </button>
               <PortalPopup anchorRef={fontMenuRef} open={showFontMenu}>
@@ -1748,7 +1748,7 @@ export default function PageEditor() {
             <div className="flex items-center gap-2 px-3 pt-2 pb-1.5">
               <div className="flex-1" />
 
-              <div className="w-52 h-8 rounded border border-zinc-300 bg-white flex items-center px-2 gap-1 shrink-0"><span className="text-zinc-400 text-xs">🔍</span><input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search in page..." className="flex-1 bg-transparent text-[11px] text-zinc-700 outline-none placeholder:text-zinc-400" />{searchTerm && <button onClick={() => setSearchTerm("")} className="text-zinc-400 hover:text-zinc-600 text-xs leading-none">✕</button>}</div>
+              <div className="w-64 h-8 rounded border border-zinc-300 bg-white flex items-center px-2 gap-1 shrink-0"><span className="text-zinc-400 text-xs">🔍</span><input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search in page..." className="flex-1 bg-transparent text-[11px] text-zinc-700 outline-none placeholder:text-zinc-400" />{searchTerm && <button onClick={() => setSearchTerm("")} className="text-zinc-400 hover:text-zinc-600 text-xs leading-none">✕</button>}</div>
               <button onClick={handleCreatePage} className="w-28 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-[11px] font-semibold text-zinc-600 shrink-0">+ New Page</button>
             </div>
           <div className="mx-3 mb-2 bg-[#f0ede8] border border-zinc-200/80 rounded-xl shadow-[inset_0_2px_3px_rgba(0,0,0,0.05)] px-3 py-1.5 flex items-center gap-1 overflow-x-auto">
@@ -1763,7 +1763,7 @@ export default function PageEditor() {
             <button onClick={() => setZoom(z => Math.max(50, z - 10))} title="Zoom out" className={`${btnSq} text-base`}>–⌝</button>
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
             <div className="relative shrink-0" ref={fontMenuRef as React.RefObject<HTMLDivElement>}>
-              <button onClick={() => setShowFontMenu(v => !v)} className="h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-left text-sm font-medium text-zinc-700 truncate w-[144px]" style={{ fontFamily: font }}>{font}</button>
+              <button onClick={() => setShowFontMenu(v => !v)} className="h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-left text-sm font-medium text-zinc-700 truncate w-[152px]" style={{ fontFamily: font }}>{font}</button>
               <PortalPopup anchorRef={fontMenuRef} open={showFontMenu}>
                 <div className="bg-white border border-zinc-300 rounded-lg shadow-lg overflow-y-auto max-h-52 w-44">
                   {FONTS.map(f => (<button key={f} onClick={() => handleFontChange(f)} className={`w-full text-left px-3 py-1.5 text-sm hover:bg-zinc-100 transition-colors ${font === f ? "bg-zinc-100 font-semibold" : ""}`} style={{ fontFamily: f }}>{f}</button>))}
@@ -1960,7 +1960,7 @@ export default function PageEditor() {
               <button onClick={() => setLocation("/")} className="w-28 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center gap-1.5 text-[11px] font-semibold text-zinc-600 shrink-0">🏠 My Notebooks</button>
               <div className="flex-1" />
 
-              <div className="w-52 h-8 rounded border border-zinc-300 bg-white flex items-center px-2 gap-1 shrink-0"><span className="text-zinc-400 text-xs">🔍</span><input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search in page..." className="flex-1 bg-transparent text-[11px] text-zinc-700 outline-none placeholder:text-zinc-400" />{searchTerm && <button onClick={() => setSearchTerm("")} className="text-zinc-400 hover:text-zinc-600 text-xs leading-none">✕</button>}</div>
+              <div className="w-64 h-8 rounded border border-zinc-300 bg-white flex items-center px-2 gap-1 shrink-0"><span className="text-zinc-400 text-xs">🔍</span><input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search in page..." className="flex-1 bg-transparent text-[11px] text-zinc-700 outline-none placeholder:text-zinc-400" />{searchTerm && <button onClick={() => setSearchTerm("")} className="text-zinc-400 hover:text-zinc-600 text-xs leading-none">✕</button>}</div>
               <button onClick={handleCreatePage} className="w-28 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-[11px] font-semibold text-zinc-600 shrink-0">+ New Page</button>
             </div>
             {/* ROW 2 — flat toolbar */}
@@ -1986,7 +1986,7 @@ export default function PageEditor() {
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
               {/* Font family */}
               <div className="relative shrink-0" ref={fontMenuRef as React.RefObject<HTMLDivElement>}>
-                <button onClick={() => setShowFontMenu(v => !v)} className="h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-left text-sm font-medium text-zinc-700 truncate w-[144px]" style={{ fontFamily: font }}>
+                <button onClick={() => setShowFontMenu(v => !v)} className="h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-left text-sm font-medium text-zinc-700 truncate w-[152px]" style={{ fontFamily: font }}>
                   {font}
                 </button>
                 <PortalPopup anchorRef={fontMenuRef} open={showFontMenu}>
@@ -2095,7 +2095,7 @@ export default function PageEditor() {
               <button onClick={() => setLocation("/")} className="w-28 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center gap-1.5 text-[11px] font-semibold text-zinc-600 shrink-0">🏠 My Notebooks</button>
               <div className="flex-1" />
 
-              <div className="w-52 h-8 rounded border border-zinc-300 bg-white flex items-center px-2 gap-1 shrink-0"><span className="text-zinc-400 text-xs">🔍</span><input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search in page..." className="flex-1 bg-transparent text-[11px] text-zinc-700 outline-none placeholder:text-zinc-400" />{searchTerm && <button onClick={() => setSearchTerm("")} className="text-zinc-400 hover:text-zinc-600 text-xs leading-none">✕</button>}</div>
+              <div className="w-64 h-8 rounded border border-zinc-300 bg-white flex items-center px-2 gap-1 shrink-0"><span className="text-zinc-400 text-xs">🔍</span><input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search in page..." className="flex-1 bg-transparent text-[11px] text-zinc-700 outline-none placeholder:text-zinc-400" />{searchTerm && <button onClick={() => setSearchTerm("")} className="text-zinc-400 hover:text-zinc-600 text-xs leading-none">✕</button>}</div>
               <button onClick={handleCreatePage} className="w-28 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-[11px] font-semibold text-zinc-600 shrink-0">+ New Page</button>
             </div>
             {/* ROW 2 — flat toolbar */}
@@ -2121,7 +2121,7 @@ export default function PageEditor() {
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
               {/* Font family */}
               <div className="relative shrink-0" ref={fontMenuRef as React.RefObject<HTMLDivElement>}>
-                <button onClick={() => setShowFontMenu(v => !v)} className="h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-left text-sm font-medium text-zinc-700 truncate w-[144px]" style={{ fontFamily: font }}>
+                <button onClick={() => setShowFontMenu(v => !v)} className="h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-left text-sm font-medium text-zinc-700 truncate w-[152px]" style={{ fontFamily: font }}>
                   {font}
                 </button>
                 <PortalPopup anchorRef={fontMenuRef} open={showFontMenu}>
