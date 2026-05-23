@@ -25,15 +25,18 @@ const ROWS = 500;
 const ROW_HEIGHT = 24;
 const VIRT_BUFFER = 30;
 const COL_LABELS = Array.from({ length: COLS }, (_, i) => String.fromCharCode(65 + i));
+const TABLE_COLS = 5;
+const TABLE_ROWS = 12;
 
 interface MergeRegion { r1: number; c1: number; r2: number; c2: number; }
 type BorderStyle = "dotted" | "single" | "double" | "bold";
 type CellFormat = { bold?: boolean; italic?: boolean; underline?: boolean; strikeThrough?: boolean; overline?: boolean; fontColor?: string; highlightColor?: string; fontSize?: number; fontFamily?: string; borderStyle?: BorderStyle; };
 interface SheetData { cells: Record<string, string>; merges: MergeRegion[]; colWidths?: Record<number, number>; rowHeights?: Record<number, number>; cellAligns?: Record<string, "left" | "center" | "right">; cellValigns?: Record<string, "top" | "middle" | "bottom">; cellFormats?: Record<string, CellFormat>; }
 
-function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, cutRef, insertRowRef, insertColRef, colWidthIncRef, colWidthDecRef, rowHeightIncRef, rowHeightDecRef, onActiveSizeChange, cellAlignRef, onActiveCellAlignChange, cellValignRef, onActiveCellValignChange, cellFormatRef, onActiveCellFormatChange, onMergeStateChange, cellBorderRef }: {
+function SpreadsheetEditor({ content, onChange, tableMode, mergeRef, clearRef, cutRef, insertRowRef, insertColRef, colWidthIncRef, colWidthDecRef, rowHeightIncRef, rowHeightDecRef, onActiveSizeChange, cellAlignRef, onActiveCellAlignChange, cellValignRef, onActiveCellValignChange, cellFormatRef, onActiveCellFormatChange, onMergeStateChange, cellBorderRef }: {
   content: string;
   onChange: (v: string) => void;
+  tableMode?: boolean;
   mergeRef?: MutableRefObject<(() => void) | null>;
   clearRef?: MutableRefObject<(() => void) | null>;
   cutRef?: MutableRefObject<(() => void) | null>;
@@ -53,6 +56,8 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, cutRef, inse
   onMergeStateChange?: (isMergedAnchor: boolean, hasMultiSelection: boolean) => void;
   cellBorderRef?: MutableRefObject<((bs: BorderStyle | "none") => void) | null>;
 }) {
+  const effectiveCols = tableMode ? TABLE_COLS : COLS;
+  const effectiveRows = tableMode ? TABLE_ROWS : ROWS;
   const parseData = (): SheetData => {
     try {
       const d = JSON.parse(content);
@@ -117,8 +122,8 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, cutRef, inse
   };
 
   const move = (r: number, c: number, dr: number, dc: number) => {
-    const nr = Math.max(0, Math.min(ROWS - 1, r + dr));
-    const nc = Math.max(0, Math.min(COLS - 1, c + dc));
+    const nr = Math.max(0, Math.min(effectiveRows - 1, r + dr));
+    const nc = Math.max(0, Math.min(effectiveCols - 1, c + dc));
     setActive([nr, nc]);
     setSelection(null);
     anchorRef.current = null;
@@ -461,10 +466,133 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, cutRef, inse
     return () => { el.removeEventListener("scroll", update); ro.disconnect(); };
   }, []);
 
-  const firstRow = Math.max(0, Math.floor(virtScroll.top / ROW_HEIGHT) - VIRT_BUFFER);
-  const lastRow = Math.min(ROWS - 1, Math.ceil((virtScroll.top + virtScroll.height) / ROW_HEIGHT) + VIRT_BUFFER);
-  const topSpacer = firstRow * ROW_HEIGHT;
-  const bottomSpacer = (ROWS - 1 - lastRow) * ROW_HEIGHT;
+  const firstRow = tableMode ? 0 : Math.max(0, Math.floor(virtScroll.top / ROW_HEIGHT) - VIRT_BUFFER);
+  const lastRow = tableMode ? effectiveRows - 1 : Math.min(ROWS - 1, Math.ceil((virtScroll.top + virtScroll.height) / ROW_HEIGHT) + VIRT_BUFFER);
+  const topSpacer = tableMode ? 0 : firstRow * ROW_HEIGHT;
+  const bottomSpacer = tableMode ? 0 : (ROWS - 1 - lastRow) * ROW_HEIGHT;
+
+  const renderCell = (r: number, c: number) => {
+    const k = key(r, c);
+    if (absorbedSet.has(k)) return null;
+    const span = mergeAnchorMap.get(k);
+    const colSpan = span?.colSpan ?? 1;
+    const rowSpan = span?.rowSpan ?? 1;
+    const isMerged = !!span;
+    const isActive = active && active[0] === r && active[1] === c;
+    const isSelected = selectedSet.has(k);
+    const bs = data.cellFormats?.[k]?.borderStyle;
+    const borderCss: React.CSSProperties = bs && !isActive && !isSelected ? (() => {
+      if (bs === "single") return { outline: "1.5px solid #374151", outlineOffset: "-1px", position: "relative" as const, zIndex: 1 };
+      if (bs === "double") return { boxShadow: "inset 0 0 0 1px #374151, inset 0 0 0 2px #fff, inset 0 0 0 3px #374151", position: "relative" as const, zIndex: 1 };
+      if (bs === "bold") return { outline: "3px solid #222", outlineOffset: "-3px", position: "relative" as const, zIndex: 1 };
+      return {};
+    })() : {};
+    const defaultBorder = tableMode ? "1px solid #374151" : undefined;
+    return (
+      <td
+        key={c}
+        data-cell="1"
+        data-r={r}
+        data-c={c}
+        colSpan={colSpan}
+        rowSpan={rowSpan}
+        onMouseDown={e => {
+          if (e.button !== 0) return;
+          if ((e.target as HTMLElement).tagName === "INPUT" && isActive) return;
+          e.preventDefault();
+          anchorRef.current = [r, c];
+          dragEndRef.current = [r, c];
+          isDraggingRef.current = true;
+          setActive(null);
+          setSelection({ anchor: [r, c], end: [r, c] });
+        }}
+        className={`p-0 cursor-cell ${
+          isActive
+            ? "outline outline-2 outline-blue-500 z-10 relative"
+            : isSelected
+            ? "bg-blue-100"
+            : ""
+        }`}
+        style={(() => {
+          return {
+            border: isActive ? "1px solid #3b82f6" : isSelected ? "1px solid #93c5fd" : (defaultBorder ?? "1px solid #e4e4e7"),
+            height: data.rowHeights?.[r] ?? ROW_HEIGHT,
+            minWidth: data.colWidths?.[c] ?? 80,
+            verticalAlign: data.cellValigns?.[k] ?? "middle",
+            ...borderCss,
+          };
+        })()}
+      >
+        <input
+          ref={el => { inputRefs.current[k] = el; }}
+          value={data.cells[k] ?? ""}
+          onChange={e => update(r, c, e.target.value)}
+          onFocus={() => {
+            setActive([r, c]);
+            setSelection(null);
+            anchorRef.current = null;
+            dragEndRef.current = null;
+          }}
+          onKeyDown={e => {
+            if (e.key === "Enter") { e.preventDefault(); move(r, c, 1, 0); }
+            else if (e.key === "Tab") { e.preventDefault(); move(r, c, 0, e.shiftKey ? -1 : 1); }
+            else if (e.key === "ArrowDown") { e.preventDefault(); move(r, c, 1, 0); }
+            else if (e.key === "ArrowUp") { e.preventDefault(); move(r, c, -1, 0); }
+            else if (e.key === "ArrowRight" && (e.target as HTMLInputElement).selectionStart === (e.target as HTMLInputElement).value.length) { e.preventDefault(); move(r, c, 0, 1); }
+            else if (e.key === "ArrowLeft" && (e.target as HTMLInputElement).selectionStart === 0) { e.preventDefault(); move(r, c, 0, -1); }
+          }}
+          className="w-full h-full px-1 outline-none bg-transparent text-[13px]"
+          style={(() => {
+            const fmt = data.cellFormats?.[k] ?? {};
+            const td = [fmt.underline && "underline", fmt.strikeThrough && "line-through", fmt.overline && "overline"].filter(Boolean).join(" ");
+            return {
+              minWidth: isMerged ? colSpan * (data.colWidths?.[c] ?? 80) : (data.colWidths?.[c] ?? 80),
+              pointerEvents: isDraggingRef.current ? "none" : "auto",
+              textAlign: data.cellAligns?.[k] ?? "left",
+              fontWeight: fmt.bold ? "bold" : undefined,
+              fontStyle: fmt.italic ? "italic" : undefined,
+              textDecoration: td || undefined,
+              color: fmt.fontColor ?? "#27272a",
+              backgroundColor: fmt.highlightColor ?? "transparent",
+              fontSize: fmt.fontSize ?? 13,
+              fontFamily: fmt.fontFamily ?? "monospace",
+            };
+          })()}
+        />
+      </td>
+    );
+  };
+
+  if (tableMode) {
+    return (
+      <div
+        ref={containerRef}
+        style={{ fontFamily: "Inter, sans-serif", fontSize: 13, userSelect: isDraggingRef.current ? "none" : "auto" }}
+        onMouseMove={e => {
+          if (!isDraggingRef.current) return;
+          const el = document.elementFromPoint(e.clientX, e.clientY);
+          const td = el?.closest("td[data-cell]") as HTMLElement | null;
+          if (!td) return;
+          const r = parseInt(td.dataset.r ?? "-1");
+          const c = parseInt(td.dataset.c ?? "-1");
+          if (r < 0 || c < 0) return;
+          dragEndRef.current = [r, c];
+          if (rafRef.current) return;
+          rafRef.current = requestAnimationFrame(() => { rafRef.current = null; commitDragSelection(); });
+        }}
+      >
+        <table className="border-collapse" style={{ tableLayout: "fixed", borderTop: "2px solid #1f2937", borderLeft: "2px solid #1f2937", borderRight: "2px solid #1f2937", borderBottom: "2px solid #1f2937" }}>
+          <tbody>
+            {Array.from({ length: effectiveRows }, (_, r) => (
+              <tr key={r}>
+                {Array.from({ length: effectiveCols }, (_, c) => renderCell(r, c))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -507,90 +635,7 @@ function SpreadsheetEditor({ content, onChange, mergeRef, clearRef, cutRef, inse
                 <td className="bg-zinc-50 border border-zinc-300 text-zinc-400 text-[11px] text-center font-medium px-1 sticky left-0 z-10 select-none" style={{ width: 40, height: ROW_HEIGHT }}>
                   {r + 1}
                 </td>
-                {Array.from({ length: COLS }, (_, c) => {
-                  const k = key(r, c);
-                  if (absorbedSet.has(k)) return null;
-                  const span = mergeAnchorMap.get(k);
-                  const colSpan = span?.colSpan ?? 1;
-                  const rowSpan = span?.rowSpan ?? 1;
-                  const isMerged = !!span;
-                  const isActive = active && active[0] === r && active[1] === c;
-                  const isSelected = selectedSet.has(k);
-                  return (
-                    <td
-                      key={c}
-                      data-cell="1"
-                      data-r={r}
-                      data-c={c}
-                      colSpan={colSpan}
-                      rowSpan={rowSpan}
-                      onMouseDown={e => {
-                        if (e.button !== 0) return;
-                        if ((e.target as HTMLElement).tagName === "INPUT" && isActive) return;
-                        e.preventDefault();
-                        anchorRef.current = [r, c];
-                        dragEndRef.current = [r, c];
-                        isDraggingRef.current = true;
-                        setActive(null);
-                        setSelection({ anchor: [r, c], end: [r, c] });
-                      }}
-                      className={`border p-0 cursor-cell ${
-                        isActive
-                          ? "outline outline-2 outline-blue-500 z-10 relative border-blue-400"
-                          : isSelected
-                          ? "bg-blue-100 border-blue-300"
-                          : "border-zinc-200"
-                      }`}
-                      style={(() => {
-                        const bs = data.cellFormats?.[k]?.borderStyle;
-                        const borderCss: React.CSSProperties = bs && !isActive && !isSelected ? (() => {
-                          if (bs === "single") return { outline: "1.5px solid #374151", outlineOffset: "-1px", position: "relative" as const, zIndex: 1 };
-                          if (bs === "double") return { boxShadow: "inset 0 0 0 1px #374151, inset 0 0 0 2px #fff, inset 0 0 0 3px #374151", position: "relative" as const, zIndex: 1 };
-                          if (bs === "bold") return { outline: "3px solid #222", outlineOffset: "-3px", position: "relative" as const, zIndex: 1 };
-                          return {};
-                        })() : {};
-                        return { height: data.rowHeights?.[r] ?? ROW_HEIGHT, minWidth: data.colWidths?.[c] ?? 80, verticalAlign: data.cellValigns?.[k] ?? "middle", ...borderCss };
-                      })()}
-                    >
-                      <input
-                        ref={el => { inputRefs.current[k] = el; }}
-                        value={data.cells[k] ?? ""}
-                        onChange={e => update(r, c, e.target.value)}
-                        onFocus={() => {
-                          setActive([r, c]);
-                          setSelection(null);
-                          anchorRef.current = null;
-                          dragEndRef.current = null;
-                        }}
-                        onKeyDown={e => {
-                          if (e.key === "Enter") { e.preventDefault(); move(r, c, 1, 0); }
-                          else if (e.key === "Tab") { e.preventDefault(); move(r, c, 0, e.shiftKey ? -1 : 1); }
-                          else if (e.key === "ArrowDown") { e.preventDefault(); move(r, c, 1, 0); }
-                          else if (e.key === "ArrowUp") { e.preventDefault(); move(r, c, -1, 0); }
-                          else if (e.key === "ArrowRight" && (e.target as HTMLInputElement).selectionStart === (e.target as HTMLInputElement).value.length) { e.preventDefault(); move(r, c, 0, 1); }
-                          else if (e.key === "ArrowLeft" && (e.target as HTMLInputElement).selectionStart === 0) { e.preventDefault(); move(r, c, 0, -1); }
-                        }}
-                        className="w-full h-full px-1 outline-none bg-transparent text-[13px]"
-                        style={(() => {
-                          const fmt = data.cellFormats?.[k] ?? {};
-                          const td = [fmt.underline && "underline", fmt.strikeThrough && "line-through", fmt.overline && "overline"].filter(Boolean).join(" ");
-                          return {
-                            minWidth: isMerged ? colSpan * (data.colWidths?.[c] ?? 80) : (data.colWidths?.[c] ?? 80),
-                            pointerEvents: isDraggingRef.current ? "none" : "auto",
-                            textAlign: data.cellAligns?.[k] ?? "left",
-                            fontWeight: fmt.bold ? "bold" : undefined,
-                            fontStyle: fmt.italic ? "italic" : undefined,
-                            textDecoration: td || undefined,
-                            color: fmt.fontColor ?? "#27272a",
-                            backgroundColor: fmt.highlightColor ?? "transparent",
-                            fontSize: fmt.fontSize ?? 13,
-                            fontFamily: fmt.fontFamily ?? "monospace",
-                          };
-                        })()}
-                      />
-                    </td>
-                  );
-                })}
+                {Array.from({ length: COLS }, (_, c) => renderCell(r, c))}
               </tr>
             );
           })}
@@ -2211,10 +2256,13 @@ export default function PageEditor() {
                 )}
               </div>
             ) : pageType === "table" ? (
-              <div style={{ zoom: zoom / 100, transformOrigin: "top left", height: "100%" }}>
+              <div className="w-full h-full overflow-auto" style={{ background: "#e8e4de" }}>
+                <div className="min-h-full flex items-start justify-center py-14 px-10">
+                  <div className="bg-white shadow-lg" style={{ transform: `scale(${zoom / 100})`, transformOrigin: "top center", padding: "48px 56px" }}>
                 {contentReadyForPid === pId && (
                   <SpreadsheetEditor
                     key={pId}
+                    tableMode
                     content={content}
                     mergeRef={spreadsheetMergeRef}
                     clearRef={spreadsheetClearRef}
@@ -2246,6 +2294,8 @@ export default function PageEditor() {
                     }}
                   />
                 )}
+                  </div>
+                </div>
               </div>
             ) : pageType === "lined" ? (
               <div className="flex w-full" style={{ minHeight: 500 * lineHeightPx, backgroundColor: "#ffffff", zoom: zoom / 100, transformOrigin: "top left" }}>
