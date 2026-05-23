@@ -34,6 +34,16 @@ const TABLE_ROWS = 12;
 const TABLE_COL_WIDTH = 160;
 const TABLE_ROW_HEIGHT = 48;
 
+type PageTheme = "day" | "night" | "blue" | "green" | "purple" | "rose";
+const PAGE_THEMES: Record<PageTheme, { label: string; swatch: string; outer: string; card: string; inner: string; soft: string; dark?: boolean }> = {
+  day:    { label: "Day",    swatch: "#e8e4dd", outer: "#ece9e3", card: "#f5f2ee", inner: "#f0ede8", soft: "#fafaf8" },
+  night:  { label: "Night",  swatch: "#252838", outer: "#1e2028", card: "#252838", inner: "#222534", soft: "#1a1c26", dark: true },
+  blue:   { label: "Blue",   swatch: "#b8d4f0", outer: "#dce8f5", card: "#e8f2fb", inner: "#e0ecf7", soft: "#f0f6fd" },
+  green:  { label: "Green",  swatch: "#a8d5b5", outer: "#dce9e2", card: "#e6f2eb", inner: "#deeae5", soft: "#f0f7f3" },
+  purple: { label: "Purple", swatch: "#c4b5e8", outer: "#e3ddf0", card: "#ece7f7", inner: "#e5dff2", soft: "#f4f0fb" },
+  rose:   { label: "Rose",   swatch: "#f0b8c8", outer: "#f0dde5", card: "#f8e7ed", inner: "#f3dfe8", soft: "#fdf0f5" },
+};
+
 interface MergeRegion { r1: number; c1: number; r2: number; c2: number; }
 type BorderStyle = "dotted" | "single" | "double" | "bold";
 type CellFormat = { bold?: boolean; italic?: boolean; underline?: boolean; strikeThrough?: boolean; overline?: boolean; fontColor?: string; highlightColor?: string; fontSize?: number; fontFamily?: string; borderStyle?: BorderStyle; };
@@ -805,6 +815,10 @@ export default function PageEditor() {
   const [showAlignPopup, setShowAlignPopup] = useState(false);
   const alignPopupRef = useRef<HTMLDivElement>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [pageTheme, setPageTheme] = useState<PageTheme>("day");
+  const [showThemePopup, setShowThemePopup] = useState(false);
+  const themePopupRef = useRef<HTMLDivElement>(null);
+  const tc = PAGE_THEMES[pageTheme];
 
   const lineHeightPx = lineSpacing === "compact" ? 28 : lineSpacing === "relaxed" ? 44 : 36;
 
@@ -1479,22 +1493,35 @@ export default function PageEditor() {
 
       {pageType === "spreadsheet" ? (
         /* ── SPREADSHEET TOOLBAR — new flat single-row design ── */
-        <div className="bg-[#ece9e3] px-3 pt-2 pb-1.5 shrink-0">
+        <div className="px-3 pt-2 pb-1.5 shrink-0" style={{ backgroundColor: tc.outer }}>
 
           {/* SINGLE CARD — top row (inactive) + bottom row (toolbar) */}
-          <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl shadow-sm">
+          <div className="border border-zinc-300 rounded-xl shadow-sm" style={{ backgroundColor: tc.card }}>
 
             {/* ROW 1 — inactive placeholder boxes */}
             <div className="flex items-center gap-2 px-3 pt-2 pb-1.5">
               <button onClick={() => setLocation("/")} className="w-28 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center gap-1.5 text-[11px] font-semibold text-zinc-600 shrink-0">🏠 My Notebooks</button>
               <div className="flex-1" />
 
+              <div className="relative shrink-0" ref={themePopupRef}>
+                <button onClick={() => setShowThemePopup(v => !v)} title="Page theme" className="w-8 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-base">🎨</button>
+                <PortalPopup anchorRef={themePopupRef} open={showThemePopup} align="right">
+                  <div className="bg-white border border-zinc-200 rounded-xl shadow-xl p-2 flex flex-col gap-1 min-w-[150px]">
+                    {(Object.keys(PAGE_THEMES) as PageTheme[]).map(t => (
+                      <button key={t} onClick={() => { setPageTheme(t); setShowThemePopup(false); }} className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors text-zinc-700 ${pageTheme === t ? "bg-zinc-100 font-semibold" : "hover:bg-zinc-50"}`}>
+                        <span className="w-4 h-4 rounded-full border border-zinc-300 shrink-0" style={{ backgroundColor: PAGE_THEMES[t].swatch }} />
+                        {PAGE_THEMES[t].label}
+                      </button>
+                    ))}
+                  </div>
+                </PortalPopup>
+              </div>
               <div className="w-64 h-8 rounded border border-zinc-300 bg-white flex items-center px-2 gap-1 shrink-0"><span className="text-zinc-400 text-xs">🔍</span><input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search in page..." className="flex-1 bg-transparent text-[11px] text-zinc-700 outline-none placeholder:text-zinc-400" />{searchTerm && <button onClick={() => setSearchTerm("")} className="text-zinc-400 hover:text-zinc-600 text-xs leading-none">✕</button>}</div>
               <button onClick={handleCreatePage} className="w-28 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-[11px] font-semibold text-zinc-600 shrink-0">+ New Page</button>
             </div>
 
             {/* ROW 2 — single flat horizontal toolbar */}
-          <div className="mx-3 mb-2 bg-[#f0ede8] border border-zinc-200/80 rounded-xl shadow-[inset_0_2px_3px_rgba(0,0,0,0.05)] px-3 py-1.5 flex items-center gap-1 overflow-x-auto">
+          <div className="mx-3 mb-2 border border-zinc-200/80 rounded-xl shadow-[inset_0_2px_3px_rgba(0,0,0,0.05)] px-3 py-1.5 flex items-center gap-1 overflow-x-auto" style={{ backgroundColor: tc.inner }}>
 
             {/* copy | paste | cut — joined */}
             <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
@@ -1744,15 +1771,28 @@ export default function PageEditor() {
 
       ) : pageType === "table" ? (
         /* ── TABLE TOOLBAR — 100% identical to Sheet toolbar ── */
-        <div className="bg-[#ece9e3] px-3 pt-2 pb-1.5 shrink-0">
-          <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl shadow-sm">
+        <div className="px-3 pt-2 pb-1.5 shrink-0" style={{ backgroundColor: tc.outer }}>
+          <div className="border border-zinc-300 rounded-xl shadow-sm" style={{ backgroundColor: tc.card }}>
             <div className="flex items-center gap-2 px-3 pt-2 pb-1.5">
               <div className="flex-1" />
 
+              <div className="relative shrink-0" ref={themePopupRef}>
+                <button onClick={() => setShowThemePopup(v => !v)} title="Page theme" className="w-8 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-base">🎨</button>
+                <PortalPopup anchorRef={themePopupRef} open={showThemePopup} align="right">
+                  <div className="bg-white border border-zinc-200 rounded-xl shadow-xl p-2 flex flex-col gap-1 min-w-[150px]">
+                    {(Object.keys(PAGE_THEMES) as PageTheme[]).map(t => (
+                      <button key={t} onClick={() => { setPageTheme(t); setShowThemePopup(false); }} className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors text-zinc-700 ${pageTheme === t ? "bg-zinc-100 font-semibold" : "hover:bg-zinc-50"}`}>
+                        <span className="w-4 h-4 rounded-full border border-zinc-300 shrink-0" style={{ backgroundColor: PAGE_THEMES[t].swatch }} />
+                        {PAGE_THEMES[t].label}
+                      </button>
+                    ))}
+                  </div>
+                </PortalPopup>
+              </div>
               <div className="w-64 h-8 rounded border border-zinc-300 bg-white flex items-center px-2 gap-1 shrink-0"><span className="text-zinc-400 text-xs">🔍</span><input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search in page..." className="flex-1 bg-transparent text-[11px] text-zinc-700 outline-none placeholder:text-zinc-400" />{searchTerm && <button onClick={() => setSearchTerm("")} className="text-zinc-400 hover:text-zinc-600 text-xs leading-none">✕</button>}</div>
               <button onClick={handleCreatePage} className="w-28 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-[11px] font-semibold text-zinc-600 shrink-0">+ New Page</button>
             </div>
-          <div className="mx-3 mb-2 bg-[#f0ede8] border border-zinc-200/80 rounded-xl shadow-[inset_0_2px_3px_rgba(0,0,0,0.05)] px-3 py-1.5 flex items-center gap-1 overflow-x-auto">
+          <div className="mx-3 mb-2 border border-zinc-200/80 rounded-xl shadow-[inset_0_2px_3px_rgba(0,0,0,0.05)] px-3 py-1.5 flex items-center gap-1 overflow-x-auto" style={{ backgroundColor: tc.inner }}>
             {/* copy | paste | cut — joined */}
             <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
               <button onClick={handleCopy} title="Copy" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center">🗐</button>
@@ -1967,18 +2007,31 @@ export default function PageEditor() {
 
       ) : pageType === "lined" ? (
         /* ── LINED TOOLBAR ── flat single-row card (same design as spreadsheet) ── */
-        <div className="bg-[#ece9e3] px-3 pt-2 pb-1.5 shrink-0">
-          <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl shadow-sm">
+        <div className="px-3 pt-2 pb-1.5 shrink-0" style={{ backgroundColor: tc.outer }}>
+          <div className="border border-zinc-300 rounded-xl shadow-sm" style={{ backgroundColor: tc.card }}>
             {/* ROW 1 — inactive placeholder boxes */}
             <div className="flex items-center gap-2 px-3 pt-2 pb-1.5">
               <button onClick={() => setLocation("/")} className="w-28 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center gap-1.5 text-[11px] font-semibold text-zinc-600 shrink-0">🏠 My Notebooks</button>
               <div className="flex-1" />
 
+              <div className="relative shrink-0" ref={themePopupRef}>
+                <button onClick={() => setShowThemePopup(v => !v)} title="Page theme" className="w-8 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-base">🎨</button>
+                <PortalPopup anchorRef={themePopupRef} open={showThemePopup} align="right">
+                  <div className="bg-white border border-zinc-200 rounded-xl shadow-xl p-2 flex flex-col gap-1 min-w-[150px]">
+                    {(Object.keys(PAGE_THEMES) as PageTheme[]).map(t => (
+                      <button key={t} onClick={() => { setPageTheme(t); setShowThemePopup(false); }} className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors text-zinc-700 ${pageTheme === t ? "bg-zinc-100 font-semibold" : "hover:bg-zinc-50"}`}>
+                        <span className="w-4 h-4 rounded-full border border-zinc-300 shrink-0" style={{ backgroundColor: PAGE_THEMES[t].swatch }} />
+                        {PAGE_THEMES[t].label}
+                      </button>
+                    ))}
+                  </div>
+                </PortalPopup>
+              </div>
               <div className="w-64 h-8 rounded border border-zinc-300 bg-white flex items-center px-2 gap-1 shrink-0"><span className="text-zinc-400 text-xs">🔍</span><input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search in page..." className="flex-1 bg-transparent text-[11px] text-zinc-700 outline-none placeholder:text-zinc-400" />{searchTerm && <button onClick={() => setSearchTerm("")} className="text-zinc-400 hover:text-zinc-600 text-xs leading-none">✕</button>}</div>
               <button onClick={handleCreatePage} className="w-28 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-[11px] font-semibold text-zinc-600 shrink-0">+ New Page</button>
             </div>
             {/* ROW 2 — flat toolbar */}
-            <div className="mx-3 mb-2 bg-[#f0ede8] border border-zinc-200/80 rounded-xl shadow-[inset_0_2px_3px_rgba(0,0,0,0.05)] px-3 py-1.5 flex items-center gap-1 overflow-x-auto">
+            <div className="mx-3 mb-2 border border-zinc-200/80 rounded-xl shadow-[inset_0_2px_3px_rgba(0,0,0,0.05)] px-3 py-1.5 flex items-center gap-1 overflow-x-auto" style={{ backgroundColor: tc.inner }}>
               {/* copy | paste | cut — joined */}
               <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
                 <button onClick={handleCopy} title="Copy" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center">🗐</button>
@@ -2110,18 +2163,31 @@ export default function PageEditor() {
 
       ) : (
         /* ── BLANK TOOLBAR ── flat single-row card (same design as spreadsheet) ── */
-        <div className="bg-[#ece9e3] px-3 pt-2 pb-1.5 shrink-0">
-          <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl shadow-sm">
+        <div className="px-3 pt-2 pb-1.5 shrink-0" style={{ backgroundColor: tc.outer }}>
+          <div className="border border-zinc-300 rounded-xl shadow-sm" style={{ backgroundColor: tc.card }}>
             {/* ROW 1 — inactive placeholder boxes */}
             <div className="flex items-center gap-2 px-3 pt-2 pb-1.5">
               <button onClick={() => setLocation("/")} className="w-28 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center gap-1.5 text-[11px] font-semibold text-zinc-600 shrink-0">🏠 My Notebooks</button>
               <div className="flex-1" />
 
+              <div className="relative shrink-0" ref={themePopupRef}>
+                <button onClick={() => setShowThemePopup(v => !v)} title="Page theme" className="w-8 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-base">🎨</button>
+                <PortalPopup anchorRef={themePopupRef} open={showThemePopup} align="right">
+                  <div className="bg-white border border-zinc-200 rounded-xl shadow-xl p-2 flex flex-col gap-1 min-w-[150px]">
+                    {(Object.keys(PAGE_THEMES) as PageTheme[]).map(t => (
+                      <button key={t} onClick={() => { setPageTheme(t); setShowThemePopup(false); }} className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors text-zinc-700 ${pageTheme === t ? "bg-zinc-100 font-semibold" : "hover:bg-zinc-50"}`}>
+                        <span className="w-4 h-4 rounded-full border border-zinc-300 shrink-0" style={{ backgroundColor: PAGE_THEMES[t].swatch }} />
+                        {PAGE_THEMES[t].label}
+                      </button>
+                    ))}
+                  </div>
+                </PortalPopup>
+              </div>
               <div className="w-64 h-8 rounded border border-zinc-300 bg-white flex items-center px-2 gap-1 shrink-0"><span className="text-zinc-400 text-xs">🔍</span><input value={searchTerm} onChange={e => setSearchTerm(e.target.value)} placeholder="Search in page..." className="flex-1 bg-transparent text-[11px] text-zinc-700 outline-none placeholder:text-zinc-400" />{searchTerm && <button onClick={() => setSearchTerm("")} className="text-zinc-400 hover:text-zinc-600 text-xs leading-none">✕</button>}</div>
               <button onClick={handleCreatePage} className="w-28 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-[11px] font-semibold text-zinc-600 shrink-0">+ New Page</button>
             </div>
             {/* ROW 2 — flat toolbar */}
-            <div className="mx-3 mb-2 bg-[#f0ede8] border border-zinc-200/80 rounded-xl shadow-[inset_0_2px_3px_rgba(0,0,0,0.05)] px-3 py-1.5 flex items-center gap-1 overflow-x-auto">
+            <div className="mx-3 mb-2 border border-zinc-200/80 rounded-xl shadow-[inset_0_2px_3px_rgba(0,0,0,0.05)] px-3 py-1.5 flex items-center gap-1 overflow-x-auto" style={{ backgroundColor: tc.inner }}>
               {/* copy | paste | cut — joined */}
               <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
                 <button onClick={handleCopy} title="Copy" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center">🗐</button>
@@ -2279,21 +2345,21 @@ export default function PageEditor() {
       )}
 
       {/* Tab bar */}
-      <div className="bg-[#ece9e3] px-4 pt-0 pb-1 shrink-0 relative flex items-center gap-1.5" ref={pageTypePickerRef}>
+      <div className="px-4 pt-0 pb-1 shrink-0 relative flex items-center gap-1.5" ref={pageTypePickerRef} style={{ backgroundColor: tc.outer }}>
         {/* Card 2: Page tabs */}
         <div className="overflow-hidden rounded-lg border border-zinc-200 shadow-sm flex-1 min-w-0">
-          <div className="bg-[#fafaf8] text-zinc-800 flex items-stretch border-b border-zinc-200" style={{ minHeight: 15 }}>
-            <button onClick={() => scrollTabs("left")} className="px-1.5 flex items-center text-zinc-400 hover:text-zinc-800 transition-colors border-r border-zinc-200 shrink-0">
+          <div className={`flex items-stretch border-b ${tc.dark ? "border-zinc-700" : "border-zinc-200"}`} style={{ minHeight: 15, backgroundColor: tc.soft }}>
+            <button onClick={() => scrollTabs("left")} className={`px-1.5 flex items-center text-zinc-400 transition-colors shrink-0 border-r ${tc.dark ? "hover:text-zinc-100 border-zinc-700" : "hover:text-zinc-800 border-zinc-200"}`}>
               <ChevronLeft className="w-3 h-3" />
             </button>
             <div ref={tabsRef} className="flex items-stretch overflow-x-auto flex-1 min-w-0" style={{ scrollbarWidth: "none" }}>
               {pages.map((p, index) => (
                 <div
                   key={p.id}
-                  className={`flex items-center border-r border-zinc-200 ${
+                  className={`flex items-center ${tc.dark ? "border-r border-zinc-700" : "border-r border-zinc-200"} ${
                     p.id === pId
-                      ? "bg-white border-b-2 border-b-zinc-900"
-                      : "hover:bg-zinc-100"
+                      ? `bg-white ${tc.dark ? "border-b-2 border-b-zinc-100" : "border-b-2 border-b-zinc-900"}`
+                      : tc.dark ? "hover:bg-zinc-700" : "hover:bg-zinc-100"
                   }`}
                 >
                   {editingTabId === p.id ? (
@@ -2317,7 +2383,7 @@ export default function PageEditor() {
                           setEditingTabId(null);
                         }
                       }}
-                      className="px-2 py-0 text-[10px] font-semibold uppercase tracking-widest bg-transparent text-zinc-900 outline-none border-b border-zinc-800 w-24"
+                      className={`px-2 py-0 text-[10px] font-semibold uppercase tracking-widest bg-transparent outline-none w-24 ${tc.dark ? "text-zinc-100 border-b border-zinc-400" : "text-zinc-900 border-b border-zinc-800"}`}
                       style={{ minWidth: 60 }}
                     />
                   ) : (
@@ -2329,7 +2395,9 @@ export default function PageEditor() {
                         setEditingTabValue(p.title || `Page ${index + 1}`);
                       }}
                       className={`px-3 py-0 text-[10px] font-semibold uppercase tracking-widest whitespace-nowrap transition-colors h-full ${
-                        p.id === pId ? "text-zinc-900" : "text-zinc-500 hover:text-zinc-800"
+                        p.id === pId
+                          ? tc.dark ? "text-zinc-100" : "text-zinc-900"
+                          : tc.dark ? "text-zinc-400 hover:text-zinc-100" : "text-zinc-500 hover:text-zinc-800"
                       }`}
                     >
                       {p.title || `PAGE ${index + 1}`}
@@ -2338,7 +2406,7 @@ export default function PageEditor() {
                 </div>
               ))}
             </div>
-            <button onClick={() => scrollTabs("right")} className="px-1.5 flex items-center text-zinc-400 hover:text-zinc-800 transition-colors border-l border-zinc-200 shrink-0">
+            <button onClick={() => scrollTabs("right")} className={`px-1.5 flex items-center text-zinc-400 transition-colors shrink-0 border-l ${tc.dark ? "hover:text-zinc-100 border-zinc-700" : "hover:text-zinc-800 border-zinc-200"}`}>
               <ChevronRight className="w-3 h-3" />
             </button>
           </div>
@@ -2392,12 +2460,12 @@ export default function PageEditor() {
       </div>
 
       {/* Paper card */}
-      <div className="flex-1 flex flex-col min-h-0 bg-[#ece9e3] px-4 pb-4">
+      <div className="flex-1 flex flex-col min-h-0 px-4 pb-4" style={{ backgroundColor: tc.outer }}>
         <div className="flex-1 flex flex-col min-h-0 overflow-hidden rounded-xl border border-zinc-300 shadow-sm bg-white">
-          <div className="bg-[#fafaf8] border-b border-zinc-200 px-4 py-1 flex items-center justify-between shrink-0">
+          <div className="border-b border-zinc-200 px-4 py-1 flex items-center justify-between shrink-0" style={{ backgroundColor: tc.soft }}>
             <div className="flex items-center gap-2">
-              <span className="text-xs font-bold uppercase tracking-widest text-zinc-500">
-                Page: <span className="text-zinc-700">PAGE {page.pageNumber}</span>
+              <span className={`text-xs font-bold uppercase tracking-widest ${tc.dark ? "text-zinc-400" : "text-zinc-500"}`}>
+                Page: <span className={tc.dark ? "text-zinc-200" : "text-zinc-700"}>PAGE {page.pageNumber}</span>
               </span>
               <div className="flex items-center gap-1 ml-2">
                 {pageType !== "spreadsheet" && pageType !== "table" && (
@@ -2595,7 +2663,7 @@ export default function PageEditor() {
             )}
           </div>
 
-          <div className="bg-[#f5f2ee] border-t border-zinc-200 px-4 py-1 flex items-center justify-between text-xs text-zinc-500 shrink-0">
+          <div className="border-t border-zinc-200 px-4 py-1 flex items-center justify-between text-xs text-zinc-500 shrink-0" style={{ backgroundColor: tc.card }}>
             <button onClick={() => prevPage && setLocation(`/books/${bId}/pages/${prevPage.id}`)} disabled={!prevPage} className="disabled:opacity-30 hover:text-zinc-700 transition-colors flex items-center gap-1">
               <ChevronLeft className="w-3 h-3" /> Prev
             </button>
