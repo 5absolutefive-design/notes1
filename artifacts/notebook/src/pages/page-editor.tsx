@@ -1564,8 +1564,7 @@ export default function PageEditor() {
             <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
               <button onClick={() => execInlineFormat("bold")} title="Bold" className={`w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center ${activeFormats.bold ? "bg-zinc-200" : ""}`}><span className="font-black text-sm">B</span></button>
               <button onClick={() => execInlineFormat("italic")} title="Italic" className={`w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center ${activeFormats.italic ? "bg-zinc-200" : ""}`}><span className="italic font-bold text-sm">I</span></button>
-            </div>
-            <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
+              <div className="w-[2px] h-5 bg-zinc-400 shrink-0" />
               <button onClick={() => execInlineFormat("underline")} title="Underline" className={`w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center ${activeFormats.underline ? "bg-zinc-200" : ""}`}><span className="text-sm underline decoration-red-500 decoration-[3px]">U</span></button>
               <button onClick={() => execInlineFormat("strikeThrough")} title="Strikethrough" className={`w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center ${activeFormats.strikeThrough ? "bg-zinc-200" : ""}`}><span className="text-sm line-through decoration-red-500 decoration-[3px]">U</span></button>
             </div>
@@ -1787,8 +1786,7 @@ export default function PageEditor() {
             <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
               <button onClick={() => execInlineFormat("bold")} title="Bold" className={`w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center ${activeFormats.bold ? "bg-zinc-200" : ""}`}><span className="font-black text-sm">B</span></button>
               <button onClick={() => execInlineFormat("italic")} title="Italic" className={`w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center ${activeFormats.italic ? "bg-zinc-200" : ""}`}><span className="italic font-bold text-sm">I</span></button>
-            </div>
-            <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
+              <div className="w-[2px] h-5 bg-zinc-400 shrink-0" />
               <button onClick={() => execInlineFormat("underline")} title="Underline" className={`w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center ${activeFormats.underline ? "bg-zinc-200" : ""}`}><span className="text-sm underline decoration-red-500 decoration-[3px]">U</span></button>
               <button onClick={() => execInlineFormat("strikeThrough")} title="Strikethrough" className={`w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center ${activeFormats.strikeThrough ? "bg-zinc-200" : ""}`}><span className="text-sm line-through decoration-red-500 decoration-[3px]">U</span></button>
             </div>
