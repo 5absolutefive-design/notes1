@@ -2427,41 +2427,6 @@ export default function PageEditor() {
                   />
                 )}
                 </div>
-                {/* Manual row/col resize widget */}
-                <div className="flex items-center gap-2 mt-3 px-2 py-1.5 bg-zinc-50 border border-zinc-200 rounded-lg select-none" style={{ transform: `scale(${zoom / 100})`, transformOrigin: "top center" }}>
-                  <span className="text-[11px] text-zinc-400 font-medium">Rows</span>
-                  <input
-                    type="number"
-                    min={1}
-                    max={50}
-                    value={nrcCustomRows}
-                    placeholder="—"
-                    onChange={e => setNrcCustomRows(e.target.value)}
-                    className="w-12 h-6 text-center text-[12px] border border-zinc-300 rounded bg-white focus:outline-none focus:border-orange-400"
-                  />
-                  <span className="text-[11px] text-zinc-400 font-medium">Cols</span>
-                  <input
-                    type="number"
-                    min={1}
-                    max={26}
-                    value={nrcCustomCols}
-                    placeholder="—"
-                    onChange={e => setNrcCustomCols(e.target.value)}
-                    className="w-12 h-6 text-center text-[12px] border border-zinc-300 rounded bg-white focus:outline-none focus:border-orange-400"
-                  />
-                  <button
-                    onClick={() => {
-                      const r = parseInt(nrcCustomRows);
-                      const c = parseInt(nrcCustomCols);
-                      if (!isNaN(r) && !isNaN(c) && r >= 1 && c >= 1) {
-                        tableResizeRef.current?.(Math.min(r, 50), Math.min(c, 26));
-                        setNrcCustomRows("");
-                        setNrcCustomCols("");
-                      }
-                    }}
-                    className="h-6 px-2.5 text-[11px] font-semibold rounded bg-orange-400 text-white hover:bg-orange-500 transition-colors"
-                  >Apply</button>
-                </div>
               </div>
             ) : pageType === "lined" ? (
               <div className="flex w-full" style={{ minHeight: 500 * lineHeightPx, backgroundColor: "#ffffff", zoom: zoom / 100, transformOrigin: "top left" }}>
