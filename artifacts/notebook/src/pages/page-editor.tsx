@@ -1549,8 +1549,10 @@ export default function PageEditor() {
                   ))}
                 </div>
               </PortalPopup>
-              <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className={btnSq}><span className="font-bold text-base leading-none">A</span></button>
-              <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className={btnSq}><span className="font-bold text-xs leading-none">A</span></button>
+              <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
+                <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className="h-8 px-2 text-zinc-600 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><span className="font-bold text-base leading-none">A</span></button>
+                <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className="h-8 px-2 text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center"><span className="font-bold text-xs leading-none">A</span></button>
+              </div>
             </div>
 
             {/* AB — All Caps toggle */}
@@ -1559,10 +1561,14 @@ export default function PageEditor() {
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
 
             {/* B I U Ŭ + font color + highlight */}
-            <button onClick={() => execInlineFormat("bold")} title="Bold" className={`${btnSq} ${activeFormats.bold ? btnActive : ""}`}><span className="font-black text-sm">B</span></button>
-            <button onClick={() => execInlineFormat("italic")} title="Italic" className={`${btnSq} ${activeFormats.italic ? btnActive : ""}`}><span className="italic font-bold text-sm">I</span></button>
-            <button onClick={() => execInlineFormat("underline")} title="Underline" className={`${btnSq} ${activeFormats.underline ? btnActive : ""}`}><span className="text-sm underline decoration-red-500 decoration-[3px]">U</span></button>
-            <button onClick={() => execInlineFormat("strikeThrough")} title="Strikethrough" className={`${btnSq} ${activeFormats.strikeThrough ? btnActive : ""}`}><span className="text-sm line-through decoration-red-500 decoration-[3px]">U</span></button>
+            <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
+              <button onClick={() => execInlineFormat("bold")} title="Bold" className={`h-8 px-2.5 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center ${activeFormats.bold ? "bg-zinc-200" : ""}`}><span className="font-black text-sm">B</span></button>
+              <button onClick={() => execInlineFormat("italic")} title="Italic" className={`h-8 px-2.5 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center ${activeFormats.italic ? "bg-zinc-200" : ""}`}><span className="italic font-bold text-sm">I</span></button>
+            </div>
+            <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
+              <button onClick={() => execInlineFormat("underline")} title="Underline" className={`h-8 px-2.5 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center ${activeFormats.underline ? "bg-zinc-200" : ""}`}><span className="text-sm underline decoration-red-500 decoration-[3px]">U</span></button>
+              <button onClick={() => execInlineFormat("strikeThrough")} title="Strikethrough" className={`h-8 px-2.5 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center ${activeFormats.strikeThrough ? "bg-zinc-200" : ""}`}><span className="text-sm line-through decoration-red-500 decoration-[3px]">U</span></button>
+            </div>
 
             {/* Font color */}
             <div className="relative" ref={colorPickerRef as React.RefObject<HTMLDivElement>}>
@@ -1707,10 +1713,14 @@ export default function PageEditor() {
               const cwBig = cw > 80; const cwSmall = cw < 80;
               const rhBig = rh > 24; const rhSmall = rh < 24;
               return (<>
-                <button onClick={() => spreadsheetCWIncRef.current?.()} title="Widen column" className={`${btnSq} text-[10px] font-bold ${cwBig ? "border-green-400 bg-green-100 text-green-700" : "border-zinc-300 bg-white text-zinc-600"}`}>CW+</button>
-                <button onClick={() => spreadsheetCWDecRef.current?.()} title="Narrow column" className={`${btnSq} text-[10px] font-bold ${cwSmall ? "border-red-400 bg-red-100 text-red-700" : "border-zinc-300 bg-white text-zinc-600"}`}>CW-</button>
-                <button onClick={() => spreadsheetCTIncRef.current?.()} title="Increase row height" className={`${btnSq} text-[10px] font-bold ${rhBig ? "border-green-400 bg-green-100 text-green-700" : "border-zinc-300 bg-white text-zinc-600"}`}>CT+</button>
-                <button onClick={() => spreadsheetCTDecRef.current?.()} title="Decrease row height" className={`${btnSq} text-[10px] font-bold ${rhSmall ? "border-red-400 bg-red-100 text-red-700" : "border-zinc-300 bg-white text-zinc-600"}`}>CT-</button>
+                <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
+                  <button onClick={() => spreadsheetCWIncRef.current?.()} title="Widen column" className={`h-8 px-2 text-[10px] font-bold flex items-center justify-center border-r border-zinc-300 transition-colors ${cwBig ? "bg-green-100 text-green-700" : "bg-white text-zinc-600 hover:bg-zinc-100"}`}>CW+</button>
+                  <button onClick={() => spreadsheetCWDecRef.current?.()} title="Narrow column" className={`h-8 px-2 text-[10px] font-bold flex items-center justify-center transition-colors ${cwSmall ? "bg-red-100 text-red-700" : "bg-white text-zinc-600 hover:bg-zinc-100"}`}>CW-</button>
+                </div>
+                <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
+                  <button onClick={() => spreadsheetCTIncRef.current?.()} title="Increase row height" className={`h-8 px-2 text-[10px] font-bold flex items-center justify-center border-r border-zinc-300 transition-colors ${rhBig ? "bg-green-100 text-green-700" : "bg-white text-zinc-600 hover:bg-zinc-100"}`}>CT+</button>
+                  <button onClick={() => spreadsheetCTDecRef.current?.()} title="Decrease row height" className={`h-8 px-2 text-[10px] font-bold flex items-center justify-center transition-colors ${rhSmall ? "bg-red-100 text-red-700" : "bg-white text-zinc-600 hover:bg-zinc-100"}`}>CT-</button>
+                </div>
               </>);
             })()}
 
@@ -1767,15 +1777,21 @@ export default function PageEditor() {
                   {[8,9,10,11,12,14,16,18,20,22,24,28,32,36,48,72].map(s => (<button key={s} onClick={() => { handleFontSizeChange(s - fontSize); setShowFontSizePopup(false); }} className={`h-7 rounded text-xs font-medium transition-colors ${fontSize === s ? "bg-zinc-800 text-white" : "hover:bg-zinc-100 text-zinc-700"}`}>{s}</button>))}
                 </div>
               </PortalPopup>
-              <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className={btnSq}><span className="font-bold text-base leading-none">A</span></button>
-              <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className={btnSq}><span className="font-bold text-xs leading-none">A</span></button>
+              <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
+                <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className="h-8 px-2 text-zinc-600 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><span className="font-bold text-base leading-none">A</span></button>
+                <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className="h-8 px-2 text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center"><span className="font-bold text-xs leading-none">A</span></button>
+              </div>
             </div>
             <button onClick={handleAllCaps} title="All caps (toggle)" className={`${btnSq} ${isAllCaps ? btnActive : ""}`}><span className="font-black text-[11px] tracking-tight">AB</span></button>
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
-            <button onClick={() => execInlineFormat("bold")} title="Bold" className={`${btnSq} ${activeFormats.bold ? btnActive : ""}`}><span className="font-black text-sm">B</span></button>
-            <button onClick={() => execInlineFormat("italic")} title="Italic" className={`${btnSq} ${activeFormats.italic ? btnActive : ""}`}><span className="italic font-bold text-sm">I</span></button>
-            <button onClick={() => execInlineFormat("underline")} title="Underline" className={`${btnSq} ${activeFormats.underline ? btnActive : ""}`}><span className="text-sm underline decoration-red-500 decoration-[3px]">U</span></button>
-            <button onClick={() => execInlineFormat("strikeThrough")} title="Strikethrough" className={`${btnSq} ${activeFormats.strikeThrough ? btnActive : ""}`}><span className="text-sm line-through decoration-red-500 decoration-[3px]">U</span></button>
+            <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
+              <button onClick={() => execInlineFormat("bold")} title="Bold" className={`h-8 px-2.5 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center ${activeFormats.bold ? "bg-zinc-200" : ""}`}><span className="font-black text-sm">B</span></button>
+              <button onClick={() => execInlineFormat("italic")} title="Italic" className={`h-8 px-2.5 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center ${activeFormats.italic ? "bg-zinc-200" : ""}`}><span className="italic font-bold text-sm">I</span></button>
+            </div>
+            <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
+              <button onClick={() => execInlineFormat("underline")} title="Underline" className={`h-8 px-2.5 bg-white hover:bg-zinc-100 transition-colors border-r border-zinc-300 flex items-center justify-center ${activeFormats.underline ? "bg-zinc-200" : ""}`}><span className="text-sm underline decoration-red-500 decoration-[3px]">U</span></button>
+              <button onClick={() => execInlineFormat("strikeThrough")} title="Strikethrough" className={`h-8 px-2.5 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center ${activeFormats.strikeThrough ? "bg-zinc-200" : ""}`}><span className="text-sm line-through decoration-red-500 decoration-[3px]">U</span></button>
+            </div>
             <div className="relative" ref={colorPickerRef as React.RefObject<HTMLDivElement>}>
               <button onClick={handleFontColorButtonClick} onDoubleClick={handleFontColorButtonDblClick} title="Font color" className={btnSq}>
                 <div className="flex flex-col items-center justify-center gap-0.5"><span className="font-bold text-sm leading-none" style={{ color: fontColor }}>A</span><div className="w-5 h-1 rounded-sm" style={{ backgroundColor: fontColor }} /></div>
