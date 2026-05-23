@@ -642,6 +642,9 @@ export default function PageEditor() {
   const [isHighlighterMode, setIsHighlighterMode] = useState(false);
   const lastKeyRef = useRef<string>("");
 
+  const [isAllCaps, setIsAllCaps] = useState(false);
+  const allCapsSnapshotRef = useRef<string | null>(null);
+
   const [zoom, setZoom] = useState(100);
   const [autoWrap, setAutoWrap] = useState(true);
   const [lineSpacing, setLineSpacing] = useState<"compact" | "normal" | "relaxed">("normal");
@@ -996,6 +999,47 @@ export default function PageEditor() {
     document.execCommand("justifyLeft", false);
     setActiveFormats({ bold: false, italic: false, underline: false, strikeThrough: false, overline: false });
     setAlign("left");
+    handleEditorInput();
+  };
+
+  const handleAllCaps = () => {
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    if (isAllCaps) {
+      if (allCapsSnapshotRef.current !== null) {
+        editor.innerHTML = allCapsSnapshotRef.current;
+        allCapsSnapshotRef.current = null;
+        handleEditorInput();
+      }
+      setIsAllCaps(false);
+      return;
+    }
+
+    const sel = window.getSelection();
+    const hasTextSelected = sel && sel.rangeCount > 0 && !sel.isCollapsed && sel.toString().trim().length > 0;
+
+    allCapsSnapshotRef.current = editor.innerHTML;
+
+    if (hasTextSelected) {
+      const range = sel.getRangeAt(0);
+      const fragment = range.extractContents();
+      const walker = document.createTreeWalker(fragment, NodeFilter.SHOW_TEXT);
+      let node: Node | null;
+      while ((node = walker.nextNode())) {
+        if (node.textContent) node.textContent = node.textContent.toUpperCase();
+      }
+      range.insertNode(fragment);
+      sel.removeAllRanges();
+    } else {
+      const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT);
+      let node: Node | null;
+      while ((node = walker.nextNode())) {
+        if (node.textContent) node.textContent = node.textContent.toUpperCase();
+      }
+    }
+
+    setIsAllCaps(true);
     handleEditorInput();
   };
 
@@ -1377,9 +1421,8 @@ export default function PageEditor() {
               <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className={btnSq}><span className="font-bold text-xs leading-none">A</span></button>
             </div>
 
-            {/* 2 inactive placeholder buttons */}
-            <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none shrink-0">in</div>
-            <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none shrink-0">in</div>
+            {/* AB — All Caps toggle */}
+            <button onClick={handleAllCaps} title="All caps (toggle)" className={`${btnSq} ${isAllCaps ? btnActive : ""}`}><span className="font-black text-[11px] tracking-tight">AB</span></button>
 
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
 
@@ -1613,9 +1656,8 @@ export default function PageEditor() {
                 <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className={btnSq}><span className="font-bold text-base leading-none">A</span></button>
                 <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className={btnSq}><span className="font-bold text-xs leading-none">A</span></button>
               </div>
-              {/* 2 inactive placeholder buttons */}
-              <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none shrink-0">in</div>
-              <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none shrink-0">in</div>
+              {/* AB — All Caps toggle */}
+              <button onClick={handleAllCaps} title="All caps (toggle)" className={`${btnSq} ${isAllCaps ? btnActive : ""}`}><span className="font-black text-[11px] tracking-tight">AB</span></button>
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
               {/* B I U S + font color + highlight */}
               <button onClick={() => execInlineFormat("bold")} title="Bold" className={`${btnSq} ${activeFormats.bold ? btnActive : ""}`}><span className="font-black text-sm">B</span></button>
@@ -1747,9 +1789,8 @@ export default function PageEditor() {
                 <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className={btnSq}><span className="font-bold text-base leading-none">A</span></button>
                 <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className={btnSq}><span className="font-bold text-xs leading-none">A</span></button>
               </div>
-              {/* 2 inactive placeholder buttons */}
-              <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none shrink-0">in</div>
-              <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none shrink-0">in</div>
+              {/* AB — All Caps toggle */}
+              <button onClick={handleAllCaps} title="All caps (toggle)" className={`${btnSq} ${isAllCaps ? btnActive : ""}`}><span className="font-black text-[11px] tracking-tight">AB</span></button>
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
               {/* B I U S + font color + highlight */}
               <button onClick={() => execInlineFormat("bold")} title="Bold" className={`${btnSq} ${activeFormats.bold ? btnActive : ""}`}><span className="font-black text-sm">B</span></button>
