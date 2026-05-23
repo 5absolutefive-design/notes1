@@ -872,13 +872,16 @@ export default function PageEditor() {
       range.collapse(false);
       sel.removeAllRanges();
       sel.addRange(range);
-      // Reset the browser's internal "typing color" state to black so new
-      // text typed after the colored selection is not colored.
-      // execCommand with a collapsed cursor sets the next-char style only.
-      document.execCommand("foreColor", false, "#000000");
     }
     savedRangeRef.current = null;
     handleEditorInput();
+    // Defer the color reset to the next tick so the browser fully processes
+    // the selection change first — doing it synchronously locks the cursor.
+    setTimeout(() => {
+      if (!editorRef.current) return;
+      editorRef.current.focus();
+      document.execCommand("foreColor", false, "#000000");
+    }, 0);
   };
 
   // Single click → apply saved fontColor to selected text only (no selection = do nothing)
