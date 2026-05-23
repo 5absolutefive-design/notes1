@@ -1473,43 +1473,256 @@ export default function PageEditor() {
         </div>
 
       ) : pageType === "lined" ? (
-        /* ── LINED TOOLBAR ── Common + Line Spacing ── */
-        <div className="bg-[#ece9e3] px-4 pt-3 pb-2 shrink-0">
-          <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl px-3 py-3 shadow-sm flex items-start justify-between">
-            <div className="inline-flex items-start gap-2 flex-wrap">
-              <CommonGroups />
-
-              {/* Line Spacing — lined only */}
-              <div className="border border-zinc-400 rounded-lg p-1.5">
-                <div className="flex flex-col gap-1">
-                  <span className="text-[9px] font-bold uppercase tracking-widest text-zinc-400 text-center px-1">Line Spacing</span>
-                  <div className="flex items-center gap-1">
-                    {(["compact", "normal", "relaxed"] as const).map(s => (
-                      <button
-                        key={s}
-                        onClick={() => setLineSpacing(s)}
-                        title={`Line spacing: ${s}`}
-                        className={`h-8 px-2 rounded-md border transition-colors text-[10px] font-bold flex items-center justify-center ${lineSpacing === s ? "bg-zinc-200 border-zinc-500 text-zinc-800" : "border-zinc-300 bg-white hover:bg-zinc-100 text-zinc-600"}`}
-                      >
-                        {s === "compact" ? "C" : s === "normal" ? "N" : "R"}
-                      </button>
+        /* ── LINED TOOLBAR ── flat single-row card (same design as spreadsheet) ── */
+        <div className="bg-[#ece9e3] px-3 pt-2 pb-1.5 shrink-0">
+          <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl shadow-sm">
+            {/* ROW 1 — inactive placeholder boxes */}
+            <div className="flex items-center gap-2 px-3 pt-2 pb-1.5">
+              <div className="w-28 h-7 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none shrink-0">inactive</div>
+              <div className="flex-1" />
+              <div className="flex items-center gap-1.5">
+                <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none">in</div>
+                <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none">in</div>
+                <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none">in</div>
+              </div>
+              <div className="w-52 h-7 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none">inactive</div>
+              <div className="w-28 h-7 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none">inactive</div>
+            </div>
+            {/* ROW 2 — flat toolbar */}
+            <div className="px-3 py-1.5 flex items-center gap-1 overflow-x-auto">
+              {/* copy | paste | cut */}
+              <button onClick={handleCopy} title="Copy" className={`${btnSq} text-base`}>🗐</button>
+              <button onClick={handlePaste} title="Paste" className={`${btnSq} text-base`}>📝</button>
+              <button onClick={() => document.execCommand("cut")} title="Cut" className={`${btnSq} text-base`}>✂</button>
+              <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+              {/* undo | redo */}
+              <button onClick={handleUndo} title="Undo" className={`${btnSq} text-base`}>↻</button>
+              <button onClick={handleRedo} title="Redo" className={`${btnSq} text-base`}>↺</button>
+              <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+              {/* zoom in | zoom out */}
+              <button onClick={() => setZoom(z => Math.min(200, z + 10))} title="Zoom in" className={`${btnSq} text-base`}>⌞+</button>
+              <button onClick={() => setZoom(z => Math.max(50, z - 10))} title="Zoom out" className={`${btnSq} text-base`}>–⌝</button>
+              <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+              {/* Font family */}
+              <div className="relative shrink-0" ref={fontMenuRef as React.RefObject<HTMLDivElement>}>
+                <button onClick={() => setShowFontMenu(v => !v)} className="h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-left text-sm font-medium text-zinc-700 truncate w-[144px]" style={{ fontFamily: font }}>
+                  {font}
+                </button>
+                <PortalPopup anchorRef={fontMenuRef} open={showFontMenu}>
+                  <div className="bg-white border border-zinc-300 rounded-lg shadow-lg overflow-y-auto max-h-52 w-44">
+                    {FONTS.map(f => (
+                      <button key={f} onClick={() => handleFontChange(f)} className={`w-full text-left px-3 py-1.5 text-sm hover:bg-zinc-100 transition-colors ${font === f ? "bg-zinc-100 font-semibold" : ""}`} style={{ fontFamily: f }}>{f}</button>
                     ))}
                   </div>
-                </div>
+                </PortalPopup>
+              </div>
+              {/* Font size */}
+              <div className="relative flex items-center gap-0.5 shrink-0" ref={fontSizePopupRef as React.RefObject<HTMLDivElement>}>
+                <button onClick={() => setShowFontSizePopup(v => !v)} title="Font size" className="w-9 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-xs font-semibold text-zinc-700 flex items-center justify-center">{fontSize}</button>
+                <PortalPopup anchorRef={fontSizePopupRef} open={showFontSizePopup}>
+                  <div className="bg-white border border-zinc-300 rounded-lg shadow-xl p-1.5 w-24 grid grid-cols-2 gap-1">
+                    {[8,9,10,11,12,14,16,18,20,22,24,28,32,36,48,72].map(s => (
+                      <button key={s} onClick={() => { handleFontSizeChange(s - fontSize); setShowFontSizePopup(false); }} className={`h-7 rounded text-xs font-medium transition-colors ${fontSize === s ? "bg-zinc-800 text-white" : "hover:bg-zinc-100 text-zinc-700"}`}>{s}</button>
+                    ))}
+                  </div>
+                </PortalPopup>
+                <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className={btnSq}><span className="font-bold text-base leading-none">A</span></button>
+                <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className={btnSq}><span className="font-bold text-xs leading-none">A</span></button>
+              </div>
+              <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+              {/* B I U S + font color + highlight */}
+              <button onClick={() => execInlineFormat("bold")} title="Bold" className={`${btnSq} ${activeFormats.bold ? btnActive : ""}`}><span className="font-black text-sm">B</span></button>
+              <button onClick={() => execInlineFormat("italic")} title="Italic" className={`${btnSq} ${activeFormats.italic ? btnActive : ""}`}><span className="italic font-bold text-sm">I</span></button>
+              <button onClick={() => execInlineFormat("underline")} title="Underline" className={`${btnSq} ${activeFormats.underline ? btnActive : ""}`}><span className="text-sm underline decoration-red-500 decoration-[3px]">U</span></button>
+              <button onClick={() => execInlineFormat("strikeThrough")} title="Strikethrough" className={`${btnSq} ${activeFormats.strikeThrough ? btnActive : ""}`}><span className="text-sm line-through decoration-red-500 decoration-[3px]">U</span></button>
+              {/* Font color */}
+              <div className="relative shrink-0" ref={colorPickerRef as React.RefObject<HTMLDivElement>}>
+                <button onClick={() => setShowColorPicker(v => !v)} title="Font color" className={btnSq}>
+                  <div className="flex flex-col items-center justify-center gap-0.5">
+                    <span className="font-bold text-sm leading-none" style={{ color: fontColor }}>A</span>
+                    <div className="w-5 h-1 rounded-sm" style={{ backgroundColor: fontColor }} />
+                  </div>
+                </button>
+                <PortalPopup anchorRef={colorPickerRef} open={showColorPicker}><FontColorPanel noAbsolute /></PortalPopup>
+              </div>
+              {/* Highlight color */}
+              <div className="relative shrink-0" ref={highlightPickerRef as React.RefObject<HTMLDivElement>}>
+                <button onClick={() => setShowHighlightPicker(v => !v)} title="Highlight color" className={btnSq}>
+                  <div className="flex flex-col items-center justify-center gap-0.5">
+                    <span className="font-bold text-sm leading-none text-zinc-700">A</span>
+                    <div className="w-5 h-1.5 rounded-sm" style={{ backgroundColor: highlightColor }} />
+                  </div>
+                </button>
+                <PortalPopup anchorRef={highlightPickerRef} open={showHighlightPicker}><HighlightPanel noAbsolute /></PortalPopup>
+              </div>
+              {/* N — clear formatting */}
+              <button onClick={handleNeutral} title="Clear formatting" className={`${btnSq} text-[11px] font-bold text-zinc-600`}>N</button>
+              <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+              {/* Align */}
+              <div className="relative shrink-0" ref={alignPopupRef as React.RefObject<HTMLDivElement>}>
+                <button onClick={() => setShowAlignPopup(v => !v)} title="Text alignment" className={`${btnSq} ${align !== "left" ? btnActive : ""}`}>
+                  {align === "center" ? (
+                    <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="3.5" y="7" width="9" height="2" rx="1"/><rect x="2" y="12" width="12" height="2" rx="1"/></svg>
+                  ) : align === "right" ? (
+                    <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="6" y="7" width="9" height="2" rx="1"/><rect x="3" y="12" width="12" height="2" rx="1"/></svg>
+                  ) : (
+                    <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="1" y="7" width="9" height="2" rx="1"/><rect x="1" y="12" width="12" height="2" rx="1"/></svg>
+                  )}
+                </button>
+                <PortalPopup anchorRef={alignPopupRef} open={showAlignPopup}>
+                  <div className="flex items-center gap-1 p-1.5">
+                    <button onClick={() => { execFormat("justifyLeft"); setAlign("left"); setShowAlignPopup(false); }} title="Align left" className={`${btnSq} ${align === "left" ? btnActive : ""}`}>
+                      <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="1" y="7" width="9" height="2" rx="1"/><rect x="1" y="12" width="12" height="2" rx="1"/></svg>
+                    </button>
+                    <button onClick={() => { execFormat("justifyCenter"); setAlign("center"); setShowAlignPopup(false); }} title="Align center" className={`${btnSq} ${align === "center" ? btnActive : ""}`}>
+                      <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="3.5" y="7" width="9" height="2" rx="1"/><rect x="2" y="12" width="12" height="2" rx="1"/></svg>
+                    </button>
+                    <button onClick={() => { execFormat("justifyRight"); setAlign("right"); setShowAlignPopup(false); }} title="Align right" className={`${btnSq} ${align === "right" ? btnActive : ""}`}>
+                      <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="6" y="7" width="9" height="2" rx="1"/><rect x="3" y="12" width="12" height="2" rx="1"/></svg>
+                    </button>
+                    <button onClick={() => { execFormat("justifyLeft"); setAlign("left"); setShowAlignPopup(false); }} title="Neutral (reset alignment)" className={`${btnSq} text-[11px] font-bold text-zinc-600`}>N</button>
+                  </div>
+                </PortalPopup>
+              </div>
+              <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+              {/* Line Spacing — lined only */}
+              {(["compact", "normal", "relaxed"] as const).map(s => (
+                <button key={s} onClick={() => setLineSpacing(s)} title={`Line spacing: ${s}`}
+                  className={`h-8 px-2 rounded-md border transition-colors text-[10px] font-bold flex items-center justify-center shrink-0 ${lineSpacing === s ? "bg-zinc-200 border-zinc-500 text-zinc-800" : "border-zinc-300 bg-white hover:bg-zinc-100 text-zinc-600"}`}>
+                  {s === "compact" ? "C" : s === "normal" ? "N" : "R"}
+                </button>
+              ))}
+              {/* Spacer */}
+              <div className="flex-1" />
+              {/* DEL + TRASH */}
+              <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
+                <button onClick={handleDelete} title="Move page to trash" className="h-8 px-3 text-base text-zinc-600 bg-white hover:bg-red-50 hover:text-red-600 transition-colors border-r border-zinc-300 flex items-center justify-center">🗑️</button>
+                <button onClick={() => setShowTrash(true)} title="Open trash" className="h-8 px-3 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center">♻</button>
               </div>
             </div>
-            <DeleteGroup />
           </div>
         </div>
 
       ) : (
-        /* ── BLANK TOOLBAR ── Common buttons only ── */
-        <div className="bg-[#ece9e3] px-4 pt-3 pb-2 shrink-0">
-          <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl px-3 py-3 shadow-sm flex items-start justify-between">
-            <div className="inline-flex items-start gap-2 flex-wrap">
-              <CommonGroups />
+        /* ── BLANK TOOLBAR ── flat single-row card (same design as spreadsheet) ── */
+        <div className="bg-[#ece9e3] px-3 pt-2 pb-1.5 shrink-0">
+          <div className="bg-[#f5f2ee] border border-zinc-300 rounded-xl shadow-sm">
+            {/* ROW 1 — inactive placeholder boxes */}
+            <div className="flex items-center gap-2 px-3 pt-2 pb-1.5">
+              <div className="w-28 h-7 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none shrink-0">inactive</div>
+              <div className="flex-1" />
+              <div className="flex items-center gap-1.5">
+                <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none">in</div>
+                <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none">in</div>
+                <div className="w-8 h-8 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[9px] font-semibold text-red-400 select-none">in</div>
+              </div>
+              <div className="w-52 h-7 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none">inactive</div>
+              <div className="w-28 h-7 rounded border border-dashed border-red-300 bg-red-50 flex items-center justify-center text-[10px] font-semibold text-red-400 select-none">inactive</div>
             </div>
-            <DeleteGroup />
+            {/* ROW 2 — flat toolbar */}
+            <div className="px-3 py-1.5 flex items-center gap-1 overflow-x-auto">
+              {/* copy | paste | cut */}
+              <button onClick={handleCopy} title="Copy" className={`${btnSq} text-base`}>🗐</button>
+              <button onClick={handlePaste} title="Paste" className={`${btnSq} text-base`}>📝</button>
+              <button onClick={() => document.execCommand("cut")} title="Cut" className={`${btnSq} text-base`}>✂</button>
+              <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+              {/* undo | redo */}
+              <button onClick={handleUndo} title="Undo" className={`${btnSq} text-base`}>↻</button>
+              <button onClick={handleRedo} title="Redo" className={`${btnSq} text-base`}>↺</button>
+              <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+              {/* zoom in | zoom out */}
+              <button onClick={() => setZoom(z => Math.min(200, z + 10))} title="Zoom in" className={`${btnSq} text-base`}>⌞+</button>
+              <button onClick={() => setZoom(z => Math.max(50, z - 10))} title="Zoom out" className={`${btnSq} text-base`}>–⌝</button>
+              <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+              {/* Font family */}
+              <div className="relative shrink-0" ref={fontMenuRef as React.RefObject<HTMLDivElement>}>
+                <button onClick={() => setShowFontMenu(v => !v)} className="h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-left text-sm font-medium text-zinc-700 truncate w-[144px]" style={{ fontFamily: font }}>
+                  {font}
+                </button>
+                <PortalPopup anchorRef={fontMenuRef} open={showFontMenu}>
+                  <div className="bg-white border border-zinc-300 rounded-lg shadow-lg overflow-y-auto max-h-52 w-44">
+                    {FONTS.map(f => (
+                      <button key={f} onClick={() => handleFontChange(f)} className={`w-full text-left px-3 py-1.5 text-sm hover:bg-zinc-100 transition-colors ${font === f ? "bg-zinc-100 font-semibold" : ""}`} style={{ fontFamily: f }}>{f}</button>
+                    ))}
+                  </div>
+                </PortalPopup>
+              </div>
+              {/* Font size */}
+              <div className="relative flex items-center gap-0.5 shrink-0" ref={fontSizePopupRef as React.RefObject<HTMLDivElement>}>
+                <button onClick={() => setShowFontSizePopup(v => !v)} title="Font size" className="w-9 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-xs font-semibold text-zinc-700 flex items-center justify-center">{fontSize}</button>
+                <PortalPopup anchorRef={fontSizePopupRef} open={showFontSizePopup}>
+                  <div className="bg-white border border-zinc-300 rounded-lg shadow-xl p-1.5 w-24 grid grid-cols-2 gap-1">
+                    {[8,9,10,11,12,14,16,18,20,22,24,28,32,36,48,72].map(s => (
+                      <button key={s} onClick={() => { handleFontSizeChange(s - fontSize); setShowFontSizePopup(false); }} className={`h-7 rounded text-xs font-medium transition-colors ${fontSize === s ? "bg-zinc-800 text-white" : "hover:bg-zinc-100 text-zinc-700"}`}>{s}</button>
+                    ))}
+                  </div>
+                </PortalPopup>
+                <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className={btnSq}><span className="font-bold text-base leading-none">A</span></button>
+                <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className={btnSq}><span className="font-bold text-xs leading-none">A</span></button>
+              </div>
+              <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+              {/* B I U S + font color + highlight */}
+              <button onClick={() => execInlineFormat("bold")} title="Bold" className={`${btnSq} ${activeFormats.bold ? btnActive : ""}`}><span className="font-black text-sm">B</span></button>
+              <button onClick={() => execInlineFormat("italic")} title="Italic" className={`${btnSq} ${activeFormats.italic ? btnActive : ""}`}><span className="italic font-bold text-sm">I</span></button>
+              <button onClick={() => execInlineFormat("underline")} title="Underline" className={`${btnSq} ${activeFormats.underline ? btnActive : ""}`}><span className="text-sm underline decoration-red-500 decoration-[3px]">U</span></button>
+              <button onClick={() => execInlineFormat("strikeThrough")} title="Strikethrough" className={`${btnSq} ${activeFormats.strikeThrough ? btnActive : ""}`}><span className="text-sm line-through decoration-red-500 decoration-[3px]">U</span></button>
+              {/* Font color */}
+              <div className="relative shrink-0" ref={colorPickerRef as React.RefObject<HTMLDivElement>}>
+                <button onClick={() => setShowColorPicker(v => !v)} title="Font color" className={btnSq}>
+                  <div className="flex flex-col items-center justify-center gap-0.5">
+                    <span className="font-bold text-sm leading-none" style={{ color: fontColor }}>A</span>
+                    <div className="w-5 h-1 rounded-sm" style={{ backgroundColor: fontColor }} />
+                  </div>
+                </button>
+                <PortalPopup anchorRef={colorPickerRef} open={showColorPicker}><FontColorPanel noAbsolute /></PortalPopup>
+              </div>
+              {/* Highlight color */}
+              <div className="relative shrink-0" ref={highlightPickerRef as React.RefObject<HTMLDivElement>}>
+                <button onClick={() => setShowHighlightPicker(v => !v)} title="Highlight color" className={btnSq}>
+                  <div className="flex flex-col items-center justify-center gap-0.5">
+                    <span className="font-bold text-sm leading-none text-zinc-700">A</span>
+                    <div className="w-5 h-1.5 rounded-sm" style={{ backgroundColor: highlightColor }} />
+                  </div>
+                </button>
+                <PortalPopup anchorRef={highlightPickerRef} open={showHighlightPicker}><HighlightPanel noAbsolute /></PortalPopup>
+              </div>
+              {/* N — clear formatting */}
+              <button onClick={handleNeutral} title="Clear formatting" className={`${btnSq} text-[11px] font-bold text-zinc-600`}>N</button>
+              <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
+              {/* Align */}
+              <div className="relative shrink-0" ref={alignPopupRef as React.RefObject<HTMLDivElement>}>
+                <button onClick={() => setShowAlignPopup(v => !v)} title="Text alignment" className={`${btnSq} ${align !== "left" ? btnActive : ""}`}>
+                  {align === "center" ? (
+                    <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="3.5" y="7" width="9" height="2" rx="1"/><rect x="2" y="12" width="12" height="2" rx="1"/></svg>
+                  ) : align === "right" ? (
+                    <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="6" y="7" width="9" height="2" rx="1"/><rect x="3" y="12" width="12" height="2" rx="1"/></svg>
+                  ) : (
+                    <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="1" y="7" width="9" height="2" rx="1"/><rect x="1" y="12" width="12" height="2" rx="1"/></svg>
+                  )}
+                </button>
+                <PortalPopup anchorRef={alignPopupRef} open={showAlignPopup}>
+                  <div className="flex items-center gap-1 p-1.5">
+                    <button onClick={() => { execFormat("justifyLeft"); setAlign("left"); setShowAlignPopup(false); }} title="Align left" className={`${btnSq} ${align === "left" ? btnActive : ""}`}>
+                      <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="1" y="7" width="9" height="2" rx="1"/><rect x="1" y="12" width="12" height="2" rx="1"/></svg>
+                    </button>
+                    <button onClick={() => { execFormat("justifyCenter"); setAlign("center"); setShowAlignPopup(false); }} title="Align center" className={`${btnSq} ${align === "center" ? btnActive : ""}`}>
+                      <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="3.5" y="7" width="9" height="2" rx="1"/><rect x="2" y="12" width="12" height="2" rx="1"/></svg>
+                    </button>
+                    <button onClick={() => { execFormat("justifyRight"); setAlign("right"); setShowAlignPopup(false); }} title="Align right" className={`${btnSq} ${align === "right" ? btnActive : ""}`}>
+                      <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 fill-zinc-600"><rect x="1" y="2" width="14" height="2" rx="1"/><rect x="6" y="7" width="9" height="2" rx="1"/><rect x="3" y="12" width="12" height="2" rx="1"/></svg>
+                    </button>
+                    <button onClick={() => { execFormat("justifyLeft"); setAlign("left"); setShowAlignPopup(false); }} title="Neutral (reset alignment)" className={`${btnSq} text-[11px] font-bold text-zinc-600`}>N</button>
+                  </div>
+                </PortalPopup>
+              </div>
+              {/* Spacer */}
+              <div className="flex-1" />
+              {/* DEL + TRASH */}
+              <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
+                <button onClick={handleDelete} title="Move page to trash" className="h-8 px-3 text-base text-zinc-600 bg-white hover:bg-red-50 hover:text-red-600 transition-colors border-r border-zinc-300 flex items-center justify-center">🗑️</button>
+                <button onClick={() => setShowTrash(true)} title="Open trash" className="h-8 px-3 text-base text-zinc-600 bg-white hover:bg-zinc-100 transition-colors flex items-center justify-center">♻</button>
+              </div>
+            </div>
           </div>
         </div>
       )}
