@@ -1389,7 +1389,7 @@ export default function PageEditor() {
       <div className="border border-zinc-400 rounded-lg p-1.5">
         <div className="flex flex-col gap-1">
           <button onClick={handleCopy} title="Copy" className={btnSq}><img src="/copy-icon.png" alt="Copy" style={{ width: "100%", height: "100%", objectFit: "contain", padding: "3px" }} /></button>
-          <button onClick={handlePaste} title="Paste" className={`${btnSq} text-base`}>📑</button>
+          <button onClick={handlePaste} title="Paste" className={btnSq}><img src="/paste-icon.png" alt="Paste" style={{ width: "100%", height: "100%", objectFit: "contain", padding: "3px" }} /></button>
         </div>
       </div>
 
@@ -1529,7 +1529,7 @@ export default function PageEditor() {
             {/* copy | paste | cut — joined */}
             <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
               <button onClick={handleCopy} title="Copy" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/copy-icon.png" alt="Copy" style={{ width: "100%", height: "100%", objectFit: "contain", padding: "3px" }} /></button>
-              <button onClick={handlePaste} title="Paste" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center">📝</button>
+              <button onClick={handlePaste} title="Paste" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/paste-icon.png" alt="Paste" style={{ width: "100%", height: "100%", objectFit: "contain", padding: "3px" }} /></button>
               <button onClick={() => spreadsheetCutRef.current?.()} title="Cut" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center">✂</button>
             </div>
 
@@ -1800,7 +1800,7 @@ export default function PageEditor() {
             {/* copy | paste | cut — joined */}
             <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
               <button onClick={handleCopy} title="Copy" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/copy-icon.png" alt="Copy" style={{ width: "100%", height: "100%", objectFit: "contain", padding: "3px" }} /></button>
-              <button onClick={handlePaste} title="Paste" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center">📝</button>
+              <button onClick={handlePaste} title="Paste" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/paste-icon.png" alt="Paste" style={{ width: "100%", height: "100%", objectFit: "contain", padding: "3px" }} /></button>
               <button onClick={() => spreadsheetCutRef.current?.()} title="Cut (copy + clear)" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center">✂</button>
             </div>
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
@@ -2039,7 +2039,7 @@ export default function PageEditor() {
               {/* copy | paste | cut — joined */}
               <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
                 <button onClick={handleCopy} title="Copy" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/copy-icon.png" alt="Copy" style={{ width: "100%", height: "100%", objectFit: "contain", padding: "3px" }} /></button>
-                <button onClick={handlePaste} title="Paste" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center">📝</button>
+                <button onClick={handlePaste} title="Paste" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/paste-icon.png" alt="Paste" style={{ width: "100%", height: "100%", objectFit: "contain", padding: "3px" }} /></button>
                 <button onClick={() => document.execCommand("cut")} title="Cut" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center">✂</button>
               </div>
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
@@ -2195,7 +2195,7 @@ export default function PageEditor() {
               {/* copy | paste | cut — joined */}
               <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
                 <button onClick={handleCopy} title="Copy" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/copy-icon.png" alt="Copy" style={{ width: "100%", height: "100%", objectFit: "contain", padding: "3px" }} /></button>
-                <button onClick={handlePaste} title="Paste" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center">📝</button>
+                <button onClick={handlePaste} title="Paste" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/paste-icon.png" alt="Paste" style={{ width: "100%", height: "100%", objectFit: "contain", padding: "3px" }} /></button>
                 <button onClick={() => document.execCommand("cut")} title="Cut" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center">✂</button>
               </div>
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
