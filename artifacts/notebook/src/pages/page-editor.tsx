@@ -49,7 +49,7 @@ type BorderStyle = "dotted" | "single" | "double" | "bold";
 type CellFormat = { bold?: boolean; italic?: boolean; underline?: boolean; strikeThrough?: boolean; overline?: boolean; fontColor?: string; highlightColor?: string; fontSize?: number; fontFamily?: string; borderStyle?: BorderStyle; };
 interface SheetData { cells: Record<string, string>; merges: MergeRegion[]; colWidths?: Record<number, number>; rowHeights?: Record<number, number>; cellAligns?: Record<string, "left" | "center" | "right">; cellValigns?: Record<string, "top" | "middle" | "bottom">; cellFormats?: Record<string, CellFormat>; tableSize?: { rows: number; cols: number }; }
 
-function SpreadsheetEditor({ content, onChange, tableMode, mergeRef, clearRef, cutRef, cutAllRef, insertRowRef, insertColRef, colWidthIncRef, colWidthDecRef, rowHeightIncRef, rowHeightDecRef, onActiveSizeChange, cellAlignRef, onActiveCellAlignChange, cellValignRef, onActiveCellValignChange, cellFormatRef, onActiveCellFormatChange, onMergeStateChange, cellBorderRef, resizeTableRef }: {
+function SpreadsheetEditor({ content, onChange, tableMode, mergeRef, clearRef, cutRef, cutAllRef, insertRowRef, insertColRef, colWidthIncRef, colWidthDecRef, rowHeightIncRef, rowHeightDecRef, onActiveSizeChange, cellAlignRef, onActiveCellAlignChange, cellValignRef, onActiveCellValignChange, cellFormatRef, onActiveCellFormatChange, onMergeStateChange, cellBorderRef, resizeTableRef, addRowRef, removeRowRef, addColRef, removeColRef }: {
   content: string;
   onChange: (v: string) => void;
   tableMode?: boolean;
@@ -73,6 +73,10 @@ function SpreadsheetEditor({ content, onChange, tableMode, mergeRef, clearRef, c
   onMergeStateChange?: (isMergedAnchor: boolean, hasMultiSelection: boolean) => void;
   cellBorderRef?: MutableRefObject<((bs: BorderStyle | "none") => void) | null>;
   resizeTableRef?: MutableRefObject<((rows: number, cols: number) => void) | null>;
+  addRowRef?: MutableRefObject<(() => void) | null>;
+  removeRowRef?: MutableRefObject<(() => void) | null>;
+  addColRef?: MutableRefObject<(() => void) | null>;
+  removeColRef?: MutableRefObject<(() => void) | null>;
 }) {
   const defColW = tableMode ? TABLE_COL_WIDTH : 80;
   const defRowH = tableMode ? TABLE_ROW_HEIGHT : ROW_HEIGHT;
@@ -409,6 +413,38 @@ function SpreadsheetEditor({ content, onChange, tableMode, mergeRef, clearRef, c
       setSelection(null);
     };
     return () => { if (resizeTableRef) resizeTableRef.current = null; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    if (addRowRef) addRowRef.current = () => {
+      setData(prev => {
+        const rows = (prev.tableSize?.rows ?? TABLE_ROWS) + 1;
+        const cols = prev.tableSize?.cols ?? TABLE_COLS;
+        return { ...prev, tableSize: { rows, cols } };
+      });
+    };
+    if (removeRowRef) removeRowRef.current = () => {
+      setData(prev => {
+        const rows = Math.max(1, (prev.tableSize?.rows ?? TABLE_ROWS) - 1);
+        const cols = prev.tableSize?.cols ?? TABLE_COLS;
+        return { ...prev, tableSize: { rows, cols } };
+      });
+    };
+    if (addColRef) addColRef.current = () => {
+      setData(prev => {
+        const rows = prev.tableSize?.rows ?? TABLE_ROWS;
+        const cols = Math.min(200, (prev.tableSize?.cols ?? TABLE_COLS) + 1);
+        return { ...prev, tableSize: { rows, cols } };
+      });
+    };
+    if (removeColRef) removeColRef.current = () => {
+      setData(prev => {
+        const rows = prev.tableSize?.rows ?? TABLE_ROWS;
+        const cols = Math.max(1, (prev.tableSize?.cols ?? TABLE_COLS) - 1);
+        return { ...prev, tableSize: { rows, cols } };
+      });
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -822,6 +858,10 @@ export default function PageEditor() {
   const spreadsheetCutRef = useRef<(() => void) | null>(null);
   const spreadsheetCutAllRef = useRef<(() => void) | null>(null);
   const tableResizeRef = useRef<((rows: number, cols: number) => void) | null>(null);
+  const tableAddRowRef = useRef<(() => void) | null>(null);
+  const tableRemoveRowRef = useRef<(() => void) | null>(null);
+  const tableAddColRef = useRef<(() => void) | null>(null);
+  const tableRemoveColRef = useRef<(() => void) | null>(null);
   const [showNRCPopup, setShowNRCPopup] = useState(false);
   const [nrcHover, setNrcHover] = useState<{ r: number; c: number } | null>(null);
   const nrcPopupRef = useRef<HTMLDivElement>(null);
@@ -2043,6 +2083,37 @@ export default function PageEditor() {
                     </div>
                     <div className="text-[10px] text-zinc-400 text-center mt-1.5">Rows: unlimited · Cols: max 200</div>
                   </div>
+                  <div className="mt-3 pt-3 border-t border-zinc-200">
+                    <div className="text-[11px] font-semibold text-zinc-500 mb-2 text-center">Adjustment</div>
+                    <div className="flex flex-col gap-1.5">
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[11px] text-zinc-500 w-12">Row</span>
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => tableRemoveRowRef.current?.()}
+                            className="w-7 h-6 rounded border border-zinc-300 bg-white hover:bg-red-50 hover:border-red-300 text-zinc-600 text-sm font-bold transition-colors flex items-center justify-center"
+                          >−</button>
+                          <button
+                            onClick={() => tableAddRowRef.current?.()}
+                            className="w-7 h-6 rounded border border-zinc-300 bg-white hover:bg-green-50 hover:border-green-300 text-zinc-600 text-sm font-bold transition-colors flex items-center justify-center"
+                          >+</button>
+                        </div>
+                      </div>
+                      <div className="flex items-center justify-between gap-2">
+                        <span className="text-[11px] text-zinc-500 w-12">Column</span>
+                        <div className="flex gap-1">
+                          <button
+                            onClick={() => tableRemoveColRef.current?.()}
+                            className="w-7 h-6 rounded border border-zinc-300 bg-white hover:bg-red-50 hover:border-red-300 text-zinc-600 text-sm font-bold transition-colors flex items-center justify-center"
+                          >−</button>
+                          <button
+                            onClick={() => tableAddColRef.current?.()}
+                            className="w-7 h-6 rounded border border-zinc-300 bg-white hover:bg-green-50 hover:border-green-300 text-zinc-600 text-sm font-bold transition-colors flex items-center justify-center"
+                          >+</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </PortalPopup>
             </div>
@@ -2614,6 +2685,10 @@ export default function PageEditor() {
                     rowHeightIncRef={spreadsheetCTIncRef}
                     rowHeightDecRef={spreadsheetCTDecRef}
                     resizeTableRef={tableResizeRef}
+                    addRowRef={tableAddRowRef}
+                    removeRowRef={tableRemoveRowRef}
+                    addColRef={tableAddColRef}
+                    removeColRef={tableRemoveColRef}
                     onActiveSizeChange={setActiveSheetSizes}
                     onMergeStateChange={(isMerged, hasSelection) => setMergeState({ isMerged, hasSelection })}
                     cellBorderRef={spreadsheetCellBorderRef}
