@@ -2691,21 +2691,16 @@ export default function PageEditor() {
         </div>
       </div>
 
-      {/* Cut confirmation popup */}
+      {/* Cut confirmation floating card */}
       {showCutConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={() => setShowCutConfirm(false)}>
-          <div className="bg-white rounded-xl shadow-xl border border-zinc-200 p-5 w-72 flex flex-col gap-3" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center gap-2">
-              <span className="text-xl">✂️</span>
-              <span className="font-semibold text-zinc-800 text-sm">পেজের সব লেখা Cut করবেন?</span>
-            </div>
-            <p className="text-xs text-zinc-500">সব লেখা clipboard-এ copy হবে এবং পেজ blank হয়ে যাবে।</p>
-            <div className="flex gap-2 justify-end mt-1">
-              <button onClick={() => setShowCutConfirm(false)} className="px-4 py-1.5 rounded-lg border border-zinc-300 text-xs text-zinc-600 hover:bg-zinc-50 transition-colors">No</button>
-              <button onClick={handleCutAll} className="px-4 py-1.5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-xs font-semibold transition-colors">Yes</button>
-            </div>
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setShowCutConfirm(false)} />
+          <div className="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-white border border-zinc-200 rounded-lg shadow-lg px-3 py-2 flex items-center gap-3 text-xs">
+            <span className="text-zinc-600 font-medium">Are you sure?</span>
+            <button onClick={() => setShowCutConfirm(false)} className="px-2.5 py-1 rounded border border-zinc-300 text-zinc-600 hover:bg-zinc-50 transition-colors">No</button>
+            <button onClick={handleCutAll} className="px-2.5 py-1 rounded bg-red-500 hover:bg-red-600 text-white font-semibold transition-colors">Yes</button>
           </div>
-        </div>
+        </>
       )}
     </div>
   );
