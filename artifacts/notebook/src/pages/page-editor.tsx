@@ -49,13 +49,14 @@ type BorderStyle = "dotted" | "single" | "double" | "bold";
 type CellFormat = { bold?: boolean; italic?: boolean; underline?: boolean; strikeThrough?: boolean; overline?: boolean; fontColor?: string; highlightColor?: string; fontSize?: number; fontFamily?: string; borderStyle?: BorderStyle; };
 interface SheetData { cells: Record<string, string>; merges: MergeRegion[]; colWidths?: Record<number, number>; rowHeights?: Record<number, number>; cellAligns?: Record<string, "left" | "center" | "right">; cellValigns?: Record<string, "top" | "middle" | "bottom">; cellFormats?: Record<string, CellFormat>; tableSize?: { rows: number; cols: number }; }
 
-function SpreadsheetEditor({ content, onChange, tableMode, mergeRef, clearRef, cutRef, insertRowRef, insertColRef, colWidthIncRef, colWidthDecRef, rowHeightIncRef, rowHeightDecRef, onActiveSizeChange, cellAlignRef, onActiveCellAlignChange, cellValignRef, onActiveCellValignChange, cellFormatRef, onActiveCellFormatChange, onMergeStateChange, cellBorderRef, resizeTableRef }: {
+function SpreadsheetEditor({ content, onChange, tableMode, mergeRef, clearRef, cutRef, cutAllRef, insertRowRef, insertColRef, colWidthIncRef, colWidthDecRef, rowHeightIncRef, rowHeightDecRef, onActiveSizeChange, cellAlignRef, onActiveCellAlignChange, cellValignRef, onActiveCellValignChange, cellFormatRef, onActiveCellFormatChange, onMergeStateChange, cellBorderRef, resizeTableRef }: {
   content: string;
   onChange: (v: string) => void;
   tableMode?: boolean;
   mergeRef?: MutableRefObject<(() => void) | null>;
   clearRef?: MutableRefObject<(() => void) | null>;
   cutRef?: MutableRefObject<(() => void) | null>;
+  cutAllRef?: MutableRefObject<(() => void) | null>;
   insertRowRef?: MutableRefObject<(() => void) | null>;
   insertColRef?: MutableRefObject<(() => void) | null>;
   colWidthIncRef?: MutableRefObject<(() => void) | null>;
@@ -313,6 +314,25 @@ function SpreadsheetEditor({ content, onChange, tableMode, mergeRef, clearRef, c
       }
       try { await navigator.clipboard.writeText(textParts.join("\n")); } catch { /* ignore */ }
       clearSelected();
+    };
+    if (cutAllRef) cutAllRef.current = async () => {
+      const allCells = dataRef.current.cells;
+      const rows: Record<number, Record<number, string>> = {};
+      for (const k of Object.keys(allCells)) {
+        const [r, c] = k.split("-").map(Number);
+        if (!rows[r]) rows[r] = {};
+        rows[r][c] = allCells[k];
+      }
+      const maxRow = Object.keys(rows).length ? Math.max(...Object.keys(rows).map(Number)) : 0;
+      const textParts: string[] = [];
+      for (let r = 0; r <= maxRow; r++) {
+        const maxCol = rows[r] ? Math.max(...Object.keys(rows[r]).map(Number)) : 0;
+        const rowParts: string[] = [];
+        for (let c = 0; c <= maxCol; c++) rowParts.push(rows[r]?.[c] ?? "");
+        textParts.push(rowParts.join("\t"));
+      }
+      try { await navigator.clipboard.writeText(textParts.join("\n")); } catch { /* ignore */ }
+      setData(prev => ({ ...prev, cells: {} }));
     };
     if (insertRowRef) insertRowRef.current = insertRow;
     if (insertColRef) insertColRef.current = insertCol;
@@ -800,6 +820,7 @@ export default function PageEditor() {
   const [mergeState, setMergeState] = useState<{ isMerged: boolean; hasSelection: boolean }>({ isMerged: false, hasSelection: false });
   const spreadsheetCellBorderRef = useRef<((bs: BorderStyle | "none") => void) | null>(null);
   const spreadsheetCutRef = useRef<(() => void) | null>(null);
+  const spreadsheetCutAllRef = useRef<(() => void) | null>(null);
   const tableResizeRef = useRef<((rows: number, cols: number) => void) | null>(null);
   const [showNRCPopup, setShowNRCPopup] = useState(false);
   const [nrcHover, setNrcHover] = useState<{ r: number; c: number } | null>(null);
@@ -1203,7 +1224,7 @@ export default function PageEditor() {
 
   const handleCutAll = async () => {
     if (cutTypeRef.current === 'spreadsheet') {
-      spreadsheetCutRef.current?.();
+      spreadsheetCutAllRef.current?.();
     } else {
       const content = editorRef.current?.innerText || "";
       try { await navigator.clipboard.writeText(content); } catch { /* ignore */ }
@@ -2544,6 +2565,7 @@ export default function PageEditor() {
                   mergeRef={spreadsheetMergeRef}
                   clearRef={spreadsheetClearRef}
                   cutRef={spreadsheetCutRef}
+                  cutAllRef={spreadsheetCutAllRef}
                   insertRowRef={spreadsheetInsertRowRef}
                   insertColRef={spreadsheetInsertColRef}
                   colWidthIncRef={spreadsheetCWIncRef}
@@ -2584,6 +2606,7 @@ export default function PageEditor() {
                     mergeRef={spreadsheetMergeRef}
                     clearRef={spreadsheetClearRef}
                     cutRef={spreadsheetCutRef}
+                    cutAllRef={spreadsheetCutAllRef}
                     insertRowRef={spreadsheetInsertRowRef}
                     insertColRef={spreadsheetInsertColRef}
                     colWidthIncRef={spreadsheetCWIncRef}
