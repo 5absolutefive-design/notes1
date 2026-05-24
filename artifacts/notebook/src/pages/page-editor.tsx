@@ -1492,7 +1492,7 @@ export default function PageEditor() {
       <div className="border border-zinc-400 rounded-lg p-1.5">
         <div className="flex flex-col gap-1">
           <button onClick={() => setZoom(z => Math.min(200, z + 10))} title={`Zoom in (${zoom}%)`} className={btnSq}>
-            <img src="/zoom-in-icon.jpg" alt="Zoom in" className="w-8 h-8 object-contain" />
+            <img src="/zoom-in-icon.jpg" alt="Zoom in" className="w-6 h-6 object-contain" />
           </button>
           <button onClick={() => setZoom(z => Math.max(50, z - 10))} title={`Zoom out (${zoom}%)`} className={btnSq}>
             <img src="/zoom-out-icon.jpg" alt="Zoom out" className="w-8 h-8 object-contain" />
@@ -1632,7 +1632,7 @@ export default function PageEditor() {
 
             {/* zoom in | zoom out — joined */}
             <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-              <button onClick={() => setZoom(z => Math.min(200, z + 10))} title="Zoom in" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/zoom-in-icon.jpg" alt="Zoom in" className="w-8 h-8 object-contain" /></button>
+              <button onClick={() => setZoom(z => Math.min(200, z + 10))} title="Zoom in" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/zoom-in-icon.jpg" alt="Zoom in" className="w-6 h-6 object-contain" /></button>
               <button onClick={() => setZoom(z => Math.max(50, z - 10))} title="Zoom out" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center"><img src="/zoom-out-icon.jpg" alt="Zoom out" className="w-8 h-8 object-contain" /></button>
             </div>
 
@@ -1899,7 +1899,7 @@ export default function PageEditor() {
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
             {/* zoom in | zoom out — joined */}
             <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-              <button onClick={() => setZoom(z => Math.min(200, z + 10))} title="Zoom in" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/zoom-in-icon.jpg" alt="Zoom in" className="w-8 h-8 object-contain" /></button>
+              <button onClick={() => setZoom(z => Math.min(200, z + 10))} title="Zoom in" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/zoom-in-icon.jpg" alt="Zoom in" className="w-6 h-6 object-contain" /></button>
               <button onClick={() => setZoom(z => Math.max(50, z - 10))} title="Zoom out" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center"><img src="/zoom-out-icon.jpg" alt="Zoom out" className="w-8 h-8 object-contain" /></button>
             </div>
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
@@ -2169,7 +2169,7 @@ export default function PageEditor() {
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
               {/* zoom in | zoom out — joined */}
               <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-                <button onClick={() => setZoom(z => Math.min(200, z + 10))} title="Zoom in" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/zoom-in-icon.jpg" alt="Zoom in" className="w-8 h-8 object-contain" /></button>
+                <button onClick={() => setZoom(z => Math.min(200, z + 10))} title="Zoom in" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/zoom-in-icon.jpg" alt="Zoom in" className="w-6 h-6 object-contain" /></button>
                 <button onClick={() => setZoom(z => Math.max(50, z - 10))} title="Zoom out" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center"><img src="/zoom-out-icon.jpg" alt="Zoom out" className="w-8 h-8 object-contain" /></button>
               </div>
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
@@ -2325,7 +2325,7 @@ export default function PageEditor() {
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
               {/* zoom in | zoom out — joined */}
               <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-                <button onClick={() => setZoom(z => Math.min(200, z + 10))} title="Zoom in" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/zoom-in-icon.jpg" alt="Zoom in" className="w-8 h-8 object-contain" /></button>
+                <button onClick={() => setZoom(z => Math.min(200, z + 10))} title="Zoom in" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/zoom-in-icon.jpg" alt="Zoom in" className="w-6 h-6 object-contain" /></button>
                 <button onClick={() => setZoom(z => Math.max(50, z - 10))} title="Zoom out" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center"><img src="/zoom-out-icon.jpg" alt="Zoom out" className="w-8 h-8 object-contain" /></button>
               </div>
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
