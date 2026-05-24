@@ -1804,7 +1804,7 @@ export default function PageEditor() {
                   ]).map(({ style, label, icon }) => (
                     <button
                       key={style}
-                      onClick={() => { setSelectedBorderStyle(style); setShowBorderPopup(false); }}
+                      onClick={() => { setSelectedBorderStyle(style); if (style === "none") spreadsheetCellBorderRef.current?.("none"); setShowBorderPopup(false); }}
                       className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-xs transition-colors ${selectedBorderStyle === style ? "bg-zinc-200 font-semibold" : "hover:bg-zinc-100"}`}
                     >
                       <span className="w-4 h-4 flex items-center justify-center shrink-0">{icon}</span>
@@ -1961,7 +1961,7 @@ export default function PageEditor() {
               <PortalPopup anchorRef={borderPopupRef} open={showBorderPopup}>
                 <div className="bg-white border border-zinc-300 rounded-lg shadow-xl p-2 flex flex-col gap-1 w-36">
                   {([{ style: "none" as const, label: "No border", icon: <span className="text-xs font-bold text-zinc-500">N</span> },{ style: "single" as const, label: "Single border", icon: <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="1.5" y="1.5" width="15" height="15" rx="1" stroke="#444" strokeWidth="1.5"/></svg> },{ style: "double" as const, label: "Double border", icon: <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="16" height="16" rx="1" stroke="#444" strokeWidth="1"/><rect x="3.5" y="3.5" width="11" height="11" rx="0.5" stroke="#444" strokeWidth="1"/></svg> },{ style: "bold" as const, label: "Bold border", icon: <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="14" height="14" rx="1" stroke="#222" strokeWidth="3.5"/></svg> }]).map(({ style, label, icon }) => (
-                    <button key={style} onClick={() => { setSelectedBorderStyle(style); setShowBorderPopup(false); }} className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-xs transition-colors ${selectedBorderStyle === style ? "bg-zinc-200 font-semibold" : "hover:bg-zinc-100"}`}><span className="w-4 h-4 flex items-center justify-center shrink-0">{icon}</span><span>{label}</span></button>
+                    <button key={style} onClick={() => { setSelectedBorderStyle(style); if (style === "none") spreadsheetCellBorderRef.current?.("none"); setShowBorderPopup(false); }} className={`flex items-center gap-2 px-2 py-1.5 rounded-md text-xs transition-colors ${selectedBorderStyle === style ? "bg-zinc-200 font-semibold" : "hover:bg-zinc-100"}`}><span className="w-4 h-4 flex items-center justify-center shrink-0">{icon}</span><span>{label}</span></button>
                   ))}
                 </div>
               </PortalPopup>
