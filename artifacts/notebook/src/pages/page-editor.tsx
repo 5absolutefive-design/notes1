@@ -1483,7 +1483,7 @@ export default function PageEditor() {
       {/* Box 2 — Undo + Redo (tall, stacked) */}
       <div className="border border-zinc-400 rounded-lg p-1.5">
         <div className="flex flex-col gap-1">
-          <button onClick={handleUndo} title="Undo" className={`${btnSq} text-base`}>↩</button>
+          <button onClick={handleUndo} title="Undo" className={`${btnSq} text-base`}><img src="/undo-icon.png" alt="Undo" className="w-4 h-4" /></button>
           <button onClick={handleRedo} title="Redo" className={`${btnSq} text-base`}>↪</button>
         </div>
       </div>
@@ -1624,7 +1624,7 @@ export default function PageEditor() {
 
             {/* undo | redo — joined */}
             <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-              <button onClick={handleUndo} title="Undo" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center">↻</button>
+              <button onClick={handleUndo} title="Undo" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/undo-icon.png" alt="Undo" className="w-4 h-4" /></button>
               <button onClick={handleRedo} title="Redo" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center">↺</button>
             </div>
 
@@ -1893,7 +1893,7 @@ export default function PageEditor() {
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
             {/* undo | redo — joined */}
             <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-              <button onClick={handleUndo} title="Undo" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center">↻</button>
+              <button onClick={handleUndo} title="Undo" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/undo-icon.png" alt="Undo" className="w-4 h-4" /></button>
               <button onClick={handleRedo} title="Redo" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center">↺</button>
             </div>
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
@@ -2163,7 +2163,7 @@ export default function PageEditor() {
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
               {/* undo | redo — joined */}
               <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-                <button onClick={handleUndo} title="Undo" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center">↻</button>
+                <button onClick={handleUndo} title="Undo" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/undo-icon.png" alt="Undo" className="w-4 h-4" /></button>
                 <button onClick={handleRedo} title="Redo" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center">↺</button>
               </div>
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
@@ -2319,7 +2319,7 @@ export default function PageEditor() {
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
               {/* undo | redo — joined */}
               <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-                <button onClick={handleUndo} title="Undo" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center">↻</button>
+                <button onClick={handleUndo} title="Undo" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/undo-icon.png" alt="Undo" className="w-4 h-4" /></button>
                 <button onClick={handleRedo} title="Redo" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center">↺</button>
               </div>
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
