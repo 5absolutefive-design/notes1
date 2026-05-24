@@ -1388,7 +1388,7 @@ export default function PageEditor() {
       {/* Box 1 — Copy + Paste (tall, stacked) */}
       <div className="border border-zinc-400 rounded-lg p-1.5">
         <div className="flex flex-col gap-1">
-          <button onClick={handleCopy} title="Copy" className={btnSq}><img src="/copy-icon.jpg" alt="Copy" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} /></button>
+          <button onClick={handleCopy} title="Copy" className={btnSq}><img src="/copy-icon.jpg" alt="Copy" style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", padding: "2px" }} /></button>
           <button onClick={handlePaste} title="Paste" className={`${btnSq} text-base`}>📑</button>
         </div>
       </div>
@@ -1528,7 +1528,7 @@ export default function PageEditor() {
 
             {/* copy | paste | cut — joined */}
             <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-              <button onClick={handleCopy} title="Copy" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/copy-icon.jpg" alt="Copy" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} /></button>
+              <button onClick={handleCopy} title="Copy" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/copy-icon.jpg" alt="Copy" style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", padding: "2px" }} /></button>
               <button onClick={handlePaste} title="Paste" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center">📝</button>
               <button onClick={() => spreadsheetCutRef.current?.()} title="Cut" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center">✂</button>
             </div>
@@ -1799,7 +1799,7 @@ export default function PageEditor() {
           <div className="mx-3 mb-2 border border-zinc-200/80 rounded-xl shadow-[inset_0_2px_3px_rgba(0,0,0,0.05)] px-3 py-1.5 flex items-center gap-1 overflow-x-auto" style={{ backgroundColor: tc.inner }}>
             {/* copy | paste | cut — joined */}
             <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-              <button onClick={handleCopy} title="Copy" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/copy-icon.jpg" alt="Copy" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} /></button>
+              <button onClick={handleCopy} title="Copy" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/copy-icon.jpg" alt="Copy" style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", padding: "2px" }} /></button>
               <button onClick={handlePaste} title="Paste" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center">📝</button>
               <button onClick={() => spreadsheetCutRef.current?.()} title="Cut (copy + clear)" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center">✂</button>
             </div>
@@ -2038,7 +2038,7 @@ export default function PageEditor() {
             <div className="mx-3 mb-2 border border-zinc-200/80 rounded-xl shadow-[inset_0_2px_3px_rgba(0,0,0,0.05)] px-3 py-1.5 flex items-center gap-1 overflow-x-auto" style={{ backgroundColor: tc.inner }}>
               {/* copy | paste | cut — joined */}
               <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-                <button onClick={handleCopy} title="Copy" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/copy-icon.jpg" alt="Copy" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} /></button>
+                <button onClick={handleCopy} title="Copy" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/copy-icon.jpg" alt="Copy" style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", padding: "2px" }} /></button>
                 <button onClick={handlePaste} title="Paste" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center">📝</button>
                 <button onClick={() => document.execCommand("cut")} title="Cut" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center">✂</button>
               </div>
@@ -2194,7 +2194,7 @@ export default function PageEditor() {
             <div className="mx-3 mb-2 border border-zinc-200/80 rounded-xl shadow-[inset_0_2px_3px_rgba(0,0,0,0.05)] px-3 py-1.5 flex items-center gap-1 overflow-x-auto" style={{ backgroundColor: tc.inner }}>
               {/* copy | paste | cut — joined */}
               <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
-                <button onClick={handleCopy} title="Copy" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/copy-icon.jpg" alt="Copy" style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} /></button>
+                <button onClick={handleCopy} title="Copy" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/copy-icon.jpg" alt="Copy" style={{ width: "100%", height: "100%", objectFit: "contain", display: "block", padding: "2px" }} /></button>
                 <button onClick={handlePaste} title="Paste" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center">📝</button>
                 <button onClick={() => document.execCommand("cut")} title="Cut" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center">✂</button>
               </div>
