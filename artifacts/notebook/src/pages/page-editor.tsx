@@ -839,6 +839,9 @@ export default function PageEditor() {
       setPageTitle(page.title);
       lastSavedContent.current = c;
       setContentReadyForPid(pId);
+      if (page.theme && page.theme in PAGE_THEMES) {
+        setPageTheme(page.theme as PageTheme);
+      }
       if (editorRef.current) {
         editorRef.current.innerHTML = c;
       }
@@ -1508,7 +1511,7 @@ export default function PageEditor() {
                 <PortalPopup anchorRef={themePopupRef} open={showThemePopup} align="right">
                   <div className="bg-white border border-zinc-200 rounded-xl shadow-xl p-2 flex flex-col gap-1 min-w-[150px]">
                     {(Object.keys(PAGE_THEMES) as PageTheme[]).map(t => (
-                      <button key={t} onClick={() => { setPageTheme(t); setShowThemePopup(false); }} className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors text-zinc-700 ${pageTheme === t ? "bg-zinc-100 font-semibold" : "hover:bg-zinc-50"}`}>
+                      <button key={t} onClick={() => { setPageTheme(t); store.updatePage(bId, pId, { theme: t }); setShowThemePopup(false); }} className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors text-zinc-700 ${pageTheme === t ? "bg-zinc-100 font-semibold" : "hover:bg-zinc-50"}`}>
                         <span className="w-4 h-4 rounded-full border border-zinc-300 shrink-0" style={{ backgroundColor: PAGE_THEMES[t].swatch }} />
                         {PAGE_THEMES[t].label}
                       </button>
@@ -1782,7 +1785,7 @@ export default function PageEditor() {
                 <PortalPopup anchorRef={themePopupRef} open={showThemePopup} align="right">
                   <div className="bg-white border border-zinc-200 rounded-xl shadow-xl p-2 flex flex-col gap-1 min-w-[150px]">
                     {(Object.keys(PAGE_THEMES) as PageTheme[]).map(t => (
-                      <button key={t} onClick={() => { setPageTheme(t); setShowThemePopup(false); }} className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors text-zinc-700 ${pageTheme === t ? "bg-zinc-100 font-semibold" : "hover:bg-zinc-50"}`}>
+                      <button key={t} onClick={() => { setPageTheme(t); store.updatePage(bId, pId, { theme: t }); setShowThemePopup(false); }} className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors text-zinc-700 ${pageTheme === t ? "bg-zinc-100 font-semibold" : "hover:bg-zinc-50"}`}>
                         <span className="w-4 h-4 rounded-full border border-zinc-300 shrink-0" style={{ backgroundColor: PAGE_THEMES[t].swatch }} />
                         {PAGE_THEMES[t].label}
                       </button>
@@ -2020,7 +2023,7 @@ export default function PageEditor() {
                 <PortalPopup anchorRef={themePopupRef} open={showThemePopup} align="right">
                   <div className="bg-white border border-zinc-200 rounded-xl shadow-xl p-2 flex flex-col gap-1 min-w-[150px]">
                     {(Object.keys(PAGE_THEMES) as PageTheme[]).map(t => (
-                      <button key={t} onClick={() => { setPageTheme(t); setShowThemePopup(false); }} className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors text-zinc-700 ${pageTheme === t ? "bg-zinc-100 font-semibold" : "hover:bg-zinc-50"}`}>
+                      <button key={t} onClick={() => { setPageTheme(t); store.updatePage(bId, pId, { theme: t }); setShowThemePopup(false); }} className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors text-zinc-700 ${pageTheme === t ? "bg-zinc-100 font-semibold" : "hover:bg-zinc-50"}`}>
                         <span className="w-4 h-4 rounded-full border border-zinc-300 shrink-0" style={{ backgroundColor: PAGE_THEMES[t].swatch }} />
                         {PAGE_THEMES[t].label}
                       </button>
@@ -2176,7 +2179,7 @@ export default function PageEditor() {
                 <PortalPopup anchorRef={themePopupRef} open={showThemePopup} align="right">
                   <div className="bg-white border border-zinc-200 rounded-xl shadow-xl p-2 flex flex-col gap-1 min-w-[150px]">
                     {(Object.keys(PAGE_THEMES) as PageTheme[]).map(t => (
-                      <button key={t} onClick={() => { setPageTheme(t); setShowThemePopup(false); }} className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors text-zinc-700 ${pageTheme === t ? "bg-zinc-100 font-semibold" : "hover:bg-zinc-50"}`}>
+                      <button key={t} onClick={() => { setPageTheme(t); store.updatePage(bId, pId, { theme: t }); setShowThemePopup(false); }} className={`flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-xs font-medium transition-colors text-zinc-700 ${pageTheme === t ? "bg-zinc-100 font-semibold" : "hover:bg-zinc-50"}`}>
                         <span className="w-4 h-4 rounded-full border border-zinc-300 shrink-0" style={{ backgroundColor: PAGE_THEMES[t].swatch }} />
                         {PAGE_THEMES[t].label}
                       </button>

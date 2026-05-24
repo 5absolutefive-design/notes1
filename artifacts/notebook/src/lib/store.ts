@@ -17,6 +17,7 @@ export interface Page {
   content: string;
   pageType: PageType;
   pageNumber: number;
+  theme?: string;
   deletedAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -148,7 +149,7 @@ export const store = {
     return page;
   },
 
-  updatePage(bookId: number, pageId: number, data: Partial<Pick<Page, "title" | "content">>): Page {
+  updatePage(bookId: number, pageId: number, data: Partial<Pick<Page, "title" | "content" | "theme">>): Page {
     const pages = loadPages();
     const idx = pages.findIndex((p) => p.bookId === bookId && p.id === pageId);
     if (idx === -1) throw new Error("Page not found");
