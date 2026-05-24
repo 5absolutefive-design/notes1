@@ -1191,15 +1191,29 @@ export default function PageEditor() {
   };
 
   const [showCutConfirm, setShowCutConfirm] = useState(false);
+  const [cutBtnRect, setCutBtnRect] = useState<{ top: number; left: number } | null>(null);
+  const cutTypeRef = useRef<'text' | 'spreadsheet'>('text');
+
+  const handleCutClick = (e: React.MouseEvent<HTMLButtonElement>, type: 'text' | 'spreadsheet') => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    setCutBtnRect({ top: rect.bottom + 4, left: rect.left });
+    cutTypeRef.current = type;
+    setShowCutConfirm(true);
+  };
 
   const handleCutAll = async () => {
-    const content = editorRef.current?.innerText || "";
-    try { await navigator.clipboard.writeText(content); } catch { /* ignore */ }
-    if (editorRef.current) {
-      editorRef.current.innerHTML = "";
-      handleEditorInput();
+    if (cutTypeRef.current === 'spreadsheet') {
+      spreadsheetCutRef.current?.();
+    } else {
+      const content = editorRef.current?.innerText || "";
+      try { await navigator.clipboard.writeText(content); } catch { /* ignore */ }
+      if (editorRef.current) {
+        editorRef.current.innerHTML = "";
+        handleEditorInput();
+      }
     }
     setShowCutConfirm(false);
+    setCutBtnRect(null);
   };
 
   const handleCopy = async () => {
@@ -1542,7 +1556,7 @@ export default function PageEditor() {
             <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
               <button onClick={handleCopy} title="Copy" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/copy-icon.png" alt="Copy" style={{ width: "100%", height: "100%", objectFit: "contain", padding: "3px" }} /></button>
               <button onClick={handlePaste} title="Paste" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/paste-icon.png" alt="Paste" style={{ width: "100%", height: "100%", objectFit: "contain", padding: "3px" }} /></button>
-              <button onClick={() => spreadsheetCutRef.current?.()} title="Cut" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center">✂</button>
+              <button onClick={e => handleCutClick(e, 'spreadsheet')} title="Cut" className="w-8 h-8 bg-white hover:bg-red-50 active:bg-red-100 transition-colors flex items-center justify-center">✂</button>
             </div>
 
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
@@ -1813,7 +1827,7 @@ export default function PageEditor() {
             <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
               <button onClick={handleCopy} title="Copy" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/copy-icon.png" alt="Copy" style={{ width: "100%", height: "100%", objectFit: "contain", padding: "3px" }} /></button>
               <button onClick={handlePaste} title="Paste" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/paste-icon.png" alt="Paste" style={{ width: "100%", height: "100%", objectFit: "contain", padding: "3px" }} /></button>
-              <button onClick={() => spreadsheetCutRef.current?.()} title="Cut (copy + clear)" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center">✂</button>
+              <button onClick={e => handleCutClick(e, 'spreadsheet')} title="Cut (copy + clear)" className="w-8 h-8 bg-white hover:bg-red-50 active:bg-red-100 transition-colors flex items-center justify-center">✂</button>
             </div>
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
             {/* undo | redo — joined */}
@@ -2049,22 +2063,10 @@ export default function PageEditor() {
             {/* ROW 2 — flat toolbar */}
             <div className="mx-3 mb-2 border border-zinc-200/80 rounded-xl shadow-[inset_0_2px_3px_rgba(0,0,0,0.05)] px-3 py-1.5 flex items-center gap-1 overflow-x-auto" style={{ backgroundColor: tc.inner }}>
               {/* copy | paste | cut — joined */}
-              <div className="relative flex items-center rounded-lg border border-zinc-300 overflow-visible shrink-0">
-                <button onClick={handleCopy} title="Copy" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 rounded-l-lg flex items-center justify-center"><img src="/copy-icon.png" alt="Copy" style={{ width: "100%", height: "100%", objectFit: "contain", padding: "3px" }} /></button>
+              <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
+                <button onClick={handleCopy} title="Copy" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/copy-icon.png" alt="Copy" style={{ width: "100%", height: "100%", objectFit: "contain", padding: "3px" }} /></button>
                 <button onClick={handlePaste} title="Paste" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/paste-icon.png" alt="Paste" style={{ width: "100%", height: "100%", objectFit: "contain", padding: "3px" }} /></button>
-                <div className="relative">
-                  <button onClick={() => setShowCutConfirm(v => !v)} title="Cut" className="w-8 h-8 bg-white hover:bg-red-50 active:bg-red-100 transition-colors rounded-r-lg flex items-center justify-center">✂</button>
-                  {showCutConfirm && (
-                    <>
-                      <div className="fixed inset-0 z-40" onClick={() => setShowCutConfirm(false)} />
-                      <div className="absolute left-0 top-full mt-1 z-50 bg-white border border-zinc-200 rounded-lg shadow-lg px-3 py-2 flex items-center gap-2 text-xs whitespace-nowrap">
-                        <span className="text-zinc-600 font-medium">Are you sure?</span>
-                        <button onClick={() => setShowCutConfirm(false)} className="px-2 py-0.5 rounded border border-zinc-300 text-zinc-600 hover:bg-zinc-50 transition-colors">No</button>
-                        <button onClick={handleCutAll} className="px-2 py-0.5 rounded bg-red-500 hover:bg-red-600 text-white font-semibold transition-colors">Yes</button>
-                      </div>
-                    </>
-                  )}
-                </div>
+                <button onClick={e => handleCutClick(e, 'text')} title="Cut" className="w-8 h-8 bg-white hover:bg-red-50 active:bg-red-100 transition-colors flex items-center justify-center">✂</button>
               </div>
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
               {/* undo | redo — joined */}
@@ -2217,22 +2219,10 @@ export default function PageEditor() {
             {/* ROW 2 — flat toolbar */}
             <div className="mx-3 mb-2 border border-zinc-200/80 rounded-xl shadow-[inset_0_2px_3px_rgba(0,0,0,0.05)] px-3 py-1.5 flex items-center gap-1 overflow-x-auto" style={{ backgroundColor: tc.inner }}>
               {/* copy | paste | cut — joined */}
-              <div className="relative flex items-center rounded-lg border border-zinc-300 overflow-visible shrink-0">
-                <button onClick={handleCopy} title="Copy" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 rounded-l-lg flex items-center justify-center"><img src="/copy-icon.png" alt="Copy" style={{ width: "100%", height: "100%", objectFit: "contain", padding: "3px" }} /></button>
+              <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
+                <button onClick={handleCopy} title="Copy" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/copy-icon.png" alt="Copy" style={{ width: "100%", height: "100%", objectFit: "contain", padding: "3px" }} /></button>
                 <button onClick={handlePaste} title="Paste" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/paste-icon.png" alt="Paste" style={{ width: "100%", height: "100%", objectFit: "contain", padding: "3px" }} /></button>
-                <div className="relative">
-                  <button onClick={() => setShowCutConfirm(v => !v)} title="Cut" className="w-8 h-8 bg-white hover:bg-red-50 active:bg-red-100 transition-colors rounded-r-lg flex items-center justify-center">✂</button>
-                  {showCutConfirm && (
-                    <>
-                      <div className="fixed inset-0 z-40" onClick={() => setShowCutConfirm(false)} />
-                      <div className="absolute left-0 top-full mt-1 z-50 bg-white border border-zinc-200 rounded-lg shadow-lg px-3 py-2 flex items-center gap-2 text-xs whitespace-nowrap">
-                        <span className="text-zinc-600 font-medium">Are you sure?</span>
-                        <button onClick={() => setShowCutConfirm(false)} className="px-2 py-0.5 rounded border border-zinc-300 text-zinc-600 hover:bg-zinc-50 transition-colors">No</button>
-                        <button onClick={handleCutAll} className="px-2 py-0.5 rounded bg-red-500 hover:bg-red-600 text-white font-semibold transition-colors">Yes</button>
-                      </div>
-                    </>
-                  )}
-                </div>
+                <button onClick={e => handleCutClick(e, 'text')} title="Cut" className="w-8 h-8 bg-white hover:bg-red-50 active:bg-red-100 transition-colors flex items-center justify-center">✂</button>
               </div>
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
               {/* undo | redo — joined */}
@@ -2715,6 +2705,20 @@ export default function PageEditor() {
         </div>
       </div>
 
+    {/* Global cut confirmation popup — fixed below the cut button */}
+    {showCutConfirm && cutBtnRect && (
+      <>
+        <div className="fixed inset-0 z-40" onClick={() => { setShowCutConfirm(false); setCutBtnRect(null); }} />
+        <div
+          className="fixed z-50 bg-white border border-zinc-200 rounded-lg shadow-lg px-3 py-2 flex items-center gap-2 text-xs whitespace-nowrap"
+          style={{ top: cutBtnRect.top, left: cutBtnRect.left }}
+        >
+          <span className="text-zinc-600 font-medium">Are you sure?</span>
+          <button onClick={() => { setShowCutConfirm(false); setCutBtnRect(null); }} className="px-2 py-0.5 rounded border border-zinc-300 text-zinc-600 hover:bg-zinc-50 transition-colors">No</button>
+          <button onClick={handleCutAll} className="px-2 py-0.5 rounded bg-red-500 hover:bg-red-600 text-white font-semibold transition-colors">Yes</button>
+        </div>
+      </>
+    )}
     </div>
   );
 }
