@@ -139,6 +139,7 @@ export const store = {
       content: data.content ?? "",
       pageType: data.pageType ?? "blank",
       pageNumber: existing.length + 1,
+      theme: "blue",
       deletedAt: null,
       createdAt: now(),
       updatedAt: now(),

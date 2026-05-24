@@ -876,7 +876,7 @@ export default function PageEditor() {
   const [showAlignPopup, setShowAlignPopup] = useState(false);
   const alignPopupRef = useRef<HTMLDivElement>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [pageTheme, setPageTheme] = useState<PageTheme>("day");
+  const [pageTheme, setPageTheme] = useState<PageTheme>("blue");
   const [showThemePopup, setShowThemePopup] = useState(false);
   const themePopupRef = useRef<HTMLDivElement>(null);
   const tc = PAGE_THEMES[pageTheme];
