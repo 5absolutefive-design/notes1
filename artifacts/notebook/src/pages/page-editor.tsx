@@ -1190,6 +1190,18 @@ export default function PageEditor() {
     handleEditorInput();
   };
 
+  const [showCutConfirm, setShowCutConfirm] = useState(false);
+
+  const handleCutAll = async () => {
+    const content = editorRef.current?.innerText || "";
+    try { await navigator.clipboard.writeText(content); } catch { /* ignore */ }
+    if (editorRef.current) {
+      editorRef.current.innerHTML = "";
+      handleEditorInput();
+    }
+    setShowCutConfirm(false);
+  };
+
   const handleCopy = async () => {
     const sel = window.getSelection();
     const selectedText = sel?.toString() || editorRef.current?.innerText || "";
@@ -2040,7 +2052,7 @@ export default function PageEditor() {
               <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
                 <button onClick={handleCopy} title="Copy" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/copy-icon.png" alt="Copy" style={{ width: "100%", height: "100%", objectFit: "contain", padding: "3px" }} /></button>
                 <button onClick={handlePaste} title="Paste" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/paste-icon.png" alt="Paste" style={{ width: "100%", height: "100%", objectFit: "contain", padding: "3px" }} /></button>
-                <button onClick={() => document.execCommand("cut")} title="Cut" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center">✂</button>
+                <button onClick={() => setShowCutConfirm(true)} title="Cut" className="w-8 h-8 bg-white hover:bg-red-50 active:bg-red-100 transition-colors flex items-center justify-center">✂</button>
               </div>
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
               {/* undo | redo — joined */}
@@ -2196,7 +2208,7 @@ export default function PageEditor() {
               <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
                 <button onClick={handleCopy} title="Copy" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/copy-icon.png" alt="Copy" style={{ width: "100%", height: "100%", objectFit: "contain", padding: "3px" }} /></button>
                 <button onClick={handlePaste} title="Paste" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><img src="/paste-icon.png" alt="Paste" style={{ width: "100%", height: "100%", objectFit: "contain", padding: "3px" }} /></button>
-                <button onClick={() => document.execCommand("cut")} title="Cut" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center">✂</button>
+                <button onClick={() => setShowCutConfirm(true)} title="Cut" className="w-8 h-8 bg-white hover:bg-red-50 active:bg-red-100 transition-colors flex items-center justify-center">✂</button>
               </div>
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
               {/* undo | redo — joined */}
@@ -2678,6 +2690,23 @@ export default function PageEditor() {
           </div>
         </div>
       </div>
+
+      {/* Cut confirmation popup */}
+      {showCutConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30" onClick={() => setShowCutConfirm(false)}>
+          <div className="bg-white rounded-xl shadow-xl border border-zinc-200 p-5 w-72 flex flex-col gap-3" onClick={e => e.stopPropagation()}>
+            <div className="flex items-center gap-2">
+              <span className="text-xl">✂️</span>
+              <span className="font-semibold text-zinc-800 text-sm">পেজের সব লেখা Cut করবেন?</span>
+            </div>
+            <p className="text-xs text-zinc-500">সব লেখা clipboard-এ copy হবে এবং পেজ blank হয়ে যাবে।</p>
+            <div className="flex gap-2 justify-end mt-1">
+              <button onClick={() => setShowCutConfirm(false)} className="px-4 py-1.5 rounded-lg border border-zinc-300 text-xs text-zinc-600 hover:bg-zinc-50 transition-colors">No</button>
+              <button onClick={handleCutAll} className="px-4 py-1.5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-xs font-semibold transition-colors">Yes</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
