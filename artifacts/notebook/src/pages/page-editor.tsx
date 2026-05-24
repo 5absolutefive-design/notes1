@@ -1785,19 +1785,12 @@ export default function PageEditor() {
 
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
 
-            {/* Border split button: ✓ (opens popup) | ⊞ (applies selected style) */}
+            {/* Border button: opens popup */}
             <div className="relative flex items-center" ref={borderPopupRef as React.RefObject<HTMLDivElement>}>
               <button
                 onClick={() => setShowBorderPopup(v => !v)}
                 title="Pick border style"
-                className="h-8 px-1.5 rounded-l-md border border-r-0 border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-zinc-600 flex items-center justify-center"
-              >
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,8 5,11 12,4" stroke="#444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
-              </button>
-              <button
-                onClick={() => spreadsheetCellBorderRef.current?.(selectedBorderStyle)}
-                title="Apply selected border style"
-                className="h-8 px-1.5 rounded-r-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-zinc-600 flex items-center justify-center"
+                className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-zinc-600 flex items-center justify-center"
               >
                 <svg width="15" height="15" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="16" height="16" rx="1.5" stroke="#444" strokeWidth="1.5"/><line x1="5" y1="1" x2="5" y2="17" stroke="#444" strokeWidth="0.7"/><line x1="9" y1="1" x2="9" y2="17" stroke="#444" strokeWidth="0.7"/><line x1="13" y1="1" x2="13" y2="17" stroke="#444" strokeWidth="0.7"/><line x1="1" y1="5" x2="17" y2="5" stroke="#444" strokeWidth="0.7"/><line x1="1" y1="9" x2="17" y2="9" stroke="#444" strokeWidth="0.7"/><line x1="1" y1="13" x2="17" y2="13" stroke="#444" strokeWidth="0.7"/></svg>
               </button>
@@ -1964,8 +1957,7 @@ export default function PageEditor() {
             <button onClick={() => spreadsheetMergeRef.current?.()} title={mergeState.isMerged ? "Unmerge cells" : "Merge selected cells"} className={`h-8 px-2 rounded-md border transition-colors text-xs font-bold flex items-center justify-center gap-1 ${mergeState.isMerged || mergeState.hasSelection ? "border-purple-400 bg-purple-50 hover:bg-purple-100 text-purple-700" : "border-zinc-300 bg-white hover:bg-zinc-50 text-zinc-600"}`}>MERGE</button>
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
             <div className="relative flex items-center" ref={borderPopupRef as React.RefObject<HTMLDivElement>}>
-              <button onClick={() => setShowBorderPopup(v => !v)} title="Pick border style" className="h-8 px-1.5 rounded-l-md border border-r-0 border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-zinc-600 flex items-center justify-center"><svg width="14" height="14" viewBox="0 0 14 14" fill="none"><polyline points="2,8 5,11 12,4" stroke="#444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg></button>
-              <button onClick={() => spreadsheetCellBorderRef.current?.(selectedBorderStyle)} title="Apply selected border style" className="h-8 px-1.5 rounded-r-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-zinc-600 flex items-center justify-center"><svg width="15" height="15" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="16" height="16" rx="1.5" stroke="#444" strokeWidth="1.5"/><line x1="5" y1="1" x2="5" y2="17" stroke="#444" strokeWidth="0.7"/><line x1="9" y1="1" x2="9" y2="17" stroke="#444" strokeWidth="0.7"/><line x1="13" y1="1" x2="13" y2="17" stroke="#444" strokeWidth="0.7"/><line x1="1" y1="5" x2="17" y2="5" stroke="#444" strokeWidth="0.7"/><line x1="1" y1="9" x2="17" y2="9" stroke="#444" strokeWidth="0.7"/><line x1="1" y1="13" x2="17" y2="13" stroke="#444" strokeWidth="0.7"/></svg></button>
+              <button onClick={() => setShowBorderPopup(v => !v)} title="Pick border style" className="w-8 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-zinc-600 flex items-center justify-center"><svg width="15" height="15" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="16" height="16" rx="1.5" stroke="#444" strokeWidth="1.5"/><line x1="5" y1="1" x2="5" y2="17" stroke="#444" strokeWidth="0.7"/><line x1="9" y1="1" x2="9" y2="17" stroke="#444" strokeWidth="0.7"/><line x1="13" y1="1" x2="13" y2="17" stroke="#444" strokeWidth="0.7"/><line x1="1" y1="5" x2="17" y2="5" stroke="#444" strokeWidth="0.7"/><line x1="1" y1="9" x2="17" y2="9" stroke="#444" strokeWidth="0.7"/><line x1="1" y1="13" x2="17" y2="13" stroke="#444" strokeWidth="0.7"/></svg></button>
               <PortalPopup anchorRef={borderPopupRef} open={showBorderPopup}>
                 <div className="bg-white border border-zinc-300 rounded-lg shadow-xl p-2 flex flex-col gap-1 w-36">
                   {([{ style: "none" as const, label: "No border", icon: <span className="text-xs font-bold text-zinc-500">N</span> },{ style: "single" as const, label: "Single border", icon: <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="1.5" y="1.5" width="15" height="15" rx="1" stroke="#444" strokeWidth="1.5"/></svg> },{ style: "double" as const, label: "Double border", icon: <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="16" height="16" rx="1" stroke="#444" strokeWidth="1"/><rect x="3.5" y="3.5" width="11" height="11" rx="0.5" stroke="#444" strokeWidth="1"/></svg> },{ style: "bold" as const, label: "Bold border", icon: <svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="2" y="2" width="14" height="14" rx="1" stroke="#222" strokeWidth="3.5"/></svg> }]).map(({ style, label, icon }) => (
