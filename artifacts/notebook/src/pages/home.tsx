@@ -349,7 +349,7 @@ export default function Home() {
               <div className="relative">
                 <Link href={`/books/${book.id}`} onClick={(e) => handleBookClick(e, book)} className="block">
                   <div
-                    className="aspect-[3/4] rounded-md shadow-md transition-transform duration-300 group-hover:-translate-y-2 group-hover:shadow-xl relative overflow-hidden"
+                    className={`aspect-[3/4] rounded-md transition-transform duration-300 relative overflow-hidden ${isLockOpen || isUnlockOpen ? "shadow-none" : "shadow-md group-hover:-translate-y-2 group-hover:shadow-xl"}`}
                     style={coverStyle((book as any).pattern ?? "solid", book.color || "#1e293b", (book as any).coverImg)}
                   >
                     {!(book as any).coverImg && <div className="absolute left-4 top-0 bottom-0 w-px bg-black/20" />}
