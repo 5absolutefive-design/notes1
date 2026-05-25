@@ -3,6 +3,8 @@ export interface FloatingImage {
   src: string;
   x: number;
   y: number;
+  width?: number;
+  locked?: boolean;
 }
 
 export interface Book {

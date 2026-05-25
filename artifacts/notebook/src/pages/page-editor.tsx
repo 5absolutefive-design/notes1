@@ -933,7 +933,7 @@ export default function PageEditor() {
     const reader = new FileReader();
     reader.onload = (ev) => {
       const src = ev.target?.result as string;
-      const newImg: FloatingImage = { id: crypto.randomUUID(), src, x: 40, y: 40 };
+      const newImg: FloatingImage = { id: crypto.randomUUID(), src, x: 40, y: 40, width: 320, locked: false };
       const updated = [...floatingImgs, newImg];
       setFloatingImgs(updated);
       store.saveFloatingImages(pId, updated);
@@ -974,6 +974,63 @@ export default function PageEditor() {
     const updated = floatingImgs.filter(i => i.id !== id);
     setFloatingImgs(updated);
     store.saveFloatingImages(pId, updated);
+  }
+
+  function handleToggleLock(id: string) {
+    const updated = floatingImgs.map(i => i.id === id ? { ...i, locked: !i.locked } : i);
+    setFloatingImgs(updated);
+    store.saveFloatingImages(pId, updated);
+  }
+
+  function handleImgResizeStart(e: React.MouseEvent, id: string, corner: "nw" | "ne" | "sw" | "se") {
+    e.preventDefault();
+    e.stopPropagation();
+    const img = floatingImgs.find(i => i.id === id);
+    if (!img) return;
+    const origWidth = img.width ?? 320;
+    const origX = img.x;
+    const origY = img.y;
+    const startMouseX = e.clientX;
+    const startMouseY = e.clientY;
+    const zoomFactor = zoom / 100;
+
+    function onMouseMove(me: MouseEvent) {
+      const dx = (me.clientX - startMouseX) / zoomFactor;
+      const dy = (me.clientY - startMouseY) / zoomFactor;
+      let newWidth = origWidth;
+      let newX = origX;
+      let newY = origY;
+
+      if (corner === "se") {
+        newWidth = Math.max(50, origWidth + dx);
+      } else if (corner === "sw") {
+        newWidth = Math.max(50, origWidth - dx);
+        newX = origX + (origWidth - newWidth);
+      } else if (corner === "ne") {
+        newWidth = Math.max(50, origWidth + dx);
+        newY = origY + dy;
+      } else if (corner === "nw") {
+        newWidth = Math.max(50, origWidth - dx);
+        newX = origX + (origWidth - newWidth);
+        newY = origY + dy;
+      }
+
+      setFloatingImgs(prev => prev.map(i =>
+        i.id === id ? { ...i, width: Math.round(newWidth), x: newX, y: newY } : i
+      ));
+    }
+
+    function onMouseUp() {
+      setFloatingImgs(prev => {
+        store.saveFloatingImages(pId, prev);
+        return prev;
+      });
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    }
+
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
   }
 
   useEffect(() => {
@@ -3040,23 +3097,58 @@ export default function PageEditor() {
                   style={{ fontFamily: font, fontSize: fontSize, lineHeight: "1.8", minHeight: 500 * Math.round(fontSize * 1.8), whiteSpace: autoWrap ? "pre-wrap" : "pre", overflowX: autoWrap ? "hidden" : "auto" }}
                   data-placeholder="Start writing..."
                 />
-                {floatingImgs.map(img => (
-                  <div
-                    key={img.id}
-                    style={{ position: "absolute", left: img.x, top: img.y, zIndex: 10, userSelect: "none", cursor: "grab" }}
-                    onMouseDown={e => handleImgDragStart(e, img.id)}
-                  >
-                    <div style={{ position: "relative", display: "inline-block", boxShadow: "0 2px 8px rgba(0,0,0,0.18)", borderRadius: 4, border: "1.5px solid #d4d4d8" }}>
-                      <img src={img.src} draggable={false} style={{ display: "block", maxWidth: 320, maxHeight: 320, borderRadius: 3, pointerEvents: "none" }} />
-                      <button
-                        onMouseDown={e => e.stopPropagation()}
-                        onClick={() => handleRemoveFloatingImg(img.id)}
-                        title="Remove image"
-                        style={{ position: "absolute", top: -10, right: -10, width: 20, height: 20, borderRadius: "50%", background: "#ef4444", border: "2px solid white", color: "white", fontSize: 12, lineHeight: 1, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }}
-                      >×</button>
+                {floatingImgs.map(img => {
+                  const w = img.width ?? 320;
+                  const isLocked = !!img.locked;
+                  const handleStyle: React.CSSProperties = { position: "absolute", width: 10, height: 10, background: "white", border: "2px solid #ef4444", borderRadius: 2 };
+                  return (
+                    <div
+                      key={img.id}
+                      style={{ position: "absolute", left: img.x, top: img.y, zIndex: 10, userSelect: "none", cursor: isLocked ? "default" : "grab" }}
+                      onMouseDown={e => !isLocked && handleImgDragStart(e, img.id)}
+                    >
+                      <div style={{ position: "relative", display: "inline-block", boxShadow: "0 2px 8px rgba(0,0,0,0.18)", borderRadius: 4, border: `1.5px solid ${isLocked ? "#94a3b8" : "#d4d4d8"}` }}>
+                        <img src={img.src} draggable={false} style={{ display: "block", width: w, height: "auto", borderRadius: 3, pointerEvents: "none" }} />
+
+                        {/* ✕ Delete button */}
+                        <button
+                          onMouseDown={e => e.stopPropagation()}
+                          onClick={() => handleRemoveFloatingImg(img.id)}
+                          title="Remove image"
+                          style={{ position: "absolute", top: -11, right: -11, width: 20, height: 20, borderRadius: "50%", background: "#ef4444", border: "2px solid white", color: "white", fontSize: 13, lineHeight: 1, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.25)" }}
+                        >×</button>
+
+                        {/* 🔒 Lock/Unlock button */}
+                        <button
+                          onMouseDown={e => e.stopPropagation()}
+                          onClick={() => handleToggleLock(img.id)}
+                          title={isLocked ? "Unlock image" : "Lock image"}
+                          style={{ position: "absolute", top: -11, right: 13, width: 20, height: 20, borderRadius: "50%", background: isLocked ? "#3b82f6" : "#6b7280", border: "2px solid white", color: "white", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.25)" }}
+                        >
+                          {isLocked ? (
+                            <svg viewBox="0 0 12 12" width="10" height="10" fill="white"><rect x="2" y="5" width="8" height="6" rx="1"/><path d="M4 5V3.5a2 2 0 0 1 4 0V5" stroke="white" strokeWidth="1.2" fill="none"/></svg>
+                          ) : (
+                            <svg viewBox="0 0 12 12" width="10" height="10" fill="white"><rect x="2" y="5" width="8" height="6" rx="1"/><path d="M4 5V3.5a2 2 0 0 1 4 0V2" stroke="white" strokeWidth="1.2" fill="none"/></svg>
+                          )}
+                        </button>
+
+                        {/* 📐 Size badge (bottom-left) */}
+                        <div
+                          onMouseDown={e => e.stopPropagation()}
+                          style={{ position: "absolute", bottom: -18, left: 0, fontSize: 9, color: "#6b7280", background: "rgba(255,255,255,0.95)", padding: "1px 5px", borderRadius: 3, border: "1px solid #e4e4e7", whiteSpace: "nowrap", fontFamily: "monospace", pointerEvents: "none" }}
+                        >{w}px</div>
+
+                        {/* Corner resize handles — hidden when locked */}
+                        {!isLocked && (<>
+                          <div onMouseDown={e => handleImgResizeStart(e, img.id, "nw")} style={{ ...handleStyle, top: -5, left: -5, cursor: "nw-resize" }} />
+                          <div onMouseDown={e => handleImgResizeStart(e, img.id, "ne")} style={{ ...handleStyle, top: -5, right: -5, cursor: "ne-resize" }} />
+                          <div onMouseDown={e => handleImgResizeStart(e, img.id, "sw")} style={{ ...handleStyle, bottom: -5, left: -5, cursor: "sw-resize" }} />
+                          <div onMouseDown={e => handleImgResizeStart(e, img.id, "se")} style={{ ...handleStyle, bottom: -5, right: -5, cursor: "se-resize" }} />
+                        </>)}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
