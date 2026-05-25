@@ -3138,10 +3138,8 @@ export default function PageEditor() {
                           style={{ position: "absolute", bottom: -18, left: 0, fontSize: 9, color: "#6b7280", background: "rgba(255,255,255,0.95)", padding: "1px 5px", borderRadius: 3, border: "1px solid #e4e4e7", whiteSpace: "nowrap", fontFamily: "monospace", pointerEvents: "none" }}
                         >{w}px</div>
 
-                        {/* Corner resize handles — hidden when locked */}
+                        {/* Corner resize handles — bottom-left and bottom-right only, hidden when locked */}
                         {!isLocked && (<>
-                          <div onMouseDown={e => handleImgResizeStart(e, img.id, "nw")} style={{ ...handleStyle, top: -5, left: -5, cursor: "nw-resize" }} />
-                          <div onMouseDown={e => handleImgResizeStart(e, img.id, "ne")} style={{ ...handleStyle, top: -5, right: -5, cursor: "ne-resize" }} />
                           <div onMouseDown={e => handleImgResizeStart(e, img.id, "sw")} style={{ ...handleStyle, bottom: -5, left: -5, cursor: "sw-resize" }} />
                           <div onMouseDown={e => handleImgResizeStart(e, img.id, "se")} style={{ ...handleStyle, bottom: -5, right: -5, cursor: "se-resize" }} />
                         </>)}
