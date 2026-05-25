@@ -5,8 +5,29 @@
 
 @font-face {
   font-family: 'Myriad Pro';
+  src: url('/MyriadPro-Regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Myriad Pro';
   src: url('/MyriadPro-Bold.otf') format('opentype');
   font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Arial Black';
+  src: url('/ariblk.ttf') format('truetype');
+  font-weight: 900;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Poppins Light';
+  src: url('/Poppins-Light.ttf') format('truetype');
+  font-weight: 300;
   font-style: normal;
 }
 
