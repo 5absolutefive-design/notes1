@@ -871,6 +871,8 @@ export default function PageEditor() {
   const [nrcCustomCols, setNrcCustomCols] = useState<string>("");
 
   const [showFontSizePopup, setShowFontSizePopup] = useState(false);
+  const [showHeadingPopup, setShowHeadingPopup] = useState(false);
+  const headingPopupRef = useRef<HTMLDivElement>(null);
   const [showBorderPopup, setShowBorderPopup] = useState(false);
   const [selectedBorderStyle, setSelectedBorderStyle] = useState<BorderStyle | "none">("single");
   const fontSizePopupRef = useRef<HTMLDivElement>(null);
@@ -935,6 +937,9 @@ export default function PageEditor() {
       }
       if (borderPopupRef.current && !borderPopupRef.current.contains(target)) {
         setShowBorderPopup(false);
+      }
+      if (headingPopupRef.current && !headingPopupRef.current.contains(target)) {
+        setShowHeadingPopup(false);
       }
       if (pageTypePickerRef.current && !pageTypePickerRef.current.contains(target)) {
         setShowPageTypePicker(false);
@@ -1254,6 +1259,17 @@ export default function PageEditor() {
     handleEditorInput();
   };
 
+  const handleHeading = (level: number) => {
+    setShowHeadingPopup(false);
+    editorRef.current?.focus();
+    if (level === 0) {
+      document.execCommand("formatBlock", false, "p");
+    } else {
+      document.execCommand("formatBlock", false, `h${level}`);
+    }
+    handleEditorInput();
+  };
+
   const [showCutConfirm, setShowCutConfirm] = useState(false);
   const [cutBtnRect, setCutBtnRect] = useState<{ top: number; left: number } | null>(null);
   const cutTypeRef = useRef<'text' | 'spreadsheet'>('text');
@@ -1456,6 +1472,39 @@ export default function PageEditor() {
         }}
         className="w-full text-xs text-zinc-600 hover:text-zinc-900 hover:bg-zinc-100 rounded px-2 py-1 text-left border border-zinc-200 transition-colors"
       >🎨 More Colors...</button>
+    </div>
+  );
+
+  const HEADING_LEVELS = [
+    { level: 1, label: "H1", desc: "Heading 1", size: "1.6em" },
+    { level: 2, label: "H2", desc: "Heading 2", size: "1.35em" },
+    { level: 3, label: "H3", desc: "Heading 3", size: "1.15em" },
+    { level: 4, label: "H4", desc: "Heading 4", size: "1em" },
+    { level: 5, label: "H5", desc: "Heading 5", size: "0.9em" },
+    { level: 6, label: "H6", desc: "Heading 6", size: "0.8em" },
+    { level: 7, label: "H7", desc: "Heading 7", size: "0.72em" },
+  ];
+
+  const HeadingPanel = ({ noAbsolute }: { noAbsolute?: boolean } = {}) => (
+    <div className={(noAbsolute ? "" : "absolute top-full left-0 mt-1 z-50 ") + "bg-white border border-zinc-300 rounded-lg shadow-xl p-1.5 w-44"}>
+      {HEADING_LEVELS.map(({ level, label, desc, size }) => (
+        <button
+          key={level}
+          onClick={() => handleHeading(level === 7 ? 0 : level)}
+          className="w-full flex items-baseline gap-2 px-2 py-1 hover:bg-zinc-100 rounded text-left transition-colors"
+        >
+          <span style={{ fontSize: size, fontWeight: "bold", lineHeight: 1.3, color: "#27272a", minWidth: "1.8em" }}>{label}</span>
+          <span className="text-[10px] text-zinc-400 truncate">{desc}</span>
+        </button>
+      ))}
+      <div className="border-t border-zinc-200 mt-1 pt-1">
+        <button
+          onClick={() => handleHeading(0)}
+          className="w-full flex items-center gap-2 px-2 py-1 hover:bg-zinc-100 rounded text-left text-xs text-zinc-500 transition-colors"
+        >
+          <span className="font-medium">Normal (P)</span>
+        </button>
+      </div>
     </div>
   );
 
@@ -1695,6 +1744,14 @@ export default function PageEditor() {
 
             {/* AB — All Caps toggle */}
             <button onClick={handleAllCaps} title="All caps (toggle)" className={`${btnSq} ${isAllCaps ? btnActive : ""}`}><span className="font-black text-[11px] tracking-tight">AB</span></button>
+            <div className="relative" ref={headingPopupRef as React.RefObject<HTMLDivElement>}>
+              <button onClick={() => setShowHeadingPopup(v => !v)} title="Heading style" className={`${btnSq} ${showHeadingPopup ? btnActive : ""}`}>
+                <span className="text-[10px] font-black leading-none">H+</span>
+              </button>
+              <PortalPopup anchorRef={headingPopupRef} open={showHeadingPopup}>
+                <HeadingPanel noAbsolute />
+              </PortalPopup>
+            </div>
 
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
 
@@ -1941,6 +1998,14 @@ export default function PageEditor() {
               </PortalPopup>
             </div>
             <button onClick={handleAllCaps} title="All caps (toggle)" className={`${btnSq} ${isAllCaps ? btnActive : ""}`}><span className="font-black text-[11px] tracking-tight">AB</span></button>
+            <div className="relative" ref={headingPopupRef as React.RefObject<HTMLDivElement>}>
+              <button onClick={() => setShowHeadingPopup(v => !v)} title="Heading style" className={`${btnSq} ${showHeadingPopup ? btnActive : ""}`}>
+                <span className="text-[10px] font-black leading-none">H+</span>
+              </button>
+              <PortalPopup anchorRef={headingPopupRef} open={showHeadingPopup}>
+                <HeadingPanel noAbsolute />
+              </PortalPopup>
+            </div>
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
             <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
               <button onClick={() => execInlineFormat("bold")} title="Bold" className={`w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center ${activeFormats.bold ? "bg-zinc-200" : ""}`}><span className="font-black text-sm">B</span></button>
@@ -2225,6 +2290,14 @@ export default function PageEditor() {
               </div>
               {/* AB — All Caps toggle */}
               <button onClick={handleAllCaps} title="All caps (toggle)" className={`${btnSq} ${isAllCaps ? btnActive : ""}`}><span className="font-black text-[11px] tracking-tight">AB</span></button>
+            <div className="relative" ref={headingPopupRef as React.RefObject<HTMLDivElement>}>
+              <button onClick={() => setShowHeadingPopup(v => !v)} title="Heading style" className={`${btnSq} ${showHeadingPopup ? btnActive : ""}`}>
+                <span className="text-[10px] font-black leading-none">H+</span>
+              </button>
+              <PortalPopup anchorRef={headingPopupRef} open={showHeadingPopup}>
+                <HeadingPanel noAbsolute />
+              </PortalPopup>
+            </div>
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
               {/* B I U S — joined */}
               <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
@@ -2384,6 +2457,14 @@ export default function PageEditor() {
               </div>
               {/* AB — All Caps toggle */}
               <button onClick={handleAllCaps} title="All caps (toggle)" className={`${btnSq} ${isAllCaps ? btnActive : ""}`}><span className="font-black text-[11px] tracking-tight">AB</span></button>
+            <div className="relative" ref={headingPopupRef as React.RefObject<HTMLDivElement>}>
+              <button onClick={() => setShowHeadingPopup(v => !v)} title="Heading style" className={`${btnSq} ${showHeadingPopup ? btnActive : ""}`}>
+                <span className="text-[10px] font-black leading-none">H+</span>
+              </button>
+              <PortalPopup anchorRef={headingPopupRef} open={showHeadingPopup}>
+                <HeadingPanel noAbsolute />
+              </PortalPopup>
+            </div>
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
               {/* B I U S — joined */}
               <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
