@@ -1262,6 +1262,7 @@ export default function PageEditor() {
   const handleHeading = (level: number) => {
     setShowHeadingPopup(false);
     editorRef.current?.focus();
+    restoreSelection();
     if (level === 0) {
       document.execCommand("formatBlock", false, "p");
     } else {
@@ -1745,7 +1746,7 @@ export default function PageEditor() {
             {/* AB — All Caps toggle */}
             <button onClick={handleAllCaps} title="All caps (toggle)" className={`${btnSq} ${isAllCaps ? btnActive : ""}`}><span className="font-black text-[11px] tracking-tight">AB</span></button>
             <div className="relative" ref={headingPopupRef as React.RefObject<HTMLDivElement>}>
-              <button onClick={() => setShowHeadingPopup(v => !v)} title="Heading style" className={`${btnSq} ${showHeadingPopup ? btnActive : ""}`}>
+              <button onClick={() => { const sel = window.getSelection(); if (sel && sel.rangeCount > 0) savedRangeRef.current = sel.getRangeAt(0).cloneRange(); setShowHeadingPopup(v => !v); }} title="Heading style" className={`${btnSq} ${showHeadingPopup ? btnActive : ""}`}>
                 <span className="text-[10px] font-black leading-none">H+</span>
               </button>
               <PortalPopup anchorRef={headingPopupRef} open={showHeadingPopup}>
@@ -1999,7 +2000,7 @@ export default function PageEditor() {
             </div>
             <button onClick={handleAllCaps} title="All caps (toggle)" className={`${btnSq} ${isAllCaps ? btnActive : ""}`}><span className="font-black text-[11px] tracking-tight">AB</span></button>
             <div className="relative" ref={headingPopupRef as React.RefObject<HTMLDivElement>}>
-              <button onClick={() => setShowHeadingPopup(v => !v)} title="Heading style" className={`${btnSq} ${showHeadingPopup ? btnActive : ""}`}>
+              <button onClick={() => { const sel = window.getSelection(); if (sel && sel.rangeCount > 0) savedRangeRef.current = sel.getRangeAt(0).cloneRange(); setShowHeadingPopup(v => !v); }} title="Heading style" className={`${btnSq} ${showHeadingPopup ? btnActive : ""}`}>
                 <span className="text-[10px] font-black leading-none">H+</span>
               </button>
               <PortalPopup anchorRef={headingPopupRef} open={showHeadingPopup}>
@@ -2291,7 +2292,7 @@ export default function PageEditor() {
               {/* AB — All Caps toggle */}
               <button onClick={handleAllCaps} title="All caps (toggle)" className={`${btnSq} ${isAllCaps ? btnActive : ""}`}><span className="font-black text-[11px] tracking-tight">AB</span></button>
             <div className="relative" ref={headingPopupRef as React.RefObject<HTMLDivElement>}>
-              <button onClick={() => setShowHeadingPopup(v => !v)} title="Heading style" className={`${btnSq} ${showHeadingPopup ? btnActive : ""}`}>
+              <button onClick={() => { const sel = window.getSelection(); if (sel && sel.rangeCount > 0) savedRangeRef.current = sel.getRangeAt(0).cloneRange(); setShowHeadingPopup(v => !v); }} title="Heading style" className={`${btnSq} ${showHeadingPopup ? btnActive : ""}`}>
                 <span className="text-[10px] font-black leading-none">H+</span>
               </button>
               <PortalPopup anchorRef={headingPopupRef} open={showHeadingPopup}>
@@ -2458,7 +2459,7 @@ export default function PageEditor() {
               {/* AB — All Caps toggle */}
               <button onClick={handleAllCaps} title="All caps (toggle)" className={`${btnSq} ${isAllCaps ? btnActive : ""}`}><span className="font-black text-[11px] tracking-tight">AB</span></button>
             <div className="relative" ref={headingPopupRef as React.RefObject<HTMLDivElement>}>
-              <button onClick={() => setShowHeadingPopup(v => !v)} title="Heading style" className={`${btnSq} ${showHeadingPopup ? btnActive : ""}`}>
+              <button onClick={() => { const sel = window.getSelection(); if (sel && sel.rangeCount > 0) savedRangeRef.current = sel.getRangeAt(0).cloneRange(); setShowHeadingPopup(v => !v); }} title="Heading style" className={`${btnSq} ${showHeadingPopup ? btnActive : ""}`}>
                 <span className="text-[10px] font-black leading-none">H+</span>
               </button>
               <PortalPopup anchorRef={headingPopupRef} open={showHeadingPopup}>
