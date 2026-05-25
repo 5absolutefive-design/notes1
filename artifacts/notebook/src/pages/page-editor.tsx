@@ -2567,15 +2567,6 @@ export default function PageEditor() {
               <button onClick={() => setLocation("/")} className="w-28 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center gap-1.5 text-[11px] font-semibold text-zinc-600 shrink-0">🏠 My Notebooks</button>
               <div className="flex-1" />
 
-              <button
-                onClick={() => imageFileInputRef.current?.click()}
-                title="Insert image (max 2 MB)"
-                className="w-8 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center shrink-0"
-              >
-                <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" className="text-zinc-600"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/><circle cx="5.5" cy="6" r="1.3"/><polyline points="1.5,10.5 5,7 7.5,9.5 10,7.5 14.5,12"/></svg>
-              </button>
-              <input ref={imageFileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageFileChange} />
-
               <div className="relative shrink-0" ref={themePopupRef}>
                 <button onClick={() => setShowThemePopup(v => !v)} title="Page theme" className="w-8 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-base">🎨</button>
                 <PortalPopup anchorRef={themePopupRef} open={showThemePopup} align="right">
@@ -2728,6 +2719,15 @@ export default function PageEditor() {
                   <BulletPanel noAbsolute />
                 </PortalPopup>
               </div>
+              {/* Insert image */}
+              <button
+                onClick={() => imageFileInputRef.current?.click()}
+                title="Insert image (max 2 MB)"
+                className={`${btnSq} shrink-0`}
+              >
+                <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" className="text-zinc-600"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/><circle cx="5.5" cy="6" r="1.3"/><polyline points="1.5,10.5 5,7 7.5,9.5 10,7.5 14.5,12"/></svg>
+              </button>
+              <input ref={imageFileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageFileChange} />
               {/* Spacer */}
               <div className="flex-1" />
               {/* DEL + TRASH */}
