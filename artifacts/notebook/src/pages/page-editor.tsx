@@ -1505,7 +1505,7 @@ export default function PageEditor() {
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-1">
             <div className="relative" ref={fontMenuRef}>
-              <button onClick={() => setShowFontMenu(v => !v)} className="w-36 h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors px-2 text-left text-sm font-medium text-zinc-700 truncate" style={{ fontFamily: font }}>
+              <button onClick={() => setShowFontMenu(v => !v)} className="w-[152px] h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors px-2 text-left text-sm font-medium text-zinc-700 truncate" style={{ fontFamily: font }}>
                 {font}
               </button>
               {showFontMenu && (
@@ -1640,7 +1640,7 @@ export default function PageEditor() {
 
             {/* Font family */}
             <div className="relative shrink-0" ref={fontMenuRef as React.RefObject<HTMLDivElement>}>
-              <button onClick={() => setShowFontMenu(v => !v)} className="h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-left text-sm font-medium text-zinc-700 truncate w-[152px]" style={{ fontFamily: font }}>
+              <button onClick={() => setShowFontMenu(v => !v)} className="h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-left text-sm font-medium text-zinc-700 truncate w-[160px]" style={{ fontFamily: font }}>
                 {font}
               </button>
               <PortalPopup anchorRef={fontMenuRef} open={showFontMenu}>
@@ -1897,7 +1897,7 @@ export default function PageEditor() {
             </div>
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
             <div className="relative shrink-0" ref={fontMenuRef as React.RefObject<HTMLDivElement>}>
-              <button onClick={() => setShowFontMenu(v => !v)} className="h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-left text-sm font-medium text-zinc-700 truncate w-[152px]" style={{ fontFamily: font }}>{font}</button>
+              <button onClick={() => setShowFontMenu(v => !v)} className="h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-left text-sm font-medium text-zinc-700 truncate w-[160px]" style={{ fontFamily: font }}>{font}</button>
               <PortalPopup anchorRef={fontMenuRef} open={showFontMenu}>
                 <div className="bg-white border border-zinc-300 rounded-lg shadow-lg overflow-y-auto max-h-52 w-44">
                   {FONTS.map(f => (<button key={f} onClick={() => handleFontChange(f)} className={`w-full text-left px-3 py-1.5 text-sm hover:bg-zinc-100 transition-colors ${font === f ? "bg-zinc-100 font-semibold" : ""}`} style={{ fontFamily: f }}>{f}</button>))}
@@ -2167,7 +2167,7 @@ export default function PageEditor() {
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
               {/* Font family */}
               <div className="relative shrink-0" ref={fontMenuRef as React.RefObject<HTMLDivElement>}>
-                <button onClick={() => setShowFontMenu(v => !v)} className="h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-left text-sm font-medium text-zinc-700 truncate w-[152px]" style={{ fontFamily: font }}>
+                <button onClick={() => setShowFontMenu(v => !v)} className="h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-left text-sm font-medium text-zinc-700 truncate w-[160px]" style={{ fontFamily: font }}>
                   {font}
                 </button>
                 <PortalPopup anchorRef={fontMenuRef} open={showFontMenu}>
@@ -2323,7 +2323,7 @@ export default function PageEditor() {
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
               {/* Font family */}
               <div className="relative shrink-0" ref={fontMenuRef as React.RefObject<HTMLDivElement>}>
-                <button onClick={() => setShowFontMenu(v => !v)} className="h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-left text-sm font-medium text-zinc-700 truncate w-[152px]" style={{ fontFamily: font }}>
+                <button onClick={() => setShowFontMenu(v => !v)} className="h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-left text-sm font-medium text-zinc-700 truncate w-[160px]" style={{ fontFamily: font }}>
                   {font}
                 </button>
                 <PortalPopup anchorRef={fontMenuRef} open={showFontMenu}>
