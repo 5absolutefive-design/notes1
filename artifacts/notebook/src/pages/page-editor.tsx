@@ -1542,10 +1542,7 @@ export default function PageEditor() {
             </div>
             <div className="relative" ref={highlightPickerRef}>
               <button onClick={() => setShowHighlightPicker(v => !v)} title="Highlight color (double-space to exit mode)" className={`${btnSq} ${isHighlighterMode ? btnActive : ""}`}>
-                <div className="flex flex-col items-center justify-center gap-0.5">
-                  <span className="font-bold text-sm leading-none text-zinc-700">A</span>
-                  <div className="w-5 h-1.5 rounded-sm" style={{ backgroundColor: highlightColor }} />
-                </div>
+                <div className="w-5 h-5 rounded-sm border border-zinc-300" style={{ backgroundColor: highlightColor === "transparent" ? "#ffffff" : highlightColor }} />
               </button>
               {showHighlightPicker && <HighlightPanel />}
             </div>
@@ -1721,10 +1718,7 @@ export default function PageEditor() {
             {/* Highlight color */}
             <div className="relative" ref={highlightPickerRef as React.RefObject<HTMLDivElement>}>
               <button onClick={() => setShowHighlightPicker(v => !v)} title="Highlight color (double-space to exit mode)" className={`${btnSq} ${isHighlighterMode ? btnActive : ""}`}>
-                <div className="flex flex-col items-center justify-center gap-0.5">
-                  <span className="font-bold text-sm leading-none text-zinc-700">A</span>
-                  <div className="w-5 h-1.5 rounded-sm" style={{ backgroundColor: highlightColor }} />
-                </div>
+                <div className="w-5 h-5 rounded-sm border border-zinc-300" style={{ backgroundColor: highlightColor === "transparent" ? "#ffffff" : highlightColor }} />
               </button>
               <PortalPopup anchorRef={highlightPickerRef} open={showHighlightPicker}>
                 <HighlightPanel noAbsolute />
@@ -1955,7 +1949,7 @@ export default function PageEditor() {
             </div>
             <div className="relative" ref={highlightPickerRef as React.RefObject<HTMLDivElement>}>
               <button onClick={() => setShowHighlightPicker(v => !v)} title="Highlight color" className={`${btnSq} ${isHighlighterMode ? btnActive : ""}`}>
-                <div className="flex flex-col items-center justify-center gap-0.5"><span className="font-bold text-sm leading-none text-zinc-700">A</span><div className="w-5 h-1.5 rounded-sm" style={{ backgroundColor: highlightColor }} /></div>
+                <div className="w-5 h-5 rounded-sm border border-zinc-300" style={{ backgroundColor: highlightColor === "transparent" ? "#ffffff" : highlightColor }} />
               </button>
               <PortalPopup anchorRef={highlightPickerRef} open={showHighlightPicker}><HighlightPanel noAbsolute /></PortalPopup>
             </div>
@@ -2243,10 +2237,7 @@ export default function PageEditor() {
               {/* Highlight color */}
               <div className="relative shrink-0" ref={highlightPickerRef as React.RefObject<HTMLDivElement>}>
                 <button onClick={() => setShowHighlightPicker(v => !v)} title="Highlight color (double-space to exit mode)" className={`${btnSq} ${isHighlighterMode ? btnActive : ""}`}>
-                  <div className="flex flex-col items-center justify-center gap-0.5">
-                    <span className="font-bold text-sm leading-none text-zinc-700">A</span>
-                    <div className="w-5 h-1.5 rounded-sm" style={{ backgroundColor: highlightColor }} />
-                  </div>
+                  <div className="w-5 h-5 rounded-sm border border-zinc-300" style={{ backgroundColor: highlightColor === "transparent" ? "#ffffff" : highlightColor }} />
                 </button>
                 <PortalPopup anchorRef={highlightPickerRef} open={showHighlightPicker}><HighlightPanel noAbsolute /></PortalPopup>
               </div>
@@ -2403,10 +2394,7 @@ export default function PageEditor() {
               {/* Highlight color */}
               <div className="relative shrink-0" ref={highlightPickerRef as React.RefObject<HTMLDivElement>}>
                 <button onClick={() => setShowHighlightPicker(v => !v)} title="Highlight color (double-space to exit mode)" className={`${btnSq} ${isHighlighterMode ? btnActive : ""}`}>
-                  <div className="flex flex-col items-center justify-center gap-0.5">
-                    <span className="font-bold text-sm leading-none text-zinc-700">A</span>
-                    <div className="w-5 h-1.5 rounded-sm" style={{ backgroundColor: highlightColor }} />
-                  </div>
+                  <div className="w-5 h-5 rounded-sm border border-zinc-300" style={{ backgroundColor: highlightColor === "transparent" ? "#ffffff" : highlightColor }} />
                 </button>
                 <PortalPopup anchorRef={highlightPickerRef} open={showHighlightPicker}><HighlightPanel noAbsolute /></PortalPopup>
               </div>
