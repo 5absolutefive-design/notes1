@@ -365,7 +365,7 @@ export default function Home() {
                 {isLockOpen && (
                   <div
                     ref={lockPopupRef}
-                    className="absolute inset-0 rounded-md z-50 bg-black/30 backdrop-blur-[2px] flex items-center justify-center"
+                    className="absolute inset-0 rounded-md z-50 flex items-center justify-center"
                   >
                     <div className="bg-white rounded-lg shadow-xl border border-stone-100 mx-2.5 w-full flex flex-col gap-1.5 p-2.5">
                       <div className="flex items-center justify-between">
@@ -417,7 +417,7 @@ export default function Home() {
                 {isUnlockOpen && (
                   <div
                     ref={unlockPopupRef}
-                    className="absolute inset-0 rounded-md z-50 bg-black/30 backdrop-blur-[2px] flex items-center justify-center"
+                    className="absolute inset-0 rounded-md z-50 flex items-center justify-center"
                   >
                     <div className="bg-white rounded-lg shadow-xl border border-stone-100 mx-2.5 w-full flex flex-col gap-1.5 p-2.5 relative">
                       <button onClick={closeUnlockPopup} className="absolute top-1.5 right-1.5 text-stone-400 hover:text-stone-600"><X className="w-3 h-3" /></button>
