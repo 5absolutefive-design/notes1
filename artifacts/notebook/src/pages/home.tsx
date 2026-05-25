@@ -1,5 +1,5 @@
-import { Link } from "wouter";
-import { Plus, Trash2, Check, ImagePlus, X, Search, Download, Upload, BookOpen, FileText } from "lucide-react";
+import { Link, useLocation } from "wouter";
+import { Plus, Trash2, Check, ImagePlus, X, Search, Download, Upload, BookOpen, FileText, Lock, LockOpen, Eye, EyeOff } from "lucide-react";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { store, type Book } from "@/lib/store";
 
@@ -59,6 +59,7 @@ function coverStyle(pattern: string, color: string, coverImg?: string): React.CS
 }
 
 export default function Home() {
+  const [, navigate] = useLocation();
   const [books, setBooks] = useState<(Book & { pageCount: number })[]>([]);
   const [recentTitle, setRecentTitle] = useState<{ id: number; title: string } | null>(null);
   const [showCreate, setShowCreate] = useState(false);
@@ -70,9 +71,23 @@ export default function Home() {
   const [searchFocused, setSearchFocused] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
+
+  // Lock system state
+  const [lockPopupId, setLockPopupId] = useState<number | null>(null);
+  const [lockPw, setLockPw] = useState("");
+  const [lockPwConfirm, setLockPwConfirm] = useState("");
+  const [lockPwError, setLockPwError] = useState("");
+  const [showLockPw, setShowLockPw] = useState(false);
+  const [unlockPopupId, setUnlockPopupId] = useState<number | null>(null);
+  const [unlockInput, setUnlockInput] = useState("");
+  const [unlockError, setUnlockError] = useState("");
+  const [showUnlockPw, setShowUnlockPw] = useState(false);
+
   const popupRef = useRef<HTMLDivElement>(null);
   const imgInputRef = useRef<HTMLInputElement>(null);
   const editInputRef = useRef<HTMLInputElement>(null);
+  const lockPopupRef = useRef<HTMLDivElement>(null);
+  const unlockPopupRef = useRef<HTMLDivElement>(null);
 
   const refresh = useCallback(() => {
     const summary = store.getSummary();
@@ -102,13 +117,92 @@ export default function Home() {
     return () => document.removeEventListener("mousedown", handler);
   }, [showCreate]);
 
+  useEffect(() => {
+    if (lockPopupId === null) return;
+    const handler = (e: MouseEvent) => {
+      if (lockPopupRef.current && !lockPopupRef.current.contains(e.target as Node)) {
+        closeLockPopup();
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [lockPopupId]);
+
+  useEffect(() => {
+    if (unlockPopupId === null) return;
+    const handler = (e: MouseEvent) => {
+      if (unlockPopupRef.current && !unlockPopupRef.current.contains(e.target as Node)) {
+        closeUnlockPopup();
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [unlockPopupId]);
+
+  const closeLockPopup = () => {
+    setLockPopupId(null);
+    setLockPw("");
+    setLockPwConfirm("");
+    setLockPwError("");
+    setShowLockPw(false);
+  };
+
+  const closeUnlockPopup = () => {
+    setUnlockPopupId(null);
+    setUnlockInput("");
+    setUnlockError("");
+    setShowUnlockPw(false);
+  };
+
+  const openLockPopup = (e: React.MouseEvent, bookId: number) => {
+    e.preventDefault();
+    closeLockPopup();
+    closeUnlockPopup();
+    setLockPopupId(bookId);
+  };
+
+  const handleSetPassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!lockPw.trim()) { setLockPwError("Password cannot be empty."); return; }
+    if (lockPw !== lockPwConfirm) { setLockPwError("Passwords do not match."); return; }
+    store.updateBook(lockPopupId!, { password: lockPw });
+    closeLockPopup();
+    refresh();
+  };
+
+  const handleRemovePassword = () => {
+    store.updateBook(lockPopupId!, { password: undefined });
+    closeLockPopup();
+    refresh();
+  };
+
+  const handleBookClick = (e: React.MouseEvent, book: Book) => {
+    if (book.password) {
+      e.preventDefault();
+      setUnlockPopupId(book.id);
+      setUnlockInput("");
+      setUnlockError("");
+      setShowUnlockPw(false);
+    }
+  };
+
+  const handleUnlock = (e: React.FormEvent) => {
+    e.preventDefault();
+    const book = books.find(b => b.id === unlockPopupId);
+    if (!book) return;
+    if (unlockInput === book.password) {
+      closeUnlockPopup();
+      navigate(`/books/${book.id}`);
+    } else {
+      setUnlockError("Incorrect password. Try again.");
+    }
+  };
+
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => {
-      setNewCoverImg(ev.target?.result as string);
-    };
+    reader.onload = (ev) => { setNewCoverImg(ev.target?.result as string); };
     reader.readAsDataURL(file);
   };
 
@@ -199,8 +293,6 @@ export default function Home() {
       {/* Header Card */}
       <div className="mb-10 rounded-2xl border border-stone-200 bg-white shadow-sm px-6 py-4">
         <div className="flex items-center justify-between gap-4 flex-wrap">
-
-          {/* Left: Title + info */}
           <div className="flex items-center gap-3 flex-wrap min-w-0">
             <h1 className="text-3xl font-serif font-bold text-stone-800 leading-tight">My Notebooks</h1>
             <div className="flex items-center gap-2 text-xs text-stone-500 flex-wrap">
@@ -208,10 +300,7 @@ export default function Home() {
               <span className="flex items-center gap-1 bg-stone-100 rounded-full px-2 py-0.5"><FileText className="w-3 h-3" />{totalPages} page{totalPages !== 1 ? "s" : ""}</span>
             </div>
           </div>
-
-          {/* Right: Search + Download + Upload */}
           <div className="flex items-center gap-2 flex-shrink-0">
-            {/* Search bar */}
             <div className={`flex items-center gap-2 border rounded-lg bg-stone-50 px-3 py-1.5 transition-all duration-300 ${searchFocused || searchQuery ? "w-72 border-stone-400 bg-white shadow-sm" : "w-52 border-stone-200"}`}>
               <Search className="w-3.5 h-3.5 text-stone-400 flex-shrink-0" />
               <input
@@ -229,24 +318,11 @@ export default function Home() {
                 </button>
               )}
             </div>
-
-            {/* Download */}
-            <button
-              onClick={handleDownload}
-              title="Download backup"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-stone-200 bg-stone-50 hover:bg-stone-100 hover:border-stone-300 text-stone-600 text-xs font-medium transition-all"
-            >
-              <Download className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Backup</span>
+            <button onClick={handleDownload} title="Download backup" className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-stone-200 bg-stone-50 hover:bg-stone-100 hover:border-stone-300 text-stone-600 text-xs font-medium transition-all">
+              <Download className="w-3.5 h-3.5" /><span className="hidden sm:inline">Backup</span>
             </button>
-
-            {/* Upload */}
-            <label
-              title="Import backup"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-stone-200 bg-stone-50 hover:bg-stone-100 hover:border-stone-300 text-stone-600 text-xs font-medium transition-all cursor-pointer"
-            >
-              <Upload className="w-3.5 h-3.5" />
-              <span className="hidden sm:inline">Import</span>
+            <label title="Import backup" className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-stone-200 bg-stone-50 hover:bg-stone-100 hover:border-stone-300 text-stone-600 text-xs font-medium transition-all cursor-pointer">
+              <Upload className="w-3.5 h-3.5" /><span className="hidden sm:inline">Import</span>
               <input type="file" accept=".json" className="hidden" onChange={handleUpload} />
             </label>
           </div>
@@ -261,49 +337,164 @@ export default function Home() {
       )}
 
       <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-10">
-        {filteredBooks.map((book) => (
-          <Link key={book.id} href={`/books/${book.id}`} className="group flex flex-col gap-3 relative">
-            <div
-              className="aspect-[3/4] rounded-md shadow-md transition-transform duration-300 group-hover:-translate-y-2 group-hover:shadow-xl relative overflow-hidden"
-              style={coverStyle((book as any).pattern ?? "solid", book.color || "#1e293b", (book as any).coverImg)}
-            >
-              {!(book as any).coverImg && <div className="absolute left-4 top-0 bottom-0 w-px bg-black/20" />}
-            </div>
-            <div className="px-1 flex justify-between items-start group/text">
-              <div className="flex-1 min-w-0">
-                {editingId === book.id ? (
-                  <input
-                    ref={editInputRef}
-                    value={editingTitle}
-                    onChange={(e) => setEditingTitle(e.target.value)}
-                    onBlur={saveEditing}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") saveEditing();
-                      if (e.key === "Escape") cancelEditing();
-                    }}
-                    onClick={(e) => e.preventDefault()}
-                    className="font-serif font-medium text-sm w-full bg-white border-b-2 border-stone-400 outline-none text-stone-800 px-0 py-0.5"
-                    autoFocus
-                  />
-                ) : (
-                  <h3
-                    className="font-serif font-medium text-sm line-clamp-2 cursor-text hover:text-stone-500 transition-colors"
-                    onClick={(e) => startEditing(e, book)}
-                    title="Click to rename"
-                  >{book.title}</h3>
-                )}
-                <p className="text-xs text-muted-foreground mt-0.5">{book.pageCount} pages</p>
+        {filteredBooks.map((book) => {
+          const isLocked = !!book.password;
+          const isLockOpen = lockPopupId === book.id;
+          const isUnlockOpen = unlockPopupId === book.id;
+
+          return (
+            <div key={book.id} className="group flex flex-col gap-3 relative">
+              {/* Lock Popup (set/change/remove password) */}
+              {isLockOpen && (
+                <div
+                  ref={lockPopupRef}
+                  className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 w-64 bg-white rounded-xl shadow-2xl border border-stone-200 p-4 flex flex-col gap-3"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Lock className="w-4 h-4 text-stone-600" />
+                      <span className="text-sm font-semibold text-stone-700">{isLocked ? "Change Password" : "Set Password"}</span>
+                    </div>
+                    <button onClick={closeLockPopup} className="text-stone-400 hover:text-stone-600"><X className="w-4 h-4" /></button>
+                  </div>
+
+                  <form onSubmit={handleSetPassword} className="flex flex-col gap-2">
+                    <div className="relative">
+                      <input
+                        autoFocus
+                        type={showLockPw ? "text" : "password"}
+                        placeholder="New password"
+                        value={lockPw}
+                        onChange={e => { setLockPw(e.target.value); setLockPwError(""); }}
+                        className="w-full text-sm border border-stone-200 rounded-lg px-3 py-2 pr-9 outline-none focus:border-stone-400 bg-stone-50"
+                      />
+                      <button type="button" onClick={() => setShowLockPw(v => !v)} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
+                        {showLockPw ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                    <input
+                      type={showLockPw ? "text" : "password"}
+                      placeholder="Confirm password"
+                      value={lockPwConfirm}
+                      onChange={e => { setLockPwConfirm(e.target.value); setLockPwError(""); }}
+                      className="w-full text-sm border border-stone-200 rounded-lg px-3 py-2 outline-none focus:border-stone-400 bg-stone-50"
+                    />
+                    {lockPwError && <p className="text-xs text-red-500">{lockPwError}</p>}
+                    <button type="submit" className="w-full bg-stone-800 text-white text-sm font-semibold py-2 rounded-lg hover:bg-stone-700 transition-colors">
+                      {isLocked ? "Update Password" : "Set Password"}
+                    </button>
+                  </form>
+
+                  {isLocked && (
+                    <button
+                      onClick={handleRemovePassword}
+                      className="w-full text-xs text-red-500 hover:text-red-700 py-1 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
+                    >
+                      Remove Lock
+                    </button>
+                  )}
+                </div>
+              )}
+
+              {/* Unlock Popup (enter password to open) */}
+              {isUnlockOpen && (
+                <div
+                  ref={unlockPopupRef}
+                  className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 w-60 bg-white rounded-xl shadow-2xl border border-stone-200 p-4 flex flex-col gap-3"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Lock className="w-4 h-4 text-stone-600" />
+                      <span className="text-sm font-semibold text-stone-700">Locked</span>
+                    </div>
+                    <button onClick={closeUnlockPopup} className="text-stone-400 hover:text-stone-600"><X className="w-4 h-4" /></button>
+                  </div>
+                  <p className="text-xs text-stone-400">Enter password to open <span className="font-medium text-stone-600">{book.title}</span></p>
+                  <form onSubmit={handleUnlock} className="flex flex-col gap-2">
+                    <div className="relative">
+                      <input
+                        autoFocus
+                        type={showUnlockPw ? "text" : "password"}
+                        placeholder="Password"
+                        value={unlockInput}
+                        onChange={e => { setUnlockInput(e.target.value); setUnlockError(""); }}
+                        className="w-full text-sm border border-stone-200 rounded-lg px-3 py-2 pr-9 outline-none focus:border-stone-400 bg-stone-50"
+                      />
+                      <button type="button" onClick={() => setShowUnlockPw(v => !v)} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
+                        {showUnlockPw ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      </button>
+                    </div>
+                    {unlockError && <p className="text-xs text-red-500">{unlockError}</p>}
+                    <button type="submit" className="w-full bg-stone-800 text-white text-sm font-semibold py-2 rounded-lg hover:bg-stone-700 transition-colors">
+                      Open
+                    </button>
+                  </form>
+                </div>
+              )}
+
+              {/* Book Cover */}
+              <Link href={`/books/${book.id}`} onClick={(e) => handleBookClick(e, book)} className="block">
+                <div
+                  className="aspect-[3/4] rounded-md shadow-md transition-transform duration-300 group-hover:-translate-y-2 group-hover:shadow-xl relative overflow-hidden"
+                  style={coverStyle((book as any).pattern ?? "solid", book.color || "#1e293b", (book as any).coverImg)}
+                >
+                  {!(book as any).coverImg && <div className="absolute left-4 top-0 bottom-0 w-px bg-black/20" />}
+                  {isLocked && (
+                    <div className="absolute top-2 right-2 w-6 h-6 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center">
+                      <Lock className="w-3 h-3 text-white" />
+                    </div>
+                  )}
+                </div>
+              </Link>
+
+              {/* Title row */}
+              <div className="px-1 flex justify-between items-start group/text">
+                <div className="flex-1 min-w-0">
+                  {editingId === book.id ? (
+                    <input
+                      ref={editInputRef}
+                      value={editingTitle}
+                      onChange={(e) => setEditingTitle(e.target.value)}
+                      onBlur={saveEditing}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") saveEditing();
+                        if (e.key === "Escape") cancelEditing();
+                      }}
+                      onClick={(e) => e.preventDefault()}
+                      className="font-serif font-medium text-sm w-full bg-white border-b-2 border-stone-400 outline-none text-stone-800 px-0 py-0.5"
+                      autoFocus
+                    />
+                  ) : (
+                    <h3
+                      className="font-serif font-medium text-sm line-clamp-2 cursor-text hover:text-stone-500 transition-colors"
+                      onClick={(e) => startEditing(e, book)}
+                      title="Click to rename"
+                    >{book.title}</h3>
+                  )}
+                  <p className="text-xs text-muted-foreground mt-0.5">{book.pageCount} pages</p>
+                </div>
+                <div className="flex items-center opacity-0 group-hover/text:opacity-100 transition-all">
+                  {/* Lock button */}
+                  <button
+                    onClick={(e) => openLockPopup(e, book.id)}
+                    className={`p-1.5 transition-all shrink-0 ${isLocked ? "text-amber-500 hover:text-amber-600 opacity-100" : "text-muted-foreground hover:text-stone-700"}`}
+                    title={isLocked ? "Locked — click to change" : "Set password"}
+                  >
+                    {isLocked ? <Lock className="w-3.5 h-3.5" /> : <LockOpen className="w-3.5 h-3.5" />}
+                  </button>
+                  {/* Delete button */}
+                  <button
+                    onClick={(e) => handleDelete(e, book.id)}
+                    className="p-1.5 text-muted-foreground hover:text-destructive transition-all shrink-0"
+                    title="Delete Notebook"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
               </div>
-              <button
-                onClick={(e) => handleDelete(e, book.id)}
-                className="opacity-0 group-hover/text:opacity-100 p-1.5 text-muted-foreground hover:text-destructive transition-all shrink-0"
-                title="Delete Notebook"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
             </div>
-          </Link>
-        ))}
+          );
+        })}
 
         {/* Add New Card */}
         <div className="flex flex-col gap-3 relative" ref={popupRef}>
@@ -321,7 +512,6 @@ export default function Home() {
           {/* Mini Create Popup */}
           {showCreate && (
             <div className="absolute top-0 left-[calc(100%+12px)] z-50 w-72 bg-white rounded-xl shadow-2xl border border-stone-200 p-4 flex flex-col gap-3 max-h-[90vh] overflow-y-auto">
-              {/* Preview */}
               <div className="flex items-center gap-3">
                 <div
                   className="w-10 h-14 rounded-md shadow flex-shrink-0 relative overflow-hidden"
@@ -331,14 +521,11 @@ export default function Home() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs text-stone-400 mb-1">Preview</p>
-                  <p className="font-serif text-sm font-medium truncate text-stone-700">
-                    {newTitle || "Untitled"}
-                  </p>
+                  <p className="font-serif text-sm font-medium truncate text-stone-700">{newTitle || "Untitled"}</p>
                 </div>
               </div>
 
               <form onSubmit={handleCreate} className="flex flex-col gap-3">
-                {/* Title */}
                 <div>
                   <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Title</label>
                   <input
@@ -350,7 +537,6 @@ export default function Home() {
                   />
                 </div>
 
-                {/* Color */}
                 <div>
                   <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Cover Color</label>
                   <div className="mt-1.5 grid grid-cols-6 gap-1.5">
@@ -368,7 +554,6 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Cover Design */}
                 <div>
                   <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Cover Design</label>
                   <div className="mt-1.5 grid grid-cols-4 gap-1.5">
@@ -386,11 +571,8 @@ export default function Home() {
                   </div>
                 </div>
 
-                {/* Cover Image */}
                 <div>
                   <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Cover Image</label>
-
-                  {/* Default image thumbnails */}
                   <div className="mt-1.5 grid grid-cols-4 gap-1.5">
                     {DEFAULT_COVER_IMAGES.map((img) => (
                       <button
@@ -409,8 +591,6 @@ export default function Home() {
                       </button>
                     ))}
                   </div>
-
-                  {/* Upload custom image */}
                   <div className="mt-1.5">
                     {newCoverImg && !DEFAULT_COVER_IMAGES.find(i => i.url === newCoverImg) ? (
                       <div className="relative">
@@ -434,13 +614,7 @@ export default function Home() {
                         <span className="text-xs text-stone-400">Upload your own image</span>
                       </button>
                     )}
-                    <input
-                      ref={imgInputRef}
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      onChange={handleImageUpload}
-                    />
+                    <input ref={imgInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
                   </div>
                 </div>
 

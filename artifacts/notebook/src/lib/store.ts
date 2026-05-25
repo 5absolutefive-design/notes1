@@ -4,6 +4,7 @@ export interface Book {
   color: string;
   pattern?: string;
   coverImg?: string;
+  password?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -97,7 +98,7 @@ export const store = {
     return book;
   },
 
-  updateBook(id: number, data: Partial<Pick<Book, "title" | "color">>): Book {
+  updateBook(id: number, data: Partial<Pick<Book, "title" | "color" | "password">>): Book {
     const books = loadBooks();
     const idx = books.findIndex((b) => b.id === id);
     if (idx === -1) throw new Error("Book not found");
