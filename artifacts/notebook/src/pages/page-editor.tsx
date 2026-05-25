@@ -1516,11 +1516,11 @@ export default function PageEditor() {
                 </button>
               )}
               {showFontMenu && (
-                <div className="absolute top-full left-0 mt-1 z-50 bg-white border border-zinc-300 rounded-lg shadow-lg overflow-y-auto max-h-72 w-64">
+                <div className="absolute top-full left-0 mt-1 z-50 bg-white border border-zinc-300 rounded-lg shadow-lg overflow-y-auto max-h-72 w-80">
                   {FONTS.filter(f => f.toLowerCase().includes(fontSearch.toLowerCase())).map(f => (
-                    <button key={f} onClick={() => handleFontChange(f)} className={`w-full text-left px-3 py-2 hover:bg-zinc-100 transition-colors ${font === f ? "bg-zinc-100" : ""}`}>
-                      <div className="text-[15px] font-medium text-zinc-800 leading-tight" style={{ fontFamily: f }}>{f}</div>
-                      <div className="text-xs text-zinc-400 leading-tight mt-0.5" style={{ fontFamily: f }}>Aa Bb Cc 123</div>
+                    <button key={f} onClick={() => handleFontChange(f)} className={`w-full text-left px-3 py-2 hover:bg-zinc-100 transition-colors flex items-center gap-3 ${font === f ? "bg-zinc-100" : ""}`}>
+                      <span className="text-xs text-zinc-600 w-28 shrink-0 truncate">{f}</span>
+                      <span className="text-base text-zinc-800 truncate" style={{ fontFamily: f }}>Akmdvijiszduh</span>
                     </button>
                   ))}
                 </div>
@@ -1658,11 +1658,11 @@ export default function PageEditor() {
                 </button>
               )}
               <PortalPopup anchorRef={fontMenuRef} open={showFontMenu}>
-                <div className="bg-white border border-zinc-300 rounded-lg shadow-lg overflow-y-auto max-h-72 w-64">
+                <div className="bg-white border border-zinc-300 rounded-lg shadow-lg overflow-y-auto max-h-72 w-80">
                   {FONTS.filter(f => f.toLowerCase().includes(fontSearch.toLowerCase())).map(f => (
-                    <button key={f} onClick={() => handleFontChange(f)} className={`w-full text-left px-3 py-2 hover:bg-zinc-100 transition-colors ${font === f ? "bg-zinc-100" : ""}`}>
-                      <div className="text-[15px] font-medium text-zinc-800 leading-tight" style={{ fontFamily: f }}>{f}</div>
-                      <div className="text-xs text-zinc-400 leading-tight mt-0.5" style={{ fontFamily: f }}>Aa Bb Cc 123</div>
+                    <button key={f} onClick={() => handleFontChange(f)} className={`w-full text-left px-3 py-2 hover:bg-zinc-100 transition-colors flex items-center gap-3 ${font === f ? "bg-zinc-100" : ""}`}>
+                      <span className="text-xs text-zinc-600 w-28 shrink-0 truncate">{f}</span>
+                      <span className="text-base text-zinc-800 truncate" style={{ fontFamily: f }}>Akmdvijiszduh</span>
                     </button>
                   ))}
                 </div>
@@ -1920,8 +1920,8 @@ export default function PageEditor() {
                 <button onClick={() => { setFontSearch(""); setShowFontMenu(true); }} className="h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-left text-sm font-medium text-zinc-700 truncate w-[160px]" style={{ fontFamily: font }}>{font}</button>
               )}
               <PortalPopup anchorRef={fontMenuRef} open={showFontMenu}>
-                <div className="bg-white border border-zinc-300 rounded-lg shadow-lg overflow-y-auto max-h-72 w-64">
-                  {FONTS.filter(f => f.toLowerCase().includes(fontSearch.toLowerCase())).map(f => (<button key={f} onClick={() => handleFontChange(f)} className={`w-full text-left px-3 py-2 hover:bg-zinc-100 transition-colors ${font === f ? "bg-zinc-100" : ""}`}><div className="text-[15px] font-medium text-zinc-800 leading-tight" style={{ fontFamily: f }}>{f}</div><div className="text-xs text-zinc-400 leading-tight mt-0.5" style={{ fontFamily: f }}>Aa Bb Cc 123</div></button>))}
+                <div className="bg-white border border-zinc-300 rounded-lg shadow-lg overflow-y-auto max-h-72 w-80">
+                  {FONTS.filter(f => f.toLowerCase().includes(fontSearch.toLowerCase())).map(f => (<button key={f} onClick={() => handleFontChange(f)} className={`w-full text-left px-3 py-2 hover:bg-zinc-100 transition-colors flex items-center gap-3 ${font === f ? "bg-zinc-100" : ""}`}><span className="text-xs text-zinc-600 w-28 shrink-0 truncate">{f}</span><span className="text-base text-zinc-800 truncate" style={{ fontFamily: f }}>Akmdvijiszduh</span></button>))}
                 </div>
               </PortalPopup>
             </div>
@@ -2196,9 +2196,9 @@ export default function PageEditor() {
                   </button>
                 )}
                 <PortalPopup anchorRef={fontMenuRef} open={showFontMenu}>
-                  <div className="bg-white border border-zinc-300 rounded-lg shadow-lg overflow-y-auto max-h-72 w-64">
+                  <div className="bg-white border border-zinc-300 rounded-lg shadow-lg overflow-y-auto max-h-72 w-80">
                     {FONTS.filter(f => f.toLowerCase().includes(fontSearch.toLowerCase())).map(f => (
-                      <button key={f} onClick={() => handleFontChange(f)} className={`w-full text-left px-3 py-2 hover:bg-zinc-100 transition-colors ${font === f ? "bg-zinc-100" : ""}`}><div className="text-[15px] font-medium text-zinc-800 leading-tight" style={{ fontFamily: f }}>{f}</div><div className="text-xs text-zinc-400 leading-tight mt-0.5" style={{ fontFamily: f }}>Aa Bb Cc 123</div></button>
+                      <button key={f} onClick={() => handleFontChange(f)} className={`w-full text-left px-3 py-2 hover:bg-zinc-100 transition-colors flex items-center gap-3 ${font === f ? "bg-zinc-100" : ""}`}><span className="text-xs text-zinc-600 w-28 shrink-0 truncate">{f}</span><span className="text-base text-zinc-800 truncate" style={{ fontFamily: f }}>Akmdvijiszduh</span></button>
                     ))}
                   </div>
                 </PortalPopup>
@@ -2356,9 +2356,9 @@ export default function PageEditor() {
                   </button>
                 )}
                 <PortalPopup anchorRef={fontMenuRef} open={showFontMenu}>
-                  <div className="bg-white border border-zinc-300 rounded-lg shadow-lg overflow-y-auto max-h-72 w-64">
+                  <div className="bg-white border border-zinc-300 rounded-lg shadow-lg overflow-y-auto max-h-72 w-80">
                     {FONTS.filter(f => f.toLowerCase().includes(fontSearch.toLowerCase())).map(f => (
-                      <button key={f} onClick={() => handleFontChange(f)} className={`w-full text-left px-3 py-2 hover:bg-zinc-100 transition-colors ${font === f ? "bg-zinc-100" : ""}`}><div className="text-[15px] font-medium text-zinc-800 leading-tight" style={{ fontFamily: f }}>{f}</div><div className="text-xs text-zinc-400 leading-tight mt-0.5" style={{ fontFamily: f }}>Aa Bb Cc 123</div></button>
+                      <button key={f} onClick={() => handleFontChange(f)} className={`w-full text-left px-3 py-2 hover:bg-zinc-100 transition-colors flex items-center gap-3 ${font === f ? "bg-zinc-100" : ""}`}><span className="text-xs text-zinc-600 w-28 shrink-0 truncate">{f}</span><span className="text-base text-zinc-800 truncate" style={{ fontFamily: f }}>Akmdvijiszduh</span></button>
                     ))}
                   </div>
                 </PortalPopup>
