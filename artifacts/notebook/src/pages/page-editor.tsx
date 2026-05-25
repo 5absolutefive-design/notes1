@@ -1526,9 +1526,13 @@ export default function PageEditor() {
                 </div>
               )}
             </div>
-            <div className="w-8 h-8 rounded-md border border-zinc-300 bg-white flex items-center justify-center text-xs font-semibold text-zinc-700 select-none">{fontSize}</div>
-            <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className={btnSq}><span className="font-bold text-base leading-none">A</span></button>
-            <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className={btnSq}><span className="font-bold text-xs leading-none">A</span></button>
+            <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
+              <div className="w-9 h-8 bg-white text-xs font-semibold text-zinc-700 flex items-center justify-center border-r border-zinc-300 select-none">{fontSize}</div>
+              <div className="flex flex-col h-8">
+                <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className="w-4 h-4 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center border-b border-zinc-300 text-zinc-500"><svg width="6" height="6" viewBox="0 0 6 6" fill="currentColor"><path d="M3 1L6 5H0L3 1Z"/></svg></button>
+                <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className="w-4 h-4 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center text-zinc-500"><svg width="6" height="6" viewBox="0 0 6 6" fill="currentColor"><path d="M3 5L0 1H6L3 5Z"/></svg></button>
+              </div>
+            </div>
           </div>
           <div className="flex items-center gap-1">
             <div className="relative" ref={colorPickerRef}>
@@ -1675,8 +1679,10 @@ export default function PageEditor() {
                   title="Font size"
                   className="w-9 h-8 bg-white hover:bg-zinc-100 transition-colors text-xs font-semibold text-zinc-700 flex items-center justify-center border-r border-zinc-300"
                 >{fontSize}</button>
-                <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><span className="font-bold text-base leading-none">A</span></button>
-                <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center"><span className="font-bold text-xs leading-none">A</span></button>
+                <div className="flex flex-col h-8">
+                  <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className="w-4 h-4 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center border-b border-zinc-300 text-zinc-500"><svg width="6" height="6" viewBox="0 0 6 6" fill="currentColor"><path d="M3 1L6 5H0L3 1Z"/></svg></button>
+                  <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className="w-4 h-4 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center text-zinc-500"><svg width="6" height="6" viewBox="0 0 6 6" fill="currentColor"><path d="M3 5L0 1H6L3 5Z"/></svg></button>
+                </div>
               </div>
               <PortalPopup anchorRef={fontSizePopupRef} open={showFontSizePopup}>
                 <div className="bg-white border border-zinc-300 rounded-lg shadow-xl p-1.5 w-24 grid grid-cols-2 gap-1">
@@ -1923,8 +1929,10 @@ export default function PageEditor() {
             <div className="relative shrink-0" ref={fontSizePopupRef as React.RefObject<HTMLDivElement>}>
               <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
                 <button onClick={() => setShowFontSizePopup(v => !v)} title="Font size" className="w-9 h-8 bg-white hover:bg-zinc-100 transition-colors text-xs font-semibold text-zinc-700 flex items-center justify-center border-r border-zinc-300">{fontSize}</button>
-                <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><span className="font-bold text-base leading-none">A</span></button>
-                <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center"><span className="font-bold text-xs leading-none">A</span></button>
+                <div className="flex flex-col h-8">
+                  <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className="w-4 h-4 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center border-b border-zinc-300 text-zinc-500"><svg width="6" height="6" viewBox="0 0 6 6" fill="currentColor"><path d="M3 1L6 5H0L3 1Z"/></svg></button>
+                  <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className="w-4 h-4 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center text-zinc-500"><svg width="6" height="6" viewBox="0 0 6 6" fill="currentColor"><path d="M3 5L0 1H6L3 5Z"/></svg></button>
+                </div>
               </div>
               <PortalPopup anchorRef={fontSizePopupRef} open={showFontSizePopup}>
                 <div className="bg-white border border-zinc-300 rounded-lg shadow-xl p-1.5 w-24 grid grid-cols-2 gap-1">
@@ -2202,8 +2210,10 @@ export default function PageEditor() {
               <div className="relative shrink-0" ref={fontSizePopupRef as React.RefObject<HTMLDivElement>}>
                 <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
                   <button onClick={() => setShowFontSizePopup(v => !v)} title="Font size" className="w-9 h-8 bg-white hover:bg-zinc-100 transition-colors text-xs font-semibold text-zinc-700 flex items-center justify-center border-r border-zinc-300">{fontSize}</button>
-                  <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><span className="font-bold text-base leading-none">A</span></button>
-                  <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center"><span className="font-bold text-xs leading-none">A</span></button>
+                  <div className="flex flex-col h-8">
+                    <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className="w-4 h-4 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center border-b border-zinc-300 text-zinc-500"><svg width="6" height="6" viewBox="0 0 6 6" fill="currentColor"><path d="M3 1L6 5H0L3 1Z"/></svg></button>
+                    <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className="w-4 h-4 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center text-zinc-500"><svg width="6" height="6" viewBox="0 0 6 6" fill="currentColor"><path d="M3 5L0 1H6L3 5Z"/></svg></button>
+                  </div>
                 </div>
                 <PortalPopup anchorRef={fontSizePopupRef} open={showFontSizePopup}>
                   <div className="bg-white border border-zinc-300 rounded-lg shadow-xl p-1.5 w-24 grid grid-cols-2 gap-1">
@@ -2359,8 +2369,10 @@ export default function PageEditor() {
               <div className="relative shrink-0" ref={fontSizePopupRef as React.RefObject<HTMLDivElement>}>
                 <div className="flex items-center rounded-lg border border-zinc-300 overflow-hidden shrink-0">
                   <button onClick={() => setShowFontSizePopup(v => !v)} title="Font size" className="w-9 h-8 bg-white hover:bg-zinc-100 transition-colors text-xs font-semibold text-zinc-700 flex items-center justify-center border-r border-zinc-300">{fontSize}</button>
-                  <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors border-r border-zinc-300 flex items-center justify-center"><span className="font-bold text-base leading-none">A</span></button>
-                  <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className="w-8 h-8 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center"><span className="font-bold text-xs leading-none">A</span></button>
+                  <div className="flex flex-col h-8">
+                    <button onClick={() => handleFontSizeChange(2)} title="Increase font size" className="w-4 h-4 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center border-b border-zinc-300 text-zinc-500"><svg width="6" height="6" viewBox="0 0 6 6" fill="currentColor"><path d="M3 1L6 5H0L3 1Z"/></svg></button>
+                    <button onClick={() => handleFontSizeChange(-2)} title="Decrease font size" className="w-4 h-4 bg-white hover:bg-blue-50 active:bg-blue-100 transition-colors flex items-center justify-center text-zinc-500"><svg width="6" height="6" viewBox="0 0 6 6" fill="currentColor"><path d="M3 5L0 1H6L3 5Z"/></svg></button>
+                  </div>
                 </div>
                 <PortalPopup anchorRef={fontSizePopupRef} open={showFontSizePopup}>
                   <div className="bg-white border border-zinc-300 rounded-lg shadow-xl p-1.5 w-24 grid grid-cols-2 gap-1">
