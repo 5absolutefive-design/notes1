@@ -3,6 +3,13 @@
 @import "tw-animate-css";
 @plugin "@tailwindcss/typography";
 
+@font-face {
+  font-family: 'Myriad Pro';
+  src: url('/MyriadPro-Bold.otf') format('opentype');
+  font-weight: bold;
+  font-style: normal;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

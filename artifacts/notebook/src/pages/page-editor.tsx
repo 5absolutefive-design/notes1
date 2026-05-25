@@ -782,7 +782,7 @@ function applySearchHighlights(root: HTMLElement, term: string) {
 }
 
 const FONTS = [
-  "Inter", "Roboto", "Lato", "Poppins", "Nunito",
+  "Inter", "Myriad Pro", "Roboto", "Lato", "Poppins", "Nunito",
   "Merriweather", "Playfair Display", "EB Garamond",
   "Source Code Pro", "Courier Prime",
 ];
