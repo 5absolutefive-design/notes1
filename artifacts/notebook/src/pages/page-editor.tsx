@@ -783,6 +783,7 @@ function applySearchHighlights(root: HTMLElement, term: string) {
 
 const FONTS = [
   "Inter", "Myriad Pro", "Arial Black", "Poppins Light",
+  "Monster of South Hollow St",
   "Roboto", "Lato", "Poppins", "Nunito",
   "Merriweather",
 ];

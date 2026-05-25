@@ -31,6 +31,13 @@
   font-style: normal;
 }
 
+@font-face {
+  font-family: 'Monster of South Hollow St';
+  src: url('/MonsterOfSouthHollowSt.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
