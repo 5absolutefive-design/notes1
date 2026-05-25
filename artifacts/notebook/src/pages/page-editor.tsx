@@ -809,6 +809,7 @@ export default function PageEditor() {
   const [font, setFont] = useState("Inter");
   const [fontSize, setFontSize] = useState(16);
   const [showFontMenu, setShowFontMenu] = useState(false);
+  const [fontSearch, setFontSearch] = useState("");
   const [activeFormats, setActiveFormats] = useState({ bold: false, italic: false, underline: false, strikeThrough: false, overline: false });
   const [align, setAlign] = useState<"left" | "center" | "right">("left");
   const [valign, setValign] = useState<"top" | "middle" | "bottom">("middle");
@@ -1040,6 +1041,7 @@ export default function PageEditor() {
   const handleFontChange = (f: string) => {
     setFont(f);
     setShowFontMenu(false);
+    setFontSearch("");
     if (pageType === "spreadsheet" || pageType === "table") { spreadsheetSetFormatRef.current?.({ fontFamily: f }); return; }
     execFormat("fontName", f);
   };
@@ -1505,12 +1507,16 @@ export default function PageEditor() {
         <div className="flex flex-col gap-1">
           <div className="flex items-center gap-1">
             <div className="relative" ref={fontMenuRef}>
-              <button onClick={() => setShowFontMenu(v => !v)} className="w-[152px] h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors px-2 text-left text-sm font-medium text-zinc-700 truncate" style={{ fontFamily: font }}>
-                {font}
-              </button>
+              {showFontMenu ? (
+                <input autoFocus value={fontSearch} onChange={e => setFontSearch(e.target.value)} placeholder="Search font..." className="w-[152px] h-8 rounded-md border border-zinc-400 bg-white px-2 text-sm text-zinc-700 outline-none ring-1 ring-zinc-400" />
+              ) : (
+                <button onClick={() => { setFontSearch(""); setShowFontMenu(true); }} className="w-[152px] h-8 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors px-2 text-left text-sm font-medium text-zinc-700 truncate" style={{ fontFamily: font }}>
+                  {font}
+                </button>
+              )}
               {showFontMenu && (
                 <div className="absolute top-full left-0 mt-1 z-50 bg-white border border-zinc-300 rounded-lg shadow-lg overflow-y-auto max-h-52 w-44">
-                  {FONTS.map(f => (
+                  {FONTS.filter(f => f.toLowerCase().includes(fontSearch.toLowerCase())).map(f => (
                     <button key={f} onClick={() => handleFontChange(f)} className={`w-full text-left px-3 py-1.5 text-sm hover:bg-zinc-100 transition-colors ${font === f ? "bg-zinc-100 font-semibold" : ""}`} style={{ fontFamily: f }}>{f}</button>
                   ))}
                 </div>
@@ -1640,12 +1646,16 @@ export default function PageEditor() {
 
             {/* Font family */}
             <div className="relative shrink-0" ref={fontMenuRef as React.RefObject<HTMLDivElement>}>
-              <button onClick={() => setShowFontMenu(v => !v)} className="h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-left text-sm font-medium text-zinc-700 truncate w-[160px]" style={{ fontFamily: font }}>
-                {font}
-              </button>
+              {showFontMenu ? (
+                <input autoFocus value={fontSearch} onChange={e => setFontSearch(e.target.value)} placeholder="Search font..." className="h-8 px-2 rounded-md border border-zinc-400 bg-white text-sm text-zinc-700 outline-none ring-1 ring-zinc-400 w-[160px]" />
+              ) : (
+                <button onClick={() => { setFontSearch(""); setShowFontMenu(true); }} className="h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-left text-sm font-medium text-zinc-700 truncate w-[160px]" style={{ fontFamily: font }}>
+                  {font}
+                </button>
+              )}
               <PortalPopup anchorRef={fontMenuRef} open={showFontMenu}>
                 <div className="bg-white border border-zinc-300 rounded-lg shadow-lg overflow-y-auto max-h-52 w-44">
-                  {FONTS.map(f => (
+                  {FONTS.filter(f => f.toLowerCase().includes(fontSearch.toLowerCase())).map(f => (
                     <button key={f} onClick={() => handleFontChange(f)} className={`w-full text-left px-3 py-1.5 text-sm hover:bg-zinc-100 transition-colors ${font === f ? "bg-zinc-100 font-semibold" : ""}`} style={{ fontFamily: f }}>{f}</button>
                   ))}
                 </div>
@@ -1897,10 +1907,14 @@ export default function PageEditor() {
             </div>
             <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
             <div className="relative shrink-0" ref={fontMenuRef as React.RefObject<HTMLDivElement>}>
-              <button onClick={() => setShowFontMenu(v => !v)} className="h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-left text-sm font-medium text-zinc-700 truncate w-[160px]" style={{ fontFamily: font }}>{font}</button>
+              {showFontMenu ? (
+                <input autoFocus value={fontSearch} onChange={e => setFontSearch(e.target.value)} placeholder="Search font..." className="h-8 px-2 rounded-md border border-zinc-400 bg-white text-sm text-zinc-700 outline-none ring-1 ring-zinc-400 w-[160px]" />
+              ) : (
+                <button onClick={() => { setFontSearch(""); setShowFontMenu(true); }} className="h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-left text-sm font-medium text-zinc-700 truncate w-[160px]" style={{ fontFamily: font }}>{font}</button>
+              )}
               <PortalPopup anchorRef={fontMenuRef} open={showFontMenu}>
                 <div className="bg-white border border-zinc-300 rounded-lg shadow-lg overflow-y-auto max-h-52 w-44">
-                  {FONTS.map(f => (<button key={f} onClick={() => handleFontChange(f)} className={`w-full text-left px-3 py-1.5 text-sm hover:bg-zinc-100 transition-colors ${font === f ? "bg-zinc-100 font-semibold" : ""}`} style={{ fontFamily: f }}>{f}</button>))}
+                  {FONTS.filter(f => f.toLowerCase().includes(fontSearch.toLowerCase())).map(f => (<button key={f} onClick={() => handleFontChange(f)} className={`w-full text-left px-3 py-1.5 text-sm hover:bg-zinc-100 transition-colors ${font === f ? "bg-zinc-100 font-semibold" : ""}`} style={{ fontFamily: f }}>{f}</button>))}
                 </div>
               </PortalPopup>
             </div>
@@ -2167,12 +2181,16 @@ export default function PageEditor() {
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
               {/* Font family */}
               <div className="relative shrink-0" ref={fontMenuRef as React.RefObject<HTMLDivElement>}>
-                <button onClick={() => setShowFontMenu(v => !v)} className="h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-left text-sm font-medium text-zinc-700 truncate w-[160px]" style={{ fontFamily: font }}>
-                  {font}
-                </button>
+                {showFontMenu ? (
+                  <input autoFocus value={fontSearch} onChange={e => setFontSearch(e.target.value)} placeholder="Search font..." className="h-8 px-2 rounded-md border border-zinc-400 bg-white text-sm text-zinc-700 outline-none ring-1 ring-zinc-400 w-[160px]" />
+                ) : (
+                  <button onClick={() => { setFontSearch(""); setShowFontMenu(true); }} className="h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-left text-sm font-medium text-zinc-700 truncate w-[160px]" style={{ fontFamily: font }}>
+                    {font}
+                  </button>
+                )}
                 <PortalPopup anchorRef={fontMenuRef} open={showFontMenu}>
                   <div className="bg-white border border-zinc-300 rounded-lg shadow-lg overflow-y-auto max-h-52 w-44">
-                    {FONTS.map(f => (
+                    {FONTS.filter(f => f.toLowerCase().includes(fontSearch.toLowerCase())).map(f => (
                       <button key={f} onClick={() => handleFontChange(f)} className={`w-full text-left px-3 py-1.5 text-sm hover:bg-zinc-100 transition-colors ${font === f ? "bg-zinc-100 font-semibold" : ""}`} style={{ fontFamily: f }}>{f}</button>
                     ))}
                   </div>
@@ -2323,12 +2341,16 @@ export default function PageEditor() {
               <div className="w-px h-6 bg-zinc-300 mx-0.5 shrink-0" />
               {/* Font family */}
               <div className="relative shrink-0" ref={fontMenuRef as React.RefObject<HTMLDivElement>}>
-                <button onClick={() => setShowFontMenu(v => !v)} className="h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-left text-sm font-medium text-zinc-700 truncate w-[160px]" style={{ fontFamily: font }}>
-                  {font}
-                </button>
+                {showFontMenu ? (
+                  <input autoFocus value={fontSearch} onChange={e => setFontSearch(e.target.value)} placeholder="Search font..." className="h-8 px-2 rounded-md border border-zinc-400 bg-white text-sm text-zinc-700 outline-none ring-1 ring-zinc-400 w-[160px]" />
+                ) : (
+                  <button onClick={() => { setFontSearch(""); setShowFontMenu(true); }} className="h-8 px-2 rounded-md border border-zinc-300 bg-white hover:bg-zinc-100 transition-colors text-left text-sm font-medium text-zinc-700 truncate w-[160px]" style={{ fontFamily: font }}>
+                    {font}
+                  </button>
+                )}
                 <PortalPopup anchorRef={fontMenuRef} open={showFontMenu}>
                   <div className="bg-white border border-zinc-300 rounded-lg shadow-lg overflow-y-auto max-h-52 w-44">
-                    {FONTS.map(f => (
+                    {FONTS.filter(f => f.toLowerCase().includes(fontSearch.toLowerCase())).map(f => (
                       <button key={f} onClick={() => handleFontChange(f)} className={`w-full text-left px-3 py-1.5 text-sm hover:bg-zinc-100 transition-colors ${font === f ? "bg-zinc-100 font-semibold" : ""}`} style={{ fontFamily: f }}>{f}</button>
                     ))}
                   </div>
