@@ -879,6 +879,10 @@ export default function PageEditor() {
   const borderPopupRef = useRef<HTMLDivElement>(null);
   const [showAlignPopup, setShowAlignPopup] = useState(false);
   const alignPopupRef = useRef<HTMLDivElement>(null);
+  const [activeBullet, setActiveBullet] = useState<string | null>(null);
+  const bulletCounterRef = useRef<number>(1);
+  const [showBulletPopup, setShowBulletPopup] = useState(false);
+  const bulletPopupRef = useRef<HTMLDivElement>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [pageTheme, setPageTheme] = useState<PageTheme>("blue");
   const [showThemePopup, setShowThemePopup] = useState(false);
@@ -940,6 +944,9 @@ export default function PageEditor() {
       }
       if (headingPopupRef.current && !headingPopupRef.current.contains(target)) {
         setShowHeadingPopup(false);
+      }
+      if (bulletPopupRef.current && !bulletPopupRef.current.contains(target)) {
+        setShowBulletPopup(false);
       }
       if (pageTypePickerRef.current && !pageTypePickerRef.current.contains(target)) {
         setShowPageTypePicker(false);
@@ -1199,6 +1206,19 @@ export default function PageEditor() {
   }, []);
 
   const handleEditorKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === "Enter" && activeBullet !== null) {
+      e.preventDefault();
+      let prefix: string;
+      if (activeBullet === "numbered") {
+        bulletCounterRef.current += 1;
+        prefix = `${bulletCounterRef.current}. `;
+      } else {
+        prefix = `${activeBullet} `;
+      }
+      document.execCommand("insertText", false, "\n" + prefix);
+      handleEditorInput();
+      return;
+    }
     if (isHighlighterMode && e.key === " " && lastKeyRef.current === " ") {
       // Double space → delete the first space already inserted, then exit mode
       e.preventDefault();
@@ -1207,7 +1227,7 @@ export default function PageEditor() {
       return;
     }
     lastKeyRef.current = e.key;
-  }, [isHighlighterMode, exitHighlighterMode]);
+  }, [isHighlighterMode, exitHighlighterMode, activeBullet]);
 
   const handleNeutral = () => {
     editorRef.current?.focus();
@@ -1506,6 +1526,53 @@ export default function PageEditor() {
           <span className="font-medium">Normal (P)</span>
         </button>
       </div>
+    </div>
+  );
+
+  const BULLET_STYLES = [
+    { key: null,       label: "Normal",  desc: "No bullet (off)" },
+    { key: "numbered", label: "1. 2. 3.", desc: "Numbered list" },
+    { key: "•",        label: "•",        desc: "Bullet" },
+    { key: "⦿",        label: "⦿",        desc: "Circle bullet" },
+    { key: "➔",        label: "➔",        desc: "Arrow" },
+    { key: "✓",        label: "✓",        desc: "Check" },
+    { key: "🗹",        label: "🗹",        desc: "Checkbox" },
+    { key: "☀",        label: "☀",        desc: "Sun" },
+    { key: "⛇",        label: "⛇",        desc: "Snake" },
+    { key: "★",        label: "★",        desc: "Star" },
+    { key: "⬩➤",       label: "⬩➤",       desc: "Diamond arrow" },
+    { key: "👉🏻",       label: "👉🏻",       desc: "Finger point" },
+    { key: "🔶",        label: "🔶",        desc: "Diamond" },
+  ];
+
+  const handleBulletSelect = (style: string | null) => {
+    setShowBulletPopup(false);
+    if (style === null) {
+      setActiveBullet(null);
+      bulletCounterRef.current = 1;
+      return;
+    }
+    setActiveBullet(style);
+    bulletCounterRef.current = 1;
+    editorRef.current?.focus();
+    const prefix = style === "numbered" ? "1. " : `${style} `;
+    document.execCommand("insertText", false, prefix);
+    handleEditorInput();
+  };
+
+  const BulletPanel = ({ noAbsolute }: { noAbsolute?: boolean } = {}) => (
+    <div className={(noAbsolute ? "" : "absolute top-full left-0 mt-1 z-50 ") + "bg-white border border-zinc-300 rounded-lg shadow-xl p-1.5 w-48"}>
+      {BULLET_STYLES.map(({ key, label, desc }) => (
+        <button
+          key={String(key)}
+          onClick={() => handleBulletSelect(key)}
+          className={`w-full flex items-center gap-2 px-2 py-1.5 hover:bg-zinc-100 rounded text-left transition-colors ${activeBullet === key ? "bg-blue-50" : ""}`}
+        >
+          <span className="text-base min-w-[2em] text-center">{label}</span>
+          <span className="text-[10px] text-zinc-400 truncate flex-1">{desc}</span>
+          {activeBullet === key && <span className="text-blue-500 text-xs font-bold shrink-0">✓</span>}
+        </button>
+      ))}
     </div>
   );
 
@@ -2519,6 +2586,21 @@ export default function PageEditor() {
                     </button>
                     <button onClick={() => { execFormat("justifyLeft"); setAlign("left"); setShowAlignPopup(false); }} title="Neutral (reset alignment)" className={`${btnSq} text-[11px] font-bold text-zinc-600`}>N</button>
                   </div>
+                </PortalPopup>
+              </div>
+              {/* Bullet list */}
+              <div className="relative shrink-0" ref={bulletPopupRef as React.RefObject<HTMLDivElement>}>
+                <button
+                  onClick={() => setShowBulletPopup(v => !v)}
+                  title="Bullet list"
+                  className={`${btnSq} ${activeBullet !== null ? btnActive : ""}`}
+                >
+                  <span className="text-sm leading-none">
+                    {activeBullet === null ? "•≡" : activeBullet === "numbered" ? "1." : activeBullet}
+                  </span>
+                </button>
+                <PortalPopup anchorRef={bulletPopupRef} open={showBulletPopup}>
+                  <BulletPanel noAbsolute />
                 </PortalPopup>
               </div>
               {/* Spacer */}
