@@ -2,7 +2,7 @@ import { useParams, useLocation, Redirect } from "wouter";
 import { ChevronLeft, ChevronRight, Trash2, ArchiveRestore, X, RotateCcw } from "lucide-react";
 import { useState, useEffect, useRef, useCallback, type MutableRefObject } from "react";
 import { createPortal } from "react-dom";
-import { store, type Book, type Page, type PageType } from "@/lib/store";
+import { store, type Book, type Page, type PageType, type FloatingImage } from "@/lib/store";
 
 function PortalPopup({ anchorRef, open, children, align = "left" }: {
   anchorRef: { current: HTMLElement | null };
@@ -889,6 +889,10 @@ export default function PageEditor() {
   const themePopupRef = useRef<HTMLDivElement>(null);
   const tc = PAGE_THEMES[pageTheme];
 
+  const [floatingImgs, setFloatingImgs] = useState<FloatingImage[]>([]);
+  const imageFileInputRef = useRef<HTMLInputElement>(null);
+  const draggingImgRef = useRef<{ id: string; startMouseX: number; startMouseY: number; origX: number; origY: number } | null>(null);
+
   const lineHeightPx = lineSpacing === "compact" ? 28 : lineSpacing === "relaxed" ? 44 : 36;
 
   const refresh = useCallback(() => {
@@ -914,8 +918,63 @@ export default function PageEditor() {
       if (editorRef.current) {
         editorRef.current.innerHTML = c;
       }
+      setFloatingImgs(store.getFloatingImages(pId));
     }
   }, [page, pId]);
+
+  function handleImageFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+      alert("Image is too large! Maximum allowed size is 2 MB.");
+      e.target.value = "";
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const src = ev.target?.result as string;
+      const newImg: FloatingImage = { id: crypto.randomUUID(), src, x: 40, y: 40 };
+      const updated = [...floatingImgs, newImg];
+      setFloatingImgs(updated);
+      store.saveFloatingImages(pId, updated);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  }
+
+  function handleImgDragStart(e: React.MouseEvent, id: string) {
+    e.preventDefault();
+    const img = floatingImgs.find(i => i.id === id);
+    if (!img) return;
+    draggingImgRef.current = { id, startMouseX: e.clientX, startMouseY: e.clientY, origX: img.x, origY: img.y };
+    const zoomFactor = zoom / 100;
+
+    function onMouseMove(me: MouseEvent) {
+      if (!draggingImgRef.current) return;
+      const dx = (me.clientX - draggingImgRef.current.startMouseX) / zoomFactor;
+      const dy = (me.clientY - draggingImgRef.current.startMouseY) / zoomFactor;
+      setFloatingImgs(prev => prev.map(i => i.id === id ? { ...i, x: draggingImgRef.current!.origX + dx, y: draggingImgRef.current!.origY + dy } : i));
+    }
+
+    function onMouseUp() {
+      setFloatingImgs(prev => {
+        store.saveFloatingImages(pId, prev);
+        return prev;
+      });
+      draggingImgRef.current = null;
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    }
+
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  }
+
+  function handleRemoveFloatingImg(id: string) {
+    const updated = floatingImgs.filter(i => i.id !== id);
+    setFloatingImgs(updated);
+    store.saveFloatingImages(pId, updated);
+  }
 
   useEffect(() => {
     if (showTrash) setTrashedPages(store.listTrashedPages(bId));
@@ -2451,6 +2510,15 @@ export default function PageEditor() {
               <button onClick={() => setLocation("/")} className="w-28 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center gap-1.5 text-[11px] font-semibold text-zinc-600 shrink-0">🏠 My Notebooks</button>
               <div className="flex-1" />
 
+              <button
+                onClick={() => imageFileInputRef.current?.click()}
+                title="Insert image (max 2 MB)"
+                className="w-8 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center shrink-0"
+              >
+                <svg viewBox="0 0 16 16" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinejoin="round" className="text-zinc-600"><rect x="1.5" y="2.5" width="13" height="11" rx="1.5"/><circle cx="5.5" cy="6" r="1.3"/><polyline points="1.5,10.5 5,7 7.5,9.5 10,7.5 14.5,12"/></svg>
+              </button>
+              <input ref={imageFileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageFileChange} />
+
               <div className="relative shrink-0" ref={themePopupRef}>
                 <button onClick={() => setShowThemePopup(v => !v)} title="Page theme" className="w-8 h-8 rounded border border-zinc-300 bg-white hover:bg-zinc-100 active:bg-zinc-200 transition-colors flex items-center justify-center text-base">🎨</button>
                 <PortalPopup anchorRef={themePopupRef} open={showThemePopup} align="right">
@@ -2958,7 +3026,7 @@ export default function PageEditor() {
                 </div>
               </div>
             ) : (
-              <div key="blank" style={{ zoom: zoom / 100, transformOrigin: "top left" }}>
+              <div key="blank" style={{ zoom: zoom / 100, transformOrigin: "top left", position: "relative" }}>
                 <div
                   ref={editorRef}
                   contentEditable
@@ -2972,6 +3040,23 @@ export default function PageEditor() {
                   style={{ fontFamily: font, fontSize: fontSize, lineHeight: "1.8", minHeight: 500 * Math.round(fontSize * 1.8), whiteSpace: autoWrap ? "pre-wrap" : "pre", overflowX: autoWrap ? "hidden" : "auto" }}
                   data-placeholder="Start writing..."
                 />
+                {floatingImgs.map(img => (
+                  <div
+                    key={img.id}
+                    style={{ position: "absolute", left: img.x, top: img.y, zIndex: 10, userSelect: "none", cursor: "grab" }}
+                    onMouseDown={e => handleImgDragStart(e, img.id)}
+                  >
+                    <div style={{ position: "relative", display: "inline-block", boxShadow: "0 2px 8px rgba(0,0,0,0.18)", borderRadius: 4, border: "1.5px solid #d4d4d8" }}>
+                      <img src={img.src} draggable={false} style={{ display: "block", maxWidth: 320, maxHeight: 320, borderRadius: 3, pointerEvents: "none" }} />
+                      <button
+                        onMouseDown={e => e.stopPropagation()}
+                        onClick={() => handleRemoveFloatingImg(img.id)}
+                        title="Remove image"
+                        style={{ position: "absolute", top: -10, right: -10, width: 20, height: 20, borderRadius: "50%", background: "#ef4444", border: "2px solid white", color: "white", fontSize: 12, lineHeight: 1, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.2)" }}
+                      >×</button>
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
           </div>

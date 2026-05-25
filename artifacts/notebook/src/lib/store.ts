@@ -1,3 +1,10 @@
+export interface FloatingImage {
+  id: string;
+  src: string;
+  x: number;
+  y: number;
+}
+
 export interface Book {
   id: number;
   title: string;
@@ -26,6 +33,18 @@ export interface Page {
 
 const BOOKS_KEY = "nb_books";
 const PAGES_KEY = "nb_pages";
+const FLOATING_IMGS_KEY = "nb_floating_imgs";
+
+function loadFloatingImgs(): Record<number, FloatingImage[]> {
+  try {
+    const raw = localStorage.getItem(FLOATING_IMGS_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch { return {}; }
+}
+
+function saveFloatingImgsData(data: Record<number, FloatingImage[]>) {
+  localStorage.setItem(FLOATING_IMGS_KEY, JSON.stringify(data));
+}
 let _bookIdSeq = 0;
 let _pageIdSeq = 0;
 
@@ -195,6 +214,16 @@ export const store = {
         pageCount: pages.filter((p) => p.bookId === b.id && !p.deletedAt).length,
       })),
     };
+  },
+
+  getFloatingImages(pageId: number): FloatingImage[] {
+    return loadFloatingImgs()[pageId] ?? [];
+  },
+
+  saveFloatingImages(pageId: number, images: FloatingImage[]) {
+    const all = loadFloatingImgs();
+    all[pageId] = images;
+    saveFloatingImgsData(all);
   },
 
   _touchBook(bookId: number) {
