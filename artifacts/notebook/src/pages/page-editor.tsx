@@ -3110,20 +3110,12 @@ export default function PageEditor() {
                       <div style={{ position: "relative", display: "inline-block", boxShadow: "0 2px 8px rgba(0,0,0,0.18)", borderRadius: 4, border: `1.5px solid ${isLocked ? "#94a3b8" : "#d4d4d8"}` }}>
                         <img src={img.src} draggable={false} style={{ display: "block", width: w, height: "auto", borderRadius: 3, pointerEvents: "none" }} />
 
-                        {/* ✕ Delete button */}
-                        <button
-                          onMouseDown={e => e.stopPropagation()}
-                          onClick={() => handleRemoveFloatingImg(img.id)}
-                          title="Remove image"
-                          style={{ position: "absolute", top: -11, right: -11, width: 20, height: 20, borderRadius: "50%", background: "#ef4444", border: "2px solid white", color: "white", fontSize: 13, lineHeight: 1, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.25)" }}
-                        >×</button>
-
-                        {/* 🔒 Lock/Unlock button */}
+                        {/* 🔒 Lock/Unlock button — top-RIGHT */}
                         <button
                           onMouseDown={e => e.stopPropagation()}
                           onClick={() => handleToggleLock(img.id)}
                           title={isLocked ? "Unlock image" : "Lock image"}
-                          style={{ position: "absolute", top: -11, right: 13, width: 20, height: 20, borderRadius: "50%", background: isLocked ? "#3b82f6" : "#6b7280", border: "2px solid white", color: "white", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.25)" }}
+                          style={{ position: "absolute", top: -11, right: -11, width: 20, height: 20, borderRadius: "50%", background: isLocked ? "#3b82f6" : "#6b7280", border: "2px solid white", color: "white", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.25)" }}
                         >
                           {isLocked ? (
                             <svg viewBox="0 0 12 12" width="10" height="10" fill="white"><rect x="2" y="5" width="8" height="6" rx="1"/><path d="M4 5V3.5a2 2 0 0 1 4 0V5" stroke="white" strokeWidth="1.2" fill="none"/></svg>
@@ -3131,6 +3123,16 @@ export default function PageEditor() {
                             <svg viewBox="0 0 12 12" width="10" height="10" fill="white"><rect x="2" y="5" width="8" height="6" rx="1"/><path d="M4 5V3.5a2 2 0 0 1 4 0V2" stroke="white" strokeWidth="1.2" fill="none"/></svg>
                           )}
                         </button>
+
+                        {/* ✕ Delete button — top-LEFT, hidden when locked */}
+                        {!isLocked && (
+                          <button
+                            onMouseDown={e => e.stopPropagation()}
+                            onClick={() => handleRemoveFloatingImg(img.id)}
+                            title="Remove image"
+                            style={{ position: "absolute", top: -11, left: -11, width: 20, height: 20, borderRadius: "50%", background: "#ef4444", border: "2px solid white", color: "white", fontSize: 13, lineHeight: 1, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.25)" }}
+                          >×</button>
+                        )}
 
                         {/* 📐 Size badge (bottom-left) */}
                         <div
