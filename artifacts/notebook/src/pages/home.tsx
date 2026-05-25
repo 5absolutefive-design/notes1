@@ -344,108 +344,110 @@ export default function Home() {
 
           return (
             <div key={book.id} className="group flex flex-col gap-3 relative">
-              {/* Lock Popup (set/change/remove password) */}
-              {isLockOpen && (
-                <div
-                  ref={lockPopupRef}
-                  className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 w-64 bg-white rounded-xl shadow-2xl border border-stone-200 p-4 flex flex-col gap-3"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Lock className="w-4 h-4 text-stone-600" />
-                      <span className="text-sm font-semibold text-stone-700">{isLocked ? "Change Password" : "Set Password"}</span>
-                    </div>
-                    <button onClick={closeLockPopup} className="text-stone-400 hover:text-stone-600"><X className="w-4 h-4" /></button>
-                  </div>
 
-                  <form onSubmit={handleSetPassword} className="flex flex-col gap-2">
-                    <div className="relative">
+              {/* Book Cover + overlaid popups */}
+              <div className="relative">
+                <Link href={`/books/${book.id}`} onClick={(e) => handleBookClick(e, book)} className="block">
+                  <div
+                    className="aspect-[3/4] rounded-md shadow-md transition-transform duration-300 group-hover:-translate-y-2 group-hover:shadow-xl relative overflow-hidden"
+                    style={coverStyle((book as any).pattern ?? "solid", book.color || "#1e293b", (book as any).coverImg)}
+                  >
+                    {!(book as any).coverImg && <div className="absolute left-4 top-0 bottom-0 w-px bg-black/20" />}
+                    {isLocked && (
+                      <div className="absolute top-2 right-2 w-6 h-6 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center">
+                        <Lock className="w-3 h-3 text-white" />
+                      </div>
+                    )}
+                  </div>
+                </Link>
+
+                {/* Lock Popup — overlaid on book cover, book shape */}
+                {isLockOpen && (
+                  <div
+                    ref={lockPopupRef}
+                    className="absolute inset-0 rounded-md z-50 bg-white/95 backdrop-blur-sm shadow-2xl border border-stone-200 flex flex-col justify-center px-3 py-3 gap-2"
+                  >
+                    <div className="flex items-center justify-between mb-0.5">
+                      <div className="flex items-center gap-1.5">
+                        <Lock className="w-3.5 h-3.5 text-stone-600" />
+                        <span className="text-xs font-semibold text-stone-700">{isLocked ? "Change Lock" : "Set Lock"}</span>
+                      </div>
+                      <button onClick={closeLockPopup} className="text-stone-400 hover:text-stone-600"><X className="w-3.5 h-3.5" /></button>
+                    </div>
+
+                    <form onSubmit={handleSetPassword} className="flex flex-col gap-1.5">
+                      <div className="relative">
+                        <input
+                          autoFocus
+                          type={showLockPw ? "text" : "password"}
+                          placeholder="New password"
+                          value={lockPw}
+                          onChange={e => { setLockPw(e.target.value); setLockPwError(""); }}
+                          className="w-full text-xs border border-stone-200 rounded-md px-2 py-1.5 pr-7 outline-none focus:border-stone-400 bg-stone-50"
+                        />
+                        <button type="button" onClick={() => setShowLockPw(v => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
+                          {showLockPw ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                        </button>
+                      </div>
                       <input
-                        autoFocus
                         type={showLockPw ? "text" : "password"}
-                        placeholder="New password"
-                        value={lockPw}
-                        onChange={e => { setLockPw(e.target.value); setLockPwError(""); }}
-                        className="w-full text-sm border border-stone-200 rounded-lg px-3 py-2 pr-9 outline-none focus:border-stone-400 bg-stone-50"
+                        placeholder="Confirm password"
+                        value={lockPwConfirm}
+                        onChange={e => { setLockPwConfirm(e.target.value); setLockPwError(""); }}
+                        className="w-full text-xs border border-stone-200 rounded-md px-2 py-1.5 outline-none focus:border-stone-400 bg-stone-50"
                       />
-                      <button type="button" onClick={() => setShowLockPw(v => !v)} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
-                        {showLockPw ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                      {lockPwError && <p className="text-[10px] text-red-500 leading-tight">{lockPwError}</p>}
+                      <button type="submit" className="w-full bg-stone-800 text-white text-xs font-semibold py-1.5 rounded-md hover:bg-stone-700 transition-colors mt-0.5">
+                        {isLocked ? "Update" : "Set Password"}
                       </button>
-                    </div>
-                    <input
-                      type={showLockPw ? "text" : "password"}
-                      placeholder="Confirm password"
-                      value={lockPwConfirm}
-                      onChange={e => { setLockPwConfirm(e.target.value); setLockPwError(""); }}
-                      className="w-full text-sm border border-stone-200 rounded-lg px-3 py-2 outline-none focus:border-stone-400 bg-stone-50"
-                    />
-                    {lockPwError && <p className="text-xs text-red-500">{lockPwError}</p>}
-                    <button type="submit" className="w-full bg-stone-800 text-white text-sm font-semibold py-2 rounded-lg hover:bg-stone-700 transition-colors">
-                      {isLocked ? "Update Password" : "Set Password"}
-                    </button>
-                  </form>
+                    </form>
 
-                  {isLocked && (
-                    <button
-                      onClick={handleRemovePassword}
-                      className="w-full text-xs text-red-500 hover:text-red-700 py-1 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
-                    >
-                      Remove Lock
-                    </button>
-                  )}
-                </div>
-              )}
-
-              {/* Unlock Popup (enter password to open) */}
-              {isUnlockOpen && (
-                <div
-                  ref={unlockPopupRef}
-                  className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 w-60 bg-white rounded-xl shadow-2xl border border-stone-200 p-4 flex flex-col gap-3"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <Lock className="w-4 h-4 text-stone-600" />
-                      <span className="text-sm font-semibold text-stone-700">Locked</span>
-                    </div>
-                    <button onClick={closeUnlockPopup} className="text-stone-400 hover:text-stone-600"><X className="w-4 h-4" /></button>
+                    {isLocked && (
+                      <button
+                        onClick={handleRemovePassword}
+                        className="w-full text-[10px] text-red-500 hover:text-red-700 py-1 border border-red-200 rounded-md hover:bg-red-50 transition-colors"
+                      >
+                        Remove Lock
+                      </button>
+                    )}
                   </div>
-                  <p className="text-xs text-stone-400">Enter password to open <span className="font-medium text-stone-600">{book.title}</span></p>
-                  <form onSubmit={handleUnlock} className="flex flex-col gap-2">
-                    <div className="relative">
-                      <input
-                        autoFocus
-                        type={showUnlockPw ? "text" : "password"}
-                        placeholder="Password"
-                        value={unlockInput}
-                        onChange={e => { setUnlockInput(e.target.value); setUnlockError(""); }}
-                        className="w-full text-sm border border-stone-200 rounded-lg px-3 py-2 pr-9 outline-none focus:border-stone-400 bg-stone-50"
-                      />
-                      <button type="button" onClick={() => setShowUnlockPw(v => !v)} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
-                        {showUnlockPw ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                      </button>
-                    </div>
-                    {unlockError && <p className="text-xs text-red-500">{unlockError}</p>}
-                    <button type="submit" className="w-full bg-stone-800 text-white text-sm font-semibold py-2 rounded-lg hover:bg-stone-700 transition-colors">
-                      Open
-                    </button>
-                  </form>
-                </div>
-              )}
+                )}
 
-              {/* Book Cover */}
-              <Link href={`/books/${book.id}`} onClick={(e) => handleBookClick(e, book)} className="block">
-                <div
-                  className="aspect-[3/4] rounded-md shadow-md transition-transform duration-300 group-hover:-translate-y-2 group-hover:shadow-xl relative overflow-hidden"
-                  style={coverStyle((book as any).pattern ?? "solid", book.color || "#1e293b", (book as any).coverImg)}
-                >
-                  {!(book as any).coverImg && <div className="absolute left-4 top-0 bottom-0 w-px bg-black/20" />}
-                  {isLocked && (
-                    <div className="absolute top-2 right-2 w-6 h-6 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center">
-                      <Lock className="w-3 h-3 text-white" />
+                {/* Unlock Popup — overlaid on book cover, book shape */}
+                {isUnlockOpen && (
+                  <div
+                    ref={unlockPopupRef}
+                    className="absolute inset-0 rounded-md z-50 bg-white/95 backdrop-blur-sm shadow-2xl border border-stone-200 flex flex-col justify-center px-3 py-3 gap-2"
+                  >
+                    <div className="flex flex-col items-center gap-1 mb-1">
+                      <div className="w-8 h-8 rounded-full bg-stone-100 flex items-center justify-center">
+                        <Lock className="w-4 h-4 text-stone-600" />
+                      </div>
+                      <span className="text-xs font-semibold text-stone-700 text-center leading-tight">{book.title}</span>
+                      <button onClick={closeUnlockPopup} className="absolute top-2 right-2 text-stone-400 hover:text-stone-600"><X className="w-3.5 h-3.5" /></button>
                     </div>
-                  )}
-                </div>
-              </Link>
+                    <form onSubmit={handleUnlock} className="flex flex-col gap-1.5">
+                      <div className="relative">
+                        <input
+                          autoFocus
+                          type={showUnlockPw ? "text" : "password"}
+                          placeholder="Password"
+                          value={unlockInput}
+                          onChange={e => { setUnlockInput(e.target.value); setUnlockError(""); }}
+                          className="w-full text-xs border border-stone-200 rounded-md px-2 py-1.5 pr-7 outline-none focus:border-stone-400 bg-stone-50"
+                        />
+                        <button type="button" onClick={() => setShowUnlockPw(v => !v)} className="absolute right-2 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
+                          {showUnlockPw ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                        </button>
+                      </div>
+                      {unlockError && <p className="text-[10px] text-red-500 leading-tight">{unlockError}</p>}
+                      <button type="submit" className="w-full bg-stone-800 text-white text-xs font-semibold py-1.5 rounded-md hover:bg-stone-700 transition-colors">
+                        Open
+                      </button>
+                    </form>
+                  </div>
+                )}
+              </div>
 
               {/* Title row */}
               <div className="px-1 flex justify-between items-start group/text">
