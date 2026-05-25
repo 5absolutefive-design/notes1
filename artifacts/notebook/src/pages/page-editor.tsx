@@ -784,8 +784,7 @@ function applySearchHighlights(root: HTMLElement, term: string) {
 const FONTS = [
   "Inter", "Myriad Pro", "Arial Black", "Poppins Light",
   "Roboto", "Lato", "Poppins", "Nunito",
-  "Merriweather", "Playfair Display", "EB Garamond",
-  "Source Code Pro", "Courier Prime",
+  "Merriweather",
 ];
 
 export default function PageEditor() {
