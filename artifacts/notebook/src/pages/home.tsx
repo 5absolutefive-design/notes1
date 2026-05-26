@@ -1,7 +1,37 @@
 import { Link, useLocation } from "wouter";
-import { Plus, Trash2, Check, ImagePlus, X, Search, Download, Upload, BookOpen, FileText, Lock, LockOpen, Eye, EyeOff, User } from "lucide-react";
+import { Plus, Trash2, ImagePlus, X, Search, Download, Upload, BookOpen, FileText, Lock, LockOpen, Eye, EyeOff, User, Camera, Pencil } from "lucide-react";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { store, type Book } from "@/lib/store";
+
+interface ProfileData {
+  name: string;
+  username: string;
+  email: string;
+  photo: string;
+  premium: boolean;
+  joinedAt: string;
+}
+
+const PROFILE_KEY = "nb_profile";
+
+function loadProfile(): ProfileData {
+  try {
+    const raw = localStorage.getItem(PROFILE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return {
+    name: "Nihan",
+    username: "nihan",
+    email: "user@gmail.com",
+    photo: "",
+    premium: false,
+    joinedAt: new Date().toISOString().slice(0, 7),
+  };
+}
+
+function saveProfile(p: ProfileData) {
+  localStorage.setItem(PROFILE_KEY, JSON.stringify(p));
+}
 
 const DEFAULT_COVER_IMAGES = [
   { id: "galaxy",   label: "Galaxy",   url: "https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=300&q=80" },
@@ -83,11 +113,21 @@ export default function Home() {
   const [unlockError, setUnlockError] = useState("");
   const [showUnlockPw, setShowUnlockPw] = useState(false);
 
+  // Profile state
+  const [profile, setProfile] = useState<ProfileData>(loadProfile);
+  const [showProfile, setShowProfile] = useState(false);
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [editName, setEditName] = useState("");
+  const [editUsername, setEditUsername] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+
   const popupRef = useRef<HTMLDivElement>(null);
   const imgInputRef = useRef<HTMLInputElement>(null);
   const editInputRef = useRef<HTMLInputElement>(null);
   const lockPopupRef = useRef<HTMLDivElement>(null);
   const unlockPopupRef = useRef<HTMLDivElement>(null);
+  const profilePopupRef = useRef<HTMLDivElement>(null);
+  const profilePhotoRef = useRef<HTMLInputElement>(null);
 
   const refresh = useCallback(() => {
     const summary = store.getSummary();
@@ -127,6 +167,18 @@ export default function Home() {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [lockPopupId]);
+
+  useEffect(() => {
+    if (!showProfile) return;
+    const handler = (e: MouseEvent) => {
+      if (profilePopupRef.current && !profilePopupRef.current.contains(e.target as Node)) {
+        setShowProfile(false);
+        setEditingProfile(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showProfile]);
 
   useEffect(() => {
     if (unlockPopupId === null) return;
@@ -282,6 +334,44 @@ export default function Home() {
     e.target.value = "";
   };
 
+  const handleProfilePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const updated = { ...profile, photo: ev.target?.result as string };
+      setProfile(updated);
+      saveProfile(updated);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
+  };
+
+  const startEditProfile = () => {
+    setEditName(profile.name);
+    setEditUsername(profile.username);
+    setEditEmail(profile.email);
+    setEditingProfile(true);
+  };
+
+  const saveEditProfile = () => {
+    const updated = {
+      ...profile,
+      name: editName.trim() || profile.name,
+      username: editUsername.trim().replace(/\s+/g, "") || profile.username,
+      email: editEmail.trim() || profile.email,
+    };
+    setProfile(updated);
+    saveProfile(updated);
+    setEditingProfile(false);
+  };
+
+  const formatJoined = (iso: string) => {
+    const [year, month] = iso.split("-");
+    const months = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+    return `${months[parseInt(month, 10) - 1]} ${year}`;
+  };
+
   const totalPages = books.reduce((sum, b) => sum + b.pageCount, 0);
   const filteredBooks = searchQuery.trim()
     ? books.filter((b) => b.title.toLowerCase().includes(searchQuery.toLowerCase()))
@@ -339,13 +429,109 @@ export default function Home() {
               {/* Floating profile button */}
               <button
                 title="Profile"
-                className="relative z-10 w-9 h-9 rounded-xl bg-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95"
-                style={{
-                  boxShadow: "0 2px 8px rgba(0,0,0,0.18), 0 1px 3px rgba(0,0,0,0.10)",
-                }}
+                onClick={() => setShowProfile(v => !v)}
+                className="relative z-10 w-9 h-9 rounded-xl bg-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 overflow-hidden"
+                style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.18), 0 1px 3px rgba(0,0,0,0.10)" }}
               >
-                <User className="w-4 h-4 text-stone-600" />
+                {profile.photo
+                  ? <img src={profile.photo} alt="profile" className="w-full h-full object-cover rounded-xl" />
+                  : <User className="w-4 h-4 text-stone-600" />}
               </button>
+
+              {/* Profile Card Popup */}
+              {showProfile && (
+                <div
+                  ref={profilePopupRef}
+                  className="absolute top-14 right-0 z-50 w-72 bg-white rounded-2xl shadow-2xl border border-stone-100 overflow-hidden"
+                  style={{ boxShadow: "0 8px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.08)" }}
+                >
+                  {/* Top gradient banner */}
+                  <div className="h-16 w-full" style={{ background: "linear-gradient(135deg, #3b5bdb 0%, #7c3aed 100%)" }} />
+
+                  {/* Photo + edit button */}
+                  <div className="relative flex justify-between items-end px-4 -mt-10 mb-3">
+                    <div className="relative">
+                      <div
+                        className="w-20 h-20 rounded-full border-4 border-white bg-stone-100 flex items-center justify-center overflow-hidden cursor-pointer"
+                        style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.15)" }}
+                        onClick={() => profilePhotoRef.current?.click()}
+                        title="Change photo"
+                      >
+                        {profile.photo
+                          ? <img src={profile.photo} alt="profile" className="w-full h-full object-cover" />
+                          : <User className="w-8 h-8 text-stone-400" />}
+                      </div>
+                      <div className="absolute bottom-0 right-0 w-6 h-6 bg-stone-800 rounded-full flex items-center justify-center border-2 border-white cursor-pointer" onClick={() => profilePhotoRef.current?.click()}>
+                        <Camera className="w-3 h-3 text-white" />
+                      </div>
+                      <input ref={profilePhotoRef} type="file" accept="image/*" className="hidden" onChange={handleProfilePhoto} />
+                    </div>
+                    {!editingProfile
+                      ? <button onClick={startEditProfile} className="mb-1 flex items-center gap-1 text-xs text-stone-500 hover:text-stone-800 border border-stone-200 rounded-lg px-2 py-1 hover:bg-stone-50 transition-all">
+                          <Pencil className="w-3 h-3" /> Edit
+                        </button>
+                      : <button onClick={saveEditProfile} className="mb-1 flex items-center gap-1 text-xs text-white bg-stone-800 hover:bg-stone-700 rounded-lg px-2 py-1 transition-all">
+                          Save
+                        </button>}
+                  </div>
+
+                  {/* Name & username */}
+                  <div className="px-4 mb-3">
+                    {editingProfile ? (
+                      <div className="flex flex-col gap-1.5">
+                        <input
+                          autoFocus
+                          value={editName}
+                          onChange={e => setEditName(e.target.value)}
+                          onKeyDown={e => e.key === "Enter" && saveEditProfile()}
+                          placeholder="Name"
+                          className="text-sm font-bold text-stone-800 border border-stone-200 rounded-lg px-2 py-1 outline-none focus:border-stone-400 bg-stone-50 w-full"
+                        />
+                        <input
+                          value={editUsername}
+                          onChange={e => setEditUsername(e.target.value)}
+                          onKeyDown={e => e.key === "Enter" && saveEditProfile()}
+                          placeholder="username"
+                          className="text-xs text-stone-500 border border-stone-200 rounded-lg px-2 py-1 outline-none focus:border-stone-400 bg-stone-50 w-full"
+                        />
+                        <input
+                          value={editEmail}
+                          onChange={e => setEditEmail(e.target.value)}
+                          onKeyDown={e => e.key === "Enter" && saveEditProfile()}
+                          placeholder="email"
+                          className="text-xs text-stone-500 border border-stone-200 rounded-lg px-2 py-1 outline-none focus:border-stone-400 bg-stone-50 w-full"
+                        />
+                      </div>
+                    ) : (
+                      <>
+                        <h2 className="text-base font-bold text-stone-800 leading-tight">{profile.name}</h2>
+                        <p className="text-xs text-stone-400">@{profile.username}</p>
+                      </>
+                    )}
+                  </div>
+
+                  {/* Badges */}
+                  {!editingProfile && (
+                    <div className="px-4 mb-4 flex flex-wrap gap-1.5">
+                      <span className="flex items-center gap-1 text-[11px] bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-2 py-0.5">🟢 Online</span>
+                      <span className="flex items-center gap-1 text-[11px] bg-amber-50 text-amber-700 border border-amber-200 rounded-full px-2 py-0.5">⭐ Premium</span>
+                      <span className="flex items-center gap-1 text-[11px] bg-blue-50 text-blue-700 border border-blue-200 rounded-full px-2 py-0.5">📚 {books.length} Notebooks</span>
+                    </div>
+                  )}
+
+                  {/* Info rows */}
+                  {!editingProfile && (
+                    <div className="px-4 pb-4 flex flex-col gap-2 border-t border-stone-100 pt-3">
+                      <div className="flex items-center gap-2 text-xs text-stone-500">
+                        <span>📧</span><span className="truncate">{profile.email}</span>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-stone-500">
+                        <span>📅</span><span>Joined {formatJoined(profile.joinedAt)}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </div>
