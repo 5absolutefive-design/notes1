@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Plus, Trash2, Check, ImagePlus, X, Search, Download, Upload, BookOpen, FileText, Lock, LockOpen, Eye, EyeOff } from "lucide-react";
+import { Plus, Trash2, Check, ImagePlus, X, Search, Download, Upload, BookOpen, FileText, Lock, LockOpen, Eye, EyeOff, User } from "lucide-react";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { store, type Book } from "@/lib/store";
 
@@ -325,6 +325,28 @@ export default function Home() {
               <Upload className="w-3.5 h-3.5" /><span className="hidden sm:inline">Import</span>
               <input type="file" accept=".json" className="hidden" onChange={handleUpload} />
             </label>
+
+            {/* Profile button with socket/inset effect */}
+            <div className="relative flex items-center justify-center w-10 h-10">
+              {/* Socket — recessed circular hole in the card */}
+              <div
+                className="absolute inset-0 rounded-full"
+                style={{
+                  background: "radial-gradient(circle, #d1d5db 0%, #e7e5e4 60%, #f5f5f4 100%)",
+                  boxShadow: "inset 0 2px 6px rgba(0,0,0,0.18), inset 0 1px 3px rgba(0,0,0,0.12)",
+                }}
+              />
+              {/* Floating profile button */}
+              <button
+                title="Profile"
+                className="relative z-10 w-8 h-8 rounded-full bg-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95"
+                style={{
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.18), 0 1px 3px rgba(0,0,0,0.10)",
+                }}
+              >
+                <User className="w-4 h-4 text-stone-600" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
