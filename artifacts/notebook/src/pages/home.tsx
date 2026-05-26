@@ -318,11 +318,11 @@ export default function Home() {
                 </button>
               )}
             </div>
-            <button onClick={handleDownload} title="Download backup" className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-stone-200 bg-stone-50 hover:bg-stone-100 hover:border-stone-300 text-stone-600 text-xs font-medium transition-all">
-              <Download className="w-3.5 h-3.5" /><span className="hidden sm:inline">Backup</span>
+            <button onClick={handleDownload} title="Download backup" className="flex items-center justify-center w-8 h-8 rounded-lg border border-stone-200 bg-stone-50 hover:bg-stone-100 hover:border-stone-300 text-stone-600 transition-all">
+              <Download className="w-4 h-4" />
             </button>
-            <label title="Import backup" className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-stone-200 bg-stone-50 hover:bg-stone-100 hover:border-stone-300 text-stone-600 text-xs font-medium transition-all cursor-pointer">
-              <Upload className="w-3.5 h-3.5" /><span className="hidden sm:inline">Import</span>
+            <label title="Import backup" className="flex items-center justify-center w-8 h-8 rounded-lg border border-stone-200 bg-stone-50 hover:bg-stone-100 hover:border-stone-300 text-stone-600 transition-all cursor-pointer">
+              <Upload className="w-4 h-4" />
               <input type="file" accept=".json" className="hidden" onChange={handleUpload} />
             </label>
 
