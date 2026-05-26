@@ -20,9 +20,9 @@ function loadProfile(): ProfileData {
     if (raw) return JSON.parse(raw);
   } catch {}
   return {
-    name: "Nihan",
-    username: "nihan",
-    email: "user@gmail.com",
+    name: "",
+    username: "",
+    email: "",
     photo: "",
     premium: false,
     joinedAt: new Date().toISOString().slice(0, 7),
@@ -357,9 +357,9 @@ export default function Home() {
   const saveEditProfile = () => {
     const updated = {
       ...profile,
-      name: editName.trim() || profile.name,
-      username: editUsername.trim().replace(/\s+/g, "") || profile.username,
-      email: editEmail.trim() || profile.email,
+      name: editName.trim(),
+      username: editUsername.trim().replace(/\s+/g, ""),
+      email: editEmail.trim(),
     };
     setProfile(updated);
     saveProfile(updated);
@@ -429,7 +429,16 @@ export default function Home() {
               {/* Floating profile button */}
               <button
                 title="Profile"
-                onClick={() => setShowProfile(v => !v)}
+                onClick={() => {
+                  const isEmpty = !profile.name && !profile.username && !profile.email && !profile.photo;
+                  if (!showProfile) {
+                    setShowProfile(true);
+                    if (isEmpty) { setEditName(""); setEditUsername(""); setEditEmail(""); setEditingProfile(true); }
+                  } else {
+                    setShowProfile(false);
+                    setEditingProfile(false);
+                  }
+                }}
                 className="relative z-10 w-9 h-9 rounded-xl bg-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 overflow-hidden"
                 style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.18), 0 1px 3px rgba(0,0,0,0.10)" }}
               >
@@ -504,8 +513,12 @@ export default function Home() {
                       </div>
                     ) : (
                       <>
-                        <h2 className="text-base font-bold text-stone-800 leading-tight">{profile.name}</h2>
-                        <p className="text-xs text-stone-400">@{profile.username}</p>
+                        <h2 className="text-base font-bold leading-tight" style={{ color: profile.name ? "#1c1917" : "#a8a29e" }}>
+                          {profile.name || "Your name"}
+                        </h2>
+                        <p className="text-xs" style={{ color: profile.username ? "#a8a29e" : "#d6d3d1" }}>
+                          {profile.username ? `@${profile.username}` : "@username"}
+                        </p>
                       </>
                     )}
                   </div>
@@ -522,9 +535,11 @@ export default function Home() {
                   {/* Info rows */}
                   {!editingProfile && (
                     <div className="px-4 pb-4 flex flex-col gap-2 border-t border-stone-100 pt-3">
-                      <div className="flex items-center gap-2 text-xs text-stone-500">
-                        <span>📧</span><span className="truncate">{profile.email}</span>
-                      </div>
+                      {profile.email && (
+                        <div className="flex items-center gap-2 text-xs text-stone-500">
+                          <span>📧</span><span className="truncate">{profile.email}</span>
+                        </div>
+                      )}
                       <div className="flex items-center gap-2 text-xs text-stone-500">
                         <span>📅</span><span>Joined {formatJoined(profile.joinedAt)}</span>
                       </div>
