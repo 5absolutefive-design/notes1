@@ -327,19 +327,19 @@ export default function Home() {
             </label>
 
             {/* Profile button with socket/inset effect */}
-            <div className="relative flex items-center justify-center w-10 h-10">
-              {/* Socket — recessed circular hole in the card */}
+            <div className="relative flex items-center justify-center w-11 h-11">
+              {/* Socket — recessed square hole in the card */}
               <div
-                className="absolute inset-0 rounded-full"
+                className="absolute inset-0 rounded-xl"
                 style={{
-                  background: "radial-gradient(circle, #d1d5db 0%, #e7e5e4 60%, #f5f5f4 100%)",
+                  background: "linear-gradient(135deg, #d1d5db 0%, #e7e5e4 60%, #f5f5f4 100%)",
                   boxShadow: "inset 0 2px 6px rgba(0,0,0,0.18), inset 0 1px 3px rgba(0,0,0,0.12)",
                 }}
               />
               {/* Floating profile button */}
               <button
                 title="Profile"
-                className="relative z-10 w-8 h-8 rounded-full bg-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95"
+                className="relative z-10 w-9 h-9 rounded-xl bg-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95"
                 style={{
                   boxShadow: "0 2px 8px rgba(0,0,0,0.18), 0 1px 3px rgba(0,0,0,0.10)",
                 }}
