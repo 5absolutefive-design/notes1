@@ -327,7 +327,7 @@ export default function Home() {
             </label>
 
             {/* Profile button with socket/inset effect */}
-            <div className="relative flex items-center justify-center w-11 h-11">
+            <div className="relative flex items-center justify-center w-11 h-11 ml-6 mr-2">
               {/* Socket — recessed square hole in the card */}
               <div
                 className="absolute inset-0 rounded-xl"
