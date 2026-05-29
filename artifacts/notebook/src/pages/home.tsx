@@ -768,7 +768,7 @@ export default function Home() {
 
             {/* Create form */}
             {showNoteCreate && (
-              <div className="mb-6 rounded-2xl border border-stone-200 bg-white shadow-sm p-5 flex flex-col gap-3 w-1/2">
+              <div className="mb-6 rounded-2xl border border-stone-200 bg-white shadow-sm p-5 flex flex-col gap-3 w-1/2 min-h-[260px]">
                 <div className="flex items-center gap-3">
                   <StickyNote className="w-4 h-4 text-stone-400" />
                   <span className="text-sm font-semibold text-stone-700">New Short Note</span>
