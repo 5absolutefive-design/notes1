@@ -556,12 +556,7 @@ export default function Home() {
                 );
               })}
 
-              {/* Ghost cells — fill row before New button */}
-              {Array.from({ length: ghostCount }).map((_, i) => (
-                <div key={`ghost-${i}`} className="aspect-[3/4] rounded-md border-2 border-dashed border-stone-200 bg-transparent" />
-              ))}
-
-              {/* New Notebook button — always last */}
+              {/* New Notebook button — right after books */}
               <div className="relative flex flex-col gap-3" ref={popupRef}>
                 <button
                   onClick={() => setShowCreate((v) => !v)}
@@ -641,6 +636,11 @@ export default function Home() {
                   </div>
                 )}
               </div>
+
+              {/* Ghost cells — fill remaining row after New button */}
+              {Array.from({ length: ghostCount }).map((_, i) => (
+                <div key={`ghost-${i}`} className="aspect-[3/4] rounded-md border-2 border-dashed border-stone-200 bg-transparent" />
+              ))}
 
               </div>
               );
