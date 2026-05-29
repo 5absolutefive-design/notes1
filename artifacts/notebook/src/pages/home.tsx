@@ -1,5 +1,11 @@
 import { Link, useLocation } from "wouter";
-import { Plus, Trash2, ImagePlus, X, Search, Download, Upload, BookOpen, FileText, Lock, LockOpen, Eye, EyeOff, User, Camera, Pencil, Home as HomeIcon, ChevronLeft, ChevronRight, Check, BookMarked, Clock } from "lucide-react";
+import {
+  Plus, Trash2, ImagePlus, X, Search, Download, Upload,
+  BookOpen, FileText, Lock, LockOpen, Eye, EyeOff, User,
+  Camera, Pencil, Home as HomeIcon, ChevronLeft, ChevronRight,
+  Check, BookMarked, Clock, StickyNote, FolderKanban,
+  CheckSquare, CalendarDays,
+} from "lucide-react";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { store, type Book } from "@/lib/store";
 
@@ -19,19 +25,9 @@ function loadProfile(): ProfileData {
     const raw = localStorage.getItem(PROFILE_KEY);
     if (raw) return JSON.parse(raw);
   } catch {}
-  return {
-    name: "",
-    username: "",
-    email: "",
-    photo: "",
-    premium: false,
-    joinedAt: new Date().toISOString().slice(0, 7),
-  };
+  return { name: "", username: "", email: "", photo: "", premium: false, joinedAt: new Date().toISOString().slice(0, 7) };
 }
-
-function saveProfile(p: ProfileData) {
-  localStorage.setItem(PROFILE_KEY, JSON.stringify(p));
-}
+function saveProfile(p: ProfileData) { localStorage.setItem(PROFILE_KEY, JSON.stringify(p)); }
 
 const DEFAULT_COVER_IMAGES = [
   { id: "galaxy",   label: "Galaxy",   url: "https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=300&q=80" },
@@ -64,22 +60,14 @@ const COVER_PATTERNS = [
 function patternStyle(pattern: string, color: string): React.CSSProperties {
   const base: React.CSSProperties = { backgroundColor: color };
   switch (pattern) {
-    case "dots":
-      return { ...base, backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.3) 1px, transparent 1px)`, backgroundSize: "12px 12px" };
-    case "lines":
-      return { ...base, backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 10px, rgba(255,255,255,0.2) 10px, rgba(255,255,255,0.2) 11px)` };
-    case "grid":
-      return { ...base, backgroundImage: `linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px)`, backgroundSize: "12px 12px" };
-    case "diagonal":
-      return { ...base, backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(255,255,255,0.18) 8px, rgba(255,255,255,0.18) 9px)` };
-    case "waves":
-      return { ...base, backgroundImage: `repeating-radial-gradient(ellipse at 0% 50%, transparent 0px, transparent 7px, rgba(255,255,255,0.18) 7px, rgba(255,255,255,0.18) 8px)` };
-    case "cross":
-      return { ...base, backgroundImage: `linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px), linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)`, backgroundSize: "24px 24px, 24px 24px, 6px 6px, 6px 6px" };
-    case "marble":
-      return { ...base, backgroundImage: `repeating-linear-gradient(105deg, transparent, transparent 10px, rgba(255,255,255,0.12) 10px, rgba(255,255,255,0.12) 11px), repeating-linear-gradient(195deg, transparent, transparent 14px, rgba(255,255,255,0.08) 14px, rgba(255,255,255,0.08) 15px)` };
-    default:
-      return base;
+    case "dots":      return { ...base, backgroundImage: `radial-gradient(circle, rgba(255,255,255,0.3) 1px, transparent 1px)`, backgroundSize: "12px 12px" };
+    case "lines":     return { ...base, backgroundImage: `repeating-linear-gradient(0deg, transparent, transparent 10px, rgba(255,255,255,0.2) 10px, rgba(255,255,255,0.2) 11px)` };
+    case "grid":      return { ...base, backgroundImage: `linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px)`, backgroundSize: "12px 12px" };
+    case "diagonal":  return { ...base, backgroundImage: `repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(255,255,255,0.18) 8px, rgba(255,255,255,0.18) 9px)` };
+    case "waves":     return { ...base, backgroundImage: `repeating-radial-gradient(ellipse at 0% 50%, transparent 0px, transparent 7px, rgba(255,255,255,0.18) 7px, rgba(255,255,255,0.18) 8px)` };
+    case "cross":     return { ...base, backgroundImage: `linear-gradient(rgba(255,255,255,0.15) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.15) 1px, transparent 1px), linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)`, backgroundSize: "24px 24px, 24px 24px, 6px 6px, 6px 6px" };
+    case "marble":    return { ...base, backgroundImage: `repeating-linear-gradient(105deg, transparent, transparent 10px, rgba(255,255,255,0.12) 10px, rgba(255,255,255,0.12) 11px), repeating-linear-gradient(195deg, transparent, transparent 14px, rgba(255,255,255,0.08) 14px, rgba(255,255,255,0.08) 15px)` };
+    default:          return base;
   }
 }
 
@@ -88,8 +76,20 @@ function coverStyle(pattern: string, color: string, coverImg?: string): React.CS
   return patternStyle(pattern, color);
 }
 
+type ActiveView = "home" | "my-notebook" | "short-note" | "project" | "task" | "schedule";
+
+const NAV_ITEMS: { id: ActiveView; label: string; icon: React.ElementType; active: boolean }[] = [
+  { id: "home",       label: "Home",        icon: HomeIcon,       active: false },
+  { id: "short-note", label: "Short Note",  icon: StickyNote,     active: false },
+  { id: "my-notebook",label: "My Notebook", icon: BookMarked,     active: true  },
+  { id: "project",    label: "Project",     icon: FolderKanban,   active: false },
+  { id: "task",       label: "Task",        icon: CheckSquare,    active: false },
+  { id: "schedule",   label: "Schedule",    icon: CalendarDays,   active: false },
+];
+
 export default function Home() {
   const [, navigate] = useLocation();
+  const [activeView, setActiveView] = useState<ActiveView>("my-notebook");
   const [books, setBooks] = useState<(Book & { pageCount: number })[]>([]);
   const [recentTitle, setRecentTitle] = useState<{ id: number; title: string } | null>(null);
   const [showCreate, setShowCreate] = useState(false);
@@ -103,7 +103,6 @@ export default function Home() {
   const [editingTitle, setEditingTitle] = useState("");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
 
-  // Lock system state
   const [lockPopupId, setLockPopupId] = useState<number | null>(null);
   const [lockPw, setLockPw] = useState("");
   const [lockPwConfirm, setLockPwConfirm] = useState("");
@@ -114,7 +113,6 @@ export default function Home() {
   const [unlockError, setUnlockError] = useState("");
   const [showUnlockPw, setShowUnlockPw] = useState(false);
 
-  // Profile state
   const [profile, setProfile] = useState<ProfileData>(loadProfile);
   const [showProfile, setShowProfile] = useState(false);
   const [editingProfile, setEditingProfile] = useState(false);
@@ -134,147 +132,86 @@ export default function Home() {
     const summary = store.getSummary();
     const allBooks = store.listBooks().map((b) => ({
       ...b,
-      pageCount: summary.recentBooks.find((r) => r.id === b.id)?.pageCount ??
-        store.listPages(b.id).length,
+      pageCount: summary.recentBooks.find((r) => r.id === b.id)?.pageCount ?? store.listPages(b.id).length,
     }));
     setBooks(allBooks);
     const recent = summary.recentBooks[0];
     setRecentTitle(recent ? { id: recent.id, title: recent.title } : null);
   }, []);
 
-  useEffect(() => {
-    store.initDefaults();
-    refresh();
-  }, [refresh]);
+  useEffect(() => { store.initDefaults(); refresh(); }, [refresh]);
 
   useEffect(() => {
     if (!showCreate) return;
-    const handler = (e: MouseEvent) => {
-      if (popupRef.current && !popupRef.current.contains(e.target as Node)) {
-        setShowCreate(false);
-      }
-    };
+    const handler = (e: MouseEvent) => { if (popupRef.current && !popupRef.current.contains(e.target as Node)) setShowCreate(false); };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [showCreate]);
 
   useEffect(() => {
     if (lockPopupId === null) return;
-    const handler = (e: MouseEvent) => {
-      if (lockPopupRef.current && !lockPopupRef.current.contains(e.target as Node)) {
-        closeLockPopup();
-      }
-    };
+    const handler = (e: MouseEvent) => { if (lockPopupRef.current && !lockPopupRef.current.contains(e.target as Node)) closeLockPopup(); };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [lockPopupId]);
 
   useEffect(() => {
     if (!showProfile) return;
-    const handler = (e: MouseEvent) => {
-      if (profilePopupRef.current && !profilePopupRef.current.contains(e.target as Node)) {
-        setShowProfile(false);
-        setEditingProfile(false);
-      }
-    };
+    const handler = (e: MouseEvent) => { if (profilePopupRef.current && !profilePopupRef.current.contains(e.target as Node)) { setShowProfile(false); setEditingProfile(false); } };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [showProfile]);
 
   useEffect(() => {
     if (unlockPopupId === null) return;
-    const handler = (e: MouseEvent) => {
-      if (unlockPopupRef.current && !unlockPopupRef.current.contains(e.target as Node)) {
-        closeUnlockPopup();
-      }
-    };
+    const handler = (e: MouseEvent) => { if (unlockPopupRef.current && !unlockPopupRef.current.contains(e.target as Node)) closeUnlockPopup(); };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [unlockPopupId]);
 
-  const closeLockPopup = () => {
-    setLockPopupId(null);
-    setLockPw("");
-    setLockPwConfirm("");
-    setLockPwError("");
-    setShowLockPw(false);
-  };
+  const closeLockPopup = () => { setLockPopupId(null); setLockPw(""); setLockPwConfirm(""); setLockPwError(""); setShowLockPw(false); };
+  const closeUnlockPopup = () => { setUnlockPopupId(null); setUnlockInput(""); setUnlockError(""); setShowUnlockPw(false); };
 
-  const closeUnlockPopup = () => {
-    setUnlockPopupId(null);
-    setUnlockInput("");
-    setUnlockError("");
-    setShowUnlockPw(false);
-  };
-
-  const openLockPopup = (e: React.MouseEvent, bookId: number) => {
-    e.preventDefault();
-    closeLockPopup();
-    closeUnlockPopup();
-    setLockPopupId(bookId);
-  };
+  const openLockPopup = (e: React.MouseEvent, bookId: number) => { e.preventDefault(); closeLockPopup(); closeUnlockPopup(); setLockPopupId(bookId); };
 
   const handleSetPassword = (e: React.FormEvent) => {
     e.preventDefault();
     if (!lockPw.trim()) { setLockPwError("Password cannot be empty."); return; }
     if (lockPw !== lockPwConfirm) { setLockPwError("Passwords do not match."); return; }
     store.updateBook(lockPopupId!, { password: lockPw });
-    closeLockPopup();
-    refresh();
+    closeLockPopup(); refresh();
   };
 
-  const handleRemovePassword = () => {
-    store.updateBook(lockPopupId!, { password: undefined });
-    closeLockPopup();
-    refresh();
-  };
+  const handleRemovePassword = () => { store.updateBook(lockPopupId!, { password: undefined }); closeLockPopup(); refresh(); };
 
   const handleBookClick = (e: React.MouseEvent, book: Book) => {
-    if (book.password) {
-      e.preventDefault();
-      setUnlockPopupId(book.id);
-      setUnlockInput("");
-      setUnlockError("");
-      setShowUnlockPw(false);
-    }
+    if (book.password) { e.preventDefault(); setUnlockPopupId(book.id); setUnlockInput(""); setUnlockError(""); setShowUnlockPw(false); }
   };
 
   const handleUnlock = (e: React.FormEvent) => {
     e.preventDefault();
     const book = books.find(b => b.id === unlockPopupId);
     if (!book) return;
-    if (unlockInput === book.password) {
-      closeUnlockPopup();
-      navigate(`/books/${book.id}`);
-    } else {
-      setUnlockError("Incorrect password. Try again.");
-    }
+    if (unlockInput === book.password) { closeUnlockPopup(); navigate(`/books/${book.id}`); }
+    else setUnlockError("Incorrect password. Try again.");
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const file = e.target.files?.[0]; if (!file) return;
     const reader = new FileReader();
     reader.onload = (ev) => { setNewCoverImg(ev.target?.result as string); };
     reader.readAsDataURL(file);
   };
 
   const handleCreate = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTitle.trim()) return;
+    e.preventDefault(); if (!newTitle.trim()) return;
     store.createBook({ title: newTitle.trim(), color: newColor, pattern: newPattern, coverImg: newCoverImg });
-    setShowCreate(false);
-    setNewTitle("");
-    setNewColor("#3b5bdb");
-    setNewPattern("solid");
-    setNewCoverImg(undefined);
+    setShowCreate(false); setNewTitle(""); setNewColor("#3b5bdb"); setNewPattern("solid"); setNewCoverImg(undefined);
     refresh();
   };
 
   const startEditing = (e: React.MouseEvent, book: { id: number; title: string }) => {
-    e.preventDefault();
-    setEditingId(book.id);
-    setEditingTitle(book.title);
+    e.preventDefault(); setEditingId(book.id); setEditingTitle(book.title);
     setTimeout(() => { editInputRef.current?.select(); }, 30);
   };
 
@@ -282,38 +219,26 @@ export default function Home() {
     if (editingId === null) return;
     const trimmed = editingTitle.trim();
     if (trimmed) store.updateBook(editingId, { title: trimmed });
-    setEditingId(null);
-    refresh();
+    setEditingId(null); refresh();
   };
 
   const cancelEditing = () => setEditingId(null);
 
   const handleDelete = (e: React.MouseEvent, bookId: number) => {
     e.preventDefault();
-    if (confirm("Delete this notebook and all its pages?")) {
-      store.deleteBook(bookId);
-      refresh();
-    }
+    if (confirm("Delete this notebook and all its pages?")) { store.deleteBook(bookId); refresh(); }
   };
 
   const handleDownload = () => {
-    const data = {
-      notebooks: store.listBooks(),
-      pages: store.listBooks().flatMap((b) => store.listPages(b.id).map((p) => ({ ...p, bookId: b.id }))),
-      exportedAt: new Date().toISOString(),
-    };
+    const data = { notebooks: store.listBooks(), pages: store.listBooks().flatMap((b) => store.listPages(b.id).map((p) => ({ ...p, bookId: b.id }))), exportedAt: new Date().toISOString() };
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `my-notebooks-${new Date().toISOString().slice(0, 10)}.json`;
-    a.click();
+    const a = document.createElement("a"); a.href = url; a.download = `my-notebooks-${new Date().toISOString().slice(0, 10)}.json`; a.click();
     URL.revokeObjectURL(url);
   };
 
   const handleUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const file = e.target.files?.[0]; if (!file) return;
     const reader = new FileReader();
     reader.onload = (ev) => {
       try {
@@ -323,48 +248,26 @@ export default function Home() {
         data.notebooks.forEach((nb: Book) => {
           const created = store.createBook({ title: nb.title, color: nb.color, pattern: nb.pattern, coverImg: nb.coverImg });
           const nbPages = (data.pages ?? []).filter((p: { bookId: number }) => p.bookId === nb.id);
-          nbPages.forEach((pg: { type: string; content: string }) => {
-            store.createPage(created.id, { title: "Imported page", pageType: pg.type as "blank" | "lined" | "spreadsheet", content: pg.content });
-          });
+          nbPages.forEach((pg: { type: string; content: string }) => { store.createPage(created.id, { title: "Imported page", pageType: pg.type as "blank" | "lined" | "spreadsheet", content: pg.content }); });
         });
-        refresh();
-        alert("Import successful!");
+        refresh(); alert("Import successful!");
       } catch { alert("Failed to read file."); }
     };
-    reader.readAsText(file);
-    e.target.value = "";
+    reader.readAsText(file); e.target.value = "";
   };
 
   const handleProfilePhoto = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const file = e.target.files?.[0]; if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => {
-      const updated = { ...profile, photo: ev.target?.result as string };
-      setProfile(updated);
-      saveProfile(updated);
-    };
-    reader.readAsDataURL(file);
-    e.target.value = "";
+    reader.onload = (ev) => { const updated = { ...profile, photo: ev.target?.result as string }; setProfile(updated); saveProfile(updated); };
+    reader.readAsDataURL(file); e.target.value = "";
   };
 
-  const startEditProfile = () => {
-    setEditName(profile.name);
-    setEditUsername(profile.username);
-    setEditEmail(profile.email);
-    setEditingProfile(true);
-  };
+  const startEditProfile = () => { setEditName(profile.name); setEditUsername(profile.username); setEditEmail(profile.email); setEditingProfile(true); };
 
   const saveEditProfile = () => {
-    const updated = {
-      ...profile,
-      name: editName.trim(),
-      username: editUsername.trim().replace(/\s+/g, ""),
-      email: editEmail.trim(),
-    };
-    setProfile(updated);
-    saveProfile(updated);
-    setEditingProfile(false);
+    const updated = { ...profile, name: editName.trim(), username: editUsername.trim().replace(/\s+/g, ""), email: editEmail.trim() };
+    setProfile(updated); saveProfile(updated); setEditingProfile(false);
   };
 
   const formatJoined = (iso: string) => {
@@ -374,111 +277,119 @@ export default function Home() {
   };
 
   const totalPages = books.reduce((sum, b) => sum + b.pageCount, 0);
-  const filteredBooks = searchQuery.trim()
-    ? books.filter((b) => b.title.toLowerCase().includes(searchQuery.toLowerCase()))
-    : books;
+  const filteredBooks = searchQuery.trim() ? books.filter((b) => b.title.toLowerCase().includes(searchQuery.toLowerCase())) : books;
+
+  const handleNavClick = (item: typeof NAV_ITEMS[0]) => {
+    if (!item.active) return;
+    setActiveView(item.id);
+  };
 
   return (
     <div className="min-h-screen w-full bg-[#f8f7f4] flex">
 
       {/* ── Sidebar ── */}
-      <aside
-        className={`flex-shrink-0 h-screen sticky top-0 flex flex-col bg-white border-r border-stone-200 transition-all duration-300 shadow-sm ${sidebarCollapsed ? "w-16" : "w-60"}`}
-      >
-        {/* Sidebar top: logo + collapse toggle */}
-        <div className={`flex items-center border-b border-stone-100 py-4 ${sidebarCollapsed ? "justify-center px-2" : "justify-between px-4"}`}>
-          {!sidebarCollapsed && (
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center flex-shrink-0">
-                <BookMarked className="w-3.5 h-3.5 text-white" />
-              </div>
-              <span className="font-serif font-bold text-stone-800 text-sm truncate">My Notebooks</span>
-            </div>
-          )}
-          {sidebarCollapsed && (
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center">
+      <aside className={`flex-shrink-0 h-screen sticky top-0 flex flex-col bg-white border-r border-stone-200 transition-all duration-300 shadow-sm ${sidebarCollapsed ? "w-16" : "w-60"}`}>
+
+        {/* Logo + collapse */}
+        <div className={`flex items-center border-b border-stone-100 py-4 ${sidebarCollapsed ? "flex-col gap-2 px-2" : "justify-between px-4"}`}>
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center flex-shrink-0">
               <BookMarked className="w-3.5 h-3.5 text-white" />
             </div>
-          )}
+            {!sidebarCollapsed && <span className="font-serif font-bold text-stone-800 text-sm truncate">My Notebooks</span>}
+          </div>
           <button
             onClick={() => setSidebarCollapsed(v => !v)}
-            className={`w-6 h-6 rounded-md flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-all flex-shrink-0 ${sidebarCollapsed ? "mt-2" : ""}`}
+            className="w-6 h-6 rounded-md flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-all flex-shrink-0"
           >
             {sidebarCollapsed ? <ChevronRight className="w-3.5 h-3.5" /> : <ChevronLeft className="w-3.5 h-3.5" />}
           </button>
         </div>
 
-        {/* Nav links */}
-        <nav className="px-2 pt-3 flex flex-col gap-0.5">
-          <div
-            className={`flex items-center gap-2.5 rounded-lg px-2 py-2 bg-stone-100 text-stone-800 cursor-default ${sidebarCollapsed ? "justify-center" : ""}`}
-            title="Home"
-          >
-            <HomeIcon className="w-4 h-4 flex-shrink-0 text-stone-600" />
-            {!sidebarCollapsed && <span className="text-sm font-medium">Home</span>}
-          </div>
-        </nav>
+        {/* Nav items */}
+        <nav className="px-2 pt-3 flex flex-col gap-0.5 flex-1 overflow-y-auto pb-4">
+          {NAV_ITEMS.map((item) => {
+            const Icon = item.icon;
+            const isSelected = activeView === item.id;
+            const isClickable = item.active;
 
-        {/* Notebooks section */}
-        {!sidebarCollapsed && (
-          <div className="px-3 pt-5 pb-1 flex items-center justify-between">
-            <span className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest">Notebooks</span>
-            <button
-              onClick={() => setShowCreate(true)}
-              className="w-5 h-5 rounded-md flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-all"
-              title="New notebook"
-            >
-              <Plus className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        )}
-        {sidebarCollapsed && (
-          <div className="px-2 pt-4 pb-1 flex justify-center">
-            <button
-              onClick={() => setShowCreate(true)}
-              className="w-8 h-8 rounded-lg flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-all"
-              title="New notebook"
-            >
-              <Plus className="w-4 h-4" />
-            </button>
-          </div>
-        )}
-
-        <div className="flex-1 overflow-y-auto px-2 pb-2 flex flex-col gap-0.5">
-          {books.map((book) => (
-            <Link
-              key={book.id}
-              href={`/books/${book.id}`}
-              onClick={(e) => handleBookClick(e, book)}
-              className={`flex items-center gap-2.5 rounded-lg px-2 py-2 text-stone-600 hover:bg-stone-50 hover:text-stone-900 transition-all group ${sidebarCollapsed ? "justify-center" : ""}`}
-              title={book.title}
-            >
-              {/* Color dot / mini cover */}
-              <div
-                className="w-5 h-5 rounded-md flex-shrink-0 relative overflow-hidden"
-                style={coverStyle((book as any).pattern ?? "solid", book.color || "#1e293b", (book as any).coverImg)}
+            return (
+              <button
+                key={item.id}
+                onClick={() => handleNavClick(item)}
+                title={!isClickable ? `${item.label} — coming soon` : item.label}
+                className={`w-full flex items-center gap-2.5 rounded-lg px-2 py-2.5 transition-all text-left
+                  ${sidebarCollapsed ? "justify-center" : ""}
+                  ${isSelected
+                    ? "bg-blue-50 text-blue-700 font-semibold"
+                    : isClickable
+                      ? "text-stone-600 hover:bg-stone-50 hover:text-stone-900 cursor-pointer"
+                      : "text-stone-300 cursor-not-allowed"
+                  }`}
               >
-                {book.password && (
-                  <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                    <Lock className="w-2 h-2 text-white" />
-                  </div>
+                <Icon className={`w-4 h-4 flex-shrink-0 ${isSelected ? "text-blue-600" : isClickable ? "text-stone-500" : "text-stone-300"}`} />
+                {!sidebarCollapsed && (
+                  <span className="text-sm truncate flex-1">{item.label}</span>
+                )}
+                {!sidebarCollapsed && !isClickable && (
+                  <span className="text-[9px] bg-stone-100 text-stone-400 rounded-full px-1.5 py-0.5 flex-shrink-0">Soon</span>
+                )}
+              </button>
+            );
+          })}
+
+          {/* Notebook list — only shown when My Notebook is active */}
+          {activeView === "my-notebook" && (
+            <div className="mt-3">
+              {!sidebarCollapsed && (
+                <div className="px-1 pb-1 flex items-center justify-between">
+                  <span className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest">Notebooks</span>
+                  <button
+                    onClick={() => setShowCreate(true)}
+                    className="w-5 h-5 rounded-md flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-all"
+                    title="New notebook"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+              <div className="flex flex-col gap-0.5">
+                {books.map((book) => (
+                  <Link
+                    key={book.id}
+                    href={`/books/${book.id}`}
+                    onClick={(e) => handleBookClick(e, book)}
+                    className={`flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-stone-500 hover:bg-stone-50 hover:text-stone-900 transition-all group ${sidebarCollapsed ? "justify-center" : ""}`}
+                    title={book.title}
+                  >
+                    <div
+                      className="w-4 h-4 rounded flex-shrink-0 relative overflow-hidden"
+                      style={coverStyle((book as any).pattern ?? "solid", book.color || "#1e293b", (book as any).coverImg)}
+                    >
+                      {book.password && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+                          <Lock className="w-2 h-2 text-white" />
+                        </div>
+                      )}
+                    </div>
+                    {!sidebarCollapsed && (
+                      <>
+                        <span className="text-xs truncate flex-1">{book.title}</span>
+                        <span className="text-[10px] text-stone-400 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">{book.pageCount}</span>
+                      </>
+                    )}
+                  </Link>
+                ))}
+                {books.length === 0 && !sidebarCollapsed && (
+                  <p className="text-xs text-stone-400 px-2 py-1">No notebooks yet</p>
                 )}
               </div>
-              {!sidebarCollapsed && (
-                <>
-                  <span className="text-sm truncate flex-1">{book.title}</span>
-                  <span className="text-[10px] text-stone-400 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">{book.pageCount}</span>
-                </>
-              )}
-            </Link>
-          ))}
-          {books.length === 0 && !sidebarCollapsed && (
-            <p className="text-xs text-stone-400 px-2 py-2">No notebooks yet</p>
+            </div>
           )}
-        </div>
+        </nav>
 
-        {/* Stats at bottom */}
-        {!sidebarCollapsed && (
+        {/* Bottom stats */}
+        {!sidebarCollapsed && activeView === "my-notebook" && (
           <div className="border-t border-stone-100 px-4 py-3 flex flex-col gap-1">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-1.5 text-xs text-stone-400">
@@ -502,462 +413,290 @@ export default function Home() {
 
       {/* ── Main content ── */}
       <div className="flex-1 min-w-0 overflow-y-auto">
-        <div className="p-6 md:p-10 max-w-5xl mx-auto">
 
-          {/* Header Card */}
-          <div className="mb-10 rounded-2xl border border-stone-200 bg-white shadow-sm px-6 py-4">
-            <div className="flex items-center justify-between gap-4 flex-wrap">
-              <div className="flex items-center gap-3 flex-wrap min-w-0">
-                <h1 className="text-3xl font-serif font-bold text-stone-800 leading-tight">My Notebooks</h1>
-                <div className="flex items-center gap-2 text-xs text-stone-500 flex-wrap">
-                  <span className="flex items-center gap-1 bg-stone-100 rounded-full px-2 py-0.5"><BookOpen className="w-3 h-3" />{books.length} notebook{books.length !== 1 ? "s" : ""}</span>
-                  <span className="flex items-center gap-1 bg-stone-100 rounded-full px-2 py-0.5"><FileText className="w-3 h-3" />{totalPages} page{totalPages !== 1 ? "s" : ""}</span>
-                </div>
-              </div>
-              <div className="flex items-center gap-2 flex-shrink-0">
-                <div className={`flex items-center gap-2 border rounded-lg bg-stone-50 px-3 py-1.5 transition-all duration-300 ${searchFocused || searchQuery ? "w-72 border-stone-400 bg-white shadow-sm" : "w-52 border-stone-200"}`}>
-                  <Search className="w-3.5 h-3.5 text-stone-400 flex-shrink-0" />
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    onFocus={() => setSearchFocused(true)}
-                    onBlur={() => setSearchFocused(false)}
-                    className="bg-transparent text-sm text-stone-700 placeholder:text-stone-400 outline-none w-full min-w-0"
-                  />
-                  {searchQuery && (
-                    <button onClick={() => setSearchQuery("")} className="text-stone-400 hover:text-stone-600">
-                      <X className="w-3 h-3" />
-                    </button>
-                  )}
-                </div>
-                <button onClick={handleDownload} title="Download backup" className="flex items-center justify-center w-8 h-8 rounded-lg border border-stone-200 bg-stone-50 hover:bg-stone-100 hover:border-stone-300 text-stone-600 transition-all">
-                  <Download className="w-4 h-4" />
-                </button>
-                <label title="Import backup" className="flex items-center justify-center w-8 h-8 rounded-lg border border-stone-200 bg-stone-50 hover:bg-stone-100 hover:border-stone-300 text-stone-600 transition-all cursor-pointer">
-                  <Upload className="w-4 h-4" />
-                  <input type="file" accept=".json" className="hidden" onChange={handleUpload} />
-                </label>
+        {/* My Notebook view */}
+        {activeView === "my-notebook" && (
+          <div className="p-6 md:p-10 max-w-5xl mx-auto">
 
-                {/* Profile button */}
-                <div className="relative flex items-center justify-center w-11 h-11 ml-2 -mr-2">
-                  <div
-                    className="absolute inset-0 rounded-xl"
-                    style={{
-                      background: "linear-gradient(135deg, #d1d5db 0%, #e7e5e4 60%, #f5f5f4 100%)",
-                      boxShadow: "inset 0 2px 6px rgba(0,0,0,0.18), inset 0 1px 3px rgba(0,0,0,0.12)",
-                    }}
-                  />
-                  <button
-                    title="Profile"
-                    onClick={() => {
-                      const isEmpty = !profile.name && !profile.username && !profile.email && !profile.photo;
-                      if (!showProfile) {
-                        setShowProfile(true);
-                        if (isEmpty) { setEditName(""); setEditUsername(""); setEditEmail(""); setEditingProfile(true); }
-                      } else {
-                        setShowProfile(false);
-                        setEditingProfile(false);
-                      }
-                    }}
-                    className="relative z-10 w-9 h-9 rounded-xl bg-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 overflow-hidden"
-                    style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.18), 0 1px 3px rgba(0,0,0,0.10)" }}
-                  >
-                    {profile.photo
-                      ? <img src={profile.photo} alt="profile" className="w-full h-full object-cover rounded-xl" />
-                      : <User className="w-4 h-4 text-stone-600" />}
+            {/* Header Card */}
+            <div className="mb-10 rounded-2xl border border-stone-200 bg-white shadow-sm px-6 py-4">
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div className="flex items-center gap-3 flex-wrap min-w-0">
+                  <h1 className="text-3xl font-serif font-bold text-stone-800 leading-tight">My Notebooks</h1>
+                  <div className="flex items-center gap-2 text-xs text-stone-500 flex-wrap">
+                    <span className="flex items-center gap-1 bg-stone-100 rounded-full px-2 py-0.5"><BookOpen className="w-3 h-3" />{books.length} notebook{books.length !== 1 ? "s" : ""}</span>
+                    <span className="flex items-center gap-1 bg-stone-100 rounded-full px-2 py-0.5"><FileText className="w-3 h-3" />{totalPages} page{totalPages !== 1 ? "s" : ""}</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className={`flex items-center gap-2 border rounded-lg bg-stone-50 px-3 py-1.5 transition-all duration-300 ${searchFocused || searchQuery ? "w-72 border-stone-400 bg-white shadow-sm" : "w-52 border-stone-200"}`}>
+                    <Search className="w-3.5 h-3.5 text-stone-400 flex-shrink-0" />
+                    <input
+                      type="text"
+                      placeholder="Search..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      onFocus={() => setSearchFocused(true)}
+                      onBlur={() => setSearchFocused(false)}
+                      className="bg-transparent text-sm text-stone-700 placeholder:text-stone-400 outline-none w-full min-w-0"
+                    />
+                    {searchQuery && (
+                      <button onClick={() => setSearchQuery("")} className="text-stone-400 hover:text-stone-600"><X className="w-3 h-3" /></button>
+                    )}
+                  </div>
+                  <button onClick={handleDownload} title="Download backup" className="flex items-center justify-center w-8 h-8 rounded-lg border border-stone-200 bg-stone-50 hover:bg-stone-100 hover:border-stone-300 text-stone-600 transition-all">
+                    <Download className="w-4 h-4" />
                   </button>
+                  <label title="Import backup" className="flex items-center justify-center w-8 h-8 rounded-lg border border-stone-200 bg-stone-50 hover:bg-stone-100 hover:border-stone-300 text-stone-600 transition-all cursor-pointer">
+                    <Upload className="w-4 h-4" />
+                    <input type="file" accept=".json" className="hidden" onChange={handleUpload} />
+                  </label>
 
-                  {/* Profile Card Popup */}
-                  {showProfile && (
-                    <div
-                      ref={profilePopupRef}
-                      className="absolute top-14 right-0 z-50 w-72 bg-white rounded-2xl shadow-2xl border border-stone-100 overflow-hidden"
-                      style={{ boxShadow: "0 8px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.08)" }}
+                  {/* Profile button */}
+                  <div className="relative flex items-center justify-center w-11 h-11 ml-2 -mr-2">
+                    <div className="absolute inset-0 rounded-xl" style={{ background: "linear-gradient(135deg, #d1d5db 0%, #e7e5e4 60%, #f5f5f4 100%)", boxShadow: "inset 0 2px 6px rgba(0,0,0,0.18), inset 0 1px 3px rgba(0,0,0,0.12)" }} />
+                    <button
+                      title="Profile"
+                      onClick={() => {
+                        const isEmpty = !profile.name && !profile.username && !profile.email && !profile.photo;
+                        if (!showProfile) { setShowProfile(true); if (isEmpty) { setEditName(""); setEditUsername(""); setEditEmail(""); setEditingProfile(true); } }
+                        else { setShowProfile(false); setEditingProfile(false); }
+                      }}
+                      className="relative z-10 w-9 h-9 rounded-xl bg-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 overflow-hidden"
+                      style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.18), 0 1px 3px rgba(0,0,0,0.10)" }}
                     >
-                      <div className="h-16 w-full" style={{ background: "linear-gradient(135deg, #3b5bdb 0%, #7c3aed 100%)" }} />
-                      <div className="relative flex justify-between items-end px-4 -mt-10 mb-3">
-                        <div className="relative">
-                          <div
-                            className="w-20 h-20 rounded-full border-4 border-white bg-stone-100 flex items-center justify-center overflow-hidden cursor-pointer"
-                            style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.15)" }}
-                            onClick={() => profilePhotoRef.current?.click()}
-                            title="Change photo"
-                          >
-                            {profile.photo
-                              ? <img src={profile.photo} alt="profile" className="w-full h-full object-cover" />
-                              : <User className="w-8 h-8 text-stone-400" />}
-                          </div>
-                          <div className="absolute bottom-0 right-0 w-6 h-6 bg-stone-800 rounded-full flex items-center justify-center border-2 border-white cursor-pointer" onClick={() => profilePhotoRef.current?.click()}>
-                            <Camera className="w-3 h-3 text-white" />
-                          </div>
-                          <input ref={profilePhotoRef} type="file" accept="image/*" className="hidden" onChange={handleProfilePhoto} />
-                        </div>
-                        {!editingProfile
-                          ? <button onClick={startEditProfile} className="mb-1 flex items-center gap-1 text-xs text-stone-500 hover:text-stone-800 border border-stone-200 rounded-lg px-2 py-1 hover:bg-stone-50 transition-all">
-                              <Pencil className="w-3 h-3" /> Edit
-                            </button>
-                          : <button onClick={saveEditProfile} className="mb-1 flex items-center gap-1 text-xs text-white bg-stone-800 hover:bg-stone-700 rounded-lg px-2 py-1 transition-all">
-                              Save
-                            </button>}
-                      </div>
+                      {profile.photo ? <img src={profile.photo} alt="profile" className="w-full h-full object-cover rounded-xl" /> : <User className="w-4 h-4 text-stone-600" />}
+                    </button>
 
-                      <div className="px-4 mb-3">
-                        {editingProfile ? (
-                          <div className="flex flex-col gap-1.5">
-                            <input
-                              autoFocus
-                              value={editName}
-                              onChange={e => setEditName(e.target.value)}
-                              onKeyDown={e => e.key === "Enter" && saveEditProfile()}
-                              placeholder="Name"
-                              className="text-sm font-bold text-stone-800 border border-stone-200 rounded-lg px-2 py-1 outline-none focus:border-stone-400 bg-stone-50 w-full"
-                            />
-                            <input
-                              value={editUsername}
-                              onChange={e => setEditUsername(e.target.value)}
-                              onKeyDown={e => e.key === "Enter" && saveEditProfile()}
-                              placeholder="username"
-                              className="text-xs text-stone-500 border border-stone-200 rounded-lg px-2 py-1 outline-none focus:border-stone-400 bg-stone-50 w-full"
-                            />
-                            <input
-                              value={editEmail}
-                              onChange={e => setEditEmail(e.target.value)}
-                              onKeyDown={e => e.key === "Enter" && saveEditProfile()}
-                              placeholder="email"
-                              className="text-xs text-stone-500 border border-stone-200 rounded-lg px-2 py-1 outline-none focus:border-stone-400 bg-stone-50 w-full"
-                            />
+                    {showProfile && (
+                      <div ref={profilePopupRef} className="absolute top-14 right-0 z-50 w-72 bg-white rounded-2xl shadow-2xl border border-stone-100 overflow-hidden" style={{ boxShadow: "0 8px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.08)" }}>
+                        <div className="h-16 w-full" style={{ background: "linear-gradient(135deg, #3b5bdb 0%, #7c3aed 100%)" }} />
+                        <div className="relative flex justify-between items-end px-4 -mt-10 mb-3">
+                          <div className="relative">
+                            <div className="w-20 h-20 rounded-full border-4 border-white bg-stone-100 flex items-center justify-center overflow-hidden cursor-pointer" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.15)" }} onClick={() => profilePhotoRef.current?.click()} title="Change photo">
+                              {profile.photo ? <img src={profile.photo} alt="profile" className="w-full h-full object-cover" /> : <User className="w-8 h-8 text-stone-400" />}
+                            </div>
+                            <div className="absolute bottom-0 right-0 w-6 h-6 bg-stone-800 rounded-full flex items-center justify-center border-2 border-white cursor-pointer" onClick={() => profilePhotoRef.current?.click()}>
+                              <Camera className="w-3 h-3 text-white" />
+                            </div>
+                            <input ref={profilePhotoRef} type="file" accept="image/*" className="hidden" onChange={handleProfilePhoto} />
                           </div>
-                        ) : (
-                          <>
-                            <h2 className="text-base font-bold leading-tight" style={{ color: profile.name ? "#1c1917" : "#a8a29e" }}>
-                              {profile.name || "Your name"}
-                            </h2>
-                            <p className="text-xs" style={{ color: profile.username ? "#a8a29e" : "#d6d3d1" }}>
-                              {profile.username ? `@${profile.username}` : "@username"}
-                            </p>
-                          </>
+                          {!editingProfile
+                            ? <button onClick={startEditProfile} className="mb-1 flex items-center gap-1 text-xs text-stone-500 hover:text-stone-800 border border-stone-200 rounded-lg px-2 py-1 hover:bg-stone-50 transition-all"><Pencil className="w-3 h-3" /> Edit</button>
+                            : <button onClick={saveEditProfile} className="mb-1 flex items-center gap-1 text-xs text-white bg-stone-800 hover:bg-stone-700 rounded-lg px-2 py-1 transition-all">Save</button>}
+                        </div>
+                        <div className="px-4 mb-3">
+                          {editingProfile ? (
+                            <div className="flex flex-col gap-1.5">
+                              <input autoFocus value={editName} onChange={e => setEditName(e.target.value)} onKeyDown={e => e.key === "Enter" && saveEditProfile()} placeholder="Name" className="text-sm font-bold text-stone-800 border border-stone-200 rounded-lg px-2 py-1 outline-none focus:border-stone-400 bg-stone-50 w-full" />
+                              <input value={editUsername} onChange={e => setEditUsername(e.target.value)} onKeyDown={e => e.key === "Enter" && saveEditProfile()} placeholder="username" className="text-xs text-stone-500 border border-stone-200 rounded-lg px-2 py-1 outline-none focus:border-stone-400 bg-stone-50 w-full" />
+                              <input value={editEmail} onChange={e => setEditEmail(e.target.value)} onKeyDown={e => e.key === "Enter" && saveEditProfile()} placeholder="email" className="text-xs text-stone-500 border border-stone-200 rounded-lg px-2 py-1 outline-none focus:border-stone-400 bg-stone-50 w-full" />
+                            </div>
+                          ) : (
+                            <>
+                              <h2 className="text-base font-bold leading-tight" style={{ color: profile.name ? "#1c1917" : "#a8a29e" }}>{profile.name || "Your name"}</h2>
+                              <p className="text-xs" style={{ color: profile.username ? "#a8a29e" : "#d6d3d1" }}>{profile.username ? `@${profile.username}` : "@username"}</p>
+                            </>
+                          )}
+                        </div>
+                        {!editingProfile && (
+                          <div className="px-4 mb-4 flex flex-wrap gap-1.5">
+                            <span className="flex items-center gap-1 text-[11px] bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-2 py-0.5">🟢 Online</span>
+                            <span className="flex items-center gap-1 text-[11px] bg-amber-50 text-amber-700 border border-amber-200 rounded-full px-2 py-0.5">⭐ Premium</span>
+                            <span className="flex items-center gap-1 text-[11px] bg-blue-50 text-blue-700 border border-blue-200 rounded-full px-2 py-0.5">📚 {books.length} Notebooks</span>
+                          </div>
+                        )}
+                        {!editingProfile && (
+                          <div className="px-4 pb-4 flex flex-col gap-2 border-t border-stone-100 pt-3">
+                            {profile.email && <div className="flex items-center gap-2 text-xs text-stone-500"><span>📧</span><span className="truncate">{profile.email}</span></div>}
+                            <div className="flex items-center gap-2 text-xs text-stone-500"><span>📅</span><span>Joined {formatJoined(profile.joinedAt)}</span></div>
+                          </div>
                         )}
                       </div>
-
-                      {!editingProfile && (
-                        <div className="px-4 mb-4 flex flex-wrap gap-1.5">
-                          <span className="flex items-center gap-1 text-[11px] bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-2 py-0.5">🟢 Online</span>
-                          <span className="flex items-center gap-1 text-[11px] bg-amber-50 text-amber-700 border border-amber-200 rounded-full px-2 py-0.5">⭐ Premium</span>
-                          <span className="flex items-center gap-1 text-[11px] bg-blue-50 text-blue-700 border border-blue-200 rounded-full px-2 py-0.5">📚 {books.length} Notebooks</span>
-                        </div>
-                      )}
-
-                      {!editingProfile && (
-                        <div className="px-4 pb-4 flex flex-col gap-2 border-t border-stone-100 pt-3">
-                          {profile.email && (
-                            <div className="flex items-center gap-2 text-xs text-stone-500">
-                              <span>📧</span><span className="truncate">{profile.email}</span>
-                            </div>
-                          )}
-                          <div className="flex items-center gap-2 text-xs text-stone-500">
-                            <span>📅</span><span>Joined {formatJoined(profile.joinedAt)}</span>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
 
-          {searchQuery && filteredBooks.length === 0 && (
-            <div className="flex flex-col items-center justify-center py-16 text-stone-400 gap-2">
-              <Search className="w-8 h-8 opacity-30" />
-              <p className="text-sm">No notebooks found for "<span className="font-medium text-stone-500">{searchQuery}</span>"</p>
-            </div>
-          )}
+            {searchQuery && filteredBooks.length === 0 && (
+              <div className="flex flex-col items-center justify-center py-16 text-stone-400 gap-2">
+                <Search className="w-8 h-8 opacity-30" />
+                <p className="text-sm">No notebooks found for "<span className="font-medium text-stone-500">{searchQuery}</span>"</p>
+              </div>
+            )}
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-10">
-            {filteredBooks.map((book) => {
-              const isLocked = !!book.password;
-              const isLockOpen = lockPopupId === book.id;
-              const isUnlockOpen = unlockPopupId === book.id;
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-10">
+              {filteredBooks.map((book) => {
+                const isLocked = !!book.password;
+                const isLockOpen = lockPopupId === book.id;
+                const isUnlockOpen = unlockPopupId === book.id;
 
-              return (
-                <div key={book.id} className="group flex flex-col gap-3 relative">
-                  <div className="relative">
-                    <Link href={`/books/${book.id}`} onClick={(e) => handleBookClick(e, book)} className="block">
-                      <div
-                        className={`aspect-[3/4] rounded-md transition-transform duration-300 relative overflow-hidden ${isLockOpen || isUnlockOpen ? "shadow-none" : "shadow-md group-hover:-translate-y-2 group-hover:shadow-xl"}`}
-                        style={coverStyle((book as any).pattern ?? "solid", book.color || "#1e293b", (book as any).coverImg)}
-                      >
-                        {!(book as any).coverImg && <div className="absolute left-4 top-0 bottom-0 w-px bg-black/20" />}
-                        {isLocked && (
-                          <div className="absolute top-2 right-2 w-6 h-6 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center">
-                            <Lock className="w-3 h-3 text-white" />
+                return (
+                  <div key={book.id} className="group flex flex-col gap-3 relative">
+                    <div className="relative">
+                      <Link href={`/books/${book.id}`} onClick={(e) => handleBookClick(e, book)} className="block">
+                        <div
+                          className={`aspect-[3/4] rounded-md transition-transform duration-300 relative overflow-hidden ${isLockOpen || isUnlockOpen ? "shadow-none" : "shadow-md group-hover:-translate-y-2 group-hover:shadow-xl"}`}
+                          style={coverStyle((book as any).pattern ?? "solid", book.color || "#1e293b", (book as any).coverImg)}
+                        >
+                          {!(book as any).coverImg && <div className="absolute left-4 top-0 bottom-0 w-px bg-black/20" />}
+                          {isLocked && <div className="absolute top-2 right-2 w-6 h-6 bg-black/40 backdrop-blur-sm rounded-full flex items-center justify-center"><Lock className="w-3 h-3 text-white" /></div>}
+                        </div>
+                      </Link>
+
+                      {isLockOpen && (
+                        <div ref={lockPopupRef} className="absolute inset-0 rounded-md z-50 flex items-center justify-center">
+                          <div className="bg-white rounded-lg shadow-xl border border-stone-100 mx-2.5 w-full flex flex-col gap-1.5 p-2.5">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-1"><Lock className="w-3 h-3 text-stone-600" /><span className="text-[10px] font-semibold text-stone-700">{isLocked ? "Change Lock" : "Set Lock"}</span></div>
+                              <button onClick={closeLockPopup} className="text-stone-400 hover:text-stone-600"><X className="w-3 h-3" /></button>
+                            </div>
+                            <form onSubmit={handleSetPassword} className="flex flex-col gap-1">
+                              <div className="relative">
+                                <input autoFocus type={showLockPw ? "text" : "password"} placeholder="New password" value={lockPw} onChange={e => { setLockPw(e.target.value); setLockPwError(""); }} className="w-full text-[10px] border border-stone-200 rounded px-2 py-1 pr-6 outline-none focus:border-stone-400 bg-stone-50" />
+                                <button type="button" onClick={() => setShowLockPw(v => !v)} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">{showLockPw ? <EyeOff className="w-2.5 h-2.5" /> : <Eye className="w-2.5 h-2.5" />}</button>
+                              </div>
+                              <input type={showLockPw ? "text" : "password"} placeholder="Confirm password" value={lockPwConfirm} onChange={e => { setLockPwConfirm(e.target.value); setLockPwError(""); }} className="w-full text-[10px] border border-stone-200 rounded px-2 py-1 outline-none focus:border-stone-400 bg-stone-50" />
+                              {lockPwError && <p className="text-[9px] text-red-500 leading-tight">{lockPwError}</p>}
+                              <button type="submit" className="w-full bg-stone-800 text-white text-[10px] font-semibold py-1 rounded hover:bg-stone-700 transition-colors">{isLocked ? "Update" : "Set Password"}</button>
+                            </form>
+                            {isLocked && <button onClick={handleRemovePassword} className="w-full text-[9px] text-red-500 hover:text-red-700 py-0.5 border border-red-200 rounded hover:bg-red-50 transition-colors">Remove Lock</button>}
                           </div>
+                        </div>
+                      )}
+
+                      {isUnlockOpen && (
+                        <div ref={unlockPopupRef} className="absolute inset-0 rounded-md z-50 flex items-center justify-center">
+                          <div className="bg-white rounded-lg shadow-xl border border-stone-100 mx-2.5 w-full flex flex-col gap-1.5 p-2.5 relative">
+                            <button onClick={closeUnlockPopup} className="absolute top-1.5 right-1.5 text-stone-400 hover:text-stone-600"><X className="w-3 h-3" /></button>
+                            <div className="flex flex-col items-center gap-0.5">
+                              <div className="w-6 h-6 rounded-full bg-stone-100 flex items-center justify-center"><Lock className="w-3 h-3 text-stone-600" /></div>
+                              <span className="text-[10px] font-semibold text-stone-700 text-center leading-tight truncate w-full text-center px-4">{book.title}</span>
+                            </div>
+                            <form onSubmit={handleUnlock} className="flex flex-col gap-1">
+                              <div className="relative">
+                                <input autoFocus type={showUnlockPw ? "text" : "password"} placeholder="Password" value={unlockInput} onChange={e => { setUnlockInput(e.target.value); setUnlockError(""); }} className="w-full text-[10px] border border-stone-200 rounded px-2 py-1 pr-6 outline-none focus:border-stone-400 bg-stone-50" />
+                                <button type="button" onClick={() => setShowUnlockPw(v => !v)} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">{showUnlockPw ? <EyeOff className="w-2.5 h-2.5" /> : <Eye className="w-2.5 h-2.5" />}</button>
+                              </div>
+                              {unlockError && <p className="text-[9px] text-red-500 leading-tight">{unlockError}</p>}
+                              <button type="submit" className="w-full bg-stone-800 text-white text-[10px] font-semibold py-1 rounded hover:bg-stone-700 transition-colors">Open</button>
+                            </form>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Title row */}
+                    <div className="px-1 flex justify-between items-start group/text">
+                      <div className="flex-1 min-w-0">
+                        {editingId === book.id ? (
+                          <input ref={editInputRef} value={editingTitle} onChange={(e) => setEditingTitle(e.target.value)} onBlur={saveEditing} onKeyDown={(e) => { if (e.key === "Enter") saveEditing(); if (e.key === "Escape") cancelEditing(); }} onClick={(e) => e.preventDefault()} className="font-serif font-medium text-sm w-full bg-white border-b-2 border-stone-400 outline-none text-stone-800 px-0 py-0.5" autoFocus />
+                        ) : (
+                          <h3 className="font-serif font-medium text-sm line-clamp-2 cursor-text hover:text-stone-500 transition-colors" onClick={(e) => startEditing(e, book)} title="Click to rename">{book.title}</h3>
                         )}
+                        <p className="text-xs text-muted-foreground mt-0.5">{book.pageCount} pages</p>
                       </div>
-                    </Link>
+                      <div className="flex items-center opacity-0 group-hover/text:opacity-100 transition-all">
+                        <button onClick={(e) => openLockPopup(e, book.id)} className={`p-1.5 transition-all shrink-0 ${isLocked ? "text-amber-500 hover:text-amber-600 opacity-100" : "text-muted-foreground hover:text-stone-700"}`} title={isLocked ? "Locked — click to change" : "Set password"}>
+                          {isLocked ? <Lock className="w-3.5 h-3.5" /> : <LockOpen className="w-3.5 h-3.5" />}
+                        </button>
+                        <button onClick={(e) => handleDelete(e, book.id)} className="p-1.5 text-muted-foreground hover:text-destructive transition-all shrink-0" title="Delete Notebook"><Trash2 className="w-3.5 h-3.5" /></button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
 
-                    {isLockOpen && (
-                      <div ref={lockPopupRef} className="absolute inset-0 rounded-md z-50 flex items-center justify-center">
-                        <div className="bg-white rounded-lg shadow-xl border border-stone-100 mx-2.5 w-full flex flex-col gap-1.5 p-2.5">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-1">
-                              <Lock className="w-3 h-3 text-stone-600" />
-                              <span className="text-[10px] font-semibold text-stone-700">{isLocked ? "Change Lock" : "Set Lock"}</span>
-                            </div>
-                            <button onClick={closeLockPopup} className="text-stone-400 hover:text-stone-600"><X className="w-3 h-3" /></button>
-                          </div>
-                          <form onSubmit={handleSetPassword} className="flex flex-col gap-1">
-                            <div className="relative">
-                              <input
-                                autoFocus
-                                type={showLockPw ? "text" : "password"}
-                                placeholder="New password"
-                                value={lockPw}
-                                onChange={e => { setLockPw(e.target.value); setLockPwError(""); }}
-                                className="w-full text-[10px] border border-stone-200 rounded px-2 py-1 pr-6 outline-none focus:border-stone-400 bg-stone-50"
-                              />
-                              <button type="button" onClick={() => setShowLockPw(v => !v)} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
-                                {showLockPw ? <EyeOff className="w-2.5 h-2.5" /> : <Eye className="w-2.5 h-2.5" />}
-                              </button>
-                            </div>
-                            <input
-                              type={showLockPw ? "text" : "password"}
-                              placeholder="Confirm password"
-                              value={lockPwConfirm}
-                              onChange={e => { setLockPwConfirm(e.target.value); setLockPwError(""); }}
-                              className="w-full text-[10px] border border-stone-200 rounded px-2 py-1 outline-none focus:border-stone-400 bg-stone-50"
-                            />
-                            {lockPwError && <p className="text-[9px] text-red-500 leading-tight">{lockPwError}</p>}
-                            <button type="submit" className="w-full bg-stone-800 text-white text-[10px] font-semibold py-1 rounded hover:bg-stone-700 transition-colors">
-                              {isLocked ? "Update" : "Set Password"}
+              {/* Add New Card */}
+              <div className="flex flex-col gap-3 relative" ref={popupRef}>
+                <button
+                  onClick={() => setShowCreate((v) => !v)}
+                  className="aspect-[3/4] rounded-md border-2 border-dashed border-stone-300 bg-[#faf6f0] hover:border-stone-400 hover:bg-[#f5efe6] transition-all flex flex-col items-center justify-center gap-2 group"
+                >
+                  <div className="w-10 h-10 rounded-full bg-stone-200 group-hover:bg-stone-300 transition-colors flex items-center justify-center">
+                    <Plus className="w-5 h-5 text-stone-500" />
+                  </div>
+                  <span className="text-xs text-stone-400 font-medium">New Notebook</span>
+                </button>
+                <div className="px-1 h-8" />
+
+                {showCreate && (
+                  <div className="absolute top-0 left-[calc(100%+12px)] z-50 w-72 bg-white rounded-xl shadow-2xl border border-stone-200 p-4 flex flex-col gap-3 max-h-[90vh] overflow-y-auto">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-14 rounded-md shadow flex-shrink-0 relative overflow-hidden" style={coverStyle(newPattern, newColor, newCoverImg)}>
+                        {!newCoverImg && <div className="absolute left-2 top-0 bottom-0 w-px bg-black/20" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs text-stone-400 mb-1">Preview</p>
+                        <p className="font-serif text-sm font-medium truncate text-stone-700">{newTitle || "Untitled"}</p>
+                      </div>
+                    </div>
+                    <form onSubmit={handleCreate} className="flex flex-col gap-3">
+                      <div>
+                        <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Title</label>
+                        <input autoFocus value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="Notebook name..." className="mt-1 w-full text-sm border border-stone-200 rounded-lg px-3 py-2 outline-none focus:border-stone-400 bg-stone-50" />
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Cover Color</label>
+                        <div className="mt-1.5 grid grid-cols-6 gap-1.5">
+                          {PRESET_COLORS.map((c) => (
+                            <button key={c} type="button" onClick={() => { setNewColor(c); setNewCoverImg(undefined); }} className="w-8 h-8 rounded-md border-2 transition-all flex items-center justify-center" style={{ backgroundColor: c, borderColor: newColor === c && !newCoverImg ? "#000" : "transparent" }}>
+                              {newColor === c && !newCoverImg && <Check className="w-3 h-3 text-white drop-shadow" />}
                             </button>
-                          </form>
-                          {isLocked && (
-                            <button onClick={handleRemovePassword} className="w-full text-[9px] text-red-500 hover:text-red-700 py-0.5 border border-red-200 rounded hover:bg-red-50 transition-colors">
-                              Remove Lock
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Cover Design</label>
+                        <div className="mt-1.5 grid grid-cols-4 gap-1.5">
+                          {COVER_PATTERNS.map((p) => (
+                            <button key={p.id} type="button" onClick={() => { setNewPattern(p.id); setNewCoverImg(undefined); }} className={`h-9 rounded-md border-2 text-[10px] font-semibold transition-all relative overflow-hidden ${newPattern === p.id && !newCoverImg ? "border-stone-700 ring-1 ring-stone-700" : "border-stone-200"}`} style={patternStyle(p.id, newColor)}>
+                              <span className="relative z-10 text-white drop-shadow-sm">{p.label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                      <div>
+                        <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Cover Image</label>
+                        <div className="mt-1.5 grid grid-cols-4 gap-1.5">
+                          {DEFAULT_COVER_IMAGES.map((img) => (
+                            <button key={img.id} type="button" onClick={() => setNewCoverImg(img.url)} className={`relative h-14 rounded-md overflow-hidden border-2 transition-all ${newCoverImg === img.url ? "border-stone-700 ring-1 ring-stone-700" : "border-transparent hover:border-stone-400"}`}>
+                              <img src={img.url} alt={img.label} className="w-full h-full object-cover" />
+                              {newCoverImg === img.url && <div className="absolute inset-0 bg-black/30 flex items-center justify-center"><Check className="w-4 h-4 text-white drop-shadow" /></div>}
+                              <div className="absolute bottom-0 inset-x-0 bg-black/40 text-white text-[9px] text-center py-0.5 font-medium">{img.label}</div>
+                            </button>
+                          ))}
+                        </div>
+                        <div className="mt-1.5">
+                          {newCoverImg && !DEFAULT_COVER_IMAGES.find(i => i.url === newCoverImg) ? (
+                            <div className="relative">
+                              <img src={newCoverImg} alt="Cover" className="w-full h-20 object-cover rounded-lg border border-stone-200" />
+                              <button type="button" onClick={() => setNewCoverImg(undefined)} className="absolute top-1.5 right-1.5 w-6 h-6 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-black/80 transition-colors"><X className="w-3.5 h-3.5" /></button>
+                              <div className="absolute bottom-1.5 left-1.5 bg-black/50 text-white text-[10px] px-1.5 py-0.5 rounded font-medium">Custom image ✓</div>
+                            </div>
+                          ) : (
+                            <button type="button" onClick={() => imgInputRef.current?.click()} className="w-full h-10 border-2 border-dashed border-stone-300 rounded-lg flex items-center justify-center gap-2 hover:border-stone-400 hover:bg-stone-50 transition-all">
+                              <ImagePlus className="w-4 h-4 text-stone-400" /><span className="text-xs text-stone-400">Upload your own image</span>
                             </button>
                           )}
+                          <input ref={imgInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
                         </div>
                       </div>
-                    )}
-
-                    {isUnlockOpen && (
-                      <div ref={unlockPopupRef} className="absolute inset-0 rounded-md z-50 flex items-center justify-center">
-                        <div className="bg-white rounded-lg shadow-xl border border-stone-100 mx-2.5 w-full flex flex-col gap-1.5 p-2.5 relative">
-                          <button onClick={closeUnlockPopup} className="absolute top-1.5 right-1.5 text-stone-400 hover:text-stone-600"><X className="w-3 h-3" /></button>
-                          <div className="flex flex-col items-center gap-0.5">
-                            <div className="w-6 h-6 rounded-full bg-stone-100 flex items-center justify-center">
-                              <Lock className="w-3 h-3 text-stone-600" />
-                            </div>
-                            <span className="text-[10px] font-semibold text-stone-700 text-center leading-tight truncate w-full text-center px-4">{book.title}</span>
-                          </div>
-                          <form onSubmit={handleUnlock} className="flex flex-col gap-1">
-                            <div className="relative">
-                              <input
-                                autoFocus
-                                type={showUnlockPw ? "text" : "password"}
-                                placeholder="Password"
-                                value={unlockInput}
-                                onChange={e => { setUnlockInput(e.target.value); setUnlockError(""); }}
-                                className="w-full text-[10px] border border-stone-200 rounded px-2 py-1 pr-6 outline-none focus:border-stone-400 bg-stone-50"
-                              />
-                              <button type="button" onClick={() => setShowUnlockPw(v => !v)} className="absolute right-1.5 top-1/2 -translate-y-1/2 text-stone-400 hover:text-stone-600">
-                                {showUnlockPw ? <EyeOff className="w-2.5 h-2.5" /> : <Eye className="w-2.5 h-2.5" />}
-                              </button>
-                            </div>
-                            {unlockError && <p className="text-[9px] text-red-500 leading-tight">{unlockError}</p>}
-                            <button type="submit" className="w-full bg-stone-800 text-white text-[10px] font-semibold py-1 rounded hover:bg-stone-700 transition-colors">Open</button>
-                          </form>
-                        </div>
-                      </div>
-                    )}
+                      <button type="submit" disabled={!newTitle.trim()} className="w-full mt-1 bg-stone-800 text-white text-sm font-semibold py-2.5 rounded-lg hover:bg-stone-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors">Create Notebook</button>
+                    </form>
                   </div>
-
-                  {/* Title row */}
-                  <div className="px-1 flex justify-between items-start group/text">
-                    <div className="flex-1 min-w-0">
-                      {editingId === book.id ? (
-                        <input
-                          ref={editInputRef}
-                          value={editingTitle}
-                          onChange={(e) => setEditingTitle(e.target.value)}
-                          onBlur={saveEditing}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") saveEditing();
-                            if (e.key === "Escape") cancelEditing();
-                          }}
-                          onClick={(e) => e.preventDefault()}
-                          className="font-serif font-medium text-sm w-full bg-white border-b-2 border-stone-400 outline-none text-stone-800 px-0 py-0.5"
-                          autoFocus
-                        />
-                      ) : (
-                        <h3
-                          className="font-serif font-medium text-sm line-clamp-2 cursor-text hover:text-stone-500 transition-colors"
-                          onClick={(e) => startEditing(e, book)}
-                          title="Click to rename"
-                        >{book.title}</h3>
-                      )}
-                      <p className="text-xs text-muted-foreground mt-0.5">{book.pageCount} pages</p>
-                    </div>
-                    <div className="flex items-center opacity-0 group-hover/text:opacity-100 transition-all">
-                      <button
-                        onClick={(e) => openLockPopup(e, book.id)}
-                        className={`p-1.5 transition-all shrink-0 ${isLocked ? "text-amber-500 hover:text-amber-600 opacity-100" : "text-muted-foreground hover:text-stone-700"}`}
-                        title={isLocked ? "Locked — click to change" : "Set password"}
-                      >
-                        {isLocked ? <Lock className="w-3.5 h-3.5" /> : <LockOpen className="w-3.5 h-3.5" />}
-                      </button>
-                      <button
-                        onClick={(e) => handleDelete(e, book.id)}
-                        className="p-1.5 text-muted-foreground hover:text-destructive transition-all shrink-0"
-                        title="Delete Notebook"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-
-            {/* Add New Card */}
-            <div className="flex flex-col gap-3 relative" ref={popupRef}>
-              <button
-                onClick={() => setShowCreate((v) => !v)}
-                className="aspect-[3/4] rounded-md border-2 border-dashed border-stone-300 bg-[#faf6f0] hover:border-stone-400 hover:bg-[#f5efe6] transition-all flex flex-col items-center justify-center gap-2 group"
-              >
-                <div className="w-10 h-10 rounded-full bg-stone-200 group-hover:bg-stone-300 transition-colors flex items-center justify-center">
-                  <Plus className="w-5 h-5 text-stone-500" />
-                </div>
-                <span className="text-xs text-stone-400 font-medium">New Notebook</span>
-              </button>
-              <div className="px-1 h-8" />
-
-              {/* Mini Create Popup */}
-              {showCreate && (
-                <div className="absolute top-0 left-[calc(100%+12px)] z-50 w-72 bg-white rounded-xl shadow-2xl border border-stone-200 p-4 flex flex-col gap-3 max-h-[90vh] overflow-y-auto">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-10 h-14 rounded-md shadow flex-shrink-0 relative overflow-hidden"
-                      style={coverStyle(newPattern, newColor, newCoverImg)}
-                    >
-                      {!newCoverImg && <div className="absolute left-2 top-0 bottom-0 w-px bg-black/20" />}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-stone-400 mb-1">Preview</p>
-                      <p className="font-serif text-sm font-medium truncate text-stone-700">{newTitle || "Untitled"}</p>
-                    </div>
-                  </div>
-
-                  <form onSubmit={handleCreate} className="flex flex-col gap-3">
-                    <div>
-                      <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Title</label>
-                      <input
-                        autoFocus
-                        value={newTitle}
-                        onChange={(e) => setNewTitle(e.target.value)}
-                        placeholder="Notebook name..."
-                        className="mt-1 w-full text-sm border border-stone-200 rounded-lg px-3 py-2 outline-none focus:border-stone-400 bg-stone-50"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Cover Color</label>
-                      <div className="mt-1.5 grid grid-cols-6 gap-1.5">
-                        {PRESET_COLORS.map((c) => (
-                          <button
-                            key={c}
-                            type="button"
-                            onClick={() => { setNewColor(c); setNewCoverImg(undefined); }}
-                            className="w-8 h-8 rounded-md border-2 transition-all flex items-center justify-center"
-                            style={{ backgroundColor: c, borderColor: newColor === c && !newCoverImg ? "#000" : "transparent" }}
-                          >
-                            {newColor === c && !newCoverImg && <Check className="w-3 h-3 text-white drop-shadow" />}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Cover Design</label>
-                      <div className="mt-1.5 grid grid-cols-4 gap-1.5">
-                        {COVER_PATTERNS.map((p) => (
-                          <button
-                            key={p.id}
-                            type="button"
-                            onClick={() => { setNewPattern(p.id); setNewCoverImg(undefined); }}
-                            className={`h-9 rounded-md border-2 text-[10px] font-semibold transition-all relative overflow-hidden ${newPattern === p.id && !newCoverImg ? "border-stone-700 ring-1 ring-stone-700" : "border-stone-200"}`}
-                            style={patternStyle(p.id, newColor)}
-                          >
-                            <span className="relative z-10 text-white drop-shadow-sm">{p.label}</span>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="text-xs font-semibold text-stone-500 uppercase tracking-wide">Cover Image</label>
-                      <div className="mt-1.5 grid grid-cols-4 gap-1.5">
-                        {DEFAULT_COVER_IMAGES.map((img) => (
-                          <button
-                            key={img.id}
-                            type="button"
-                            onClick={() => setNewCoverImg(img.url)}
-                            className={`relative h-14 rounded-md overflow-hidden border-2 transition-all ${newCoverImg === img.url ? "border-stone-700 ring-1 ring-stone-700" : "border-transparent hover:border-stone-400"}`}
-                          >
-                            <img src={img.url} alt={img.label} className="w-full h-full object-cover" />
-                            {newCoverImg === img.url && (
-                              <div className="absolute inset-0 bg-black/30 flex items-center justify-center">
-                                <Check className="w-4 h-4 text-white drop-shadow" />
-                              </div>
-                            )}
-                            <div className="absolute bottom-0 inset-x-0 bg-black/40 text-white text-[9px] text-center py-0.5 font-medium">{img.label}</div>
-                          </button>
-                        ))}
-                      </div>
-                      <div className="mt-1.5">
-                        {newCoverImg && !DEFAULT_COVER_IMAGES.find(i => i.url === newCoverImg) ? (
-                          <div className="relative">
-                            <img src={newCoverImg} alt="Cover" className="w-full h-20 object-cover rounded-lg border border-stone-200" />
-                            <button
-                              type="button"
-                              onClick={() => setNewCoverImg(undefined)}
-                              className="absolute top-1.5 right-1.5 w-6 h-6 bg-black/60 text-white rounded-full flex items-center justify-center hover:bg-black/80 transition-colors"
-                            >
-                              <X className="w-3.5 h-3.5" />
-                            </button>
-                            <div className="absolute bottom-1.5 left-1.5 bg-black/50 text-white text-[10px] px-1.5 py-0.5 rounded font-medium">Custom image ✓</div>
-                          </div>
-                        ) : (
-                          <button
-                            type="button"
-                            onClick={() => imgInputRef.current?.click()}
-                            className="w-full h-10 border-2 border-dashed border-stone-300 rounded-lg flex items-center justify-center gap-2 hover:border-stone-400 hover:bg-stone-50 transition-all"
-                          >
-                            <ImagePlus className="w-4 h-4 text-stone-400" />
-                            <span className="text-xs text-stone-400">Upload your own image</span>
-                          </button>
-                        )}
-                        <input ref={imgInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-                      </div>
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={!newTitle.trim()}
-                      className="w-full mt-1 bg-stone-800 text-white text-sm font-semibold py-2.5 rounded-lg hover:bg-stone-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                    >
-                      Create Notebook
-                    </button>
-                  </form>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
+        )}
 
-        </div>
+        {/* All other views — blank */}
+        {activeView !== "my-notebook" && (
+          <div className="flex-1" />
+        )}
+
       </div>
     </div>
   );
