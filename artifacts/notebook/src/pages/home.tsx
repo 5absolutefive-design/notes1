@@ -453,69 +453,6 @@ export default function Home() {
                     <input type="file" accept=".json" className="hidden" onChange={handleUpload} />
                   </label>
 
-                  {/* Profile button */}
-                  <div className="relative flex items-center justify-center w-11 h-11 ml-2 -mr-2">
-                    <div className="absolute inset-0 rounded-xl" style={{ background: "linear-gradient(135deg, #d1d5db 0%, #e7e5e4 60%, #f5f5f4 100%)", boxShadow: "inset 0 2px 6px rgba(0,0,0,0.18), inset 0 1px 3px rgba(0,0,0,0.12)" }} />
-                    <button
-                      title="Profile"
-                      onClick={() => {
-                        const isEmpty = !profile.name && !profile.username && !profile.email && !profile.photo;
-                        if (!showProfile) { setShowProfile(true); if (isEmpty) { setEditName(""); setEditUsername(""); setEditEmail(""); setEditingProfile(true); } }
-                        else { setShowProfile(false); setEditingProfile(false); }
-                      }}
-                      className="relative z-10 w-9 h-9 rounded-xl bg-white flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95 overflow-hidden"
-                      style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.18), 0 1px 3px rgba(0,0,0,0.10)" }}
-                    >
-                      {profile.photo ? <img src={profile.photo} alt="profile" className="w-full h-full object-cover rounded-xl" /> : <User className="w-4 h-4 text-stone-600" />}
-                    </button>
-
-                    {showProfile && (
-                      <div ref={profilePopupRef} className="absolute top-14 right-0 z-50 w-72 bg-white rounded-2xl shadow-2xl border border-stone-100 overflow-hidden" style={{ boxShadow: "0 8px 40px rgba(0,0,0,0.18), 0 2px 8px rgba(0,0,0,0.08)" }}>
-                        <div className="h-16 w-full" style={{ background: "linear-gradient(135deg, #3b5bdb 0%, #7c3aed 100%)" }} />
-                        <div className="relative flex justify-between items-end px-4 -mt-10 mb-3">
-                          <div className="relative">
-                            <div className="w-20 h-20 rounded-full border-4 border-white bg-stone-100 flex items-center justify-center overflow-hidden cursor-pointer" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.15)" }} onClick={() => profilePhotoRef.current?.click()} title="Change photo">
-                              {profile.photo ? <img src={profile.photo} alt="profile" className="w-full h-full object-cover" /> : <User className="w-8 h-8 text-stone-400" />}
-                            </div>
-                            <div className="absolute bottom-0 right-0 w-6 h-6 bg-stone-800 rounded-full flex items-center justify-center border-2 border-white cursor-pointer" onClick={() => profilePhotoRef.current?.click()}>
-                              <Camera className="w-3 h-3 text-white" />
-                            </div>
-                            <input ref={profilePhotoRef} type="file" accept="image/*" className="hidden" onChange={handleProfilePhoto} />
-                          </div>
-                          {!editingProfile
-                            ? <button onClick={startEditProfile} className="mb-1 flex items-center gap-1 text-xs text-stone-500 hover:text-stone-800 border border-stone-200 rounded-lg px-2 py-1 hover:bg-stone-50 transition-all"><Pencil className="w-3 h-3" /> Edit</button>
-                            : <button onClick={saveEditProfile} className="mb-1 flex items-center gap-1 text-xs text-white bg-stone-800 hover:bg-stone-700 rounded-lg px-2 py-1 transition-all">Save</button>}
-                        </div>
-                        <div className="px-4 mb-3">
-                          {editingProfile ? (
-                            <div className="flex flex-col gap-1.5">
-                              <input autoFocus value={editName} onChange={e => setEditName(e.target.value)} onKeyDown={e => e.key === "Enter" && saveEditProfile()} placeholder="Name" className="text-sm font-bold text-stone-800 border border-stone-200 rounded-lg px-2 py-1 outline-none focus:border-stone-400 bg-stone-50 w-full" />
-                              <input value={editUsername} onChange={e => setEditUsername(e.target.value)} onKeyDown={e => e.key === "Enter" && saveEditProfile()} placeholder="username" className="text-xs text-stone-500 border border-stone-200 rounded-lg px-2 py-1 outline-none focus:border-stone-400 bg-stone-50 w-full" />
-                              <input value={editEmail} onChange={e => setEditEmail(e.target.value)} onKeyDown={e => e.key === "Enter" && saveEditProfile()} placeholder="email" className="text-xs text-stone-500 border border-stone-200 rounded-lg px-2 py-1 outline-none focus:border-stone-400 bg-stone-50 w-full" />
-                            </div>
-                          ) : (
-                            <>
-                              <h2 className="text-base font-bold leading-tight" style={{ color: profile.name ? "#1c1917" : "#a8a29e" }}>{profile.name || "Your name"}</h2>
-                              <p className="text-xs" style={{ color: profile.username ? "#a8a29e" : "#d6d3d1" }}>{profile.username ? `@${profile.username}` : "@username"}</p>
-                            </>
-                          )}
-                        </div>
-                        {!editingProfile && (
-                          <div className="px-4 mb-4 flex flex-wrap gap-1.5">
-                            <span className="flex items-center gap-1 text-[11px] bg-emerald-50 text-emerald-700 border border-emerald-200 rounded-full px-2 py-0.5">🟢 Online</span>
-                            <span className="flex items-center gap-1 text-[11px] bg-amber-50 text-amber-700 border border-amber-200 rounded-full px-2 py-0.5">⭐ Premium</span>
-                            <span className="flex items-center gap-1 text-[11px] bg-blue-50 text-blue-700 border border-blue-200 rounded-full px-2 py-0.5">📚 {books.length} Notebooks</span>
-                          </div>
-                        )}
-                        {!editingProfile && (
-                          <div className="px-4 pb-4 flex flex-col gap-2 border-t border-stone-100 pt-3">
-                            {profile.email && <div className="flex items-center gap-2 text-xs text-stone-500"><span>📧</span><span className="truncate">{profile.email}</span></div>}
-                            <div className="flex items-center gap-2 text-xs text-stone-500"><span>📅</span><span>Joined {formatJoined(profile.joinedAt)}</span></div>
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  </div>
                 </div>
               </div>
             </div>
