@@ -77,6 +77,15 @@ function coverStyle(pattern: string, color: string, coverImg?: string): React.CS
 }
 
 
+const POSITIONS_KEY = "nb_book_positions";
+const ITEM_W = 140;
+function loadPositions(): Record<number, {x: number; y: number}> {
+  try { const r = localStorage.getItem(POSITIONS_KEY); return r ? JSON.parse(r) : {}; } catch { return {}; }
+}
+function savePositions(p: Record<number, {x: number; y: number}>) {
+  localStorage.setItem(POSITIONS_KEY, JSON.stringify(p));
+}
+
 type ActiveView = "author" | "home" | "my-notebook" | "short-note" | "project" | "task" | "schedule";
 
 const NAV_ITEMS: { id: ActiveView; label: string; icon: React.ElementType; active: boolean }[] = [
@@ -104,6 +113,11 @@ export default function Home() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [positions, setPositions] = useState<Record<number, {x: number; y: number}>>({});
+  const [draggingBookId, setDraggingBookId] = useState<number | null>(null);
+  const dragRef = useRef<{id: number; offsetX: number; offsetY: number; moved: boolean} | null>(null);
+  const wasDraggedRef = useRef(false);
+  const freeCanvasRef = useRef<HTMLDivElement>(null);
 
   const [lockPopupId, setLockPopupId] = useState<number | null>(null);
   const [lockPw, setLockPw] = useState("");
@@ -170,6 +184,59 @@ export default function Home() {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [unlockPopupId]);
+
+  // Initialize positions for books that don't have one saved
+  useEffect(() => {
+    if (books.length === 0) return;
+    const saved = loadPositions();
+    const updated = { ...saved };
+    let changed = false;
+    books.forEach((book, i) => {
+      if (updated[book.id] === undefined) {
+        const col = i % 5; const row = Math.floor(i / 5);
+        updated[book.id] = { x: col * (ITEM_W + 40) + 24, y: row * 270 + 24 };
+        changed = true;
+      }
+    });
+    if (changed) savePositions(updated);
+    setPositions(updated);
+  }, [books]);
+
+  // Global mouse move/up for free drag
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (!dragRef.current) return;
+      const canvas = freeCanvasRef.current;
+      if (!canvas) return;
+      const rect = canvas.getBoundingClientRect();
+      const x = Math.max(0, e.clientX - rect.left - dragRef.current.offsetX);
+      const y = Math.max(0, e.clientY - rect.top - dragRef.current.offsetY);
+      dragRef.current.moved = true;
+      wasDraggedRef.current = true;
+      setPositions(prev => ({ ...prev, [dragRef.current!.id]: { x, y } }));
+    };
+    const onUp = () => {
+      if (dragRef.current) {
+        setPositions(prev => { savePositions(prev); return prev; });
+        setDraggingBookId(null);
+        dragRef.current = null;
+      }
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
+  }, []);
+
+  const handleBookMouseDown = (e: React.MouseEvent, id: number) => {
+    if (e.button !== 0) return;
+    const canvas = freeCanvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const pos = positions[id] ?? { x: 0, y: 0 };
+    wasDraggedRef.current = false;
+    dragRef.current = { id, offsetX: e.clientX - rect.left - pos.x, offsetY: e.clientY - rect.top - pos.y, moved: false };
+    setDraggingBookId(id);
+  };
 
   const closeLockPopup = () => { setLockPopupId(null); setLockPw(""); setLockPwConfirm(""); setLockPwError(""); setShowLockPw(false); };
   const closeUnlockPopup = () => { setUnlockPopupId(null); setUnlockInput(""); setUnlockError(""); setShowUnlockPw(false); };
@@ -464,15 +531,23 @@ export default function Home() {
               </div>
             )}
 
-            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-x-5 gap-y-10">
+            {/* Free-form canvas */}
+            <div ref={freeCanvasRef} className="relative w-full" style={{ minHeight: "65vh" }}>
               {filteredBooks.map((book) => {
                 const isLocked = !!book.password;
                 const isLockOpen = lockPopupId === book.id;
                 const isUnlockOpen = unlockPopupId === book.id;
+                const pos = positions[book.id] ?? { x: 0, y: 0 };
+                const isDragging = draggingBookId === book.id;
                 return (
-                  <div key={book.id} className="group flex flex-col gap-3 relative">
-                    <div className="relative">
-                      <Link href={`/books/${book.id}`} onClick={(e) => handleBookClick(e, book)} className="block">
+                  <div
+                    key={book.id}
+                    className="group flex flex-col gap-3 absolute select-none"
+                    style={{ left: pos.x, top: pos.y, width: ITEM_W, zIndex: isDragging ? 50 : 1, opacity: isDragging ? 0.85 : 1, filter: isDragging ? "drop-shadow(0 12px 24px rgba(0,0,0,0.25))" : "none", transition: isDragging ? "none" : "filter 0.2s, opacity 0.2s" }}
+                    onMouseDown={(e) => handleBookMouseDown(e, book.id)}
+                  >
+                    <div className="relative" style={{ cursor: isDragging ? "grabbing" : "grab" }}>
+                      <Link href={`/books/${book.id}`} onClick={(e) => { if (wasDraggedRef.current) { e.preventDefault(); wasDraggedRef.current = false; } else { handleBookClick(e, book); } }} className="block" draggable={false}>
                         <div
                           className={`aspect-[3/4] rounded-md transition-transform duration-300 relative overflow-hidden ${isLockOpen || isUnlockOpen ? "shadow-none" : "shadow-md group-hover:-translate-y-2 group-hover:shadow-xl"}`}
                           style={coverStyle((book as any).pattern ?? "solid", book.color || "#1e293b", (book as any).coverImg)}
@@ -545,11 +620,13 @@ export default function Home() {
                 );
               })}
 
-              {/* Add New Card */}
-              <div className="flex flex-col gap-3 relative" ref={popupRef}>
+            </div>{/* end free canvas */}
+
+              {/* Add New — floating button anchored to bottom-left of canvas area */}
+              <div className="relative mt-4" ref={popupRef} style={{ width: ITEM_W }}>
                 <button
                   onClick={() => setShowCreate((v) => !v)}
-                  className="aspect-[3/4] rounded-md border-2 border-dashed border-stone-300 bg-[#faf6f0] hover:border-stone-400 hover:bg-[#f5efe6] transition-all flex flex-col items-center justify-center gap-2 group"
+                  className="aspect-[3/4] rounded-md border-2 border-dashed border-stone-300 bg-[#faf6f0] hover:border-stone-400 hover:bg-[#f5efe6] transition-all flex flex-col items-center justify-center gap-2 group w-full"
                 >
                   <div className="w-10 h-10 rounded-full bg-stone-200 group-hover:bg-stone-300 transition-colors flex items-center justify-center">
                     <Plus className="w-5 h-5 text-stone-500" />
@@ -625,7 +702,6 @@ export default function Home() {
                   </div>
                 )}
               </div>
-            </div>
           </div>
         )}
 
