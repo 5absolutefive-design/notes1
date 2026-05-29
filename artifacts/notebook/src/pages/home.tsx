@@ -469,9 +469,8 @@ export default function Home() {
 
             {/* Grid layout */}
             {(() => {
-              const totalItems = filteredBooks.length + 1; // +1 for New button
-              const remainder = totalItems % COLS;
-              const ghostCount = remainder === 0 ? 0 : COLS - remainder;
+              const totalSlots = Math.ceil((filteredBooks.length + 1) / COLS) * COLS;
+              const ghostCount = totalSlots - filteredBooks.length - 1;
               return (
               <div className="grid gap-6" style={{ gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))` }}>
               {filteredBooks.map((book) => {
@@ -557,7 +556,12 @@ export default function Home() {
                 );
               })}
 
-              {/* New Notebook button — in-grid */}
+              {/* Ghost cells — fill row before New button */}
+              {Array.from({ length: ghostCount }).map((_, i) => (
+                <div key={`ghost-${i}`} className="aspect-[3/4] rounded-md border-2 border-dashed border-stone-200 bg-transparent" />
+              ))}
+
+              {/* New Notebook button — always last */}
               <div className="relative flex flex-col gap-3" ref={popupRef}>
                 <button
                   onClick={() => setShowCreate((v) => !v)}
@@ -637,11 +641,6 @@ export default function Home() {
                   </div>
                 )}
               </div>
-
-              {/* Ghost cells to fill the remaining row */}
-              {Array.from({ length: ghostCount }).map((_, i) => (
-                <div key={`ghost-${i}`} className="aspect-[3/4] rounded-md border-2 border-dashed border-stone-200 bg-transparent" />
-              ))}
 
               </div>
               );
