@@ -4,7 +4,7 @@ import {
   BookOpen, FileText, Lock, LockOpen, Eye, EyeOff, User,
   Camera, Pencil, Home as HomeIcon, ChevronLeft, ChevronRight,
   Check, BookMarked, Clock, StickyNote, FolderKanban,
-  CheckSquare, CalendarDays,
+  CheckSquare, CalendarDays, UserRound,
 } from "lucide-react";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { store, type Book } from "@/lib/store";
@@ -76,9 +76,10 @@ function coverStyle(pattern: string, color: string, coverImg?: string): React.CS
   return patternStyle(pattern, color);
 }
 
-type ActiveView = "home" | "my-notebook" | "short-note" | "project" | "task" | "schedule";
+type ActiveView = "author" | "home" | "my-notebook" | "short-note" | "project" | "task" | "schedule";
 
 const NAV_ITEMS: { id: ActiveView; label: string; icon: React.ElementType; active: boolean }[] = [
+  { id: "author",     label: "Author",      icon: UserRound,      active: false },
   { id: "home",       label: "Home",        icon: HomeIcon,       active: false },
   { id: "short-note", label: "Short Note",  icon: StickyNote,     active: false },
   { id: "my-notebook",label: "My Notebook", icon: BookMarked,     active: true  },
