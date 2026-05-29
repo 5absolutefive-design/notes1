@@ -420,10 +420,10 @@ export default function Home() {
           <div className="p-6 md:p-10 max-w-7xl mx-auto">
 
             {/* Header Card */}
-            <div className="mb-10 rounded-2xl border border-stone-200 bg-white shadow-sm px-8 py-6">
+            <div className="mb-10 rounded-2xl border border-stone-200 bg-white shadow-sm px-8 py-3">
               <div className="flex items-center justify-between gap-4 flex-wrap">
-                <div className="flex flex-col gap-2 min-w-0">
-                  <h1 className="text-4xl font-serif font-bold text-stone-800 leading-tight">My Notebooks</h1>
+                <div className="flex flex-col gap-1 min-w-0">
+                  <h1 className="text-2xl font-serif font-bold text-stone-800 leading-tight">My Notebooks</h1>
                   <div className="flex items-center gap-2 text-xs text-stone-500 flex-wrap">
                     <span className="flex items-center gap-1.5 bg-stone-100 rounded-full px-3 py-1"><BookOpen className="w-3.5 h-3.5" />{books.length} notebook{books.length !== 1 ? "s" : ""}</span>
                     <span className="flex items-center gap-1.5 bg-stone-100 rounded-full px-3 py-1"><FileText className="w-3.5 h-3.5" />{totalPages} page{totalPages !== 1 ? "s" : ""}</span>
