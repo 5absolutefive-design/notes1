@@ -193,7 +193,7 @@ export default function Home() {
     let changed = false;
     books.forEach((book, i) => {
       if (updated[book.id] === undefined) {
-        const col = i % 5; const row = Math.floor(i / 5);
+        const col = i % 6; const row = Math.floor(i / 6);
         updated[book.id] = { x: col * (ITEM_W + 40) + 24, y: row * 270 + 24 };
         changed = true;
       }
