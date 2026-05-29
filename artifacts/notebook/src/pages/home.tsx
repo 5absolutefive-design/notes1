@@ -79,12 +79,40 @@ function coverStyle(pattern: string, color: string, coverImg?: string): React.CS
 
 const COLS = 6;
 
+// ── Short Notes ──────────────────────────────────────────────
+const SHORT_NOTES_KEY = "nb_short_notes";
+
+interface ShortNote {
+  id: number;
+  title: string;
+  body: string;
+  color: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+const NOTE_COLORS = [
+  "#fef08a", "#bbf7d0", "#bfdbfe", "#fecaca",
+  "#e9d5ff", "#fed7aa", "#f5f5f4", "#cffafe",
+];
+
+function loadShortNotes(): ShortNote[] {
+  try { const r = localStorage.getItem(SHORT_NOTES_KEY); return r ? JSON.parse(r) : []; } catch { return []; }
+}
+function saveShortNotes(notes: ShortNote[]) {
+  localStorage.setItem(SHORT_NOTES_KEY, JSON.stringify(notes));
+}
+function nextNoteId(notes: ShortNote[]): number {
+  return notes.reduce((m, n) => Math.max(m, n.id), 0) + 1;
+}
+// ─────────────────────────────────────────────────────────────
+
 type ActiveView = "author" | "home" | "my-notebook" | "short-note" | "project" | "task" | "schedule";
 
 const NAV_ITEMS: { id: ActiveView; label: string; icon: React.ElementType; active: boolean }[] = [
   { id: "author",     label: "Author",      icon: UserRound,      active: false },
   { id: "home",       label: "Home",        icon: HomeIcon,       active: false },
-  { id: "short-note", label: "Short Note",  icon: StickyNote,     active: false },
+  { id: "short-note", label: "Short Note",  icon: StickyNote,     active: true  },
   { id: "my-notebook",label: "My Notebook", icon: BookMarked,     active: true  },
   { id: "project",    label: "Project",     icon: FolderKanban,   active: false },
   { id: "task",       label: "Task",        icon: CheckSquare,    active: false },
@@ -123,6 +151,17 @@ export default function Home() {
   const [editName, setEditName] = useState("");
   const [editUsername, setEditUsername] = useState("");
   const [editEmail, setEditEmail] = useState("");
+
+  // Short Notes state
+  const [shortNotes, setShortNotes] = useState<ShortNote[]>(() => loadShortNotes());
+  const [noteSearch, setNoteSearch] = useState("");
+  const [newNoteTitle, setNewNoteTitle] = useState("");
+  const [newNoteBody, setNewNoteBody] = useState("");
+  const [newNoteColor, setNewNoteColor] = useState(NOTE_COLORS[0]);
+  const [showNoteCreate, setShowNoteCreate] = useState(false);
+  const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
+  const [editNoteTitle, setEditNoteTitle] = useState("");
+  const [editNoteBody, setEditNoteBody] = useState("");
 
   const popupRef = useRef<HTMLDivElement>(null);
   const imgInputRef = useRef<HTMLInputElement>(null);
@@ -233,6 +272,53 @@ export default function Home() {
     e.preventDefault();
     if (confirm("Delete this notebook and all its pages?")) { store.deleteBook(bookId); refresh(); }
   };
+
+  // ── Short Note handlers ──────────────────────────────────────
+  const handleCreateNote = () => {
+    if (!newNoteTitle.trim() && !newNoteBody.trim()) return;
+    const notes = loadShortNotes();
+    const note: ShortNote = {
+      id: nextNoteId(notes),
+      title: newNoteTitle.trim() || "Untitled",
+      body: newNoteBody.trim(),
+      color: newNoteColor,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    const updated = [...notes, note];
+    saveShortNotes(updated);
+    setShortNotes(updated);
+    setNewNoteTitle(""); setNewNoteBody(""); setNewNoteColor(NOTE_COLORS[0]); setShowNoteCreate(false);
+  };
+
+  const handleDeleteNote = (id: number) => {
+    const updated = shortNotes.filter((n) => n.id !== id);
+    saveShortNotes(updated);
+    setShortNotes(updated);
+  };
+
+  const startEditNote = (note: ShortNote) => {
+    setEditingNoteId(note.id);
+    setEditNoteTitle(note.title);
+    setEditNoteBody(note.body);
+  };
+
+  const saveEditNote = () => {
+    if (editingNoteId === null) return;
+    const updated = shortNotes.map((n) =>
+      n.id === editingNoteId
+        ? { ...n, title: editNoteTitle.trim() || "Untitled", body: editNoteBody, updatedAt: new Date().toISOString() }
+        : n
+    );
+    saveShortNotes(updated);
+    setShortNotes(updated);
+    setEditingNoteId(null);
+  };
+
+  const filteredNotes = noteSearch.trim()
+    ? shortNotes.filter((n) => n.title.toLowerCase().includes(noteSearch.toLowerCase()) || n.body.toLowerCase().includes(noteSearch.toLowerCase()))
+    : shortNotes;
+  // ─────────────────────────────────────────────────────────────
 
   const handleDownload = () => {
     const data = { notebooks: store.listBooks(), pages: store.listBooks().flatMap((b) => store.listPages(b.id).map((p) => ({ ...p, bookId: b.id }))), exportedAt: new Date().toISOString() };
@@ -648,8 +734,149 @@ export default function Home() {
           </div>
         )}
 
+        {/* Short Note view */}
+        {activeView === "short-note" && (
+          <div className="p-6 md:p-10 max-w-7xl mx-auto">
+
+            {/* Header */}
+            <div className="mb-8 rounded-2xl border border-stone-200 bg-white shadow-sm px-8 py-3">
+              <div className="flex items-center justify-between gap-4 flex-wrap">
+                <div className="flex flex-col gap-1 min-w-0">
+                  <h1 className="text-2xl font-serif font-bold text-stone-800 leading-tight">Short Notes</h1>
+                  <p className="text-xs text-stone-400">{shortNotes.length} note{shortNotes.length !== 1 ? "s" : ""}</p>
+                </div>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <div className={`flex items-center gap-2 border rounded-xl bg-stone-50 px-3 py-2 transition-all duration-300 ${noteSearch ? "w-64 border-stone-400 bg-white shadow-sm" : "w-48 border-stone-200"}`}>
+                    <Search className="w-4 h-4 text-stone-400 flex-shrink-0" />
+                    <input
+                      type="text"
+                      placeholder="Search notes..."
+                      value={noteSearch}
+                      onChange={(e) => setNoteSearch(e.target.value)}
+                      className="bg-transparent text-sm text-stone-700 placeholder:text-stone-400 outline-none w-full min-w-0"
+                    />
+                    {noteSearch && <button onClick={() => setNoteSearch("")} className="text-stone-400 hover:text-stone-600"><X className="w-3 h-3" /></button>}
+                  </div>
+                  <button
+                    onClick={() => setShowNoteCreate((v) => !v)}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-stone-800 text-white text-sm font-semibold hover:bg-stone-700 transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    New Note
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Create form */}
+            {showNoteCreate && (
+              <div className="mb-6 rounded-2xl border border-stone-200 bg-white shadow-sm p-5 flex flex-col gap-3">
+                <div className="flex items-center gap-3">
+                  <StickyNote className="w-4 h-4 text-stone-400" />
+                  <span className="text-sm font-semibold text-stone-700">New Short Note</span>
+                  <button onClick={() => setShowNoteCreate(false)} className="ml-auto text-stone-400 hover:text-stone-600"><X className="w-4 h-4" /></button>
+                </div>
+                <input
+                  autoFocus
+                  value={newNoteTitle}
+                  onChange={(e) => setNewNoteTitle(e.target.value)}
+                  placeholder="Title..."
+                  className="text-sm font-semibold text-stone-800 border border-stone-200 rounded-lg px-3 py-2 outline-none focus:border-stone-400 bg-stone-50"
+                />
+                <textarea
+                  value={newNoteBody}
+                  onChange={(e) => setNewNoteBody(e.target.value)}
+                  placeholder="Write your note..."
+                  rows={3}
+                  className="text-sm text-stone-700 border border-stone-200 rounded-lg px-3 py-2 outline-none focus:border-stone-400 bg-stone-50 resize-none"
+                  onKeyDown={(e) => { if (e.key === "Enter" && e.ctrlKey) handleCreateNote(); }}
+                />
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-xs text-stone-400 mr-1">Color:</span>
+                    {NOTE_COLORS.map((c) => (
+                      <button key={c} onClick={() => setNewNoteColor(c)} className="w-6 h-6 rounded-full border-2 transition-all" style={{ backgroundColor: c, borderColor: newNoteColor === c ? "#1c1917" : "transparent" }} />
+                    ))}
+                  </div>
+                  <button
+                    onClick={handleCreateNote}
+                    disabled={!newNoteTitle.trim() && !newNoteBody.trim()}
+                    className="px-4 py-1.5 rounded-lg bg-stone-800 text-white text-sm font-semibold hover:bg-stone-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                  >
+                    Add Note
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Notes grid */}
+            {filteredNotes.length === 0 && !showNoteCreate && (
+              <div className="flex flex-col items-center justify-center py-20 text-stone-400 gap-3">
+                <StickyNote className="w-10 h-10 opacity-25" />
+                <p className="text-sm">{noteSearch ? `No notes found for "${noteSearch}"` : "No notes yet — tap New Note to start"}</p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+              {filteredNotes.map((note) => (
+                <div
+                  key={note.id}
+                  className="group relative rounded-2xl p-4 flex flex-col gap-2 shadow-sm hover:shadow-md transition-shadow min-h-[140px]"
+                  style={{ backgroundColor: note.color }}
+                >
+                  {/* Actions */}
+                  <div className="absolute top-3 right-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => startEditNote(note)}
+                      className="w-6 h-6 rounded-full bg-black/10 hover:bg-black/20 flex items-center justify-center transition-colors"
+                    >
+                      <Pencil className="w-3 h-3 text-stone-700" />
+                    </button>
+                    <button
+                      onClick={() => handleDeleteNote(note.id)}
+                      className="w-6 h-6 rounded-full bg-black/10 hover:bg-red-200 flex items-center justify-center transition-colors"
+                    >
+                      <Trash2 className="w-3 h-3 text-stone-700" />
+                    </button>
+                  </div>
+
+                  {editingNoteId === note.id ? (
+                    <>
+                      <input
+                        autoFocus
+                        value={editNoteTitle}
+                        onChange={(e) => setEditNoteTitle(e.target.value)}
+                        className="text-sm font-semibold text-stone-800 bg-white/50 rounded px-2 py-1 outline-none w-full"
+                      />
+                      <textarea
+                        value={editNoteBody}
+                        onChange={(e) => setEditNoteBody(e.target.value)}
+                        rows={3}
+                        className="text-xs text-stone-700 bg-white/50 rounded px-2 py-1 outline-none w-full resize-none flex-1"
+                        onKeyDown={(e) => { if (e.key === "Enter" && e.ctrlKey) saveEditNote(); if (e.key === "Escape") setEditingNoteId(null); }}
+                      />
+                      <div className="flex gap-2 mt-1">
+                        <button onClick={saveEditNote} className="text-[10px] font-semibold px-2 py-0.5 rounded bg-stone-800 text-white hover:bg-stone-700 transition-colors">Save</button>
+                        <button onClick={() => setEditingNoteId(null)} className="text-[10px] text-stone-500 hover:text-stone-700">Cancel</button>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <h3 className="text-sm font-semibold text-stone-800 leading-snug pr-14 line-clamp-2">{note.title}</h3>
+                      {note.body && <p className="text-xs text-stone-600 leading-relaxed flex-1 line-clamp-5 whitespace-pre-wrap">{note.body}</p>}
+                      <p className="text-[10px] text-stone-400 mt-auto pt-1">
+                        {new Date(note.updatedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                      </p>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* All other views — blank */}
-        {activeView !== "my-notebook" && (
+        {activeView !== "my-notebook" && activeView !== "short-note" && (
           <div className="flex-1" />
         )}
 
