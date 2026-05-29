@@ -768,40 +768,39 @@ export default function Home() {
 
             {/* Create form */}
             {showNoteCreate && (
-              <div className="mb-6 rounded-2xl border border-stone-200 bg-white shadow-sm p-5 flex flex-col gap-3 w-1/2 min-h-[260px]">
+              <div className="mb-6 rounded-2xl bg-white shadow-md p-4 flex flex-col gap-3 w-1/2 min-h-[260px]">
+                {/* Top row: title + add note */}
                 <div className="flex items-center gap-3">
-                  <StickyNote className="w-4 h-4 text-stone-400" />
-                  <span className="text-sm font-semibold text-stone-700">New Short Note</span>
-                  <button onClick={() => setShowNoteCreate(false)} className="ml-auto text-stone-400 hover:text-stone-600"><X className="w-4 h-4" /></button>
+                  <input
+                    autoFocus
+                    value={newNoteTitle}
+                    onChange={(e) => setNewNoteTitle(e.target.value)}
+                    placeholder="Title..."
+                    className="flex-1 text-sm font-semibold text-stone-800 rounded-xl px-3 py-2 outline-none bg-stone-100 placeholder:text-stone-400 focus:bg-stone-50 transition-colors"
+                  />
+                  <button
+                    onClick={handleCreateNote}
+                    className="px-4 py-2 rounded-xl bg-stone-800 text-white text-sm font-semibold hover:bg-stone-700 transition-colors whitespace-nowrap"
+                  >
+                    Add Note
+                  </button>
                 </div>
-                <input
-                  autoFocus
-                  value={newNoteTitle}
-                  onChange={(e) => setNewNoteTitle(e.target.value)}
-                  placeholder="Title..."
-                  className="text-sm font-semibold text-stone-800 border border-stone-200 rounded-lg px-3 py-2 outline-none focus:border-stone-400 bg-stone-50"
-                />
+                {/* Body textarea fills remaining space */}
                 <textarea
                   value={newNoteBody}
                   onChange={(e) => setNewNoteBody(e.target.value)}
                   placeholder="Write your note..."
-                  rows={3}
-                  className="text-sm text-stone-700 border border-stone-200 rounded-lg px-3 py-2 outline-none focus:border-stone-400 bg-stone-50 resize-none"
+                  className="flex-1 text-sm text-stone-700 rounded-xl px-3 py-2 outline-none bg-stone-100 placeholder:text-stone-400 resize-none focus:bg-stone-50 transition-colors"
                   onKeyDown={(e) => { if (e.key === "Enter" && e.ctrlKey) handleCreateNote(); }}
                 />
+                {/* Color picker + close */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-xs text-stone-400 mr-1">Color:</span>
                     {NOTE_COLORS.map((c) => (
-                      <button key={c} onClick={() => setNewNoteColor(c)} className="w-6 h-6 rounded-full border-2 transition-all" style={{ backgroundColor: c, borderColor: newNoteColor === c ? "#1c1917" : "transparent" }} />
+                      <button key={c} onClick={() => setNewNoteColor(c)} className="w-5 h-5 rounded-full border-2 transition-all" style={{ backgroundColor: c, borderColor: newNoteColor === c ? "#1c1917" : "transparent" }} />
                     ))}
                   </div>
-                  <button
-                    onClick={handleCreateNote}
-                    className="px-4 py-1.5 rounded-lg bg-stone-800 text-white text-sm font-semibold hover:bg-stone-700 transition-colors"
-                  >
-                    Add Note
-                  </button>
+                  <button onClick={() => setShowNoteCreate(false)} className="text-xs text-stone-400 hover:text-stone-600 transition-colors">Cancel</button>
                 </div>
               </div>
             )}
