@@ -76,6 +76,12 @@ function coverStyle(pattern: string, color: string, coverImg?: string): React.CS
   return patternStyle(pattern, color);
 }
 
+const ORDER_KEY = "nb_book_order";
+function loadOrder(): number[] {
+  try { const r = localStorage.getItem(ORDER_KEY); return r ? JSON.parse(r) : []; } catch { return []; }
+}
+function saveOrder(ids: number[]) { localStorage.setItem(ORDER_KEY, JSON.stringify(ids)); }
+
 type ActiveView = "author" | "home" | "my-notebook" | "short-note" | "project" | "task" | "schedule";
 
 const NAV_ITEMS: { id: ActiveView; label: string; icon: React.ElementType; active: boolean }[] = [
@@ -103,6 +109,8 @@ export default function Home() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [draggingId, setDraggingId] = useState<number | null>(null);
+  const [dragOverId, setDragOverId] = useState<number | null>(null);
 
   const [lockPopupId, setLockPopupId] = useState<number | null>(null);
   const [lockPw, setLockPw] = useState("");
@@ -135,10 +143,38 @@ export default function Home() {
       ...b,
       pageCount: summary.recentBooks.find((r) => r.id === b.id)?.pageCount ?? store.listPages(b.id).length,
     }));
+    const order = loadOrder();
+    if (order.length > 0) {
+      allBooks.sort((a, b) => {
+        const ai = order.indexOf(a.id); const bi = order.indexOf(b.id);
+        if (ai === -1 && bi === -1) return 0;
+        if (ai === -1) return 1;
+        if (bi === -1) return -1;
+        return ai - bi;
+      });
+    }
     setBooks(allBooks);
     const recent = summary.recentBooks[0];
     setRecentTitle(recent ? { id: recent.id, title: recent.title } : null);
   }, []);
+
+  const handleDragStart = (id: number) => { setDraggingId(id); };
+  const handleDragOver = (e: React.DragEvent, id: number) => { e.preventDefault(); setDragOverId(id); };
+  const handleDrop = (e: React.DragEvent, targetId: number) => {
+    e.preventDefault();
+    if (draggingId === null || draggingId === targetId) { setDraggingId(null); setDragOverId(null); return; }
+    setBooks(prev => {
+      const next = [...prev];
+      const fromIdx = next.findIndex(b => b.id === draggingId);
+      const toIdx = next.findIndex(b => b.id === targetId);
+      const [moved] = next.splice(fromIdx, 1);
+      next.splice(toIdx, 0, moved);
+      saveOrder(next.map(b => b.id));
+      return next;
+    });
+    setDraggingId(null); setDragOverId(null);
+  };
+  const handleDragEnd = () => { setDraggingId(null); setDragOverId(null); };
 
   useEffect(() => { store.initDefaults(); refresh(); }, [refresh]);
 
@@ -468,9 +504,22 @@ export default function Home() {
                 const isLocked = !!book.password;
                 const isLockOpen = lockPopupId === book.id;
                 const isUnlockOpen = unlockPopupId === book.id;
+                const isDragging = draggingId === book.id;
+                const isDragOver = dragOverId === book.id && draggingId !== book.id;
 
                 return (
-                  <div key={book.id} className="group flex flex-col gap-3 relative">
+                  <div
+                    key={book.id}
+                    draggable
+                    onDragStart={() => handleDragStart(book.id)}
+                    onDragOver={(e) => handleDragOver(e, book.id)}
+                    onDrop={(e) => handleDrop(e, book.id)}
+                    onDragEnd={handleDragEnd}
+                    className={`group flex flex-col gap-3 relative rounded-xl border bg-white p-3 shadow-sm transition-all duration-200 cursor-grab active:cursor-grabbing
+                      ${isDragging ? "opacity-40 scale-95 border-stone-300" : "border-stone-200"}
+                      ${isDragOver ? "border-blue-400 shadow-md scale-[1.02] bg-blue-50/30" : ""}
+                    `}
+                  >
                     <div className="relative">
                       <Link href={`/books/${book.id}`} onClick={(e) => handleBookClick(e, book)} className="block">
                         <div
