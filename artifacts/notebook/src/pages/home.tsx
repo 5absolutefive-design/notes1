@@ -768,7 +768,7 @@ export default function Home() {
 
             {/* Create form */}
             {showNoteCreate && (
-              <div className="mb-6 rounded-2xl bg-white shadow-md p-4 flex flex-col gap-3 w-1/2 min-h-[260px]">
+              <div className="mb-6 rounded-2xl bg-stone-100 shadow-md p-4 flex flex-col gap-3 w-1/2 min-h-[260px]">
                 {/* Top row: title + add note */}
                 <div className="flex items-center gap-3">
                   <input
@@ -776,7 +776,7 @@ export default function Home() {
                     value={newNoteTitle}
                     onChange={(e) => setNewNoteTitle(e.target.value)}
                     placeholder="Title..."
-                    className="flex-1 text-sm font-semibold text-stone-800 rounded-xl px-3 py-2 outline-none bg-stone-100 placeholder:text-stone-400 focus:bg-stone-50 transition-colors"
+                    className="flex-1 text-sm font-semibold text-stone-800 rounded-xl px-3 py-2 outline-none bg-white placeholder:text-stone-400 transition-colors"
                   />
                   <button
                     onClick={handleCreateNote}
@@ -790,7 +790,7 @@ export default function Home() {
                   value={newNoteBody}
                   onChange={(e) => setNewNoteBody(e.target.value)}
                   placeholder="Write your note..."
-                  className="flex-1 text-sm text-stone-700 rounded-xl px-3 py-2 outline-none bg-stone-100 placeholder:text-stone-400 resize-none focus:bg-stone-50 transition-colors"
+                  className="flex-1 text-sm text-stone-700 rounded-xl px-3 py-2 outline-none bg-white placeholder:text-stone-400 resize-none transition-colors"
                   onKeyDown={(e) => { if (e.key === "Enter" && e.ctrlKey) handleCreateNote(); }}
                 />
                 {/* Color picker + close */}
