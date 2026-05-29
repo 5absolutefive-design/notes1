@@ -77,14 +77,7 @@ function coverStyle(pattern: string, color: string, coverImg?: string): React.CS
 }
 
 
-const POSITIONS_KEY = "nb_book_positions";
-const ITEM_W = 140;
-function loadPositions(): Record<number, {x: number; y: number}> {
-  try { const r = localStorage.getItem(POSITIONS_KEY); return r ? JSON.parse(r) : {}; } catch { return {}; }
-}
-function savePositions(p: Record<number, {x: number; y: number}>) {
-  localStorage.setItem(POSITIONS_KEY, JSON.stringify(p));
-}
+const COLS = 6;
 
 type ActiveView = "author" | "home" | "my-notebook" | "short-note" | "project" | "task" | "schedule";
 
@@ -113,11 +106,6 @@ export default function Home() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editingTitle, setEditingTitle] = useState("");
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [positions, setPositions] = useState<Record<number, {x: number; y: number}>>({});
-  const [draggingBookId, setDraggingBookId] = useState<number | null>(null);
-  const dragRef = useRef<{id: number; offsetX: number; offsetY: number; moved: boolean} | null>(null);
-  const wasDraggedRef = useRef(false);
-  const freeCanvasRef = useRef<HTMLDivElement>(null);
 
   const [lockPopupId, setLockPopupId] = useState<number | null>(null);
   const [lockPw, setLockPw] = useState("");
@@ -185,58 +173,6 @@ export default function Home() {
     return () => document.removeEventListener("mousedown", handler);
   }, [unlockPopupId]);
 
-  // Initialize positions for books that don't have one saved
-  useEffect(() => {
-    if (books.length === 0) return;
-    const saved = loadPositions();
-    const updated = { ...saved };
-    let changed = false;
-    books.forEach((book, i) => {
-      if (updated[book.id] === undefined) {
-        const col = i % 6; const row = Math.floor(i / 6);
-        updated[book.id] = { x: col * (ITEM_W + 40) + 24, y: row * 270 + 24 };
-        changed = true;
-      }
-    });
-    if (changed) savePositions(updated);
-    setPositions(updated);
-  }, [books]);
-
-  // Global mouse move/up for free drag
-  useEffect(() => {
-    const onMove = (e: MouseEvent) => {
-      if (!dragRef.current) return;
-      const canvas = freeCanvasRef.current;
-      if (!canvas) return;
-      const rect = canvas.getBoundingClientRect();
-      const x = Math.max(0, e.clientX - rect.left - dragRef.current.offsetX);
-      const y = Math.max(0, e.clientY - rect.top - dragRef.current.offsetY);
-      dragRef.current.moved = true;
-      wasDraggedRef.current = true;
-      setPositions(prev => ({ ...prev, [dragRef.current!.id]: { x, y } }));
-    };
-    const onUp = () => {
-      if (dragRef.current) {
-        setPositions(prev => { savePositions(prev); return prev; });
-        setDraggingBookId(null);
-        dragRef.current = null;
-      }
-    };
-    window.addEventListener("mousemove", onMove);
-    window.addEventListener("mouseup", onUp);
-    return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
-  }, []);
-
-  const handleBookMouseDown = (e: React.MouseEvent, id: number) => {
-    if (e.button !== 0) return;
-    const canvas = freeCanvasRef.current;
-    if (!canvas) return;
-    const rect = canvas.getBoundingClientRect();
-    const pos = positions[id] ?? { x: 0, y: 0 };
-    wasDraggedRef.current = false;
-    dragRef.current = { id, offsetX: e.clientX - rect.left - pos.x, offsetY: e.clientY - rect.top - pos.y, moved: false };
-    setDraggingBookId(id);
-  };
 
   const closeLockPopup = () => { setLockPopupId(null); setLockPw(""); setLockPwConfirm(""); setLockPwError(""); setShowLockPw(false); };
   const closeUnlockPopup = () => { setUnlockPopupId(null); setUnlockInput(""); setUnlockError(""); setShowUnlockPw(false); };
@@ -531,23 +467,24 @@ export default function Home() {
               </div>
             )}
 
-            {/* Free-form canvas */}
-            <div ref={freeCanvasRef} className="relative w-full" style={{ minHeight: "65vh" }}>
+            {/* Grid layout */}
+            {(() => {
+              const totalItems = filteredBooks.length + 1; // +1 for New button
+              const remainder = totalItems % COLS;
+              const ghostCount = remainder === 0 ? 0 : COLS - remainder;
+              return (
+              <div className="grid gap-6" style={{ gridTemplateColumns: `repeat(${COLS}, minmax(0, 1fr))` }}>
               {filteredBooks.map((book) => {
                 const isLocked = !!book.password;
                 const isLockOpen = lockPopupId === book.id;
                 const isUnlockOpen = unlockPopupId === book.id;
-                const pos = positions[book.id] ?? { x: 0, y: 0 };
-                const isDragging = draggingBookId === book.id;
                 return (
                   <div
                     key={book.id}
-                    className="group flex flex-col gap-3 absolute select-none"
-                    style={{ left: pos.x, top: pos.y, width: ITEM_W, zIndex: isDragging ? 50 : 1, opacity: isDragging ? 0.85 : 1, filter: isDragging ? "drop-shadow(0 12px 24px rgba(0,0,0,0.25))" : "none", transition: isDragging ? "none" : "filter 0.2s, opacity 0.2s" }}
-                    onMouseDown={(e) => handleBookMouseDown(e, book.id)}
+                    className="group flex flex-col gap-3 select-none"
                   >
-                    <div className="relative" style={{ cursor: isDragging ? "grabbing" : "grab" }}>
-                      <Link href={`/books/${book.id}`} onClick={(e) => { if (wasDraggedRef.current) { e.preventDefault(); wasDraggedRef.current = false; } else { handleBookClick(e, book); } }} className="block" draggable={false}>
+                    <div className="relative">
+                      <Link href={`/books/${book.id}`} onClick={(e) => { handleBookClick(e, book); }} className="block" draggable={false}>
                         <div
                           className={`aspect-[3/4] rounded-md transition-transform duration-300 relative overflow-hidden ${isLockOpen || isUnlockOpen ? "shadow-none" : "shadow-md group-hover:-translate-y-2 group-hover:shadow-xl"}`}
                           style={coverStyle((book as any).pattern ?? "solid", book.color || "#1e293b", (book as any).coverImg)}
@@ -620,10 +557,8 @@ export default function Home() {
                 );
               })}
 
-            </div>{/* end free canvas */}
-
-              {/* Add New — floating button anchored to bottom-left of canvas area */}
-              <div className="relative mt-4" ref={popupRef} style={{ width: ITEM_W }}>
+              {/* New Notebook button — in-grid */}
+              <div className="relative flex flex-col gap-3" ref={popupRef}>
                 <button
                   onClick={() => setShowCreate((v) => !v)}
                   className="aspect-[3/4] rounded-md border-2 border-dashed border-stone-300 bg-[#faf6f0] hover:border-stone-400 hover:bg-[#f5efe6] transition-all flex flex-col items-center justify-center gap-2 group w-full"
@@ -633,7 +568,7 @@ export default function Home() {
                   </div>
                   <span className="text-xs text-stone-400 font-medium">New Notebook</span>
                 </button>
-                <div className="px-1 h-8" />
+                <div className="px-1 h-5" />
 
                 {showCreate && (
                   <div className="absolute top-0 left-[calc(100%+12px)] z-50 w-72 bg-white rounded-xl shadow-2xl border border-stone-200 p-4 flex flex-col gap-3 max-h-[90vh] overflow-y-auto">
@@ -702,6 +637,15 @@ export default function Home() {
                   </div>
                 )}
               </div>
+
+              {/* Ghost cells to fill the remaining row */}
+              {Array.from({ length: ghostCount }).map((_, i) => (
+                <div key={`ghost-${i}`} className="aspect-[3/4] rounded-md border-2 border-dashed border-stone-200 bg-transparent" />
+              ))}
+
+              </div>
+              );
+            })()}
           </div>
         )}
 
