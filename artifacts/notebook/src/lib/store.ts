@@ -96,7 +96,7 @@ function nextPageId(): number {
 
 export const store = {
   listBooks(): Book[] {
-    return loadBooks().sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
+    return loadBooks().sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
   },
 
   getBook(id: number): Book | undefined {
