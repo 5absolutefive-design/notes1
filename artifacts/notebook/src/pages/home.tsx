@@ -275,17 +275,15 @@ export default function Home() {
 
   // ── Short Note handlers ──────────────────────────────────────
   const handleCreateNote = () => {
-    if (!newNoteTitle.trim() && !newNoteBody.trim()) return;
-    const notes = loadShortNotes();
     const note: ShortNote = {
-      id: nextNoteId(notes),
+      id: nextNoteId(shortNotes),
       title: newNoteTitle.trim() || "Untitled",
       body: newNoteBody.trim(),
       color: newNoteColor,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    const updated = [...notes, note];
+    const updated = [...shortNotes, note];
     saveShortNotes(updated);
     setShortNotes(updated);
     setNewNoteTitle(""); setNewNoteBody(""); setNewNoteColor(NOTE_COLORS[0]); setShowNoteCreate(false);
@@ -800,8 +798,7 @@ export default function Home() {
                   </div>
                   <button
                     onClick={handleCreateNote}
-                    disabled={!newNoteTitle.trim() && !newNoteBody.trim()}
-                    className="px-4 py-1.5 rounded-lg bg-stone-800 text-white text-sm font-semibold hover:bg-stone-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    className="px-4 py-1.5 rounded-lg bg-stone-800 text-white text-sm font-semibold hover:bg-stone-700 transition-colors"
                   >
                     Add Note
                   </button>
