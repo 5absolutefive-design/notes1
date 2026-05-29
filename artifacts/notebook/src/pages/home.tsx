@@ -776,7 +776,7 @@ export default function Home() {
                     value={newNoteTitle}
                     onChange={(e) => setNewNoteTitle(e.target.value)}
                     placeholder="Title..."
-                    className="flex-1 text-sm font-semibold text-stone-800 rounded-xl px-3 py-2 outline-none bg-white placeholder:text-stone-400 transition-colors"
+                    className="w-2/3 text-sm font-semibold text-stone-800 rounded-xl px-3 py-2 outline-none bg-white placeholder:text-stone-400 transition-colors"
                   />
                   <button
                     onClick={handleCreateNote}
