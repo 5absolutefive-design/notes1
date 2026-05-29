@@ -417,24 +417,24 @@ export default function Home() {
 
         {/* My Notebook view */}
         {activeView === "my-notebook" && (
-          <div className="p-6 md:p-10 max-w-5xl mx-auto">
+          <div className="p-6 md:p-10 max-w-7xl mx-auto">
 
             {/* Header Card */}
-            <div className="mb-10 rounded-2xl border border-stone-200 bg-white shadow-sm px-6 py-4">
+            <div className="mb-10 rounded-2xl border border-stone-200 bg-white shadow-sm px-8 py-6">
               <div className="flex items-center justify-between gap-4 flex-wrap">
-                <div className="flex items-center gap-3 flex-wrap min-w-0">
-                  <h1 className="text-3xl font-serif font-bold text-stone-800 leading-tight">My Notebooks</h1>
+                <div className="flex flex-col gap-2 min-w-0">
+                  <h1 className="text-4xl font-serif font-bold text-stone-800 leading-tight">My Notebooks</h1>
                   <div className="flex items-center gap-2 text-xs text-stone-500 flex-wrap">
-                    <span className="flex items-center gap-1 bg-stone-100 rounded-full px-2 py-0.5"><BookOpen className="w-3 h-3" />{books.length} notebook{books.length !== 1 ? "s" : ""}</span>
-                    <span className="flex items-center gap-1 bg-stone-100 rounded-full px-2 py-0.5"><FileText className="w-3 h-3" />{totalPages} page{totalPages !== 1 ? "s" : ""}</span>
+                    <span className="flex items-center gap-1.5 bg-stone-100 rounded-full px-3 py-1"><BookOpen className="w-3.5 h-3.5" />{books.length} notebook{books.length !== 1 ? "s" : ""}</span>
+                    <span className="flex items-center gap-1.5 bg-stone-100 rounded-full px-3 py-1"><FileText className="w-3.5 h-3.5" />{totalPages} page{totalPages !== 1 ? "s" : ""}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  <div className={`flex items-center gap-2 border rounded-lg bg-stone-50 px-3 py-1.5 transition-all duration-300 ${searchFocused || searchQuery ? "w-72 border-stone-400 bg-white shadow-sm" : "w-52 border-stone-200"}`}>
-                    <Search className="w-3.5 h-3.5 text-stone-400 flex-shrink-0" />
+                  <div className={`flex items-center gap-2 border rounded-xl bg-stone-50 px-3 py-2 transition-all duration-300 ${searchFocused || searchQuery ? "w-72 border-stone-400 bg-white shadow-sm" : "w-56 border-stone-200"}`}>
+                    <Search className="w-4 h-4 text-stone-400 flex-shrink-0" />
                     <input
                       type="text"
-                      placeholder="Search..."
+                      placeholder="Search notebooks..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       onFocus={() => setSearchFocused(true)}
@@ -445,14 +445,13 @@ export default function Home() {
                       <button onClick={() => setSearchQuery("")} className="text-stone-400 hover:text-stone-600"><X className="w-3 h-3" /></button>
                     )}
                   </div>
-                  <button onClick={handleDownload} title="Download backup" className="flex items-center justify-center w-8 h-8 rounded-lg border border-stone-200 bg-stone-50 hover:bg-stone-100 hover:border-stone-300 text-stone-600 transition-all">
+                  <button onClick={handleDownload} title="Download backup" className="flex items-center justify-center w-9 h-9 rounded-xl border border-stone-200 bg-stone-50 hover:bg-stone-100 hover:border-stone-300 text-stone-600 transition-all">
                     <Download className="w-4 h-4" />
                   </button>
-                  <label title="Import backup" className="flex items-center justify-center w-8 h-8 rounded-lg border border-stone-200 bg-stone-50 hover:bg-stone-100 hover:border-stone-300 text-stone-600 transition-all cursor-pointer">
+                  <label title="Import backup" className="flex items-center justify-center w-9 h-9 rounded-xl border border-stone-200 bg-stone-50 hover:bg-stone-100 hover:border-stone-300 text-stone-600 transition-all cursor-pointer">
                     <Upload className="w-4 h-4" />
                     <input type="file" accept=".json" className="hidden" onChange={handleUpload} />
                   </label>
-
                 </div>
               </div>
             </div>
@@ -464,7 +463,7 @@ export default function Home() {
               </div>
             )}
 
-            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-x-6 gap-y-10">
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 gap-x-5 gap-y-10">
               {filteredBooks.map((book) => {
                 const isLocked = !!book.password;
                 const isLockOpen = lockPopupId === book.id;
