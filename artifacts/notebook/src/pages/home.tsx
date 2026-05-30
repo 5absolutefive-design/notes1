@@ -88,7 +88,7 @@ interface ShortNote {
   title: string;
   body: string;
   color: string;
-  priority?: "low" | "medium" | "important";
+  priority?: "low" | "normal" | "medium" | "important" | "urgent";
   createdAt: string;
   updatedAt: string;
 }
@@ -162,7 +162,7 @@ export default function Home() {
   const [newNoteColor, setNewNoteColor] = useState("#f5f5f4");
   const [showNoteCreate, setShowNoteCreate] = useState(false);
   const [showColorPopup, setShowColorPopup] = useState(false);
-  const [newNotePriority, setNewNotePriority] = useState<"low"|"medium"|"important"|null>(null);
+  const [newNotePriority, setNewNotePriority] = useState<"low"|"normal"|"medium"|"important"|"urgent"|null>(null);
   const [showPriorityPopup, setShowPriorityPopup] = useState(false);
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
   const [confirmDeleteNoteId, setConfirmDeleteNoteId] = useState<number | null>(null);
@@ -817,9 +817,11 @@ export default function Home() {
                           <button
                             onClick={() => { setShowPriorityPopup((v) => !v); setShowColorPopup(false); }}
                             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
-                              newNotePriority === "low"        ? "bg-green-50  border-green-200  text-green-700"
-                              : newNotePriority === "medium"  ? "bg-yellow-50 border-yellow-200 text-yellow-700"
-                              : newNotePriority === "important"? "bg-red-50    border-red-200    text-red-600"
+                              newNotePriority === "low"       ? "bg-green-50  border-green-200  text-green-600"
+                              : newNotePriority === "normal" ? "bg-gray-50   border-gray-200   text-gray-600"
+                              : newNotePriority === "medium" ? "bg-blue-50   border-blue-200   text-blue-600"
+                              : newNotePriority === "important" ? "bg-orange-50 border-orange-200 text-orange-600"
+                              : newNotePriority === "urgent" ? "bg-red-50    border-red-200    text-red-600"
                               : "bg-violet-50 border-violet-200 text-violet-500 hover:bg-violet-100"
                             }`}
                           >
@@ -829,14 +831,20 @@ export default function Home() {
                           {showPriorityPopup && (
                             <div className="absolute right-0 top-9 z-50 bg-white rounded-2xl shadow-xl p-3 flex flex-col gap-1.5 w-36 border border-stone-100">
                               <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide mb-1">Priority</p>
-                              {([["low","Low","#bbf7d0","#16a34a"],["medium","Medium","#fef08a","#ca8a04"],["important","Important","#fecaca","#dc2626"]] as const).map(([val, label, bg, color]) => (
+                              {([
+                                ["low",       "Low",       "#dcfce7", "#22C55E"],
+                                ["normal",    "Normal",    "#f3f4f6", "#6B7280"],
+                                ["medium",    "Medium",    "#dbeafe", "#3B82F6"],
+                                ["important", "Important", "#ffedd5", "#F97316"],
+                                ["urgent",    "Urgent",    "#fee2e2", "#EF4444"],
+                              ] as const).map(([val, label, bg, color]) => (
                                 <button
                                   key={val}
                                   onClick={() => { setNewNotePriority(newNotePriority === val ? null : val); setShowPriorityPopup(false); }}
                                   className="flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors hover:bg-stone-50 text-left"
                                   style={{ backgroundColor: newNotePriority === val ? bg : undefined }}
                                 >
-                                  <AlertTriangle className="w-3 h-3 flex-shrink-0" style={{ color }} />
+                                  <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
                                   <span className="text-xs font-medium text-stone-700">{label}</span>
                                 </button>
                               ))}
@@ -925,8 +933,8 @@ export default function Home() {
                   </div>
                 )}
                 {filteredNotes.map((note) => {
-                  const pColor = note.priority === "low" ? "#16a34a" : note.priority === "medium" ? "#ca8a04" : note.priority === "important" ? "#dc2626" : "";
-                  const pBg    = note.priority === "low" ? "#dcfce7" : note.priority === "medium" ? "#fef9c3" : note.priority === "important" ? "#fee2e2" : "";
+                  const pColor = note.priority === "low" ? "#22C55E" : note.priority === "normal" ? "#6B7280" : note.priority === "medium" ? "#3B82F6" : note.priority === "important" ? "#F97316" : note.priority === "urgent" ? "#EF4444" : "";
+                  const pBg    = note.priority === "low" ? "#dcfce7" : note.priority === "normal" ? "#f3f4f6" : note.priority === "medium" ? "#dbeafe" : note.priority === "important" ? "#ffedd5" : note.priority === "urgent" ? "#fee2e2" : "";
                   const pLabel = note.priority ? note.priority.charAt(0).toUpperCase() + note.priority.slice(1) : null;
                   const accentBar = pColor || note.color;
 
@@ -954,7 +962,7 @@ export default function Home() {
                               className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0"
                               style={{ backgroundColor: pBg, color: pColor }}
                             >
-                              <AlertTriangle className="w-2.5 h-2.5" />
+                              <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: pColor }} />
                               {pLabel}
                             </span>
                           )}
