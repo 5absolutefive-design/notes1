@@ -1450,7 +1450,7 @@ export default function Home() {
               <div className="flex gap-4 flex-1 min-h-0 overflow-hidden">
 
                 {/* ── LEFT — task pad ── */}
-                <div className="flex-1 bg-white rounded-2xl border border-stone-200 flex flex-col overflow-hidden">
+                <div className="flex-[7] bg-white rounded-2xl border border-stone-200 flex flex-col overflow-hidden">
 
                   {/* Task list */}
                   <div className="flex-1 overflow-y-auto px-7 pt-6 pb-2">
@@ -1588,7 +1588,7 @@ export default function Home() {
                 </div>
 
                 {/* ── RIGHT panel ── */}
-                <div className="w-[300px] flex-shrink-0 flex flex-col gap-4 overflow-hidden">
+                <div className="flex-[3] flex-shrink-0 flex flex-col gap-4 overflow-hidden">
 
                   {/* Clock card — analog clock + empty right half */}
                   <div className="bg-white rounded-2xl border border-stone-200 flex-shrink-0 flex items-center">
