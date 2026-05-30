@@ -857,12 +857,12 @@ export default function Home() {
                           )}
                         </div>
 
-                        {/* Save — black rounded square */}
+                        {/* Save button */}
                         <button
                           onClick={selectedNoteId !== null ? handleSaveSelectedNote : handleCreateNote}
-                          className="w-9 h-9 rounded-xl bg-stone-900 text-white hover:bg-stone-700 transition-colors flex items-center justify-center shadow-sm"
+                          className="px-6 py-[10px] rounded-xl bg-stone-900 text-white hover:bg-stone-700 transition-colors text-xs font-semibold shadow-sm"
                         >
-                          <Check className="w-4 h-4" />
+                          Save
                         </button>
                       </div>
                     </div>
