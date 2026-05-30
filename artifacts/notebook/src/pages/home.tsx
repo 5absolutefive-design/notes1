@@ -741,7 +741,7 @@ export default function Home() {
 
         {/* Short Note view */}
         {activeView === "short-note" && (
-          <div className="px-4 py-6 md:py-8 w-full flex flex-col gap-6">
+          <div className="px-10 py-6 md:py-8 w-full flex flex-col gap-6">
 
             {/* Header */}
             <div className="rounded-2xl border border-stone-200 bg-white shadow-sm px-5 py-1">
