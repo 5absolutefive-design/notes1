@@ -1463,10 +1463,10 @@ export default function Home() {
               <div className="flex gap-4 flex-1 min-h-0 overflow-hidden">
 
                 {/* ── LEFT — task pad ── */}
-                <div className="flex-[7] bg-white rounded-2xl border border-stone-200 flex flex-col overflow-hidden">
+                <div className="flex-[7] bg-stone-50 rounded-2xl border border-stone-200 flex flex-col overflow-hidden">
 
                   {/* Card header */}
-                  <div className="flex-shrink-0 flex items-center justify-between px-5 py-3 border-b border-stone-100">
+                  <div className="flex-shrink-0 flex items-center justify-between px-5 py-3 border-b border-stone-200">
                     <span className="text-sm font-semibold text-stone-700">{selectedTypeName}</span>
                     <div className="flex items-center gap-4 text-[11px] text-stone-400">
                       <span>Total Task: <span className="font-semibold text-stone-600">{totalTasks}</span></span>
@@ -1480,166 +1480,162 @@ export default function Home() {
                   </div>
 
                   {/* Task list */}
-                  <div className="flex-1 overflow-y-auto px-4 py-2">
+                  <div className="flex-1 overflow-y-auto px-4 py-3">
                     {filteredTasks.length === 0 && !addingRow && (
                       <div className="flex items-center justify-center h-20">
                         <p className="text-sm text-stone-300">No tasks — press + to add</p>
                       </div>
                     )}
 
-                    <div className="flex flex-col">
+                    <div className="flex flex-col gap-2">
                       {filteredTasks.map((task, idx) => {
                         const pm = task.priority ? DAY_PRIORITY_META[task.priority] : null;
                         return (
-                          <div key={task.id} className="group flex flex-col border-b border-stone-100 last:border-0">
-                            <div className="flex items-center gap-2 py-2.5">
+                          <div key={task.id} className="bg-white rounded-xl shadow-sm border border-stone-100 flex items-center gap-2.5 px-3 py-2.5">
 
-                              {/* Row number */}
-                              <span className="text-[11px] font-bold text-stone-400 w-6 flex-shrink-0 text-center">T{idx + 1}</span>
+                            {/* Row number badge */}
+                            <span className="text-[11px] font-bold text-stone-500 bg-stone-100 rounded-lg px-2 py-1 flex-shrink-0">T{idx + 1}</span>
 
-                              {/* Checkbox */}
+                            {/* Checkbox */}
+                            <button
+                              onClick={() => toggleDone(task.id)}
+                              className={`w-[17px] h-[17px] rounded border-2 flex-shrink-0 flex items-center justify-center transition-all ${task.done ? "bg-stone-700 border-stone-700" : "border-stone-300 hover:border-stone-500"}`}
+                            >
+                              {task.done && <Check className="w-2.5 h-2.5 text-white" />}
+                            </button>
+
+                            {/* Title input */}
+                            <input
+                              value={task.title}
+                              onChange={e => updateTask(task.id, { title: e.target.value })}
+                              placeholder="Task"
+                              className={`flex-1 text-sm bg-transparent outline-none min-w-0 border-b border-stone-200 pb-0.5 focus:border-stone-400 transition-colors placeholder-stone-300 ${task.done ? "line-through text-stone-400" : "text-stone-700"}`}
+                            />
+
+                            {/* Note button */}
+                            <div className="relative flex-shrink-0">
                               <button
-                                onClick={() => toggleDone(task.id)}
-                                className={`w-[15px] h-[15px] rounded-sm border-2 flex-shrink-0 flex items-center justify-center transition-all ${task.done ? "bg-stone-700 border-stone-700" : "border-stone-400 hover:border-stone-600"}`}
+                                onClick={() => { setNotePopupId(notePopupId === task.id ? null : task.id); setTimePickerId(null); setPriorityMenuId(null); setProgressMenuId(null); }}
+                                className={`text-[11px] px-3 py-1.5 rounded-lg border transition-colors flex items-center gap-1 ${task.note ? "bg-stone-200 border-stone-300 text-stone-700" : "bg-stone-100 border-stone-200 text-stone-500 hover:bg-stone-200"}`}
                               >
-                                {task.done && <Check className="w-2.5 h-2.5 text-white" />}
+                                Note {task.note && <span className="w-1.5 h-1.5 rounded-full bg-stone-500 inline-block" />}
                               </button>
-
-                              {/* Title */}
-                              <input
-                                value={task.title}
-                                onChange={e => updateTask(task.id, { title: e.target.value })}
-                                className={`flex-1 text-sm bg-transparent outline-none min-w-0 ${task.done ? "line-through text-stone-400" : "text-stone-800"}`}
-                              />
-
-                              {/* Grouped action buttons */}
-                              <div className="flex-shrink-0 flex items-stretch border border-stone-300 rounded overflow-visible divide-x divide-stone-300">
-
-                                {/* Note */}
-                                <div className="relative">
-                                  <button
-                                    onClick={() => { setNotePopupId(notePopupId === task.id ? null : task.id); setTimePickerId(null); setPriorityMenuId(null); setProgressMenuId(null); }}
-                                    className={`text-[11px] px-3 py-1.5 min-w-[46px] text-center transition-colors h-full ${task.note ? "bg-stone-100 text-stone-700" : "bg-white text-stone-400 hover:bg-stone-50"}`}
-                                  >Note</button>
-                                  {notePopupId === task.id && (
-                                    <div className="absolute top-full mt-1 left-0 bg-white border border-stone-200 rounded-xl shadow-xl p-3 z-50 w-56">
-                                      <textarea
-                                        autoFocus
-                                        value={task.note}
-                                        onChange={e => updateTask(task.id, { note: e.target.value })}
-                                        placeholder="Add a note..."
-                                        rows={3}
-                                        className="w-full text-xs border border-stone-200 rounded-lg p-2 outline-none resize-none focus:border-stone-500"
-                                      />
-                                      <button onClick={() => setNotePopupId(null)} className="mt-1 text-xs font-bold text-white bg-stone-800 rounded-lg px-3 py-1 hover:bg-stone-700 w-full">Done</button>
-                                    </div>
-                                  )}
+                              {notePopupId === task.id && (
+                                <div className="absolute top-full mt-1 left-0 bg-white border border-stone-200 rounded-xl shadow-xl p-3 z-50 w-56">
+                                  <textarea
+                                    autoFocus
+                                    value={task.note}
+                                    onChange={e => updateTask(task.id, { note: e.target.value })}
+                                    placeholder="Add a note..."
+                                    rows={3}
+                                    className="w-full text-xs border border-stone-200 rounded-lg p-2 outline-none resize-none focus:border-stone-500"
+                                  />
+                                  <button onClick={() => setNotePopupId(null)} className="mt-1 text-xs font-bold text-white bg-stone-800 rounded-lg px-3 py-1 hover:bg-stone-700 w-full">Done</button>
                                 </div>
-
-                                {/* Time */}
-                                <div className="relative">
-                                  <button
-                                    onClick={() => {
-                                      if (timePickerId === task.id) { setTimePickerId(null); return; }
-                                      setTempHour(task.hour || "12");
-                                      setTempMinute(task.minute || "00");
-                                      setTempAmpm(task.ampm || "AM");
-                                      setTimePickerId(task.id);
-                                      setPriorityMenuId(null); setNotePopupId(null); setProgressMenuId(null);
-                                    }}
-                                    className="text-[11px] px-3 py-1.5 min-w-[76px] text-center transition-colors bg-white text-stone-600 tabular-nums hover:bg-stone-50 h-full"
-                                  >
-                                    {task.hasTime
-                                      ? <>{task.hour}:{task.minute}<span className="text-[9px] ml-0.5">{task.ampm}</span></>
-                                      : <span className="text-stone-300">--:-- --</span>}
-                                  </button>
-                                  {timePickerId === task.id && (
-                                    <div className="absolute top-full mt-1 right-0 bg-white border border-stone-200 rounded-xl shadow-xl p-3 z-50 flex gap-2 items-center">
-                                      <select value={tempHour} onChange={e => setTempHour(e.target.value)} className="text-sm border border-stone-200 rounded-lg px-1.5 py-1 outline-none bg-white">
-                                        {Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0")).map(v => <option key={v} value={v}>{v}</option>)}
-                                      </select>
-                                      <span className="text-stone-400 font-bold">:</span>
-                                      <select value={tempMinute} onChange={e => setTempMinute(e.target.value)} className="text-sm border border-stone-200 rounded-lg px-1.5 py-1 outline-none bg-white">
-                                        {["00","05","10","15","20","25","30","35","40","45","50","55"].map(v => <option key={v} value={v}>{v}</option>)}
-                                      </select>
-                                      <select value={tempAmpm} onChange={e => setTempAmpm(e.target.value as "AM" | "PM")} className="text-sm border border-stone-200 rounded-lg px-1.5 py-1 outline-none bg-white">
-                                        <option value="AM">AM</option>
-                                        <option value="PM">PM</option>
-                                      </select>
-                                      <button onClick={() => { updateTask(task.id, { hour: tempHour, minute: tempMinute, ampm: tempAmpm, hasTime: true }); setTimePickerId(null); }}
-                                        className="text-xs font-bold text-white bg-stone-800 rounded-lg px-2.5 py-1 hover:bg-stone-700">✓</button>
-                                      {task.hasTime && (
-                                        <button onClick={() => { updateTask(task.id, { hasTime: false }); setTimePickerId(null); }} className="text-xs text-stone-400 hover:text-stone-600 px-1">✕</button>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-
-                                {/* Priority */}
-                                <div className="relative">
-                                  <button
-                                    onClick={() => { setPriorityMenuId(priorityMenuId === task.id ? null : task.id); setTimePickerId(null); setNotePopupId(null); setProgressMenuId(null); }}
-                                    className="text-[10px] font-bold px-3 py-1.5 min-w-[62px] text-center transition-colors h-full"
-                                    style={pm ? { backgroundColor: pm.bg, color: pm.color } : { backgroundColor: "#fff", color: "#d1d5db" }}
-                                  >
-                                    {pm ? pm.label : "Priority"}
-                                  </button>
-                                  {priorityMenuId === task.id && (
-                                    <div className="absolute top-full mt-1 right-0 bg-white border border-stone-200 rounded-xl shadow-xl py-1.5 z-50 min-w-[110px]">
-                                      {(["low", "high", "urgent"] as NonNullable<DayPriority>[]).map(p => (
-                                        <button key={p} onClick={() => { updateTask(task.id, { priority: p }); setPriorityMenuId(null); }}
-                                          className="w-full text-left text-xs font-semibold px-3 py-2 hover:bg-stone-50 flex items-center gap-2"
-                                          style={{ color: DAY_PRIORITY_META[p].color }}>
-                                          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: DAY_PRIORITY_META[p].color }} />
-                                          {DAY_PRIORITY_META[p].label}
-                                        </button>
-                                      ))}
-                                      {task.priority && (
-                                        <button onClick={() => { updateTask(task.id, { priority: null }); setPriorityMenuId(null); }}
-                                          className="w-full text-left text-[11px] text-stone-400 px-3 py-1.5 hover:bg-stone-50 border-t border-stone-100 mt-0.5">
-                                          Clear
-                                        </button>
-                                      )}
-                                    </div>
-                                  )}
-                                </div>
-
-                                {/* Progress % */}
-                                <div className="relative">
-                                  <button
-                                    onClick={() => { setProgressMenuId(progressMenuId === task.id ? null : task.id); setTimePickerId(null); setNotePopupId(null); setPriorityMenuId(null); }}
-                                    className={`text-[11px] px-3 py-1.5 min-w-[72px] text-center transition-colors h-full ${task.progress > 0 ? "bg-stone-100 text-stone-700" : "bg-white text-stone-400 hover:bg-stone-50"}`}
-                                  >
-                                    {task.progress > 0 ? `${task.progress}%` : "Progress %"}
-                                  </button>
-                                  {progressMenuId === task.id && (
-                                    <div className="absolute top-full mt-1 right-0 bg-white border border-stone-200 rounded-xl shadow-xl py-1.5 z-50 min-w-[90px]">
-                                      {[0, 10, 25, 50, 75, 90, 100].map(p => (
-                                        <button key={p} onClick={() => { updateTask(task.id, { progress: p }); setProgressMenuId(null); }}
-                                          className={`w-full text-left text-xs px-3 py-1.5 hover:bg-stone-50 ${task.progress === p ? "font-bold text-stone-800" : "text-stone-600"}`}>
-                                          {p}%
-                                        </button>
-                                      ))}
-                                    </div>
-                                  )}
-                                </div>
-
-                              </div>
-
-                              {/* Trash delete */}
-                              <button onClick={() => deleteTask(task.id)} className="flex-shrink-0 ml-2">
-                                <Trash2 className="w-3.5 h-3.5 text-red-400 hover:text-red-600" />
-                              </button>
+                              )}
                             </div>
+
+                            {/* Time button */}
+                            <div className="relative flex-shrink-0">
+                              <button
+                                onClick={() => {
+                                  if (timePickerId === task.id) { setTimePickerId(null); return; }
+                                  setTempHour(task.hour || "12");
+                                  setTempMinute(task.minute || "00");
+                                  setTempAmpm(task.ampm || "AM");
+                                  setTimePickerId(task.id);
+                                  setPriorityMenuId(null); setNotePopupId(null); setProgressMenuId(null);
+                                }}
+                                className="text-[11px] px-3 py-1.5 rounded-lg border border-stone-200 bg-white text-stone-600 tabular-nums hover:bg-stone-50 transition-colors min-w-[76px] text-center"
+                              >
+                                {task.hasTime
+                                  ? <>{task.hour}:{task.minute}<span className="text-[9px] ml-0.5">{task.ampm}</span></>
+                                  : <span className="text-stone-300">--:-- --</span>}
+                              </button>
+                              {timePickerId === task.id && (
+                                <div className="absolute top-full mt-1 right-0 bg-white border border-stone-200 rounded-xl shadow-xl p-3 z-50 flex gap-2 items-center">
+                                  <select value={tempHour} onChange={e => setTempHour(e.target.value)} className="text-sm border border-stone-200 rounded-lg px-1.5 py-1 outline-none bg-white">
+                                    {Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0")).map(v => <option key={v} value={v}>{v}</option>)}
+                                  </select>
+                                  <span className="text-stone-400 font-bold">:</span>
+                                  <select value={tempMinute} onChange={e => setTempMinute(e.target.value)} className="text-sm border border-stone-200 rounded-lg px-1.5 py-1 outline-none bg-white">
+                                    {["00","05","10","15","20","25","30","35","40","45","50","55"].map(v => <option key={v} value={v}>{v}</option>)}
+                                  </select>
+                                  <select value={tempAmpm} onChange={e => setTempAmpm(e.target.value as "AM" | "PM")} className="text-sm border border-stone-200 rounded-lg px-1.5 py-1 outline-none bg-white">
+                                    <option value="AM">AM</option>
+                                    <option value="PM">PM</option>
+                                  </select>
+                                  <button onClick={() => { updateTask(task.id, { hour: tempHour, minute: tempMinute, ampm: tempAmpm, hasTime: true }); setTimePickerId(null); }}
+                                    className="text-xs font-bold text-white bg-stone-800 rounded-lg px-2.5 py-1 hover:bg-stone-700">✓</button>
+                                  {task.hasTime && (
+                                    <button onClick={() => { updateTask(task.id, { hasTime: false }); setTimePickerId(null); }} className="text-xs text-stone-400 hover:text-stone-600 px-1">✕</button>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Priority button */}
+                            <div className="relative flex-shrink-0">
+                              <button
+                                onClick={() => { setPriorityMenuId(priorityMenuId === task.id ? null : task.id); setTimePickerId(null); setNotePopupId(null); setProgressMenuId(null); }}
+                                className="text-[10px] font-bold px-3 py-1.5 rounded-lg border transition-colors min-w-[62px] text-center"
+                                style={pm ? { backgroundColor: pm.bg, color: pm.color, borderColor: pm.border } : { backgroundColor: "#fff", color: "#c4c4c4", borderColor: "#e5e7eb" }}
+                              >
+                                {pm ? pm.label : "Priority"}
+                              </button>
+                              {priorityMenuId === task.id && (
+                                <div className="absolute top-full mt-1 right-0 bg-white border border-stone-200 rounded-xl shadow-xl py-1.5 z-50 min-w-[110px]">
+                                  {(["low", "high", "urgent"] as NonNullable<DayPriority>[]).map(p => (
+                                    <button key={p} onClick={() => { updateTask(task.id, { priority: p }); setPriorityMenuId(null); }}
+                                      className="w-full text-left text-xs font-semibold px-3 py-2 hover:bg-stone-50 flex items-center gap-2"
+                                      style={{ color: DAY_PRIORITY_META[p].color }}>
+                                      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: DAY_PRIORITY_META[p].color }} />
+                                      {DAY_PRIORITY_META[p].label}
+                                    </button>
+                                  ))}
+                                  {task.priority && (
+                                    <button onClick={() => { updateTask(task.id, { priority: null }); setPriorityMenuId(null); }}
+                                      className="w-full text-left text-[11px] text-stone-400 px-3 py-1.5 hover:bg-stone-50 border-t border-stone-100 mt-0.5">
+                                      Clear
+                                    </button>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Progress button */}
+                            <div className="relative flex-shrink-0">
+                              <button
+                                onClick={() => { setProgressMenuId(progressMenuId === task.id ? null : task.id); setTimePickerId(null); setNotePopupId(null); setPriorityMenuId(null); }}
+                                className={`text-[11px] px-3 py-1.5 rounded-lg border transition-colors min-w-[72px] text-center ${task.progress > 0 ? "bg-stone-100 border-stone-200 text-stone-700" : "bg-white border-stone-200 text-stone-400 hover:bg-stone-50"}`}
+                              >
+                                {task.progress > 0 ? `${task.progress}%` : "Progress %"}
+                              </button>
+                              {progressMenuId === task.id && (
+                                <div className="absolute top-full mt-1 right-0 bg-white border border-stone-200 rounded-xl shadow-xl py-1.5 z-50 min-w-[90px]">
+                                  {[0, 10, 25, 50, 75, 90, 100].map(p => (
+                                    <button key={p} onClick={() => { updateTask(task.id, { progress: p }); setProgressMenuId(null); }}
+                                      className={`w-full text-left text-xs px-3 py-1.5 hover:bg-stone-50 ${task.progress === p ? "font-bold text-stone-800" : "text-stone-600"}`}>
+                                      {p}%
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Trash button — pink pill */}
+                            <button onClick={() => deleteTask(task.id)} className="flex-shrink-0 w-7 h-7 rounded-lg bg-red-50 border border-red-100 flex items-center justify-center hover:bg-red-100 transition-colors">
+                              <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                            </button>
                           </div>
                         );
                       })}
 
                       {/* Inline new-row input */}
                       {addingRow && (
-                        <div className="flex items-center gap-2 py-2.5">
-                          <span className="text-[11px] font-bold text-stone-300 w-6 flex-shrink-0 text-center">T{filteredTasks.length + 1}</span>
-                          <div className="w-[15px] h-[15px] rounded-sm border-2 border-stone-300 flex-shrink-0" />
+                        <div className="bg-white rounded-xl shadow-sm border border-stone-200 flex items-center gap-2.5 px-3 py-2.5">
+                          <span className="text-[11px] font-bold text-stone-400 bg-stone-100 rounded-lg px-2 py-1 flex-shrink-0">T{filteredTasks.length + 1}</span>
+                          <div className="w-[17px] h-[17px] rounded border-2 border-stone-300 flex-shrink-0" />
                           <input
                             autoFocus
                             value={newRowTitle}
@@ -1650,7 +1646,7 @@ export default function Home() {
                             }}
                             onBlur={() => { if (newRowTitle.trim()) addTask(); else setAddingRow(false); }}
                             placeholder="Task name..."
-                            className="flex-1 text-sm bg-transparent outline-none text-stone-800 placeholder-stone-300"
+                            className="flex-1 text-sm bg-transparent outline-none text-stone-700 border-b border-stone-200 pb-0.5 placeholder-stone-300"
                           />
                         </div>
                       )}
