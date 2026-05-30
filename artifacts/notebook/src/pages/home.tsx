@@ -1658,10 +1658,10 @@ export default function Home() {
                             value={newRowTitle}
                             onChange={e => setNewRowTitle(e.target.value)}
                             onKeyDown={e => {
-                              if (e.key === "Enter") { addTask(); setAddingRow(true); setNewRowTitle(""); }
+                              if (e.key === "Enter") { e.preventDefault(); addTask(); setAddingRow(true); setNewRowTitle(""); }
                               if (e.key === "Escape") { setAddingRow(false); setNewRowTitle(""); }
                             }}
-                            onBlur={() => { if (newRowTitle.trim()) addTask(); else setAddingRow(false); }}
+                            onBlur={() => { if (newRowTitle.trim()) addTask(); setAddingRow(false); }}
                             placeholder="Task name..."
                             className="flex-1 text-sm outline-none text-stone-700 px-3 py-2.5 rounded-xl placeholder-stone-400"
                             style={{ background: "#ffffff", boxShadow: "inset 3px 3px 7px #d0d0d0, inset -3px -3px 7px #ffffff" }}
