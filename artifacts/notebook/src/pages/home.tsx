@@ -122,6 +122,79 @@ function nextNoteId(notes: ShortNote[]): number {
 }
 // ─────────────────────────────────────────────────────────────
 
+// ── Tasks ─────────────────────────────────────────────────────
+const TASKS_KEY = "nb_tasks";
+const TASK_GROUPS_KEY = "nb_task_groups";
+
+type TaskPriority = "low" | "normal" | "high" | "urgent";
+type TaskStatus = "todo" | "in-progress" | "done";
+
+interface SubTask {
+  id: number;
+  title: string;
+  done: boolean;
+}
+
+interface Task {
+  id: number;
+  groupId: number;
+  title: string;
+  description: string;
+  priority: TaskPriority;
+  status: TaskStatus;
+  dueDate: string;
+  subtasks: SubTask[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface TaskGroup {
+  id: number;
+  name: string;
+  color: string;
+}
+
+const TASK_GROUP_COLORS = [
+  "#3b5bdb", "#0ca678", "#e8590c", "#9c36b5",
+  "#c2255c", "#1971c2", "#2f9e44", "#b45309",
+];
+
+const TASK_PRIORITY_META: Record<TaskPriority, { label: string; color: string; bg: string }> = {
+  low:    { label: "Low",    color: "#64748b", bg: "#f1f5f9" },
+  normal: { label: "Normal", color: "#0ca678", bg: "#d1fae5" },
+  high:   { label: "High",   color: "#e8590c", bg: "#ffedd5" },
+  urgent: { label: "Urgent", color: "#c2255c", bg: "#fce7f3" },
+};
+
+const TASK_STATUS_META: Record<TaskStatus, { label: string; color: string; bg: string }> = {
+  "todo":        { label: "To Do",       color: "#64748b", bg: "#f1f5f9" },
+  "in-progress": { label: "In Progress", color: "#1971c2", bg: "#dbeafe" },
+  "done":        { label: "Done",        color: "#0ca678", bg: "#d1fae5" },
+};
+
+function loadTasks(): Task[] {
+  try { const r = localStorage.getItem(TASKS_KEY); return r ? JSON.parse(r) : []; } catch { return []; }
+}
+function saveTasks(tasks: Task[]) { localStorage.setItem(TASKS_KEY, JSON.stringify(tasks)); }
+
+function loadTaskGroups(): TaskGroup[] {
+  try {
+    const r = localStorage.getItem(TASK_GROUPS_KEY);
+    if (r) return JSON.parse(r);
+  } catch {}
+  const defaults: TaskGroup[] = [
+    { id: 1, name: "Personal", color: "#3b5bdb" },
+    { id: 2, name: "Work",     color: "#0ca678" },
+  ];
+  localStorage.setItem(TASK_GROUPS_KEY, JSON.stringify(defaults));
+  return defaults;
+}
+function saveTaskGroups(groups: TaskGroup[]) { localStorage.setItem(TASK_GROUPS_KEY, JSON.stringify(groups)); }
+
+function nextTaskId(tasks: Task[]): number { return tasks.reduce((m, t) => Math.max(m, t.id), 0) + 1; }
+function nextGroupId(groups: TaskGroup[]): number { return groups.reduce((m, g) => Math.max(m, g.id), 0) + 1; }
+// ─────────────────────────────────────────────────────────────
+
 type ActiveView = "author" | "home" | "my-notebook" | "short-note" | "project" | "task" | "schedule";
 
 const NAV_ITEMS: { id: ActiveView; label: string; icon: React.ElementType; active: boolean }[] = [
@@ -130,7 +203,7 @@ const NAV_ITEMS: { id: ActiveView; label: string; icon: React.ElementType; activ
   { id: "short-note", label: "Short Note",  icon: StickyNote,     active: true  },
   { id: "my-notebook",label: "My Notebook", icon: BookMarked,     active: true  },
   { id: "project",    label: "Project",     icon: FolderKanban,   active: false },
-  { id: "task",       label: "Task",        icon: CheckSquare,    active: false },
+  { id: "task",       label: "Task",        icon: CheckSquare,    active: true  },
   { id: "schedule",   label: "Schedule",    icon: CalendarDays,   active: false },
 ];
 
@@ -189,6 +262,28 @@ export default function Home() {
   const [newNoteVoices, setNewNoteVoices] = useState<{ name: string; data: string }[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [playingVoice, setPlayingVoice] = useState<number | null>(null);
+
+  // Task state
+  const [tasks, setTasks] = useState<Task[]>(() => loadTasks());
+  const [taskGroups, setTaskGroups] = useState<TaskGroup[]>(() => loadTaskGroups());
+  const [selectedTaskId, setSelectedTaskId] = useState<number | null>(null);
+  const [taskSearch, setTaskSearch] = useState("");
+  const [taskStatusFilter, setTaskStatusFilter] = useState<TaskStatus | "all">("all");
+  const [taskGroupFilter, setTaskGroupFilter] = useState<number | "all">("all");
+  const [showTaskCreate, setShowTaskCreate] = useState(false);
+  const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [newTaskDesc, setNewTaskDesc] = useState("");
+  const [newTaskPriority, setNewTaskPriority] = useState<TaskPriority>("normal");
+  const [newTaskStatus, setNewTaskStatus] = useState<TaskStatus>("todo");
+  const [newTaskDue, setNewTaskDue] = useState("");
+  const [newTaskGroupId, setNewTaskGroupId] = useState<number>(1);
+  const [newTaskSubtasks, setNewTaskSubtasks] = useState<SubTask[]>([]);
+  const [newSubtaskInput, setNewSubtaskInput] = useState("");
+  const [taskDetailEdit, setTaskDetailEdit] = useState(false);
+  const [showNewGroup, setShowNewGroup] = useState(false);
+  const [newGroupName, setNewGroupName] = useState("");
+  const [newGroupColor, setNewGroupColor] = useState(TASK_GROUP_COLORS[0]);
+  const [taskConfirmDelete, setTaskConfirmDelete] = useState<number | null>(null);
 
   const popupRef = useRef<HTMLDivElement>(null);
   const imgInputRef = useRef<HTMLInputElement>(null);
@@ -1276,8 +1371,553 @@ export default function Home() {
           </div>
         )}
 
+        {/* Task view */}
+        {activeView === "task" && (() => {
+          const selectedTask = tasks.find(t => t.id === selectedTaskId) ?? null;
+
+          const filteredTasks = tasks.filter(t => {
+            const matchSearch = t.title.toLowerCase().includes(taskSearch.toLowerCase());
+            const matchStatus = taskStatusFilter === "all" || t.status === taskStatusFilter;
+            const matchGroup = taskGroupFilter === "all" || t.groupId === taskGroupFilter;
+            return matchSearch && matchStatus && matchGroup;
+          });
+
+          const groupedTasks = taskGroups.map(g => ({
+            group: g,
+            tasks: filteredTasks.filter(t => t.groupId === g.id),
+          })).filter(g => g.tasks.length > 0 || taskGroupFilter === "all");
+
+          const handleAddTask = () => {
+            if (!newTaskTitle.trim()) return;
+            const now = new Date().toISOString();
+            const task: Task = {
+              id: nextTaskId(tasks),
+              groupId: newTaskGroupId,
+              title: newTaskTitle.trim(),
+              description: newTaskDesc,
+              priority: newTaskPriority,
+              status: newTaskStatus,
+              dueDate: newTaskDue,
+              subtasks: newTaskSubtasks,
+              createdAt: now,
+              updatedAt: now,
+            };
+            const updated = [task, ...tasks];
+            saveTasks(updated);
+            setTasks(updated);
+            setSelectedTaskId(task.id);
+            setShowTaskCreate(false);
+            setNewTaskTitle(""); setNewTaskDesc(""); setNewTaskPriority("normal");
+            setNewTaskStatus("todo"); setNewTaskDue(""); setNewTaskGroupId(taskGroups[0]?.id ?? 1);
+            setNewTaskSubtasks([]); setNewSubtaskInput("");
+          };
+
+          const handleUpdateTask = (patch: Partial<Task>) => {
+            if (!selectedTask) return;
+            const updated = tasks.map(t => t.id === selectedTask.id ? { ...t, ...patch, updatedAt: new Date().toISOString() } : t);
+            saveTasks(updated);
+            setTasks(updated);
+          };
+
+          const handleDeleteTask = (id: number) => {
+            const updated = tasks.filter(t => t.id !== id);
+            saveTasks(updated);
+            setTasks(updated);
+            if (selectedTaskId === id) setSelectedTaskId(null);
+            setTaskConfirmDelete(null);
+          };
+
+          const handleAddGroup = () => {
+            if (!newGroupName.trim()) return;
+            const g: TaskGroup = { id: nextGroupId(taskGroups), name: newGroupName.trim(), color: newGroupColor };
+            const updated = [...taskGroups, g];
+            saveTaskGroups(updated);
+            setTaskGroups(updated);
+            setNewGroupName(""); setShowNewGroup(false);
+          };
+
+          const toggleSubtask = (stId: number) => {
+            if (!selectedTask) return;
+            const updated = selectedTask.subtasks.map(s => s.id === stId ? { ...s, done: !s.done } : s);
+            handleUpdateTask({ subtasks: updated });
+          };
+
+          const addSubtaskToDetail = (title: string) => {
+            if (!selectedTask || !title.trim()) return;
+            const st: SubTask = { id: (selectedTask.subtasks.reduce((m, s) => Math.max(m, s.id), 0) + 1), title: title.trim(), done: false };
+            handleUpdateTask({ subtasks: [...selectedTask.subtasks, st] });
+          };
+
+          const removeSubtaskFromDetail = (stId: number) => {
+            if (!selectedTask) return;
+            handleUpdateTask({ subtasks: selectedTask.subtasks.filter(s => s.id !== stId) });
+          };
+
+          const isOverdue = (due: string) => due && new Date(due) < new Date() && new Date(due).toDateString() !== new Date().toDateString();
+
+          return (
+            <div className="flex flex-1 min-h-0 overflow-hidden">
+
+              {/* LEFT PANEL — Task list */}
+              <div className="flex flex-col w-[380px] min-w-[320px] max-w-[420px] border-r border-stone-100 bg-stone-50/60 overflow-hidden">
+
+                {/* Header */}
+                <div className="px-5 pt-5 pb-3 border-b border-stone-100 bg-white">
+                  <div className="flex items-center justify-between mb-3">
+                    <div>
+                      <h1 className="text-xl font-serif font-bold text-stone-800">Tasks</h1>
+                      <p className="text-[11px] text-stone-400">{tasks.length} task{tasks.length !== 1 ? "s" : ""} total</p>
+                    </div>
+                    <button
+                      onClick={() => { setShowTaskCreate(true); setNewTaskGroupId(taskGroups[0]?.id ?? 1); }}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-white text-xs font-semibold transition-colors shadow-sm"
+                    >
+                      <Plus className="w-3.5 h-3.5" /> New Task
+                    </button>
+                  </div>
+
+                  {/* Search */}
+                  <div className="flex items-center gap-2 bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 mb-2">
+                    <Search className="w-3.5 h-3.5 text-stone-400 flex-shrink-0" />
+                    <input
+                      type="text"
+                      placeholder="Search tasks..."
+                      value={taskSearch}
+                      onChange={e => setTaskSearch(e.target.value)}
+                      className="flex-1 bg-transparent text-xs text-stone-700 outline-none placeholder-stone-400"
+                    />
+                    {taskSearch && <button onClick={() => setTaskSearch("")}><X className="w-3 h-3 text-stone-400" /></button>}
+                  </div>
+
+                  {/* Filters */}
+                  <div className="flex gap-1.5 flex-wrap">
+                    {(["all","todo","in-progress","done"] as const).map(s => (
+                      <button
+                        key={s}
+                        onClick={() => setTaskStatusFilter(s)}
+                        className={`text-[10px] font-semibold px-2.5 py-1 rounded-full transition-colors ${taskStatusFilter === s ? "bg-stone-800 text-white" : "bg-stone-100 text-stone-500 hover:bg-stone-200"}`}
+                      >
+                        {s === "all" ? "All" : TASK_STATUS_META[s].label}
+                      </button>
+                    ))}
+                    <div className="w-px h-5 bg-stone-200 self-center mx-0.5" />
+                    <button
+                      onClick={() => setTaskGroupFilter("all")}
+                      className={`text-[10px] font-semibold px-2.5 py-1 rounded-full transition-colors ${taskGroupFilter === "all" ? "bg-stone-800 text-white" : "bg-stone-100 text-stone-500 hover:bg-stone-200"}`}
+                    >All Groups</button>
+                    {taskGroups.map(g => (
+                      <button
+                        key={g.id}
+                        onClick={() => setTaskGroupFilter(g.id)}
+                        className={`text-[10px] font-semibold px-2.5 py-1 rounded-full transition-colors ${taskGroupFilter === g.id ? "text-white" : "text-stone-500 hover:bg-stone-200 bg-stone-100"}`}
+                        style={taskGroupFilter === g.id ? { backgroundColor: g.color } : {}}
+                      >{g.name}</button>
+                    ))}
+                    <button
+                      onClick={() => setShowNewGroup(v => !v)}
+                      className="text-[10px] px-2 py-1 rounded-full bg-stone-100 hover:bg-stone-200 text-stone-400 transition-colors"
+                      title="Add group"
+                    ><Plus className="w-2.5 h-2.5" /></button>
+                  </div>
+
+                  {/* New group input */}
+                  {showNewGroup && (
+                    <div className="mt-2 flex gap-2 items-center">
+                      <div className="flex gap-1">
+                        {TASK_GROUP_COLORS.map(c => (
+                          <button key={c} onClick={() => setNewGroupColor(c)}
+                            className={`w-4 h-4 rounded-full flex-shrink-0 transition-transform ${newGroupColor === c ? "ring-2 ring-offset-1 ring-stone-400 scale-110" : ""}`}
+                            style={{ backgroundColor: c }} />
+                        ))}
+                      </div>
+                      <input
+                        autoFocus
+                        value={newGroupName}
+                        onChange={e => setNewGroupName(e.target.value)}
+                        onKeyDown={e => { if (e.key === "Enter") handleAddGroup(); if (e.key === "Escape") setShowNewGroup(false); }}
+                        placeholder="Group name..."
+                        className="flex-1 text-xs bg-stone-50 border border-stone-200 rounded-lg px-2 py-1 outline-none"
+                      />
+                      <button onClick={handleAddGroup} className="text-xs font-semibold px-2 py-1 rounded-lg bg-stone-800 text-white">Add</button>
+                    </div>
+                  )}
+                </div>
+
+                {/* Task list scroll area */}
+                <div className="flex-1 overflow-y-auto px-3 py-3 flex flex-col gap-5">
+                  {groupedTasks.length === 0 && filteredTasks.length === 0 && (
+                    <div className="flex flex-col items-center justify-center py-16 gap-3 text-stone-400">
+                      <CheckSquare className="w-10 h-10 opacity-30" />
+                      <p className="text-sm">No tasks yet</p>
+                      <button onClick={() => setShowTaskCreate(true)} className="text-xs underline text-stone-500">Create one</button>
+                    </div>
+                  )}
+
+                  {taskGroups.map(group => {
+                    const gTasks = filteredTasks.filter(t => t.groupId === group.id);
+                    if (gTasks.length === 0 && taskGroupFilter !== "all") return null;
+                    if (gTasks.length === 0) return null;
+                    return (
+                      <div key={group.id}>
+                        <div className="flex items-center gap-2 mb-2 px-1">
+                          <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: group.color }} />
+                          <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">{group.name}</span>
+                          <span className="text-[10px] text-stone-400 ml-auto">{gTasks.length}</span>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          {gTasks.map(task => {
+                            const pm = TASK_PRIORITY_META[task.priority];
+                            const sm = TASK_STATUS_META[task.status];
+                            const overdue = isOverdue(task.dueDate);
+                            const doneCount = task.subtasks.filter(s => s.done).length;
+                            const isSelected = selectedTaskId === task.id;
+                            return (
+                              <div
+                                key={task.id}
+                                onClick={() => { setSelectedTaskId(task.id); setTaskDetailEdit(false); }}
+                                className={`group relative bg-white rounded-xl border transition-all duration-200 cursor-pointer hover:shadow-md hover:-translate-y-0.5 overflow-hidden flex ${isSelected ? "border-stone-400 ring-2 ring-stone-200 shadow-md" : "border-stone-100 shadow-sm"}`}
+                              >
+                                {/* left accent */}
+                                <div className="w-[4px] flex-shrink-0 rounded-l-xl" style={{ backgroundColor: group.color }} />
+                                <div className="flex-1 px-3.5 py-3 min-w-0">
+                                  <div className="flex items-start justify-between gap-2 mb-1.5">
+                                    <h3 className={`text-sm font-semibold leading-snug flex-1 min-w-0 ${task.status === "done" ? "line-through text-stone-400" : "text-stone-800"}`}>
+                                      {task.title}
+                                    </h3>
+                                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full flex-shrink-0" style={{ backgroundColor: pm.bg, color: pm.color }}>{pm.label}</span>
+                                  </div>
+                                  {task.description && (
+                                    <p className="text-[11px] text-stone-500 line-clamp-1 mb-1.5">{task.description}</p>
+                                  )}
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full" style={{ backgroundColor: sm.bg, color: sm.color }}>{sm.label}</span>
+                                    {task.dueDate && (
+                                      <span className={`text-[9px] flex items-center gap-0.5 ${overdue ? "text-red-500 font-semibold" : "text-stone-400"}`}>
+                                        <CalendarDays className="w-2.5 h-2.5" />
+                                        {new Date(task.dueDate).toLocaleDateString("en-GB", { day: "numeric", month: "short" })}
+                                        {overdue && " ⚠"}
+                                      </span>
+                                    )}
+                                    {task.subtasks.length > 0 && (
+                                      <span className="text-[9px] text-stone-400 flex items-center gap-0.5">
+                                        <Check className="w-2.5 h-2.5" /> {doneCount}/{task.subtasks.length}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+                                {/* delete button on hover */}
+                                <button
+                                  onClick={e => { e.stopPropagation(); setTaskConfirmDelete(task.id); }}
+                                  className="absolute top-2 right-2 w-5 h-5 rounded-full bg-stone-100 hover:bg-red-100 items-center justify-center opacity-0 group-hover:opacity-100 transition-all hidden group-hover:flex"
+                                ><Trash2 className="w-2.5 h-2.5 text-stone-400 hover:text-red-500" /></button>
+
+                                {/* delete confirm overlay */}
+                                {taskConfirmDelete === task.id && (
+                                  <div className="absolute inset-0 bg-white/95 flex flex-col items-center justify-center gap-2 z-10 rounded-xl">
+                                    <p className="text-xs font-semibold text-stone-700">Delete this task?</p>
+                                    <div className="flex gap-2">
+                                      <button onClick={e => { e.stopPropagation(); handleDeleteTask(task.id); }} className="px-3 py-1 rounded-lg bg-red-500 text-white text-xs font-semibold">Yes</button>
+                                      <button onClick={e => { e.stopPropagation(); setTaskConfirmDelete(null); }} className="px-3 py-1 rounded-lg bg-stone-100 text-stone-700 text-xs font-semibold">No</button>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* RIGHT PANEL — Detail / Create */}
+              <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-white">
+
+                {/* CREATE FORM */}
+                {showTaskCreate && (
+                  <div className="flex-1 overflow-y-auto px-8 py-8">
+                    <div className="max-w-lg mx-auto">
+                      <div className="flex items-center justify-between mb-6">
+                        <h2 className="text-lg font-serif font-bold text-stone-800">New Task</h2>
+                        <button onClick={() => setShowTaskCreate(false)}><X className="w-5 h-5 text-stone-400 hover:text-stone-700" /></button>
+                      </div>
+
+                      <div className="flex flex-col gap-4">
+                        <div>
+                          <label className="text-xs font-semibold text-stone-500 mb-1 block">Title *</label>
+                          <input
+                            autoFocus
+                            value={newTaskTitle}
+                            onChange={e => setNewTaskTitle(e.target.value)}
+                            onKeyDown={e => e.key === "Enter" && handleAddTask()}
+                            placeholder="Task title..."
+                            className="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm text-stone-800 outline-none focus:border-stone-400 transition-colors bg-stone-50"
+                          />
+                        </div>
+
+                        <div>
+                          <label className="text-xs font-semibold text-stone-500 mb-1 block">Description</label>
+                          <textarea
+                            value={newTaskDesc}
+                            onChange={e => setNewTaskDesc(e.target.value)}
+                            placeholder="Add details..."
+                            rows={3}
+                            className="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm text-stone-600 outline-none focus:border-stone-400 transition-colors bg-stone-50 resize-none"
+                          />
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-xs font-semibold text-stone-500 mb-1 block">Group</label>
+                            <select value={newTaskGroupId} onChange={e => setNewTaskGroupId(Number(e.target.value))} className="w-full border border-stone-200 rounded-xl px-3 py-2 text-sm text-stone-700 bg-stone-50 outline-none">
+                              {taskGroups.map(g => <option key={g.id} value={g.id}>{g.name}</option>)}
+                            </select>
+                          </div>
+                          <div>
+                            <label className="text-xs font-semibold text-stone-500 mb-1 block">Due Date</label>
+                            <input type="date" value={newTaskDue} onChange={e => setNewTaskDue(e.target.value)} className="w-full border border-stone-200 rounded-xl px-3 py-2 text-sm text-stone-700 bg-stone-50 outline-none" />
+                          </div>
+                        </div>
+
+                        <div className="grid grid-cols-2 gap-3">
+                          <div>
+                            <label className="text-xs font-semibold text-stone-500 mb-1 block">Priority</label>
+                            <div className="flex gap-1.5 flex-wrap">
+                              {(["low","normal","high","urgent"] as TaskPriority[]).map(p => (
+                                <button key={p} onClick={() => setNewTaskPriority(p)}
+                                  className="text-[10px] font-bold px-2 py-1 rounded-full transition-colors"
+                                  style={newTaskPriority === p ? { backgroundColor: TASK_PRIORITY_META[p].color, color: "#fff" } : { backgroundColor: TASK_PRIORITY_META[p].bg, color: TASK_PRIORITY_META[p].color }}
+                                >{TASK_PRIORITY_META[p].label}</button>
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <label className="text-xs font-semibold text-stone-500 mb-1 block">Status</label>
+                            <div className="flex gap-1.5 flex-wrap">
+                              {(["todo","in-progress","done"] as TaskStatus[]).map(s => (
+                                <button key={s} onClick={() => setNewTaskStatus(s)}
+                                  className="text-[10px] font-bold px-2 py-1 rounded-full transition-colors"
+                                  style={newTaskStatus === s ? { backgroundColor: TASK_STATUS_META[s].color, color: "#fff" } : { backgroundColor: TASK_STATUS_META[s].bg, color: TASK_STATUS_META[s].color }}
+                                >{TASK_STATUS_META[s].label}</button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Subtasks */}
+                        <div>
+                          <label className="text-xs font-semibold text-stone-500 mb-2 block">Subtasks</label>
+                          <div className="flex flex-col gap-1.5 mb-2">
+                            {newTaskSubtasks.map(st => (
+                              <div key={st.id} className="flex items-center gap-2 bg-stone-50 rounded-lg px-3 py-1.5">
+                                <Check className="w-3.5 h-3.5 text-stone-300" />
+                                <span className="text-xs text-stone-600 flex-1">{st.title}</span>
+                                <button onClick={() => setNewTaskSubtasks(p => p.filter(s => s.id !== st.id))}><X className="w-3 h-3 text-stone-400" /></button>
+                              </div>
+                            ))}
+                          </div>
+                          <div className="flex gap-2">
+                            <input
+                              value={newSubtaskInput}
+                              onChange={e => setNewSubtaskInput(e.target.value)}
+                              onKeyDown={e => {
+                                if (e.key === "Enter" && newSubtaskInput.trim()) {
+                                  setNewTaskSubtasks(p => [...p, { id: p.length + 1, title: newSubtaskInput.trim(), done: false }]);
+                                  setNewSubtaskInput("");
+                                }
+                              }}
+                              placeholder="Add subtask, press Enter..."
+                              className="flex-1 border border-stone-200 rounded-xl px-3 py-2 text-xs text-stone-700 bg-stone-50 outline-none"
+                            />
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2 pt-2">
+                          <button onClick={handleAddTask} className="flex-1 py-2.5 rounded-xl bg-stone-800 hover:bg-stone-700 text-white text-sm font-semibold transition-colors">Create Task</button>
+                          <button onClick={() => setShowTaskCreate(false)} className="px-4 py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-700 text-sm font-semibold transition-colors">Cancel</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* DETAIL PANEL */}
+                {!showTaskCreate && selectedTask && (() => {
+                  const group = taskGroups.find(g => g.id === selectedTask.groupId);
+                  const pm = TASK_PRIORITY_META[selectedTask.priority];
+                  const sm = TASK_STATUS_META[selectedTask.status];
+                  const overdue = isOverdue(selectedTask.dueDate);
+                  const doneCount = selectedTask.subtasks.filter(s => s.done).length;
+                  return (
+                    <div className="flex-1 overflow-y-auto px-8 py-8">
+                      <div className="max-w-lg mx-auto">
+
+                        {/* Top bar */}
+                        <div className="flex items-center justify-between mb-6">
+                          <div className="flex items-center gap-2">
+                            {group && <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: group.color }} />}
+                            <span className="text-xs font-semibold text-stone-400">{group?.name}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => setTaskDetailEdit(v => !v)}
+                              className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-stone-100 hover:bg-stone-200 text-stone-600 transition-colors flex items-center gap-1"
+                            ><Pencil className="w-3 h-3" /> {taskDetailEdit ? "Done" : "Edit"}</button>
+                            <button onClick={() => setTaskConfirmDelete(selectedTask.id)} className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-500 transition-colors flex items-center gap-1">
+                              <Trash2 className="w-3 h-3" /> Delete
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Title */}
+                        {taskDetailEdit ? (
+                          <input
+                            value={selectedTask.title}
+                            onChange={e => handleUpdateTask({ title: e.target.value })}
+                            className="w-full text-2xl font-serif font-bold text-stone-800 bg-stone-50 border border-stone-200 rounded-xl px-4 py-2 outline-none mb-4"
+                          />
+                        ) : (
+                          <h2 className={`text-2xl font-serif font-bold mb-4 leading-snug ${selectedTask.status === "done" ? "line-through text-stone-400" : "text-stone-800"}`}>{selectedTask.title}</h2>
+                        )}
+
+                        {/* Badges */}
+                        <div className="flex gap-2 flex-wrap mb-5">
+                          {/* Priority */}
+                          {taskDetailEdit ? (
+                            <div className="flex gap-1.5">
+                              {(["low","normal","high","urgent"] as TaskPriority[]).map(p => (
+                                <button key={p} onClick={() => handleUpdateTask({ priority: p })}
+                                  className="text-[10px] font-bold px-2 py-1 rounded-full transition-colors"
+                                  style={selectedTask.priority === p ? { backgroundColor: TASK_PRIORITY_META[p].color, color: "#fff" } : { backgroundColor: TASK_PRIORITY_META[p].bg, color: TASK_PRIORITY_META[p].color }}
+                                >{TASK_PRIORITY_META[p].label}</button>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-xs font-bold px-2.5 py-1 rounded-full" style={{ backgroundColor: pm.bg, color: pm.color }}>{pm.label}</span>
+                          )}
+                        </div>
+
+                        {/* Status */}
+                        <div className="mb-4">
+                          <label className="text-xs font-semibold text-stone-400 mb-1.5 block">Status</label>
+                          <div className="flex gap-2">
+                            {(["todo","in-progress","done"] as TaskStatus[]).map(s => (
+                              <button key={s} onClick={() => handleUpdateTask({ status: s })}
+                                className="text-xs font-semibold px-3 py-1.5 rounded-full transition-colors"
+                                style={selectedTask.status === s ? { backgroundColor: TASK_STATUS_META[s].color, color: "#fff" } : { backgroundColor: TASK_STATUS_META[s].bg, color: TASK_STATUS_META[s].color }}
+                              >{TASK_STATUS_META[s].label}</button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Due date */}
+                        <div className="mb-5">
+                          <label className="text-xs font-semibold text-stone-400 mb-1.5 block flex items-center gap-1">
+                            <CalendarDays className="w-3 h-3" /> Due Date
+                          </label>
+                          {taskDetailEdit ? (
+                            <input type="date" value={selectedTask.dueDate} onChange={e => handleUpdateTask({ dueDate: e.target.value })}
+                              className="border border-stone-200 rounded-xl px-3 py-2 text-sm text-stone-700 bg-stone-50 outline-none" />
+                          ) : (
+                            <span className={`text-sm font-medium ${overdue ? "text-red-500" : selectedTask.dueDate ? "text-stone-700" : "text-stone-400"}`}>
+                              {selectedTask.dueDate ? new Date(selectedTask.dueDate).toLocaleDateString("en-GB", { day: "numeric", month: "long", year: "numeric" }) + (overdue ? " — Overdue ⚠" : "") : "No due date"}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Description */}
+                        <div className="mb-6">
+                          <label className="text-xs font-semibold text-stone-400 mb-1.5 block">Description</label>
+                          {taskDetailEdit ? (
+                            <textarea value={selectedTask.description} onChange={e => handleUpdateTask({ description: e.target.value })}
+                              rows={4} placeholder="Add description..."
+                              className="w-full border border-stone-200 rounded-xl px-4 py-2.5 text-sm text-stone-600 bg-stone-50 outline-none resize-none focus:border-stone-400 transition-colors" />
+                          ) : (
+                            <p className="text-sm text-stone-600 leading-relaxed whitespace-pre-wrap">{selectedTask.description || <span className="text-stone-300 italic">No description</span>}</p>
+                          )}
+                        </div>
+
+                        {/* Subtasks */}
+                        <div>
+                          <label className="text-xs font-semibold text-stone-400 mb-2 block flex items-center gap-1">
+                            <Check className="w-3 h-3" /> Subtasks {selectedTask.subtasks.length > 0 && `(${doneCount}/${selectedTask.subtasks.length})`}
+                          </label>
+
+                          {selectedTask.subtasks.length > 0 && (
+                            <div className="mb-1.5 h-1.5 rounded-full bg-stone-100 overflow-hidden">
+                              <div className="h-full rounded-full bg-emerald-400 transition-all" style={{ width: `${Math.round((doneCount / selectedTask.subtasks.length) * 100)}%` }} />
+                            </div>
+                          )}
+
+                          <div className="flex flex-col gap-1.5 mb-3">
+                            {selectedTask.subtasks.map(st => (
+                              <div key={st.id} className="flex items-center gap-2.5 bg-stone-50 rounded-xl px-3 py-2 group/st">
+                                <button onClick={() => toggleSubtask(st.id)}
+                                  className={`w-4 h-4 rounded flex items-center justify-center flex-shrink-0 border transition-colors ${st.done ? "bg-emerald-500 border-emerald-500" : "border-stone-300 hover:border-stone-500"}`}
+                                >
+                                  {st.done && <Check className="w-2.5 h-2.5 text-white" />}
+                                </button>
+                                <span className={`text-sm flex-1 ${st.done ? "line-through text-stone-400" : "text-stone-700"}`}>{st.title}</span>
+                                {taskDetailEdit && (
+                                  <button onClick={() => removeSubtaskFromDetail(st.id)} className="opacity-0 group-hover/st:opacity-100 transition-opacity">
+                                    <X className="w-3 h-3 text-stone-400 hover:text-red-500" />
+                                  </button>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+
+                          <div className="flex gap-2">
+                            <input
+                              value={newSubtaskInput}
+                              onChange={e => setNewSubtaskInput(e.target.value)}
+                              onKeyDown={e => {
+                                if (e.key === "Enter" && newSubtaskInput.trim()) {
+                                  addSubtaskToDetail(newSubtaskInput);
+                                  setNewSubtaskInput("");
+                                }
+                              }}
+                              placeholder="Add subtask, press Enter..."
+                              className="flex-1 border border-stone-200 rounded-xl px-3 py-2 text-xs text-stone-700 bg-stone-50 outline-none focus:border-stone-400 transition-colors"
+                            />
+                          </div>
+                        </div>
+
+                        <p className="text-[10px] text-stone-300 mt-6">Updated {new Date(selectedTask.updatedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}</p>
+                      </div>
+
+                      {/* delete confirm overlay */}
+                      {taskConfirmDelete === selectedTask.id && (
+                        <div className="absolute inset-0 bg-white/95 flex flex-col items-center justify-center gap-3 z-20">
+                          <p className="text-sm font-semibold text-stone-700">Delete this task?</p>
+                          <div className="flex gap-2">
+                            <button onClick={() => handleDeleteTask(selectedTask.id)} className="px-4 py-1.5 rounded-lg bg-red-500 text-white text-xs font-semibold">Yes, delete</button>
+                            <button onClick={() => setTaskConfirmDelete(null)} className="px-4 py-1.5 rounded-lg bg-stone-100 text-stone-700 text-xs font-semibold">Cancel</button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
+
+                {/* EMPTY STATE */}
+                {!showTaskCreate && !selectedTask && (
+                  <div className="flex-1 flex flex-col items-center justify-center gap-4 text-stone-300">
+                    <CheckSquare className="w-16 h-16 opacity-20" />
+                    <p className="text-sm text-stone-400">Select a task to view details</p>
+                    <button onClick={() => setShowTaskCreate(true)} className="text-xs px-4 py-2 rounded-xl bg-stone-800 text-white font-semibold hover:bg-stone-700 transition-colors">
+                      + New Task
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          );
+        })()}
+
         {/* All other views — blank */}
-        {activeView !== "my-notebook" && activeView !== "short-note" && (
+        {activeView !== "my-notebook" && activeView !== "short-note" && activeView !== "task" && (
           <div className="flex-1" />
         )}
 
