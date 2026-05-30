@@ -773,7 +773,7 @@ export default function Home() {
               <div className="w-[58%] flex-shrink-0">
                 {/* Gradient border wrapper */}
                 <div className="p-[1.5px] rounded-2xl" style={{ background: "linear-gradient(135deg, #c4b5fd 0%, #f9a8d4 50%, #bfdbfe 100%)" }}>
-                  <div className="bg-white rounded-2xl flex flex-col overflow-visible" style={{ minHeight: 700 }}>
+                  <div className="bg-stone-50 rounded-2xl flex flex-col overflow-visible" style={{ minHeight: 700 }}>
 
                     {/* Form header */}
                     <div className="flex items-center justify-between px-6 py-4">
@@ -853,7 +853,7 @@ export default function Home() {
                         value={newNoteTitle}
                         onChange={(e) => setNewNoteTitle(e.target.value)}
                         placeholder="Give your note a title..."
-                        className="w-full bg-stone-50 rounded-xl px-4 py-2.5 text-sm font-medium text-stone-700 outline-none placeholder:text-stone-300 border border-stone-100 focus:border-violet-200 focus:bg-white transition-colors"
+                        className="w-full bg-white rounded-xl px-4 py-2.5 text-sm font-medium text-stone-700 outline-none placeholder:text-stone-300 border border-stone-100 focus:border-violet-200 transition-colors"
                       />
                     </div>
 
@@ -863,7 +863,7 @@ export default function Home() {
                         value={newNoteBody}
                         onChange={(e) => setNewNoteBody(e.target.value)}
                         placeholder="Write your note here..."
-                        className="flex-1 w-full px-4 py-3 text-sm text-stone-600 outline-none bg-stone-50 resize-none placeholder:text-stone-300 leading-relaxed"
+                        className="flex-1 w-full px-4 py-3 text-sm text-stone-600 outline-none bg-white resize-none placeholder:text-stone-300 leading-relaxed"
                         onKeyDown={(e) => { if (e.key === "Enter" && e.ctrlKey) handleCreateNote(); }}
                         style={{ minHeight: 500 }}
                       />
