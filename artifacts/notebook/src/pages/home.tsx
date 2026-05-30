@@ -1179,7 +1179,7 @@ export default function Home() {
                   const accentBar = pColor || note.color;
 
                   return (
-                    <div key={note.id} onClick={() => handleSelectNote(note)} className={`group relative bg-white rounded-xl shadow-sm hover:shadow-md transition-all border overflow-hidden flex cursor-pointer ${selectedNoteId === note.id ? "border-stone-400 ring-2 ring-stone-200" : "border-stone-100"}`}>
+                    <div key={note.id} onClick={() => handleSelectNote(note)} className={`group relative bg-white rounded-xl shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-200 border overflow-hidden flex cursor-pointer ${selectedNoteId === note.id ? "border-stone-400 ring-2 ring-stone-200" : "border-stone-100"}`}>
                       {/* Left accent bar */}
                       <div className="w-[4px] flex-shrink-0 rounded-l-xl" style={{ backgroundColor: accentBar }} />
 
