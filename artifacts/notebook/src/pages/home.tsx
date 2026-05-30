@@ -4,7 +4,7 @@ import {
   BookOpen, FileText, Lock, LockOpen, Eye, EyeOff, User,
   Camera, Pencil, Home as HomeIcon, ChevronLeft, ChevronRight,
   Check, BookMarked, Clock, StickyNote, FolderKanban,
-  CheckSquare, CalendarDays, UserRound,
+  CheckSquare, CalendarDays, UserRound, Flag,
 } from "lucide-react";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { store, type Book } from "@/lib/store";
@@ -160,6 +160,8 @@ export default function Home() {
   const [newNoteColor, setNewNoteColor] = useState("#f5f5f4");
   const [showNoteCreate, setShowNoteCreate] = useState(false);
   const [showColorPopup, setShowColorPopup] = useState(false);
+  const [newNotePriority, setNewNotePriority] = useState<"low"|"medium"|"important"|null>(null);
+  const [showPriorityPopup, setShowPriorityPopup] = useState(false);
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
   const [confirmDeleteNoteId, setConfirmDeleteNoteId] = useState<number | null>(null);
   const [editNoteTitle, setEditNoteTitle] = useState("");
@@ -288,7 +290,7 @@ export default function Home() {
     const updated = [...shortNotes, note];
     saveShortNotes(updated);
     setShortNotes(updated);
-    setNewNoteTitle(""); setNewNoteBody(""); setNewNoteColor("#f5f5f4"); setShowNoteCreate(false);
+    setNewNoteTitle(""); setNewNoteBody(""); setNewNoteColor("#f5f5f4"); setNewNotePriority(null); setShowNoteCreate(false);
   };
 
   const handleDeleteNote = (id: number) => {
@@ -781,10 +783,39 @@ export default function Home() {
                     className="w-2/3 text-sm font-semibold text-stone-800 rounded-xl px-3 py-2 outline-none bg-white placeholder:text-stone-400 transition-colors"
                   />
                   <div className="flex items-center gap-2">
+                    {/* Priority button */}
+                    <div className="relative">
+                      <button
+                        onClick={() => { setShowPriorityPopup((v) => !v); setShowColorPopup(false); }}
+                        className="w-6 h-6 rounded-md flex items-center justify-center transition-colors border-2"
+                        style={{
+                          backgroundColor: newNotePriority === "low" ? "#bbf7d0" : newNotePriority === "medium" ? "#fef08a" : newNotePriority === "important" ? "#fecaca" : "transparent",
+                          borderColor: newNotePriority ? "transparent" : "#d6d3d1",
+                        }}
+                      >
+                        <Flag className="w-3 h-3" style={{ color: newNotePriority === "low" ? "#16a34a" : newNotePriority === "medium" ? "#ca8a04" : newNotePriority === "important" ? "#dc2626" : "#a8a29e" }} />
+                      </button>
+                      {showPriorityPopup && (
+                        <div className="absolute right-0 top-8 z-50 bg-white rounded-2xl shadow-xl p-3 flex flex-col gap-1.5 w-36 border border-stone-100">
+                          <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide mb-1">Priority</p>
+                          {([["low","Low","#bbf7d0","#16a34a"],["medium","Medium","#fef08a","#ca8a04"],["important","Important","#fecaca","#dc2626"]] as const).map(([val, label, bg, color]) => (
+                            <button
+                              key={val}
+                              onClick={() => { setNewNotePriority(newNotePriority === val ? null : val); setShowPriorityPopup(false); }}
+                              className="flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors hover:bg-stone-50 text-left"
+                              style={{ backgroundColor: newNotePriority === val ? bg : undefined }}
+                            >
+                              <Flag className="w-3 h-3 flex-shrink-0" style={{ color }} />
+                              <span className="text-xs font-medium text-stone-700">{label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                     {/* Color circle button */}
                     <div className="relative">
                       <button
-                        onClick={() => setShowColorPopup((v) => !v)}
+                        onClick={() => { setShowColorPopup((v) => !v); setShowPriorityPopup(false); }}
                         className="w-[26px] h-[26px] rounded-full border-2 border-stone-300 hover:border-stone-500 transition-colors shadow-sm"
                         style={{ backgroundColor: newNoteColor }}
                       />
