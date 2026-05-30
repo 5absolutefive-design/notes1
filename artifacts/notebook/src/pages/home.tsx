@@ -648,7 +648,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#f8f7f4] flex">
+    <div className="h-screen w-full bg-[#f8f7f4] flex overflow-hidden">
 
       {/* ── Sidebar ── */}
       <aside className={`flex-shrink-0 h-screen sticky top-0 flex flex-col bg-white border-r border-stone-200 transition-all duration-300 shadow-sm ${sidebarCollapsed ? "w-16" : "w-60"}`}>
@@ -775,11 +775,11 @@ export default function Home() {
       </aside>
 
       {/* ── Main content ── */}
-      <div className="flex-1 min-w-0 overflow-y-auto">
+      <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
 
         {/* My Notebook view */}
         {activeView === "my-notebook" && (
-          <div className="p-6 md:p-10 max-w-7xl mx-auto">
+          <div className="flex-1 overflow-y-auto p-6 md:p-10 max-w-7xl mx-auto">
 
             {/* Header Card */}
             <div className="mb-10 rounded-2xl border border-stone-200 bg-white shadow-sm px-8 py-3">
@@ -1008,7 +1008,7 @@ export default function Home() {
 
         {/* Short Note view */}
         {activeView === "short-note" && (
-          <div className="px-10 py-6 md:py-8 w-full flex flex-col gap-6">
+          <div className="flex-1 overflow-y-auto px-10 py-6 md:py-8 w-full flex flex-col gap-6">
 
             {/* Header */}
             <div className="rounded-2xl border border-stone-200 bg-white shadow-sm px-5 py-1">
