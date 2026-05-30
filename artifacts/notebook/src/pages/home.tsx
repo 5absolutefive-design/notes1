@@ -1439,47 +1439,49 @@ export default function Home() {
 
 
           return (
-            <div className="flex flex-col flex-1 min-h-0 p-5 gap-4 bg-stone-100 overflow-hidden">
+            <div className="flex flex-col flex-1 min-h-0 p-6 gap-4 bg-stone-50 overflow-hidden">
 
               {/* TASK header card */}
-              <div className="bg-white rounded-2xl shadow-sm border border-stone-200 px-6 py-4 flex-shrink-0">
-                <h1 className="text-xl font-bold text-stone-700 tracking-widest">TASK</h1>
+              <div className="bg-white rounded-2xl border border-stone-200 px-7 py-4 flex-shrink-0">
+                <h1 className="text-lg font-bold text-stone-700 tracking-[0.25em]">TASK</h1>
               </div>
 
-              {/* Main row */}
+              {/* Main two-column row */}
               <div className="flex gap-4 flex-1 min-h-0 overflow-hidden">
 
-                {/* LEFT — big floating task pad */}
-                <div className="flex-1 bg-white rounded-2xl shadow-sm border border-stone-200 flex flex-col overflow-hidden">
-                  <div className="flex-1 overflow-y-auto px-6 py-5">
+                {/* ── LEFT — task pad ── */}
+                <div className="flex-1 bg-white rounded-2xl border border-stone-200 flex flex-col overflow-hidden">
+
+                  {/* Task list */}
+                  <div className="flex-1 overflow-y-auto px-7 pt-6 pb-2">
                     {filteredTasks.length === 0 && !addingRow && (
-                      <div className="flex flex-col items-center justify-center h-32 gap-2">
-                        <CheckSquare className="w-8 h-8 text-stone-200" />
-                        <p className="text-sm text-stone-300">No tasks for this day</p>
+                      <div className="flex items-center justify-center h-20">
+                        <p className="text-sm text-stone-300">No tasks — press + to add</p>
                       </div>
                     )}
 
-                    <div className="flex flex-col gap-0.5">
+                    <div className="flex flex-col">
                       {filteredTasks.map(task => {
                         const pm = task.priority ? DAY_PRIORITY_META[task.priority] : null;
                         return (
-                          <div key={task.id} className="group flex items-center gap-3 py-2.5 border-b border-stone-50 last:border-0">
+                          <div key={task.id} className="group flex items-center gap-3 py-3 border-b border-stone-100 last:border-0">
+
                             {/* Checkbox */}
                             <button
                               onClick={() => toggleDone(task.id)}
-                              className={`w-4 h-4 rounded border-2 flex-shrink-0 flex items-center justify-center transition-all ${task.done ? "bg-stone-700 border-stone-700" : "border-stone-300 hover:border-stone-500"}`}
+                              className={`w-[15px] h-[15px] rounded-sm border-2 flex-shrink-0 flex items-center justify-center transition-all ${task.done ? "bg-stone-700 border-stone-700" : "border-stone-400 hover:border-stone-600"}`}
                             >
                               {task.done && <Check className="w-2.5 h-2.5 text-white" />}
                             </button>
 
-                            {/* Title */}
+                            {/* Title — expands to fill space */}
                             <input
                               value={task.title}
                               onChange={e => updateTask(task.id, { title: e.target.value })}
-                              className={`flex-1 text-sm bg-transparent outline-none min-w-0 ${task.done ? "line-through opacity-50 text-stone-400" : "text-stone-800"}`}
+                              className={`flex-1 text-sm bg-transparent outline-none min-w-0 ${task.done ? "line-through text-stone-400" : "text-stone-800"}`}
                             />
 
-                            {/* Time picker */}
+                            {/* Time button */}
                             <div className="relative flex-shrink-0">
                               <button
                                 onClick={() => {
@@ -1490,16 +1492,18 @@ export default function Home() {
                                   setTimePickerId(task.id);
                                   setPriorityMenuId(null);
                                 }}
-                                className="text-xs border border-stone-200 rounded px-2.5 py-1 min-w-[76px] text-center hover:border-stone-400 transition-colors bg-stone-50 text-stone-500"
+                                className="text-[11px] border border-stone-300 rounded px-2.5 py-1 min-w-[80px] text-center hover:border-stone-500 transition-colors bg-white text-stone-600 tabular-nums"
                               >
-                                {task.hasTime ? `${task.hour}:${task.minute} ${task.ampm}` : <span className="text-stone-300 text-[11px]">--:-- --</span>}
+                                {task.hasTime
+                                  ? <>{task.hour}:{task.minute}<span className="text-[9px] ml-0.5">{task.ampm}</span></>
+                                  : <span className="text-stone-300">--:-- --</span>}
                               </button>
                               {timePickerId === task.id && (
                                 <div className="absolute top-full mt-1 right-0 bg-white border border-stone-200 rounded-xl shadow-xl p-3 z-50 flex gap-2 items-center">
                                   <select value={tempHour} onChange={e => setTempHour(e.target.value)} className="text-sm border border-stone-200 rounded-lg px-1.5 py-1 outline-none bg-white">
                                     {Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0")).map(v => <option key={v} value={v}>{v}</option>)}
                                   </select>
-                                  <span className="text-stone-400 font-bold text-sm">:</span>
+                                  <span className="text-stone-400 font-bold">:</span>
                                   <select value={tempMinute} onChange={e => setTempMinute(e.target.value)} className="text-sm border border-stone-200 rounded-lg px-1.5 py-1 outline-none bg-white">
                                     {["00","05","10","15","20","25","30","35","40","45","50","55"].map(v => <option key={v} value={v}>{v}</option>)}
                                   </select>
@@ -1507,10 +1511,8 @@ export default function Home() {
                                     <option value="AM">AM</option>
                                     <option value="PM">PM</option>
                                   </select>
-                                  <button
-                                    onClick={() => { updateTask(task.id, { hour: tempHour, minute: tempMinute, ampm: tempAmpm, hasTime: true }); setTimePickerId(null); }}
-                                    className="text-xs font-bold text-white bg-stone-800 rounded-lg px-2.5 py-1 hover:bg-stone-700"
-                                  >✓</button>
+                                  <button onClick={() => { updateTask(task.id, { hour: tempHour, minute: tempMinute, ampm: tempAmpm, hasTime: true }); setTimePickerId(null); }}
+                                    className="text-xs font-bold text-white bg-stone-800 rounded-lg px-2.5 py-1 hover:bg-stone-700">✓</button>
                                   {task.hasTime && (
                                     <button onClick={() => { updateTask(task.id, { hasTime: false }); setTimePickerId(null); }} className="text-xs text-stone-400 hover:text-stone-600 px-1">✕</button>
                                   )}
@@ -1518,12 +1520,12 @@ export default function Home() {
                               )}
                             </div>
 
-                            {/* Priority */}
+                            {/* Priority button */}
                             <div className="relative flex-shrink-0">
                               <button
                                 onClick={() => { setPriorityMenuId(priorityMenuId === task.id ? null : task.id); setTimePickerId(null); }}
-                                className="text-[10px] font-bold px-2.5 py-1 rounded border transition-colors min-w-[62px] text-center"
-                                style={pm ? { backgroundColor: pm.bg, color: pm.color, borderColor: pm.border } : { backgroundColor: "#f8fafc", color: "#cbd5e1", borderColor: "#e2e8f0" }}
+                                className="text-[10px] font-bold px-2.5 py-1 rounded border transition-colors min-w-[64px] text-center"
+                                style={pm ? { backgroundColor: pm.bg, color: pm.color, borderColor: pm.border } : { backgroundColor: "#fff", color: "#d1d5db", borderColor: "#d1d5db" }}
                               >
                                 {pm ? pm.label : "PRIORITY"}
                               </button>
@@ -1531,16 +1533,15 @@ export default function Home() {
                                 <div className="absolute top-full mt-1 right-0 bg-white border border-stone-200 rounded-xl shadow-xl py-1.5 z-50 min-w-[110px]">
                                   {(["low", "high", "urgent"] as NonNullable<DayPriority>[]).map(p => (
                                     <button key={p} onClick={() => { updateTask(task.id, { priority: p }); setPriorityMenuId(null); }}
-                                      className="w-full text-left text-xs font-semibold px-3 py-2 hover:bg-stone-50 flex items-center gap-2 transition-colors"
-                                      style={{ color: DAY_PRIORITY_META[p].color }}
-                                    >
+                                      className="w-full text-left text-xs font-semibold px-3 py-2 hover:bg-stone-50 flex items-center gap-2"
+                                      style={{ color: DAY_PRIORITY_META[p].color }}>
                                       <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: DAY_PRIORITY_META[p].color }} />
                                       {DAY_PRIORITY_META[p].label}
                                     </button>
                                   ))}
                                   {task.priority && (
                                     <button onClick={() => { updateTask(task.id, { priority: null }); setPriorityMenuId(null); }}
-                                      className="w-full text-left text-xs text-stone-400 px-3 py-1.5 hover:bg-stone-50 border-t border-stone-100 mt-0.5">
+                                      className="w-full text-left text-[11px] text-stone-400 px-3 py-1.5 hover:bg-stone-50 border-t border-stone-100 mt-0.5">
                                       Clear
                                     </button>
                                   )}
@@ -1549,27 +1550,27 @@ export default function Home() {
                             </div>
 
                             {/* Delete on hover */}
-                            <button onClick={() => deleteTask(task.id)} className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0">
-                              <X className="w-3.5 h-3.5 text-stone-300 hover:text-red-400 transition-colors" />
+                            <button onClick={() => deleteTask(task.id)} className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 ml-1">
+                              <X className="w-3.5 h-3.5 text-stone-300 hover:text-red-400" />
                             </button>
                           </div>
                         );
                       })}
 
-                      {/* New inline row */}
+                      {/* Inline new-row input */}
                       {addingRow && (
-                        <div className="flex items-center gap-3 py-2.5">
-                          <div className="w-4 h-4 rounded border-2 border-stone-200 flex-shrink-0" />
+                        <div className="flex items-center gap-3 py-3">
+                          <div className="w-[15px] h-[15px] rounded-sm border-2 border-stone-300 flex-shrink-0" />
                           <input
                             autoFocus
                             value={newRowTitle}
                             onChange={e => setNewRowTitle(e.target.value)}
                             onKeyDown={e => {
-                              if (e.key === "Enter") { addTask(); }
+                              if (e.key === "Enter") { addTask(); setAddingRow(true); setNewRowTitle(""); }
                               if (e.key === "Escape") { setAddingRow(false); setNewRowTitle(""); }
                             }}
                             onBlur={() => { if (newRowTitle.trim()) addTask(); else setAddingRow(false); }}
-                            placeholder="Type task and press Enter..."
+                            placeholder="Task name..."
                             className="flex-1 text-sm bg-transparent outline-none text-stone-800 placeholder-stone-300"
                           />
                         </div>
@@ -1577,97 +1578,103 @@ export default function Home() {
                     </div>
                   </div>
 
-                  {/* + Add task button */}
-                  <div className="border-t border-stone-100 px-5 py-3 flex-shrink-0">
-                    <button
-                      onClick={() => { setAddingRow(true); setNewRowTitle(""); setPriorityMenuId(null); setTimePickerId(null); }}
-                      className="w-full flex items-center justify-center gap-1.5 text-sm text-stone-400 hover:text-stone-600 hover:bg-stone-50 rounded-xl py-2 transition-colors"
-                    >
-                      <Plus className="w-4 h-4" /> Add task
-                    </button>
-                  </div>
+                  {/* + button — full width, light gray bar */}
+                  <button
+                    onClick={() => { setAddingRow(true); setNewRowTitle(""); setPriorityMenuId(null); setTimePickerId(null); }}
+                    className="flex-shrink-0 w-full flex items-center justify-center py-3 bg-stone-100 hover:bg-stone-200 transition-colors rounded-b-2xl text-stone-400 hover:text-stone-600 text-xl font-light leading-none"
+                  >
+                    +
+                  </button>
                 </div>
 
-                {/* RIGHT panel */}
-                <div className="w-64 flex flex-col gap-4 overflow-y-auto flex-shrink-0">
+                {/* ── RIGHT panel ── */}
+                <div className="w-[300px] flex-shrink-0 flex flex-col gap-4 overflow-hidden">
 
-                  {/* Clock card */}
-                  <div className="bg-white rounded-2xl shadow-sm border border-stone-200 p-4 flex items-center gap-3 flex-shrink-0">
-                    <div className="w-[72px] h-[72px] flex-shrink-0">
-                      <AnalogClock now={clockNow} />
+                  {/* Clock card — analog clock + empty right half */}
+                  <div className="bg-white rounded-2xl border border-stone-200 flex-shrink-0 flex items-center">
+                    <div className="flex-1 flex items-center justify-center p-5">
+                      <div className="w-[100px] h-[100px]">
+                        <AnalogClock now={clockNow} />
+                      </div>
                     </div>
-                    <div className="min-w-0">
-                      <div className="text-xl font-bold text-stone-800 tabular-nums leading-tight">
+                    <div className="flex-1 flex flex-col items-center justify-center p-4 border-l border-stone-100">
+                      <div className="text-2xl font-bold text-stone-800 tabular-nums leading-tight">
                         {clockNow.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}
                       </div>
-                      <div className="text-[11px] text-stone-400 mt-0.5 leading-snug">
+                      <div className="text-[11px] text-stone-400 mt-1">
                         {clockNow.toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
                       </div>
                     </div>
                   </div>
 
-                  {/* Task Type card */}
-                  <div className="bg-white rounded-2xl shadow-sm border border-stone-200 p-4 flex flex-col gap-2 flex-shrink-0">
-                    <h3 className="text-[10px] font-bold text-stone-400 tracking-widest uppercase mb-1">Task Type</h3>
+                  {/* TASK TYPE section */}
+                  <div className="bg-white rounded-2xl border border-stone-200 flex-1 flex flex-col overflow-hidden">
+                    <div className="px-5 pt-5 pb-3 flex-shrink-0">
+                      <h3 className="text-sm font-bold text-stone-700 tracking-[0.15em]">TASK TYPE</h3>
+                    </div>
+                    <div className="flex-1 overflow-y-auto px-5 pb-3 flex flex-col gap-2">
 
-                    <button
-                      onClick={() => setSelectedTypeId("all")}
-                      className={`w-full text-left text-sm px-3 py-2 rounded-xl border transition-all ${selectedTypeId === "all" ? "bg-stone-800 text-white border-stone-800" : "border-stone-200 text-stone-600 hover:bg-stone-50"}`}
-                    >
-                      All Tasks
-                    </button>
+                      {dayTaskTypes.map(type => (
+                        <div key={type.id} className="group/type relative">
+                          <button
+                            onClick={() => setSelectedTypeId(selectedTypeId === type.id ? "all" : type.id)}
+                            className={`w-full text-left text-sm px-4 py-2.5 rounded-xl border transition-all ${selectedTypeId === type.id ? "bg-stone-800 text-white border-stone-800" : "border-stone-300 text-stone-700 hover:border-stone-500 bg-white"}`}
+                          >
+                            {type.name}
+                          </button>
+                          <button
+                            onClick={() => deleteType(type.id)}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 opacity-0 group-hover/type:opacity-100 transition-opacity"
+                          >
+                            <X className={`w-3 h-3 ${selectedTypeId === type.id ? "text-white/60 hover:text-white" : "text-stone-300 hover:text-red-400"}`} />
+                          </button>
+                        </div>
+                      ))}
 
-                    {dayTaskTypes.map(type => (
-                      <div key={type.id} className="group/type relative">
+                      {selectedTypeId !== "all" && dayTaskTypes.length > 0 && (
                         <button
-                          onClick={() => setSelectedTypeId(selectedTypeId === type.id ? "all" : type.id)}
-                          className={`w-full text-left text-sm px-3 py-2 rounded-xl border transition-all ${selectedTypeId === type.id ? "bg-stone-800 text-white border-stone-800" : "border-stone-200 text-stone-600 hover:bg-stone-50"}`}
+                          onClick={() => setSelectedTypeId("all")}
+                          className="w-full text-left text-sm px-4 py-2.5 rounded-xl border border-stone-200 text-stone-400 hover:border-stone-400 hover:text-stone-600 bg-white transition-all"
                         >
-                          {type.name}
+                          All Tasks
                         </button>
-                        <button
-                          onClick={() => deleteType(type.id)}
-                          className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/type:opacity-100 transition-opacity"
-                        >
-                          <X className={`w-3 h-3 ${selectedTypeId === type.id ? "text-white/60 hover:text-white" : "text-stone-300 hover:text-red-400"}`} />
-                        </button>
-                      </div>
-                    ))}
+                      )}
 
-                    {showTypeInput ? (
-                      <div className="flex gap-1.5 mt-1">
-                        <input
-                          autoFocus
-                          value={newTypeName}
-                          onChange={e => setNewTypeName(e.target.value)}
-                          onKeyDown={e => { if (e.key === "Enter") addType(); if (e.key === "Escape") { setShowTypeInput(false); setNewTypeName(""); } }}
-                          placeholder="Type name..."
-                          className="flex-1 text-sm border border-stone-200 rounded-xl px-3 py-2 outline-none focus:border-stone-400"
-                        />
-                        <button onClick={addType} className="text-xs font-bold px-3 rounded-xl bg-stone-800 text-white hover:bg-stone-700">Add</button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => setShowTypeInput(true)}
-                        className="w-full flex items-center justify-center gap-1 text-sm text-stone-400 hover:text-stone-600 border border-dashed border-stone-200 rounded-xl py-2 hover:bg-stone-50 transition-colors mt-1"
-                      >
-                        <Plus className="w-3.5 h-3.5" /> New Type
-                      </button>
-                    )}
+                      {showTypeInput ? (
+                        <div className="flex gap-1.5">
+                          <input
+                            autoFocus
+                            value={newTypeName}
+                            onChange={e => setNewTypeName(e.target.value)}
+                            onKeyDown={e => { if (e.key === "Enter") addType(); if (e.key === "Escape") { setShowTypeInput(false); setNewTypeName(""); } }}
+                            placeholder="Type name..."
+                            className="flex-1 text-sm border border-stone-300 rounded-xl px-3 py-2.5 outline-none focus:border-stone-600"
+                          />
+                          <button onClick={addType} className="text-xs font-bold px-3 rounded-xl bg-stone-800 text-white hover:bg-stone-700 flex-shrink-0">OK</button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={() => setShowTypeInput(true)}
+                          className="w-full flex items-center justify-center py-2.5 rounded-xl bg-stone-100 hover:bg-stone-200 transition-colors text-stone-400 hover:text-stone-600 text-xl font-light leading-none"
+                        >
+                          +
+                        </button>
+                      )}
+                    </div>
                   </div>
 
-                  {/* Date panel card */}
-                  <div className="bg-white rounded-2xl shadow-sm border border-stone-200 p-4 flex-shrink-0">
-                    <h3 className="text-[10px] font-bold text-stone-400 tracking-widest uppercase mb-3">Next 7 Days</h3>
-                    <div className="grid grid-cols-4 gap-1.5">
+                  {/* NEXT 7 DAY — horizontal pill strip at the bottom */}
+                  <div className="bg-white rounded-2xl border border-stone-200 flex-shrink-0 px-4 py-3">
+                    <p className="text-[9px] font-bold text-stone-400 tracking-widest uppercase mb-2">NEXT 7 DAY</p>
+                    <div className="flex gap-1.5 overflow-x-auto pb-0.5">
                       {days.map(d => (
                         <button
                           key={d.key}
                           onClick={() => setSelectedDate(d.key)}
-                          className={`flex flex-col items-center py-2 px-1 rounded-xl border transition-all ${selectedDate === d.key ? "bg-stone-800 text-white border-stone-800 shadow-sm" : "border-stone-200 text-stone-500 hover:bg-stone-50"}`}
+                          className={`flex flex-col items-center flex-shrink-0 px-2.5 py-1.5 rounded-xl border transition-all ${selectedDate === d.key ? "bg-stone-800 text-white border-stone-800" : "border-stone-300 text-stone-600 hover:border-stone-500 bg-white"}`}
                         >
-                          <span className="text-[8px] font-bold uppercase leading-none">{d.isToday ? "TODAY" : d.day}</span>
-                          <span className="text-sm font-bold mt-0.5">{d.label}</span>
+                          <span className="text-[8px] font-bold uppercase leading-none">{d.isToday ? "TO\nDAY" : d.day}</span>
+                          <span className="text-sm font-bold mt-0.5 tabular-nums">{d.label}</span>
                         </button>
                       ))}
                     </div>
