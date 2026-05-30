@@ -772,7 +772,7 @@ export default function Home() {
 
             {/* Create form */}
             {showNoteCreate && (
-              <div className="mb-6 rounded-2xl shadow-md p-4 flex flex-col gap-3 w-1/2 min-h-[340px] transition-colors duration-200" style={{ backgroundColor: newNoteColor }}>
+              <div className="mb-6 rounded-2xl shadow-md p-4 flex flex-col gap-3 w-2/3 min-h-[340px] transition-colors duration-200" style={{ backgroundColor: newNoteColor }}>
                 {/* Top row: title + color picker + save */}
                 <div className="flex items-center justify-between gap-3">
                   <input
