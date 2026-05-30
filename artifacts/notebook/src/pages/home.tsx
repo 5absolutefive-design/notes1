@@ -1463,10 +1463,10 @@ export default function Home() {
               <div className="flex gap-4 flex-1 min-h-0 overflow-hidden">
 
                 {/* ── LEFT — task pad ── */}
-                <div className="flex-[7] bg-stone-50 rounded-2xl border border-stone-200 flex flex-col overflow-hidden">
+                <div className="flex-[7] rounded-2xl flex flex-col overflow-hidden" style={{ background: "#e8e9f0", boxShadow: "inset 4px 4px 10px #c5c6cc, inset -4px -4px 10px #ffffff" }}>
 
                   {/* Card header */}
-                  <div className="flex-shrink-0 flex items-center justify-between px-5 py-3 border-b border-stone-200">
+                  <div className="flex-shrink-0 flex items-center justify-between px-5 py-3" style={{ borderBottom: "1px solid #d5d6de" }}>
                     <span className="text-sm font-semibold text-stone-700">{selectedTypeName}</span>
                     <div className="flex items-center gap-4 text-[11px] text-stone-400">
                       <span>Total Task: <span className="font-semibold text-stone-600">{totalTasks}</span></span>
@@ -1491,15 +1491,18 @@ export default function Home() {
                       {filteredTasks.map((task, idx) => {
                         const pm = task.priority ? DAY_PRIORITY_META[task.priority] : null;
                         return (
-                          <div key={task.id} className="bg-white rounded-xl shadow-sm border border-stone-100 flex items-center gap-2.5 px-3 py-4">
+                          <div key={task.id} className="rounded-2xl flex items-center gap-2.5 px-4 py-4" style={{ background: "#e8e9f0", boxShadow: "6px 6px 14px #c2c3ca, -6px -6px 14px #ffffff" }}>
 
                             {/* Row number badge */}
-                            <span className="text-[11px] font-bold text-stone-500 bg-stone-100 rounded-lg px-2 py-1 flex-shrink-0">T{idx + 1}</span>
+                            <span className="text-[11px] font-bold text-stone-500 rounded-lg px-2.5 py-1.5 flex-shrink-0" style={{ background: "#e8e9f0", boxShadow: "3px 3px 7px #c2c3ca, -3px -3px 7px #ffffff" }}>T{idx + 1}</span>
 
                             {/* Checkbox */}
                             <button
                               onClick={() => toggleDone(task.id)}
-                              className={`w-[17px] h-[17px] rounded border-2 flex-shrink-0 flex items-center justify-center transition-all ${task.done ? "bg-stone-700 border-stone-700" : "border-stone-300 hover:border-stone-500"}`}
+                              className="w-[18px] h-[18px] rounded flex-shrink-0 flex items-center justify-center transition-all"
+                              style={task.done
+                                ? { background: "#6366f1", boxShadow: "inset 2px 2px 5px #4f52c7, inset -2px -2px 5px #7779ff" }
+                                : { background: "#e8e9f0", boxShadow: "inset 3px 3px 6px #c2c3ca, inset -3px -3px 6px #ffffff" }}
                             >
                               {task.done && <Check className="w-2.5 h-2.5 text-white" />}
                             </button>
@@ -1509,16 +1512,20 @@ export default function Home() {
                               value={task.title}
                               onChange={e => updateTask(task.id, { title: e.target.value })}
                               placeholder="Task"
-                              className={`flex-1 text-sm bg-transparent outline-none min-w-0 border-b border-stone-200 pb-0.5 focus:border-stone-400 transition-colors placeholder-stone-300 ${task.done ? "line-through text-stone-400" : "text-stone-700"}`}
+                              className={`flex-1 text-sm outline-none min-w-0 px-3 py-1.5 rounded-xl placeholder-stone-400 ${task.done ? "line-through text-stone-400" : "text-stone-700"}`}
+                              style={{ background: "#e8e9f0", boxShadow: "inset 3px 3px 7px #c2c3ca, inset -3px -3px 7px #ffffff" }}
                             />
 
                             {/* Note button */}
                             <div className="relative flex-shrink-0">
                               <button
                                 onClick={() => { setNotePopupId(notePopupId === task.id ? null : task.id); setTimePickerId(null); setPriorityMenuId(null); setProgressMenuId(null); }}
-                                className={`text-[11px] px-3 py-1.5 rounded-lg border transition-colors flex items-center gap-1 ${task.note ? "bg-stone-200 border-stone-300 text-stone-700" : "bg-stone-100 border-stone-200 text-stone-500 hover:bg-stone-200"}`}
+                                className="text-[11px] px-3 py-1.5 rounded-xl flex items-center gap-1 transition-all text-stone-500"
+                                style={task.note || notePopupId === task.id
+                                  ? { background: "#e8e9f0", boxShadow: "inset 3px 3px 7px #c2c3ca, inset -3px -3px 7px #ffffff" }
+                                  : { background: "#e8e9f0", boxShadow: "3px 3px 7px #c2c3ca, -3px -3px 7px #ffffff" }}
                               >
-                                Note {task.note && <span className="w-1.5 h-1.5 rounded-full bg-stone-500 inline-block" />}
+                                Note {task.note && <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 inline-block" />}
                               </button>
                               {notePopupId === task.id && (
                                 <div className="absolute top-full mt-1 left-0 bg-white border border-stone-200 rounded-xl shadow-xl p-3 z-50 w-56">
@@ -1546,7 +1553,10 @@ export default function Home() {
                                   setTimePickerId(task.id);
                                   setPriorityMenuId(null); setNotePopupId(null); setProgressMenuId(null);
                                 }}
-                                className="text-[11px] px-3 py-1.5 rounded-lg border border-stone-200 bg-white text-stone-600 tabular-nums hover:bg-stone-50 transition-colors min-w-[76px] text-center"
+                                className="text-[11px] px-3 py-1.5 rounded-xl text-stone-600 tabular-nums transition-all min-w-[76px] text-center"
+                                style={timePickerId === task.id
+                                  ? { background: "#e8e9f0", boxShadow: "inset 3px 3px 7px #c2c3ca, inset -3px -3px 7px #ffffff" }
+                                  : { background: "#e8e9f0", boxShadow: "3px 3px 7px #c2c3ca, -3px -3px 7px #ffffff" }}
                               >
                                 {task.hasTime
                                   ? <>{task.hour}:{task.minute}<span className="text-[9px] ml-0.5">{task.ampm}</span></>
@@ -1578,8 +1588,12 @@ export default function Home() {
                             <div className="relative flex-shrink-0">
                               <button
                                 onClick={() => { setPriorityMenuId(priorityMenuId === task.id ? null : task.id); setTimePickerId(null); setNotePopupId(null); setProgressMenuId(null); }}
-                                className="text-[10px] font-bold px-3 py-1.5 rounded-lg border transition-colors min-w-[62px] text-center"
-                                style={pm ? { backgroundColor: pm.bg, color: pm.color, borderColor: pm.border } : { backgroundColor: "#fff", color: "#c4c4c4", borderColor: "#e5e7eb" }}
+                                className="text-[10px] font-bold px-3 py-1.5 rounded-xl transition-all min-w-[62px] text-center"
+                                style={pm
+                                  ? { backgroundColor: pm.bg, color: pm.color, boxShadow: `3px 3px 7px #c2c3ca, -3px -3px 7px #ffffff` }
+                                  : priorityMenuId === task.id
+                                    ? { background: "#e8e9f0", color: "#a0a0b0", boxShadow: "inset 3px 3px 7px #c2c3ca, inset -3px -3px 7px #ffffff" }
+                                    : { background: "#e8e9f0", color: "#a0a0b0", boxShadow: "3px 3px 7px #c2c3ca, -3px -3px 7px #ffffff" }}
                               >
                                 {pm ? pm.label : "Priority"}
                               </button>
@@ -1607,7 +1621,10 @@ export default function Home() {
                             <div className="relative flex-shrink-0">
                               <button
                                 onClick={() => { setProgressMenuId(progressMenuId === task.id ? null : task.id); setTimePickerId(null); setNotePopupId(null); setPriorityMenuId(null); }}
-                                className={`text-[11px] px-3 py-1.5 rounded-lg border transition-colors min-w-[72px] text-center ${task.progress > 0 ? "bg-stone-100 border-stone-200 text-stone-700" : "bg-white border-stone-200 text-stone-400 hover:bg-stone-50"}`}
+                                className="text-[11px] px-3 py-1.5 rounded-xl transition-all min-w-[72px] text-center text-stone-500"
+                                style={progressMenuId === task.id
+                                  ? { background: "#e8e9f0", boxShadow: "inset 3px 3px 7px #c2c3ca, inset -3px -3px 7px #ffffff" }
+                                  : { background: "#e8e9f0", boxShadow: "3px 3px 7px #c2c3ca, -3px -3px 7px #ffffff" }}
                               >
                                 {task.progress > 0 ? `${task.progress}%` : "Progress %"}
                               </button>
@@ -1623,8 +1640,8 @@ export default function Home() {
                               )}
                             </div>
 
-                            {/* Trash button — pink pill */}
-                            <button onClick={() => deleteTask(task.id)} className="flex-shrink-0 w-7 h-7 rounded-lg bg-red-50 border border-red-100 flex items-center justify-center hover:bg-red-100 transition-colors">
+                            {/* Trash button — neumorphic */}
+                            <button onClick={() => deleteTask(task.id)} className="flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center transition-all" style={{ background: "#e8e9f0", boxShadow: "3px 3px 7px #c2c3ca, -3px -3px 7px #ffffff" }}>
                               <Trash2 className="w-3.5 h-3.5 text-red-400" />
                             </button>
                           </div>
@@ -1633,9 +1650,9 @@ export default function Home() {
 
                       {/* Inline new-row input */}
                       {addingRow && (
-                        <div className="bg-white rounded-xl shadow-sm border border-stone-200 flex items-center gap-2.5 px-3 py-4">
-                          <span className="text-[11px] font-bold text-stone-400 bg-stone-100 rounded-lg px-2 py-1 flex-shrink-0">T{filteredTasks.length + 1}</span>
-                          <div className="w-[17px] h-[17px] rounded border-2 border-stone-300 flex-shrink-0" />
+                        <div className="rounded-2xl flex items-center gap-2.5 px-4 py-4" style={{ background: "#e8e9f0", boxShadow: "6px 6px 14px #c2c3ca, -6px -6px 14px #ffffff" }}>
+                          <span className="text-[11px] font-bold text-stone-400 rounded-lg px-2.5 py-1.5 flex-shrink-0" style={{ background: "#e8e9f0", boxShadow: "3px 3px 7px #c2c3ca, -3px -3px 7px #ffffff" }}>T{filteredTasks.length + 1}</span>
+                          <div className="w-[18px] h-[18px] rounded flex-shrink-0" style={{ background: "#e8e9f0", boxShadow: "inset 3px 3px 6px #c2c3ca, inset -3px -3px 6px #ffffff" }} />
                           <input
                             autoFocus
                             value={newRowTitle}
@@ -1646,7 +1663,8 @@ export default function Home() {
                             }}
                             onBlur={() => { if (newRowTitle.trim()) addTask(); else setAddingRow(false); }}
                             placeholder="Task name..."
-                            className="flex-1 text-sm bg-transparent outline-none text-stone-700 border-b border-stone-200 pb-0.5 placeholder-stone-300"
+                            className="flex-1 text-sm outline-none text-stone-700 px-3 py-1.5 rounded-xl placeholder-stone-400"
+                            style={{ background: "#e8e9f0", boxShadow: "inset 3px 3px 7px #c2c3ca, inset -3px -3px 7px #ffffff" }}
                           />
                         </div>
                       )}
