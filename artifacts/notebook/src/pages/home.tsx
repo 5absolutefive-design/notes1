@@ -1463,7 +1463,7 @@ export default function Home() {
               <div className="flex gap-4 flex-1 min-h-0 overflow-hidden p-1">
 
                 {/* ── LEFT — task pad ── */}
-                <div className="flex-[7] rounded-2xl flex flex-col overflow-hidden" style={{ background: "#ffffff", border: "1px solid rgba(0,0,0,0.18)", boxShadow: "0 8px 32px rgba(0,0,0,0.14), 0 2px 8px rgba(0,0,0,0.08)" }}>
+                <div className="flex-[7] rounded-2xl flex flex-col overflow-hidden" style={{ background: "#ffffff", border: "1px solid rgba(0,0,0,0.12)" }}>
 
                   {/* Card header */}
                   <div className="flex-shrink-0 flex items-center justify-between px-5 py-3" style={{ borderBottom: "1px solid #d5d6de" }}>
