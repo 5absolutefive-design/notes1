@@ -1601,7 +1601,7 @@ export default function Home() {
                   </div>
 
                   {/* TASK TYPE section */}
-                  <div className="bg-white rounded-2xl border border-stone-200 flex-1 flex flex-col overflow-hidden">
+                  <div className="bg-white rounded-2xl border border-stone-200 flex-[3] flex flex-col overflow-hidden">
                     <div className="px-5 pt-5 pb-3 flex-shrink-0">
                       <h3 className="text-sm font-bold text-stone-700 tracking-[0.15em]">TASK TYPE</h3>
                     </div>
@@ -1655,6 +1655,9 @@ export default function Home() {
                       )}
                     </div>
                   </div>
+
+                  {/* Spacer — 1/4 of flexible space */}
+                  <div className="flex-[1]" />
 
                   {/* NEXT 7 DAY — horizontal pill strip at the bottom */}
                   <div className="bg-white rounded-2xl border border-stone-200 flex-shrink-0 px-4 py-3">
