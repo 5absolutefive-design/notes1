@@ -805,9 +805,9 @@ export default function Home() {
                     </div>
                     <button
                       onClick={handleCreateNote}
-                      className="px-4 py-2 rounded-xl bg-stone-800 text-white text-sm font-semibold hover:bg-stone-700 transition-colors whitespace-nowrap"
+                      className="w-7 h-7 rounded-full bg-stone-800 text-white hover:bg-stone-700 transition-colors flex items-center justify-center flex-shrink-0"
                     >
-                      Save
+                      <Check className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
