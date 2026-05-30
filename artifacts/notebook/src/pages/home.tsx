@@ -168,6 +168,7 @@ export default function Home() {
   const [confirmDeleteNoteId, setConfirmDeleteNoteId] = useState<number | null>(null);
   const [editNoteTitle, setEditNoteTitle] = useState("");
   const [editNoteBody, setEditNoteBody] = useState("");
+  const [selectedNoteId, setSelectedNoteId] = useState<number | null>(null);
 
   const popupRef = useRef<HTMLDivElement>(null);
   const imgInputRef = useRef<HTMLInputElement>(null);
@@ -293,6 +294,32 @@ export default function Home() {
     const updated = [note, ...shortNotes];
     saveShortNotes(updated);
     setShortNotes(updated);
+    setNewNoteTitle(""); setNewNoteBody(""); setNewNoteColor("#f5f5f4"); setNewNotePriority(null);
+  };
+
+  const handleSelectNote = (note: ShortNote) => {
+    setSelectedNoteId(note.id);
+    setNewNoteTitle(note.title);
+    setNewNoteBody(note.body);
+    setNewNoteColor(note.color);
+    setNewNotePriority(note.priority ?? null);
+    setShowColorPopup(false);
+    setShowPriorityPopup(false);
+  };
+
+  const handleSaveSelectedNote = () => {
+    if (selectedNoteId === null) return;
+    const updated = shortNotes.map((n) =>
+      n.id === selectedNoteId
+        ? { ...n, title: newNoteTitle.trim() || "Untitled", body: newNoteBody, color: newNoteColor, priority: newNotePriority ?? undefined, updatedAt: new Date().toISOString() }
+        : n
+    );
+    saveShortNotes(updated);
+    setShortNotes(updated);
+  };
+
+  const clearSelectedNote = () => {
+    setSelectedNoteId(null);
     setNewNoteTitle(""); setNewNoteBody(""); setNewNoteColor("#f5f5f4"); setNewNotePriority(null);
   };
 
@@ -775,7 +802,14 @@ export default function Home() {
 
                     {/* Form header */}
                     <div className="flex items-center justify-between px-6 py-4">
-                      <span className="text-lg font-bold text-stone-800">New Note</span>
+                      <div className="flex items-center gap-2">
+                        {selectedNoteId !== null && (
+                          <button onClick={clearSelectedNote} className="flex items-center gap-1 text-xs text-stone-400 hover:text-stone-600 transition-colors">
+                            <ChevronLeft className="w-3.5 h-3.5" /> New
+                          </button>
+                        )}
+                        <span className="text-lg font-bold text-stone-800">{selectedNoteId !== null ? "Edit Note" : "New Note"}</span>
+                      </div>
                       <div className="flex items-center gap-2">
 
                         {/* Priority button — violet style */}
@@ -836,7 +870,7 @@ export default function Home() {
 
                         {/* Save — black rounded square */}
                         <button
-                          onClick={handleCreateNote}
+                          onClick={selectedNoteId !== null ? handleSaveSelectedNote : handleCreateNote}
                           className="w-9 h-9 rounded-xl bg-stone-900 text-white hover:bg-stone-700 transition-colors flex items-center justify-center shadow-sm"
                         >
                           <Check className="w-4 h-4" />
@@ -862,7 +896,7 @@ export default function Home() {
                         onChange={(e) => setNewNoteBody(e.target.value)}
                         placeholder="Write your note here..."
                         className="flex-1 w-full px-4 py-3 text-sm text-stone-600 outline-none bg-white resize-none placeholder:text-stone-300 leading-relaxed"
-                        onKeyDown={(e) => { if (e.key === "Enter" && e.ctrlKey) handleCreateNote(); }}
+                        onKeyDown={(e) => { if (e.key === "Enter" && e.ctrlKey) { selectedNoteId !== null ? handleSaveSelectedNote() : handleCreateNote(); } }}
                         style={{ minHeight: 500 }}
                       />
                     </div>
@@ -897,7 +931,7 @@ export default function Home() {
                   const accentBar = pColor || note.color;
 
                   return (
-                    <div key={note.id} className="group relative bg-white rounded-xl shadow-sm hover:shadow-md transition-all border border-stone-100 overflow-hidden flex">
+                    <div key={note.id} onClick={() => handleSelectNote(note)} className={`group relative bg-white rounded-xl shadow-sm hover:shadow-md transition-all border overflow-hidden flex cursor-pointer ${selectedNoteId === note.id ? "border-stone-400 ring-2 ring-stone-200" : "border-stone-100"}`}>
                       {/* Left accent bar */}
                       <div className="w-[4px] flex-shrink-0 rounded-l-xl" style={{ backgroundColor: accentBar }} />
 
