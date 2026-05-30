@@ -1578,13 +1578,6 @@ export default function Home() {
                     </div>
                   </div>
 
-                  {/* + button — full width, light gray bar */}
-                  <button
-                    onClick={() => { setAddingRow(true); setNewRowTitle(""); setPriorityMenuId(null); setTimePickerId(null); }}
-                    className="flex-shrink-0 w-full flex items-center justify-center py-3 bg-stone-100 hover:bg-stone-200 transition-colors rounded-b-2xl text-stone-400 hover:text-stone-600 text-xl font-light leading-none"
-                  >
-                    +
-                  </button>
                 </div>
 
                 {/* ── RIGHT panel ── */}
