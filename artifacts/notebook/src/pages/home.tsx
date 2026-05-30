@@ -771,7 +771,7 @@ export default function Home() {
 
               {/* LEFT: Big note form */}
               <div className="w-[58%] flex-shrink-0">
-                <div className="bg-stone-50 rounded-2xl flex flex-col overflow-visible" style={{ minHeight: 700, boxShadow: "0 8px 40px 0 rgba(0,0,0,0.10), 0 2px 8px 0 rgba(0,0,0,0.06)" }}>
+                <div className="bg-stone-50 rounded-2xl flex flex-col overflow-visible" style={{ minHeight: 780, boxShadow: "0 8px 40px 0 rgba(0,0,0,0.10), 0 2px 8px 0 rgba(0,0,0,0.06)" }}>
 
                     {/* Form header */}
                     <div className="flex items-center justify-between px-6 py-4">
