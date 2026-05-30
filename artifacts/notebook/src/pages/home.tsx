@@ -4,7 +4,7 @@ import {
   BookOpen, FileText, Lock, LockOpen, Eye, EyeOff, User,
   Camera, Pencil, Home as HomeIcon, ChevronLeft, ChevronRight,
   Check, BookMarked, Clock, StickyNote, FolderKanban,
-  CheckSquare, CalendarDays, UserRound, Flag,
+  CheckSquare, CalendarDays, UserRound, AlertTriangle,
 } from "lucide-react";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { store, type Book } from "@/lib/store";
@@ -793,7 +793,7 @@ export default function Home() {
                           borderColor: newNotePriority ? "transparent" : "#d6d3d1",
                         }}
                       >
-                        <Flag className="w-3 h-3" style={{ color: newNotePriority === "low" ? "#16a34a" : newNotePriority === "medium" ? "#ca8a04" : newNotePriority === "important" ? "#dc2626" : "#a8a29e" }} />
+                        <AlertTriangle className="w-3 h-3" style={{ color: newNotePriority === "low" ? "#16a34a" : newNotePriority === "medium" ? "#ca8a04" : newNotePriority === "important" ? "#dc2626" : "#a8a29e" }} />
                       </button>
                       {showPriorityPopup && (
                         <div className="absolute right-0 top-8 z-50 bg-white rounded-2xl shadow-xl p-3 flex flex-col gap-1.5 w-36 border border-stone-100">
@@ -805,7 +805,7 @@ export default function Home() {
                               className="flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors hover:bg-stone-50 text-left"
                               style={{ backgroundColor: newNotePriority === val ? bg : undefined }}
                             >
-                              <Flag className="w-3 h-3 flex-shrink-0" style={{ color }} />
+                              <AlertTriangle className="w-3 h-3 flex-shrink-0" style={{ color }} />
                               <span className="text-xs font-medium text-stone-700">{label}</span>
                             </button>
                           ))}
