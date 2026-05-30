@@ -1489,20 +1489,20 @@ export default function Home() {
                       {filteredTasks.map((task, idx) => {
                         const pm = task.priority ? DAY_PRIORITY_META[task.priority] : null;
                         return (
-                          <div key={task.id} className="rounded-2xl flex items-center gap-2.5 px-4 py-6" style={{ background: "#ffffff", boxShadow: "6px 6px 14px #d0d0d0, -6px -6px 14px #ffffff" }}>
+                          <div key={task.id} className="rounded-2xl flex items-center gap-2.5 px-4 py-4" style={{ background: "#ffffff", boxShadow: "6px 6px 14px #d0d0d0, -6px -6px 14px #ffffff" }}>
 
                             {/* Row number badge */}
-                            <span className="text-[11px] font-bold text-stone-500 rounded-lg px-2.5 py-2.5 flex-shrink-0" style={{ background: "#ffffff", boxShadow: "3px 3px 7px #d0d0d0, -3px -3px 7px #ffffff" }}>T{idx + 1}</span>
+                            <span className="text-[11px] font-bold text-stone-500 rounded-lg px-2.5 py-3.5 flex-shrink-0" style={{ background: "#ffffff", boxShadow: "3px 3px 7px #d0d0d0, -3px -3px 7px #ffffff" }}>T{idx + 1}</span>
 
                             {/* Checkbox */}
                             <button
                               onClick={() => toggleDone(task.id)}
-                              className="w-[18px] h-[18px] rounded flex-shrink-0 flex items-center justify-center transition-all"
+                              className="w-[22px] h-[22px] rounded flex-shrink-0 flex items-center justify-center transition-all"
                               style={task.done
                                 ? { background: "#6366f1", boxShadow: "inset 2px 2px 5px #4f52c7, inset -2px -2px 5px #7779ff" }
                                 : { background: "#ffffff", boxShadow: "inset 3px 3px 6px #d0d0d0, inset -3px -3px 6px #ffffff" }}
                             >
-                              {task.done && <Check className="w-2.5 h-2.5 text-white" />}
+                              {task.done && <Check className="w-3 h-3 text-white" />}
                             </button>
 
                             {/* Title input */}
@@ -1512,7 +1512,7 @@ export default function Home() {
                               onChange={e => updateTask(task.id, { title: e.target.value })}
                               onFocus={() => setNewTaskFocusId(null)}
                               placeholder="Task name..."
-                              className={`flex-1 text-sm outline-none min-w-0 px-3 py-2.5 rounded-xl placeholder-stone-400 ${task.done ? "line-through text-stone-400" : "text-stone-700"}`}
+                              className={`flex-1 text-sm outline-none min-w-0 px-3 py-3.5 rounded-xl placeholder-stone-400 ${task.done ? "line-through text-stone-400" : "text-stone-700"}`}
                               style={{ background: "#ffffff", boxShadow: "inset 3px 3px 7px #d0d0d0, inset -3px -3px 7px #ffffff" }}
                             />
 
@@ -1520,7 +1520,7 @@ export default function Home() {
                             <div className="relative flex-shrink-0">
                               <button
                                 onClick={() => { setNotePopupId(notePopupId === task.id ? null : task.id); setTimePickerId(null); setPriorityMenuId(null); setProgressMenuId(null); }}
-                                className="text-[11px] px-3 py-2.5 rounded-xl flex items-center gap-1 transition-all text-stone-500"
+                                className="text-[11px] px-3 py-3.5 rounded-xl flex items-center gap-1 transition-all text-stone-500"
                                 style={task.note || notePopupId === task.id
                                   ? { background: "#ffffff", boxShadow: "inset 3px 3px 7px #d0d0d0, inset -3px -3px 7px #ffffff" }
                                   : { background: "#ffffff", boxShadow: "3px 3px 7px #d0d0d0, -3px -3px 7px #ffffff" }}
@@ -1553,7 +1553,7 @@ export default function Home() {
                                   setTimePickerId(task.id);
                                   setPriorityMenuId(null); setNotePopupId(null); setProgressMenuId(null);
                                 }}
-                                className="text-[11px] px-3 py-2.5 rounded-xl text-stone-600 tabular-nums transition-all min-w-[76px] text-center"
+                                className="text-[11px] px-3 py-3.5 rounded-xl text-stone-600 tabular-nums transition-all min-w-[76px] text-center"
                                 style={timePickerId === task.id
                                   ? { background: "#ffffff", boxShadow: "inset 3px 3px 7px #d0d0d0, inset -3px -3px 7px #ffffff" }
                                   : { background: "#ffffff", boxShadow: "3px 3px 7px #d0d0d0, -3px -3px 7px #ffffff" }}
@@ -1588,7 +1588,7 @@ export default function Home() {
                             <div className="relative flex-shrink-0">
                               <button
                                 onClick={() => { setPriorityMenuId(priorityMenuId === task.id ? null : task.id); setTimePickerId(null); setNotePopupId(null); setProgressMenuId(null); }}
-                                className="text-[10px] font-bold px-3 py-2.5 rounded-xl transition-all min-w-[62px] text-center"
+                                className="text-[10px] font-bold px-3 py-3.5 rounded-xl transition-all min-w-[62px] text-center"
                                 style={pm
                                   ? { backgroundColor: pm.bg, color: pm.color, boxShadow: `3px 3px 7px #d0d0d0, -3px -3px 7px #ffffff` }
                                   : priorityMenuId === task.id
@@ -1621,7 +1621,7 @@ export default function Home() {
                             <div className="relative flex-shrink-0">
                               <button
                                 onClick={() => { setProgressMenuId(progressMenuId === task.id ? null : task.id); setTimePickerId(null); setNotePopupId(null); setPriorityMenuId(null); }}
-                                className="text-[11px] px-3 py-2.5 rounded-xl transition-all min-w-[72px] text-center text-stone-500"
+                                className="text-[11px] px-3 py-3.5 rounded-xl transition-all min-w-[72px] text-center text-stone-500"
                                 style={progressMenuId === task.id
                                   ? { background: "#ffffff", boxShadow: "inset 3px 3px 7px #d0d0d0, inset -3px -3px 7px #ffffff" }
                                   : { background: "#ffffff", boxShadow: "3px 3px 7px #d0d0d0, -3px -3px 7px #ffffff" }}
@@ -1641,7 +1641,7 @@ export default function Home() {
                             </div>
 
                             {/* Trash button — neumorphic */}
-                            <button onClick={() => deleteTask(task.id)} className="flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center transition-all" style={{ background: "#ffffff", boxShadow: "3px 3px 7px #d0d0d0, -3px -3px 7px #ffffff" }}>
+                            <button onClick={() => deleteTask(task.id)} className="flex-shrink-0 w-10 h-12 rounded-xl flex items-center justify-center transition-all" style={{ background: "#ffffff", boxShadow: "3px 3px 7px #d0d0d0, -3px -3px 7px #ffffff" }}>
                               <Trash2 className="w-3.5 h-3.5 text-red-400" />
                             </button>
                           </div>
