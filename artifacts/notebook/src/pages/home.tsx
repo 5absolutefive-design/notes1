@@ -862,11 +862,11 @@ export default function Home() {
               </div>
             )}
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-3 gap-4">
               {filteredNotes.map((note) => (
                 <div
                   key={note.id}
-                  className="group relative rounded-2xl p-5 flex flex-col gap-3 shadow-sm hover:shadow-md transition-shadow min-h-[260px]"
+                  className="group relative rounded-2xl p-5 flex flex-col gap-3 shadow-sm hover:shadow-md transition-shadow min-h-[255px]"
                   style={{ backgroundColor: note.color }}
                 >
                   {/* Actions */}
