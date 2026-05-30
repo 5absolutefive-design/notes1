@@ -1586,7 +1586,7 @@ export default function Home() {
                   {/* Clock card — analog clock + empty right half */}
                   <div className="bg-white rounded-2xl border border-stone-200 flex-shrink-0 flex items-center">
                     <div className="flex-1 flex items-center justify-center p-5">
-                      <div className="w-[100px] h-[100px]">
+                      <div className="w-[150px] h-[150px]">
                         <AnalogClock now={clockNow} />
                       </div>
                     </div>
