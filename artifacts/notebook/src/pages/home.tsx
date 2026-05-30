@@ -161,6 +161,7 @@ export default function Home() {
   const [showNoteCreate, setShowNoteCreate] = useState(false);
   const [showColorPopup, setShowColorPopup] = useState(false);
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
+  const [confirmDeleteNoteId, setConfirmDeleteNoteId] = useState<number | null>(null);
   const [editNoteTitle, setEditNoteTitle] = useState("");
   const [editNoteBody, setEditNoteBody] = useState("");
 
@@ -846,12 +847,33 @@ export default function Home() {
                       <Pencil className="w-3 h-3 text-stone-700" />
                     </button>
                     <button
-                      onClick={() => handleDeleteNote(note.id)}
+                      onClick={() => setConfirmDeleteNoteId(note.id)}
                       className="w-6 h-6 rounded-full bg-black/10 hover:bg-red-200 flex items-center justify-center transition-colors"
                     >
                       <Trash2 className="w-3 h-3 text-stone-700" />
                     </button>
                   </div>
+
+                  {/* Delete confirmation overlay */}
+                  {confirmDeleteNoteId === note.id && (
+                    <div className="absolute inset-0 rounded-2xl bg-black/40 backdrop-blur-sm flex flex-col items-center justify-center gap-3 z-10">
+                      <p className="text-white text-sm font-semibold">Are you sure?</p>
+                      <div className="flex gap-2">
+                        <button
+                          onClick={() => { handleDeleteNote(note.id); setConfirmDeleteNoteId(null); }}
+                          className="px-4 py-1.5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-xs font-semibold transition-colors"
+                        >
+                          Yes
+                        </button>
+                        <button
+                          onClick={() => setConfirmDeleteNoteId(null)}
+                          className="px-4 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white text-xs font-semibold transition-colors"
+                        >
+                          No
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   {editingNoteId === note.id ? (
                     <>
