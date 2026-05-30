@@ -805,7 +805,7 @@ export default function Home() {
                     </div>
                     <button
                       onClick={handleCreateNote}
-                      className="w-7 h-7 rounded-full bg-stone-800 text-white hover:bg-stone-700 transition-colors flex items-center justify-center flex-shrink-0"
+                      className="w-6 h-6 rounded-md bg-stone-800 text-white hover:bg-stone-700 transition-colors flex items-center justify-center flex-shrink-0"
                     >
                       <Check className="w-4 h-4" />
                     </button>
