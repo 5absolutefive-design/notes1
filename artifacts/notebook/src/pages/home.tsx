@@ -784,7 +784,7 @@ export default function Home() {
                     <div className="relative">
                       <button
                         onClick={() => setShowColorPopup((v) => !v)}
-                        className="w-6 h-6 rounded-full border-2 border-stone-300 hover:border-stone-500 transition-colors shadow-sm"
+                        className="w-[26px] h-[26px] rounded-full border-2 border-stone-300 hover:border-stone-500 transition-colors shadow-sm"
                         style={{ backgroundColor: newNoteColor }}
                       />
                       {showColorPopup && (
