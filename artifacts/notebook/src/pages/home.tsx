@@ -757,7 +757,7 @@ export default function Home() {
                     {noteSearch && <button onClick={() => setNoteSearch("")} className="text-stone-400 hover:text-stone-600"><X className="w-3 h-3" /></button>}
                   </div>
                   <button
-                    onClick={() => setShowNoteCreate((v) => !v)}
+                    onClick={() => setShowNoteCreate(true)}
                     className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-stone-800 text-white text-sm font-semibold hover:bg-stone-700 transition-colors"
                   >
                     <Plus className="w-4 h-4" />
