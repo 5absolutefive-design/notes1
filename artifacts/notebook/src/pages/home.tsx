@@ -801,15 +801,15 @@ export default function Home() {
                 <div className="bg-stone-50 rounded-2xl flex flex-col overflow-visible" style={{ minHeight: 780, boxShadow: "0 8px 40px 0 rgba(0,0,0,0.10), 0 2px 8px 0 rgba(0,0,0,0.06)" }}>
 
                     {/* Form header */}
-                    <div className="flex items-center justify-between px-6 py-4">
+                    <div className="relative flex items-center justify-between px-6 py-4">
                       <div className="flex items-center gap-2">
                         {selectedNoteId !== null && (
                           <button onClick={clearSelectedNote} className="flex items-center gap-1 text-xs text-stone-400 hover:text-stone-600 transition-colors">
                             <ChevronLeft className="w-3.5 h-3.5" /> New
                           </button>
                         )}
-                        <span className="text-lg font-bold text-stone-800">{selectedNoteId !== null ? "Edit Note" : "New Note"}</span>
                       </div>
+                      <span className="absolute left-1/2 -translate-x-1/2 text-lg font-bold text-stone-800">{selectedNoteId !== null ? "Edit Note" : "New Note"}</span>
                       <div className="flex items-center gap-2">
 
                         {/* Priority button — violet style */}
