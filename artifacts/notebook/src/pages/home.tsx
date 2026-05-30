@@ -769,7 +769,7 @@ export default function Home() {
 
             {/* Create form */}
             {showNoteCreate && (
-              <div className="mb-6 rounded-2xl shadow-md p-4 flex flex-col gap-3 w-1/2 min-h-[260px] transition-colors duration-200" style={{ backgroundColor: newNoteColor }}>
+              <div className="mb-6 rounded-2xl shadow-md p-4 flex flex-col gap-3 w-1/2 min-h-[340px] transition-colors duration-200" style={{ backgroundColor: newNoteColor }}>
                 {/* Top row: title + color picker + save */}
                 <div className="flex items-center justify-between gap-3">
                   <input
@@ -819,10 +819,6 @@ export default function Home() {
                   className="flex-1 text-sm text-stone-700 rounded-xl px-3 py-2 outline-none bg-white placeholder:text-stone-400 resize-none transition-colors"
                   onKeyDown={(e) => { if (e.key === "Enter" && e.ctrlKey) handleCreateNote(); }}
                 />
-                {/* Close */}
-                <div className="flex items-center justify-end">
-                  <button onClick={() => { setShowNoteCreate(false); setShowColorPopup(false); }} className="text-xs text-stone-400 hover:text-stone-600 transition-colors">Cancel</button>
-                </div>
               </div>
             )}
 
