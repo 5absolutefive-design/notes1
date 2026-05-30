@@ -840,7 +840,12 @@ export default function Home() {
                               ] as const).map(([val, label, bg, color]) => (
                                 <button
                                   key={val}
-                                  onClick={() => { setNewNotePriority(newNotePriority === val ? null : val); setShowPriorityPopup(false); }}
+                                  onClick={() => {
+                                    const next = newNotePriority === val ? null : val;
+                                    setNewNotePriority(next);
+                                    setNewNoteColor(next ? color : "#f5f5f4");
+                                    setShowPriorityPopup(false);
+                                  }}
                                   className="flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors hover:bg-stone-50 text-left"
                                   style={{ backgroundColor: newNotePriority === val ? bg : undefined }}
                                 >
@@ -848,30 +853,6 @@ export default function Home() {
                                   <span className="text-xs font-medium text-stone-700">{label}</span>
                                 </button>
                               ))}
-                            </div>
-                          )}
-                        </div>
-
-                        {/* Color circle */}
-                        <div className="relative">
-                          <button
-                            onClick={() => { setShowColorPopup((v) => !v); setShowPriorityPopup(false); }}
-                            className="w-8 h-8 rounded-full border-2 border-stone-300 hover:border-stone-400 transition-colors shadow-sm"
-                            style={{ backgroundColor: newNoteColor }}
-                          />
-                          {showColorPopup && (
-                            <div className="absolute right-0 top-10 z-50 bg-white rounded-2xl shadow-xl p-3 flex flex-col gap-2 w-40 border border-stone-100">
-                              <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide">Card Colour</p>
-                              <div className="grid grid-cols-4 gap-2">
-                                {NOTE_COLORS.map((c) => (
-                                  <button
-                                    key={c}
-                                    onClick={() => { setNewNoteColor(c); setShowColorPopup(false); }}
-                                    className="w-7 h-7 rounded-full border-2 transition-all hover:scale-110"
-                                    style={{ backgroundColor: c, borderColor: newNoteColor === c ? "#1c1917" : "transparent" }}
-                                  />
-                                ))}
-                              </div>
                             </div>
                           )}
                         </div>
