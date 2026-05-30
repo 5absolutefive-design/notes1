@@ -281,9 +281,7 @@ export default function Home() {
   const [dayTasks, setDayTasks] = useState<DayTask[]>(() => loadDayTasks(getDateKey(new Date())));
   const [dayTaskTypes, setDayTaskTypes] = useState<DayTaskType[]>(() => loadDayTaskTypes());
   const [selectedTypeId, setSelectedTypeId] = useState<number | "all">("all");
-  const [addingRow, setAddingRow] = useState(false);
-  const [newRowTitle, setNewRowTitle] = useState("");
-  const addingRowEnterRef = useRef(false);
+  const [newTaskFocusId, setNewTaskFocusId] = useState<number | null>(null);
   const [showTypeInput, setShowTypeInput] = useState(false);
   const [newTypeName, setNewTypeName] = useState("");
   const [timePickerId, setTimePickerId] = useState<number | null>(null);
@@ -333,8 +331,7 @@ export default function Home() {
   useEffect(() => {
     setDayTasks(loadDayTasks(selectedDate));
     setSelectedTypeId("all");
-    setAddingRow(false);
-    setNewRowTitle("");
+    setNewTaskFocusId(null);
   }, [selectedDate]);
 
   useEffect(() => {
@@ -1409,10 +1406,10 @@ export default function Home() {
           };
 
           const addTask = () => {
-            if (!newRowTitle.trim()) { setAddingRow(false); return; }
+            const id = nextDayTaskId(dayTasks);
             const task: DayTask = {
-              id: nextDayTaskId(dayTasks),
-              title: newRowTitle.trim(),
+              id,
+              title: "",
               hour: "12", minute: "00", ampm: "AM", hasTime: false,
               priority: null,
               typeId: selectedTypeId === "all" ? null : selectedTypeId,
@@ -1421,7 +1418,7 @@ export default function Home() {
               progress: 0,
             };
             saveDay([...dayTasks, task]);
-            setNewRowTitle("");
+            setNewTaskFocusId(id);
           };
 
           const selectedTypeName = selectedTypeId === "all"
@@ -1474,7 +1471,7 @@ export default function Home() {
                       <span>complete: <span className="font-semibold text-green-600">{completeTasks}</span></span>
                       <span>Pending Task: <span className="font-semibold text-orange-500">{pendingTasks}</span></span>
                       <button
-                        onClick={() => { setAddingRow(true); setNewRowTitle(""); setNotePopupId(null); setProgressMenuId(null); setPriorityMenuId(null); setTimePickerId(null); }}
+                        onClick={() => { addTask(); setNotePopupId(null); setProgressMenuId(null); setPriorityMenuId(null); setTimePickerId(null); }}
                         className="ml-2 w-6 h-6 rounded-full bg-stone-800 text-white flex items-center justify-center text-base font-light hover:bg-stone-600 transition-colors leading-none"
                       >+</button>
                     </div>
@@ -1482,7 +1479,7 @@ export default function Home() {
 
                   {/* Task list */}
                   <div className="flex-1 overflow-y-auto px-4 py-3">
-                    {filteredTasks.length === 0 && !addingRow && (
+                    {filteredTasks.length === 0 && (
                       <div className="flex items-center justify-center h-20">
                         <p className="text-sm text-stone-300">No tasks — press + to add</p>
                       </div>
@@ -1510,9 +1507,11 @@ export default function Home() {
 
                             {/* Title input */}
                             <input
+                              autoFocus={task.id === newTaskFocusId}
                               value={task.title}
                               onChange={e => updateTask(task.id, { title: e.target.value })}
-                              placeholder="Task"
+                              onFocus={() => setNewTaskFocusId(null)}
+                              placeholder="Task name..."
                               className={`flex-1 text-sm outline-none min-w-0 px-3 py-2.5 rounded-xl placeholder-stone-400 ${task.done ? "line-through text-stone-400" : "text-stone-700"}`}
                               style={{ background: "#ffffff", boxShadow: "inset 3px 3px 7px #d0d0d0, inset -3px -3px 7px #ffffff" }}
                             />
@@ -1649,36 +1648,6 @@ export default function Home() {
                         );
                       })}
 
-                      {/* Inline new-row input */}
-                      {addingRow && (
-                        <div className="rounded-2xl flex items-center gap-2.5 px-4 py-6" style={{ background: "#ffffff", boxShadow: "6px 6px 14px #d0d0d0, -6px -6px 14px #ffffff" }}>
-                          <span className="text-[11px] font-bold text-stone-400 rounded-lg px-2.5 py-1.5 flex-shrink-0" style={{ background: "#ffffff", boxShadow: "3px 3px 7px #d0d0d0, -3px -3px 7px #ffffff" }}>T{filteredTasks.length + 1}</span>
-                          <div className="w-[18px] h-[18px] rounded flex-shrink-0" style={{ background: "#ffffff", boxShadow: "inset 3px 3px 6px #d0d0d0, inset -3px -3px 6px #ffffff" }} />
-                          <input
-                            autoFocus
-                            value={newRowTitle}
-                            onChange={e => setNewRowTitle(e.target.value)}
-                            onKeyDown={e => {
-                              if (e.key === "Enter") {
-                                e.preventDefault();
-                                addingRowEnterRef.current = true;
-                                addTask();
-                                setNewRowTitle("");
-                                setTimeout(() => { addingRowEnterRef.current = false; }, 100);
-                              }
-                              if (e.key === "Escape") { setAddingRow(false); setNewRowTitle(""); }
-                            }}
-                            onBlur={() => {
-                              if (addingRowEnterRef.current) return;
-                              if (newRowTitle.trim()) addTask();
-                              setAddingRow(false);
-                            }}
-                            placeholder="Task name..."
-                            className="flex-1 text-sm outline-none text-stone-700 px-3 py-2.5 rounded-xl placeholder-stone-400"
-                            style={{ background: "#ffffff", boxShadow: "inset 3px 3px 7px #d0d0d0, inset -3px -3px 7px #ffffff" }}
-                          />
-                        </div>
-                      )}
                     </div>
                   </div>
 
