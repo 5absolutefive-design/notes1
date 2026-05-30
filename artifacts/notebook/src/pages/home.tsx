@@ -1463,7 +1463,7 @@ export default function Home() {
               <div className="flex gap-4 flex-1 min-h-0 overflow-hidden">
 
                 {/* ── LEFT — task pad ── */}
-                <div className="flex-[7] rounded-2xl flex flex-col overflow-hidden" style={{ background: "#e8e9f0", boxShadow: "inset 4px 4px 10px #c5c6cc, inset -4px -4px 10px #ffffff" }}>
+                <div className="flex-[7] rounded-2xl flex flex-col overflow-hidden" style={{ background: "#ebebeb", boxShadow: "inset 4px 4px 10px #cccccc, inset -4px -4px 10px #ffffff" }}>
 
                   {/* Card header */}
                   <div className="flex-shrink-0 flex items-center justify-between px-5 py-3" style={{ borderBottom: "1px solid #d5d6de" }}>
@@ -1491,10 +1491,10 @@ export default function Home() {
                       {filteredTasks.map((task, idx) => {
                         const pm = task.priority ? DAY_PRIORITY_META[task.priority] : null;
                         return (
-                          <div key={task.id} className="rounded-2xl flex items-center gap-2.5 px-4 py-4" style={{ background: "#e8e9f0", boxShadow: "6px 6px 14px #c2c3ca, -6px -6px 14px #ffffff" }}>
+                          <div key={task.id} className="rounded-2xl flex items-center gap-2.5 px-4 py-4" style={{ background: "#ebebeb", boxShadow: "6px 6px 14px #c8c8c8, -6px -6px 14px #ffffff" }}>
 
                             {/* Row number badge */}
-                            <span className="text-[11px] font-bold text-stone-500 rounded-lg px-2.5 py-1.5 flex-shrink-0" style={{ background: "#e8e9f0", boxShadow: "3px 3px 7px #c2c3ca, -3px -3px 7px #ffffff" }}>T{idx + 1}</span>
+                            <span className="text-[11px] font-bold text-stone-500 rounded-lg px-2.5 py-1.5 flex-shrink-0" style={{ background: "#ebebeb", boxShadow: "3px 3px 7px #c8c8c8, -3px -3px 7px #ffffff" }}>T{idx + 1}</span>
 
                             {/* Checkbox */}
                             <button
@@ -1502,7 +1502,7 @@ export default function Home() {
                               className="w-[18px] h-[18px] rounded flex-shrink-0 flex items-center justify-center transition-all"
                               style={task.done
                                 ? { background: "#6366f1", boxShadow: "inset 2px 2px 5px #4f52c7, inset -2px -2px 5px #7779ff" }
-                                : { background: "#e8e9f0", boxShadow: "inset 3px 3px 6px #c2c3ca, inset -3px -3px 6px #ffffff" }}
+                                : { background: "#ebebeb", boxShadow: "inset 3px 3px 6px #c8c8c8, inset -3px -3px 6px #ffffff" }}
                             >
                               {task.done && <Check className="w-2.5 h-2.5 text-white" />}
                             </button>
@@ -1513,7 +1513,7 @@ export default function Home() {
                               onChange={e => updateTask(task.id, { title: e.target.value })}
                               placeholder="Task"
                               className={`flex-1 text-sm outline-none min-w-0 px-3 py-1.5 rounded-xl placeholder-stone-400 ${task.done ? "line-through text-stone-400" : "text-stone-700"}`}
-                              style={{ background: "#e8e9f0", boxShadow: "inset 3px 3px 7px #c2c3ca, inset -3px -3px 7px #ffffff" }}
+                              style={{ background: "#ebebeb", boxShadow: "inset 3px 3px 7px #c8c8c8, inset -3px -3px 7px #ffffff" }}
                             />
 
                             {/* Note button */}
@@ -1522,8 +1522,8 @@ export default function Home() {
                                 onClick={() => { setNotePopupId(notePopupId === task.id ? null : task.id); setTimePickerId(null); setPriorityMenuId(null); setProgressMenuId(null); }}
                                 className="text-[11px] px-3 py-1.5 rounded-xl flex items-center gap-1 transition-all text-stone-500"
                                 style={task.note || notePopupId === task.id
-                                  ? { background: "#e8e9f0", boxShadow: "inset 3px 3px 7px #c2c3ca, inset -3px -3px 7px #ffffff" }
-                                  : { background: "#e8e9f0", boxShadow: "3px 3px 7px #c2c3ca, -3px -3px 7px #ffffff" }}
+                                  ? { background: "#ebebeb", boxShadow: "inset 3px 3px 7px #c8c8c8, inset -3px -3px 7px #ffffff" }
+                                  : { background: "#ebebeb", boxShadow: "3px 3px 7px #c8c8c8, -3px -3px 7px #ffffff" }}
                               >
                                 Note {task.note && <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 inline-block" />}
                               </button>
@@ -1555,8 +1555,8 @@ export default function Home() {
                                 }}
                                 className="text-[11px] px-3 py-1.5 rounded-xl text-stone-600 tabular-nums transition-all min-w-[76px] text-center"
                                 style={timePickerId === task.id
-                                  ? { background: "#e8e9f0", boxShadow: "inset 3px 3px 7px #c2c3ca, inset -3px -3px 7px #ffffff" }
-                                  : { background: "#e8e9f0", boxShadow: "3px 3px 7px #c2c3ca, -3px -3px 7px #ffffff" }}
+                                  ? { background: "#ebebeb", boxShadow: "inset 3px 3px 7px #c8c8c8, inset -3px -3px 7px #ffffff" }
+                                  : { background: "#ebebeb", boxShadow: "3px 3px 7px #c8c8c8, -3px -3px 7px #ffffff" }}
                               >
                                 {task.hasTime
                                   ? <>{task.hour}:{task.minute}<span className="text-[9px] ml-0.5">{task.ampm}</span></>
@@ -1590,10 +1590,10 @@ export default function Home() {
                                 onClick={() => { setPriorityMenuId(priorityMenuId === task.id ? null : task.id); setTimePickerId(null); setNotePopupId(null); setProgressMenuId(null); }}
                                 className="text-[10px] font-bold px-3 py-1.5 rounded-xl transition-all min-w-[62px] text-center"
                                 style={pm
-                                  ? { backgroundColor: pm.bg, color: pm.color, boxShadow: `3px 3px 7px #c2c3ca, -3px -3px 7px #ffffff` }
+                                  ? { backgroundColor: pm.bg, color: pm.color, boxShadow: `3px 3px 7px #c8c8c8, -3px -3px 7px #ffffff` }
                                   : priorityMenuId === task.id
-                                    ? { background: "#e8e9f0", color: "#a0a0b0", boxShadow: "inset 3px 3px 7px #c2c3ca, inset -3px -3px 7px #ffffff" }
-                                    : { background: "#e8e9f0", color: "#a0a0b0", boxShadow: "3px 3px 7px #c2c3ca, -3px -3px 7px #ffffff" }}
+                                    ? { background: "#ebebeb", color: "#a0a0b0", boxShadow: "inset 3px 3px 7px #c8c8c8, inset -3px -3px 7px #ffffff" }
+                                    : { background: "#ebebeb", color: "#a0a0b0", boxShadow: "3px 3px 7px #c8c8c8, -3px -3px 7px #ffffff" }}
                               >
                                 {pm ? pm.label : "Priority"}
                               </button>
@@ -1623,8 +1623,8 @@ export default function Home() {
                                 onClick={() => { setProgressMenuId(progressMenuId === task.id ? null : task.id); setTimePickerId(null); setNotePopupId(null); setPriorityMenuId(null); }}
                                 className="text-[11px] px-3 py-1.5 rounded-xl transition-all min-w-[72px] text-center text-stone-500"
                                 style={progressMenuId === task.id
-                                  ? { background: "#e8e9f0", boxShadow: "inset 3px 3px 7px #c2c3ca, inset -3px -3px 7px #ffffff" }
-                                  : { background: "#e8e9f0", boxShadow: "3px 3px 7px #c2c3ca, -3px -3px 7px #ffffff" }}
+                                  ? { background: "#ebebeb", boxShadow: "inset 3px 3px 7px #c8c8c8, inset -3px -3px 7px #ffffff" }
+                                  : { background: "#ebebeb", boxShadow: "3px 3px 7px #c8c8c8, -3px -3px 7px #ffffff" }}
                               >
                                 {task.progress > 0 ? `${task.progress}%` : "Progress %"}
                               </button>
@@ -1641,7 +1641,7 @@ export default function Home() {
                             </div>
 
                             {/* Trash button — neumorphic */}
-                            <button onClick={() => deleteTask(task.id)} className="flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center transition-all" style={{ background: "#e8e9f0", boxShadow: "3px 3px 7px #c2c3ca, -3px -3px 7px #ffffff" }}>
+                            <button onClick={() => deleteTask(task.id)} className="flex-shrink-0 w-8 h-8 rounded-xl flex items-center justify-center transition-all" style={{ background: "#ebebeb", boxShadow: "3px 3px 7px #c8c8c8, -3px -3px 7px #ffffff" }}>
                               <Trash2 className="w-3.5 h-3.5 text-red-400" />
                             </button>
                           </div>
@@ -1650,9 +1650,9 @@ export default function Home() {
 
                       {/* Inline new-row input */}
                       {addingRow && (
-                        <div className="rounded-2xl flex items-center gap-2.5 px-4 py-4" style={{ background: "#e8e9f0", boxShadow: "6px 6px 14px #c2c3ca, -6px -6px 14px #ffffff" }}>
-                          <span className="text-[11px] font-bold text-stone-400 rounded-lg px-2.5 py-1.5 flex-shrink-0" style={{ background: "#e8e9f0", boxShadow: "3px 3px 7px #c2c3ca, -3px -3px 7px #ffffff" }}>T{filteredTasks.length + 1}</span>
-                          <div className="w-[18px] h-[18px] rounded flex-shrink-0" style={{ background: "#e8e9f0", boxShadow: "inset 3px 3px 6px #c2c3ca, inset -3px -3px 6px #ffffff" }} />
+                        <div className="rounded-2xl flex items-center gap-2.5 px-4 py-4" style={{ background: "#ebebeb", boxShadow: "6px 6px 14px #c8c8c8, -6px -6px 14px #ffffff" }}>
+                          <span className="text-[11px] font-bold text-stone-400 rounded-lg px-2.5 py-1.5 flex-shrink-0" style={{ background: "#ebebeb", boxShadow: "3px 3px 7px #c8c8c8, -3px -3px 7px #ffffff" }}>T{filteredTasks.length + 1}</span>
+                          <div className="w-[18px] h-[18px] rounded flex-shrink-0" style={{ background: "#ebebeb", boxShadow: "inset 3px 3px 6px #c8c8c8, inset -3px -3px 6px #ffffff" }} />
                           <input
                             autoFocus
                             value={newRowTitle}
@@ -1664,7 +1664,7 @@ export default function Home() {
                             onBlur={() => { if (newRowTitle.trim()) addTask(); else setAddingRow(false); }}
                             placeholder="Task name..."
                             className="flex-1 text-sm outline-none text-stone-700 px-3 py-1.5 rounded-xl placeholder-stone-400"
-                            style={{ background: "#e8e9f0", boxShadow: "inset 3px 3px 7px #c2c3ca, inset -3px -3px 7px #ffffff" }}
+                            style={{ background: "#ebebeb", boxShadow: "inset 3px 3px 7px #c8c8c8, inset -3px -3px 7px #ffffff" }}
                           />
                         </div>
                       )}
