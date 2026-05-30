@@ -87,6 +87,7 @@ interface ShortNote {
   title: string;
   body: string;
   color: string;
+  priority?: "low" | "medium" | "important";
   createdAt: string;
   updatedAt: string;
 }
@@ -284,13 +285,14 @@ export default function Home() {
       title: newNoteTitle.trim() || "Untitled",
       body: newNoteBody.trim(),
       color: newNoteColor,
+      priority: newNotePriority ?? undefined,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
-    const updated = [...shortNotes, note];
+    const updated = [note, ...shortNotes];
     saveShortNotes(updated);
     setShortNotes(updated);
-    setNewNoteTitle(""); setNewNoteBody(""); setNewNoteColor("#f5f5f4"); setNewNotePriority(null); setShowNoteCreate(false);
+    setNewNoteTitle(""); setNewNoteBody(""); setNewNoteColor("#f5f5f4"); setNewNotePriority(null);
   };
 
   const handleDeleteNote = (id: number) => {
@@ -738,10 +740,10 @@ export default function Home() {
 
         {/* Short Note view */}
         {activeView === "short-note" && (
-          <div className="px-4 py-6 md:py-8 w-full">
+          <div className="px-4 py-6 md:py-8 w-full flex flex-col gap-6">
 
             {/* Header */}
-            <div className="mb-8 rounded-2xl border border-stone-200 bg-white shadow-sm px-8 py-3">
+            <div className="rounded-2xl border border-stone-200 bg-white shadow-sm px-8 py-3">
               <div className="flex items-center justify-between gap-4 flex-wrap">
                 <div className="flex flex-col gap-1 min-w-0">
                   <h1 className="text-2xl font-serif font-bold text-stone-800 leading-tight">Short Notes</h1>
@@ -759,184 +761,221 @@ export default function Home() {
                     />
                     {noteSearch && <button onClick={() => setNoteSearch("")} className="text-stone-400 hover:text-stone-600"><X className="w-3 h-3" /></button>}
                   </div>
-                  <button
-                    onClick={() => setShowNoteCreate(true)}
-                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-stone-800 text-white text-sm font-semibold hover:bg-stone-700 transition-colors"
-                  >
-                    <Plus className="w-4 h-4" />
-                    New Note
-                  </button>
                 </div>
               </div>
             </div>
 
-            {/* Create form */}
-            {showNoteCreate && (
-              <div className="mb-6 rounded-2xl shadow-md p-4 flex flex-col gap-3 w-1/3 min-h-[255px] transition-colors duration-200" style={{ backgroundColor: newNoteColor }}>
-                {/* Top row: title + color picker + save */}
-                <div className="flex items-center justify-between gap-3">
-                  <input
-                    autoFocus
-                    value={newNoteTitle}
-                    onChange={(e) => setNewNoteTitle(e.target.value)}
-                    placeholder="Title..."
-                    className="w-2/3 text-sm font-semibold text-stone-800 rounded-xl px-3 py-2 outline-none bg-white placeholder:text-stone-400 transition-colors"
-                  />
-                  <div className="flex items-center gap-2">
-                    {/* Priority button */}
-                    <div className="relative">
-                      <button
-                        onClick={() => { setShowPriorityPopup((v) => !v); setShowColorPopup(false); }}
-                        className="w-6 h-6 rounded-md flex items-center justify-center transition-colors border-2"
-                        style={{
-                          backgroundColor: newNotePriority === "low" ? "#bbf7d0" : newNotePriority === "medium" ? "#fef08a" : newNotePriority === "important" ? "#fecaca" : "transparent",
-                          borderColor: newNotePriority ? "transparent" : "#d6d3d1",
-                        }}
-                      >
-                        <AlertTriangle className="w-3 h-3" style={{ color: newNotePriority === "low" ? "#16a34a" : newNotePriority === "medium" ? "#ca8a04" : newNotePriority === "important" ? "#dc2626" : "#a8a29e" }} />
-                      </button>
-                      {showPriorityPopup && (
-                        <div className="absolute right-0 top-8 z-50 bg-white rounded-2xl shadow-xl p-3 flex flex-col gap-1.5 w-36 border border-stone-100">
-                          <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide mb-1">Priority</p>
-                          {([["low","Low","#bbf7d0","#16a34a"],["medium","Medium","#fef08a","#ca8a04"],["important","Important","#fecaca","#dc2626"]] as const).map(([val, label, bg, color]) => (
-                            <button
-                              key={val}
-                              onClick={() => { setNewNotePriority(newNotePriority === val ? null : val); setShowPriorityPopup(false); }}
-                              className="flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors hover:bg-stone-50 text-left"
-                              style={{ backgroundColor: newNotePriority === val ? bg : undefined }}
-                            >
-                              <AlertTriangle className="w-3 h-3 flex-shrink-0" style={{ color }} />
-                              <span className="text-xs font-medium text-stone-700">{label}</span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                    {/* Color circle button */}
-                    <div className="relative">
-                      <button
-                        onClick={() => { setShowColorPopup((v) => !v); setShowPriorityPopup(false); }}
-                        className="w-[26px] h-[26px] rounded-full border-2 border-stone-300 hover:border-stone-500 transition-colors shadow-sm"
-                        style={{ backgroundColor: newNoteColor }}
-                      />
-                      {showColorPopup && (
-                        <div className="absolute right-0 top-10 z-50 bg-white rounded-2xl shadow-xl p-3 flex flex-col gap-2 w-40 border border-stone-100">
-                          <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide">Card Colour</p>
-                          <div className="grid grid-cols-4 gap-2">
-                            {NOTE_COLORS.map((c) => (
+            {/* Two-panel layout */}
+            <div className="flex gap-5 items-start">
+
+              {/* LEFT: Big note form */}
+              <div className="w-[58%] flex-shrink-0">
+                <div className="bg-white rounded-2xl shadow-md border border-stone-100 flex flex-col overflow-visible" style={{ minHeight: 500 }}>
+                  {/* Form header */}
+                  <div className="flex items-center justify-between px-6 py-4 border-b border-stone-100">
+                    <span className="text-base font-semibold text-stone-700">New Note</span>
+                    <div className="flex items-center gap-2">
+                      {/* Priority button */}
+                      <div className="relative">
+                        <button
+                          onClick={() => { setShowPriorityPopup((v) => !v); setShowColorPopup(false); }}
+                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
+                            newNotePriority === "low"       ? "bg-green-50  border-green-200  text-green-700"
+                            : newNotePriority === "medium" ? "bg-yellow-50 border-yellow-200 text-yellow-700"
+                            : newNotePriority === "important" ? "bg-red-50 border-red-200 text-red-600"
+                            : "bg-stone-50 border-stone-200 text-stone-400 hover:border-stone-300"
+                          }`}
+                        >
+                          <AlertTriangle className="w-3 h-3" />
+                          {newNotePriority ? newNotePriority.charAt(0).toUpperCase() + newNotePriority.slice(1) : "Priority"}
+                        </button>
+                        {showPriorityPopup && (
+                          <div className="absolute right-0 top-9 z-50 bg-white rounded-2xl shadow-xl p-3 flex flex-col gap-1.5 w-36 border border-stone-100">
+                            <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide mb-1">Priority</p>
+                            {([["low","Low","#bbf7d0","#16a34a"],["medium","Medium","#fef08a","#ca8a04"],["important","Important","#fecaca","#dc2626"]] as const).map(([val, label, bg, color]) => (
                               <button
-                                key={c}
-                                onClick={() => { setNewNoteColor(c); setShowColorPopup(false); }}
-                                className="w-7 h-7 rounded-full border-2 transition-all hover:scale-110"
-                                style={{ backgroundColor: c, borderColor: newNoteColor === c ? "#1c1917" : "transparent" }}
-                              />
+                                key={val}
+                                onClick={() => { setNewNotePriority(newNotePriority === val ? null : val); setShowPriorityPopup(false); }}
+                                className="flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors hover:bg-stone-50 text-left"
+                                style={{ backgroundColor: newNotePriority === val ? bg : undefined }}
+                              >
+                                <AlertTriangle className="w-3 h-3 flex-shrink-0" style={{ color }} />
+                                <span className="text-xs font-medium text-stone-700">{label}</span>
+                              </button>
                             ))}
+                          </div>
+                        )}
+                      </div>
+                      {/* Color circle */}
+                      <div className="relative">
+                        <button
+                          onClick={() => { setShowColorPopup((v) => !v); setShowPriorityPopup(false); }}
+                          className="w-[26px] h-[26px] rounded-full border-2 border-stone-300 hover:border-stone-500 transition-colors shadow-sm"
+                          style={{ backgroundColor: newNoteColor }}
+                        />
+                        {showColorPopup && (
+                          <div className="absolute right-0 top-10 z-50 bg-white rounded-2xl shadow-xl p-3 flex flex-col gap-2 w-40 border border-stone-100">
+                            <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide">Card Colour</p>
+                            <div className="grid grid-cols-4 gap-2">
+                              {NOTE_COLORS.map((c) => (
+                                <button
+                                  key={c}
+                                  onClick={() => { setNewNoteColor(c); setShowColorPopup(false); }}
+                                  className="w-7 h-7 rounded-full border-2 transition-all hover:scale-110"
+                                  style={{ backgroundColor: c, borderColor: newNoteColor === c ? "#1c1917" : "transparent" }}
+                                />
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                      {/* Save */}
+                      <button
+                        onClick={handleCreateNote}
+                        className="w-8 h-8 rounded-lg bg-stone-800 text-white hover:bg-stone-700 transition-colors flex items-center justify-center shadow-sm"
+                      >
+                        <Check className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Title input */}
+                  <div className="px-6 pt-5 pb-3">
+                    <input
+                      autoFocus
+                      value={newNoteTitle}
+                      onChange={(e) => setNewNoteTitle(e.target.value)}
+                      placeholder="Give your note a title..."
+                      className="w-full text-lg font-semibold text-stone-800 outline-none placeholder:text-stone-300 bg-transparent"
+                    />
+                  </div>
+                  <div className="mx-6 border-b border-stone-100" />
+
+                  {/* Body textarea */}
+                  <textarea
+                    value={newNoteBody}
+                    onChange={(e) => setNewNoteBody(e.target.value)}
+                    placeholder="Write your note here..."
+                    className="flex-1 px-6 py-4 text-sm text-stone-600 outline-none bg-transparent resize-none placeholder:text-stone-300 leading-relaxed"
+                    onKeyDown={(e) => { if (e.key === "Enter" && e.ctrlKey) handleCreateNote(); }}
+                    style={{ minHeight: 340 }}
+                  />
+
+                  {/* Bottom bar */}
+                  <div className="flex items-center justify-between px-6 py-3 border-t border-stone-100">
+                    <span className="text-[11px] text-stone-300">Ctrl+Enter to save</span>
+                    <span className="text-[11px] text-stone-300">{newNoteBody.length} / 2000</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* RIGHT: Mini note cards */}
+              <div className="flex-1 flex flex-col gap-3">
+                {filteredNotes.length === 0 && (
+                  <div className="flex flex-col items-center justify-center py-20 text-stone-300 gap-3">
+                    <StickyNote className="w-10 h-10 opacity-40" />
+                    <p className="text-sm text-center">{noteSearch ? `No notes for "${noteSearch}"` : "Notes will appear here"}</p>
+                  </div>
+                )}
+                {filteredNotes.map((note) => {
+                  const pColor = note.priority === "low" ? "#16a34a" : note.priority === "medium" ? "#ca8a04" : note.priority === "important" ? "#dc2626" : "";
+                  const pBg    = note.priority === "low" ? "#dcfce7" : note.priority === "medium" ? "#fef9c3" : note.priority === "important" ? "#fee2e2" : "";
+                  const pLabel = note.priority ? note.priority.charAt(0).toUpperCase() + note.priority.slice(1) : null;
+                  const accentBar = pColor || note.color;
+
+                  return (
+                    <div key={note.id} className="group relative bg-white rounded-xl shadow-sm hover:shadow-md transition-all border border-stone-100 overflow-hidden flex">
+                      {/* Left accent bar */}
+                      <div className="w-[4px] flex-shrink-0 rounded-l-xl" style={{ backgroundColor: accentBar }} />
+
+                      <div className="flex-1 px-4 py-3 flex flex-col gap-1.5 min-w-0">
+                        {/* Title + priority badge */}
+                        <div className="flex items-center justify-between gap-2">
+                          {editingNoteId === note.id ? (
+                            <input
+                              autoFocus
+                              value={editNoteTitle}
+                              onChange={(e) => setEditNoteTitle(e.target.value)}
+                              className="text-sm font-semibold text-stone-800 bg-stone-50 rounded px-2 py-0.5 outline-none flex-1 min-w-0"
+                              onKeyDown={(e) => { if (e.key === "Enter") saveEditNote(); if (e.key === "Escape") setEditingNoteId(null); }}
+                            />
+                          ) : (
+                            <h3 className="text-sm font-semibold text-stone-800 leading-snug flex-1 min-w-0 truncate">{note.title}</h3>
+                          )}
+                          {pLabel && (
+                            <span
+                              className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0"
+                              style={{ backgroundColor: pBg, color: pColor }}
+                            >
+                              <AlertTriangle className="w-2.5 h-2.5" />
+                              {pLabel}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Body preview */}
+                        {editingNoteId === note.id ? (
+                          <textarea
+                            value={editNoteBody}
+                            onChange={(e) => setEditNoteBody(e.target.value)}
+                            rows={2}
+                            className="text-xs text-stone-600 bg-stone-50 rounded px-2 py-1 outline-none w-full resize-none"
+                            onKeyDown={(e) => { if (e.key === "Enter" && e.ctrlKey) saveEditNote(); if (e.key === "Escape") setEditingNoteId(null); }}
+                          />
+                        ) : (
+                          note.body && <p className="text-xs text-stone-500 leading-relaxed line-clamp-2 whitespace-pre-wrap">{note.body}</p>
+                        )}
+
+                        {/* Footer */}
+                        <div className="flex items-center justify-between mt-0.5">
+                          <span className="text-[10px] text-stone-400">
+                            {new Date(note.updatedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
+                          </span>
+                          {editingNoteId === note.id ? (
+                            <div className="flex gap-1.5">
+                              <button onClick={saveEditNote} className="text-[10px] font-semibold px-2 py-0.5 rounded bg-stone-800 text-white hover:bg-stone-700 transition-colors">Save</button>
+                              <button onClick={() => setEditingNoteId(null)} className="text-[10px] text-stone-400 hover:text-stone-600">Cancel</button>
+                            </div>
+                          ) : (
+                            <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <button
+                                onClick={() => startEditNote(note)}
+                                className="w-6 h-6 rounded-full bg-stone-100 hover:bg-stone-200 flex items-center justify-center transition-colors"
+                              >
+                                <Pencil className="w-3 h-3 text-stone-500" />
+                              </button>
+                              <button
+                                onClick={() => setConfirmDeleteNoteId(note.id)}
+                                className="w-6 h-6 rounded-full bg-stone-100 hover:bg-red-100 flex items-center justify-center transition-colors"
+                              >
+                                <Trash2 className="w-3 h-3 text-stone-500" />
+                              </button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Delete confirmation overlay */}
+                      {confirmDeleteNoteId === note.id && (
+                        <div className="absolute inset-0 bg-white/95 backdrop-blur-sm flex flex-col items-center justify-center gap-3 z-10 rounded-xl">
+                          <p className="text-sm font-semibold text-stone-700">Delete this note?</p>
+                          <div className="flex gap-2">
+                            <button
+                              onClick={() => { handleDeleteNote(note.id); setConfirmDeleteNoteId(null); }}
+                              className="px-4 py-1.5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-xs font-semibold transition-colors"
+                            >Yes</button>
+                            <button
+                              onClick={() => setConfirmDeleteNoteId(null)}
+                              className="px-4 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 text-xs font-semibold transition-colors"
+                            >No</button>
                           </div>
                         </div>
                       )}
                     </div>
-                    <button
-                      onClick={handleCreateNote}
-                      className="w-6 h-6 rounded-md bg-stone-800 text-white hover:bg-stone-700 transition-colors flex items-center justify-center flex-shrink-0"
-                    >
-                      <Check className="w-4 h-4" />
-                    </button>
-                  </div>
-                </div>
-                {/* Body textarea fills remaining space */}
-                <textarea
-                  value={newNoteBody}
-                  onChange={(e) => setNewNoteBody(e.target.value)}
-                  placeholder="Write your note..."
-                  className="flex-1 text-sm text-stone-700 rounded-xl px-3 py-2 outline-none bg-white placeholder:text-stone-400 resize-none transition-colors"
-                  onKeyDown={(e) => { if (e.key === "Enter" && e.ctrlKey) handleCreateNote(); }}
-                />
+                  );
+                })}
               </div>
-            )}
 
-            {/* Notes grid */}
-            {filteredNotes.length === 0 && !showNoteCreate && (
-              <div className="flex flex-col items-center justify-center py-20 text-stone-400 gap-3">
-                <StickyNote className="w-10 h-10 opacity-25" />
-                <p className="text-sm">{noteSearch ? `No notes found for "${noteSearch}"` : "No notes yet — tap New Note to start"}</p>
-              </div>
-            )}
-
-            <div className="grid grid-cols-3 gap-4">
-              {filteredNotes.map((note) => (
-                <div
-                  key={note.id}
-                  className="group relative rounded-2xl p-5 flex flex-col gap-3 shadow-sm hover:shadow-md transition-shadow min-h-[255px]"
-                  style={{ backgroundColor: note.color }}
-                >
-                  {/* Actions */}
-                  <div className="absolute top-3 right-3 flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button
-                      onClick={() => startEditNote(note)}
-                      className="w-6 h-6 rounded-full bg-black/10 hover:bg-black/20 flex items-center justify-center transition-colors"
-                    >
-                      <Pencil className="w-3 h-3 text-stone-700" />
-                    </button>
-                    <button
-                      onClick={() => setConfirmDeleteNoteId(note.id)}
-                      className="w-6 h-6 rounded-full bg-black/10 hover:bg-red-200 flex items-center justify-center transition-colors"
-                    >
-                      <Trash2 className="w-3 h-3 text-stone-700" />
-                    </button>
-                  </div>
-
-                  {/* Delete confirmation overlay */}
-                  {confirmDeleteNoteId === note.id && (
-                    <div className="absolute inset-0 rounded-2xl bg-black/40 backdrop-blur-sm flex flex-col items-center justify-center gap-3 z-10">
-                      <p className="text-white text-sm font-semibold">Are you sure?</p>
-                      <div className="flex gap-2">
-                        <button
-                          onClick={() => { handleDeleteNote(note.id); setConfirmDeleteNoteId(null); }}
-                          className="px-4 py-1.5 rounded-lg bg-red-500 hover:bg-red-600 text-white text-xs font-semibold transition-colors"
-                        >
-                          Yes
-                        </button>
-                        <button
-                          onClick={() => setConfirmDeleteNoteId(null)}
-                          className="px-4 py-1.5 rounded-lg bg-white/20 hover:bg-white/30 text-white text-xs font-semibold transition-colors"
-                        >
-                          No
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
-                  {editingNoteId === note.id ? (
-                    <>
-                      <input
-                        autoFocus
-                        value={editNoteTitle}
-                        onChange={(e) => setEditNoteTitle(e.target.value)}
-                        className="text-sm font-semibold text-stone-800 bg-white/50 rounded px-2 py-1 outline-none w-full"
-                      />
-                      <textarea
-                        value={editNoteBody}
-                        onChange={(e) => setEditNoteBody(e.target.value)}
-                        rows={3}
-                        className="text-xs text-stone-700 bg-white/50 rounded px-2 py-1 outline-none w-full resize-none flex-1"
-                        onKeyDown={(e) => { if (e.key === "Enter" && e.ctrlKey) saveEditNote(); if (e.key === "Escape") setEditingNoteId(null); }}
-                      />
-                      <div className="flex gap-2 mt-1">
-                        <button onClick={saveEditNote} className="text-[10px] font-semibold px-2 py-0.5 rounded bg-stone-800 text-white hover:bg-stone-700 transition-colors">Save</button>
-                        <button onClick={() => setEditingNoteId(null)} className="text-[10px] text-stone-500 hover:text-stone-700">Cancel</button>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <h3 className="text-sm font-semibold text-stone-800 leading-snug pr-14 line-clamp-2">{note.title}</h3>
-                      {note.body && <p className="text-xs text-stone-600 leading-relaxed flex-1 line-clamp-5 whitespace-pre-wrap">{note.body}</p>}
-                      <p className="text-[10px] text-stone-400 mt-auto pt-1">
-                        {new Date(note.updatedAt).toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" })}
-                      </p>
-                    </>
-                  )}
-                </div>
-              ))}
             </div>
           </div>
         )}
