@@ -1491,7 +1491,7 @@ export default function Home() {
                       {filteredTasks.map((task, idx) => {
                         const pm = task.priority ? DAY_PRIORITY_META[task.priority] : null;
                         return (
-                          <div key={task.id} className="bg-white rounded-xl shadow-sm border border-stone-100 flex items-center gap-2.5 px-3 py-2.5">
+                          <div key={task.id} className="bg-white rounded-xl shadow-sm border border-stone-100 flex items-center gap-2.5 px-3 py-4">
 
                             {/* Row number badge */}
                             <span className="text-[11px] font-bold text-stone-500 bg-stone-100 rounded-lg px-2 py-1 flex-shrink-0">T{idx + 1}</span>
@@ -1633,7 +1633,7 @@ export default function Home() {
 
                       {/* Inline new-row input */}
                       {addingRow && (
-                        <div className="bg-white rounded-xl shadow-sm border border-stone-200 flex items-center gap-2.5 px-3 py-2.5">
+                        <div className="bg-white rounded-xl shadow-sm border border-stone-200 flex items-center gap-2.5 px-3 py-4">
                           <span className="text-[11px] font-bold text-stone-400 bg-stone-100 rounded-lg px-2 py-1 flex-shrink-0">T{filteredTasks.length + 1}</span>
                           <div className="w-[17px] h-[17px] rounded border-2 border-stone-300 flex-shrink-0" />
                           <input
