@@ -860,7 +860,7 @@ export default function Home() {
                         {/* Save button */}
                         <button
                           onClick={selectedNoteId !== null ? handleSaveSelectedNote : handleCreateNote}
-                          className="px-6 py-[10px] rounded-xl bg-stone-900 text-white hover:bg-stone-700 transition-colors text-xs font-semibold shadow-sm"
+                          className="px-3 py-1.5 rounded-lg bg-stone-900 text-white hover:bg-stone-700 transition-colors text-xs font-semibold border border-stone-900"
                         >
                           Save
                         </button>
