@@ -283,6 +283,7 @@ export default function Home() {
   const [selectedTypeId, setSelectedTypeId] = useState<number | "all">("all");
   const [addingRow, setAddingRow] = useState(false);
   const [newRowTitle, setNewRowTitle] = useState("");
+  const addingRowEnterRef = useRef(false);
   const [showTypeInput, setShowTypeInput] = useState(false);
   const [newTypeName, setNewTypeName] = useState("");
   const [timePickerId, setTimePickerId] = useState<number | null>(null);
@@ -1658,10 +1659,20 @@ export default function Home() {
                             value={newRowTitle}
                             onChange={e => setNewRowTitle(e.target.value)}
                             onKeyDown={e => {
-                              if (e.key === "Enter") { e.preventDefault(); addTask(); setAddingRow(true); setNewRowTitle(""); }
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                addingRowEnterRef.current = true;
+                                addTask();
+                                setNewRowTitle("");
+                                setTimeout(() => { addingRowEnterRef.current = false; }, 100);
+                              }
                               if (e.key === "Escape") { setAddingRow(false); setNewRowTitle(""); }
                             }}
-                            onBlur={() => { if (newRowTitle.trim()) addTask(); setAddingRow(false); }}
+                            onBlur={() => {
+                              if (addingRowEnterRef.current) return;
+                              if (newRowTitle.trim()) addTask();
+                              setAddingRow(false);
+                            }}
                             placeholder="Task name..."
                             className="flex-1 text-sm outline-none text-stone-700 px-3 py-2.5 rounded-xl placeholder-stone-400"
                             style={{ background: "#ffffff", boxShadow: "inset 3px 3px 7px #d0d0d0, inset -3px -3px 7px #ffffff" }}
