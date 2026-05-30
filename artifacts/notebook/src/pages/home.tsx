@@ -159,6 +159,7 @@ export default function Home() {
   const [newNoteBody, setNewNoteBody] = useState("");
   const [newNoteColor, setNewNoteColor] = useState(NOTE_COLORS[0]);
   const [showNoteCreate, setShowNoteCreate] = useState(false);
+  const [showColorPopup, setShowColorPopup] = useState(false);
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
   const [editNoteTitle, setEditNoteTitle] = useState("");
   const [editNoteBody, setEditNoteBody] = useState("");
@@ -769,7 +770,7 @@ export default function Home() {
             {/* Create form */}
             {showNoteCreate && (
               <div className="mb-6 rounded-2xl bg-stone-100 shadow-md p-4 flex flex-col gap-3 w-1/2 min-h-[260px]">
-                {/* Top row: title + add note */}
+                {/* Top row: title + color picker + save */}
                 <div className="flex items-center justify-between gap-3">
                   <input
                     autoFocus
@@ -778,12 +779,37 @@ export default function Home() {
                     placeholder="Title..."
                     className="w-2/3 text-sm font-semibold text-stone-800 rounded-xl px-3 py-2 outline-none bg-white placeholder:text-stone-400 transition-colors"
                   />
-                  <button
-                    onClick={handleCreateNote}
-                    className="px-4 py-2 rounded-xl bg-stone-800 text-white text-sm font-semibold hover:bg-stone-700 transition-colors whitespace-nowrap"
-                  >
-                    Save
-                  </button>
+                  <div className="flex items-center gap-2">
+                    {/* Color circle button */}
+                    <div className="relative">
+                      <button
+                        onClick={() => setShowColorPopup((v) => !v)}
+                        className="w-8 h-8 rounded-full border-2 border-stone-300 hover:border-stone-500 transition-colors shadow-sm"
+                        style={{ backgroundColor: newNoteColor }}
+                      />
+                      {showColorPopup && (
+                        <div className="absolute right-0 top-10 z-50 bg-white rounded-2xl shadow-xl p-3 flex flex-col gap-2 w-40 border border-stone-100">
+                          <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide">Card Colour</p>
+                          <div className="grid grid-cols-4 gap-2">
+                            {NOTE_COLORS.map((c) => (
+                              <button
+                                key={c}
+                                onClick={() => { setNewNoteColor(c); setShowColorPopup(false); }}
+                                className="w-7 h-7 rounded-full border-2 transition-all hover:scale-110"
+                                style={{ backgroundColor: c, borderColor: newNoteColor === c ? "#1c1917" : "transparent" }}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      onClick={handleCreateNote}
+                      className="px-4 py-2 rounded-xl bg-stone-800 text-white text-sm font-semibold hover:bg-stone-700 transition-colors whitespace-nowrap"
+                    >
+                      Save
+                    </button>
+                  </div>
                 </div>
                 {/* Body textarea fills remaining space */}
                 <textarea
@@ -793,14 +819,9 @@ export default function Home() {
                   className="flex-1 text-sm text-stone-700 rounded-xl px-3 py-2 outline-none bg-white placeholder:text-stone-400 resize-none transition-colors"
                   onKeyDown={(e) => { if (e.key === "Enter" && e.ctrlKey) handleCreateNote(); }}
                 />
-                {/* Color picker + close */}
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    {NOTE_COLORS.map((c) => (
-                      <button key={c} onClick={() => setNewNoteColor(c)} className="w-5 h-5 rounded-full border-2 transition-all" style={{ backgroundColor: c, borderColor: newNoteColor === c ? "#1c1917" : "transparent" }} />
-                    ))}
-                  </div>
-                  <button onClick={() => setShowNoteCreate(false)} className="text-xs text-stone-400 hover:text-stone-600 transition-colors">Cancel</button>
+                {/* Close */}
+                <div className="flex items-center justify-end">
+                  <button onClick={() => { setShowNoteCreate(false); setShowColorPopup(false); }} className="text-xs text-stone-400 hover:text-stone-600 transition-colors">Cancel</button>
                 </div>
               </div>
             )}
