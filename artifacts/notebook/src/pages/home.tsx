@@ -882,7 +882,7 @@ export default function Home() {
               </div>
 
               {/* RIGHT: Mini note cards */}
-              <div className="flex-1 overflow-y-auto max-h-[700px] pr-1">
+              <div className="flex-1 overflow-y-auto max-h-[780px] pr-1">
                 <div className="flex flex-col gap-3">
                 {filteredNotes.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-20 text-stone-300 gap-3">
