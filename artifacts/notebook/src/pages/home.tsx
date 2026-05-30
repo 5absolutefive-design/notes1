@@ -89,7 +89,7 @@ interface ShortNote {
   body: string;
   color: string;
   priority?: "low" | "normal" | "medium" | "important" | "urgent";
-  images?: string[];
+  images?: { src: string; x: number; y: number; w: number }[];
   voices?: { name: string; data: string }[];
   createdAt: string;
   updatedAt: string;
@@ -184,7 +184,8 @@ export default function Home() {
   const [selectedNoteId, setSelectedNoteId] = useState<number | null>(null);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [emojiCategory, setEmojiCategory] = useState(0);
-  const [newNoteImages, setNewNoteImages] = useState<string[]>([]);
+  const [newNoteImages, setNewNoteImages] = useState<{ src: string; x: number; y: number; w: number }[]>([]);
+  const [draggingImg, setDraggingImg] = useState<{ idx: number; ox: number; oy: number } | null>(null);
   const [newNoteVoices, setNewNoteVoices] = useState<{ name: string; data: string }[]>([]);
   const [isRecording, setIsRecording] = useState(false);
   const [playingVoice, setPlayingVoice] = useState<number | null>(null);
@@ -200,6 +201,7 @@ export default function Home() {
   const noteAudioInputRef = useRef<HTMLInputElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const noteTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const noteBodyRef = useRef<HTMLDivElement>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
   const audioElemsRef = useRef<Map<number, HTMLAudioElement>>(new Map());
@@ -379,8 +381,31 @@ export default function Home() {
   const handleNoteImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; if (!file) return;
     const reader = new FileReader();
-    reader.onload = (ev) => { setNewNoteImages(prev => [...prev, ev.target?.result as string]); };
+    reader.onload = (ev) => {
+      const container = noteBodyRef.current;
+      const cx = container ? container.clientWidth / 2 - 80 : 60;
+      const cy = container ? container.clientHeight / 2 - 80 : 60;
+      setNewNoteImages(prev => [...prev, { src: ev.target?.result as string, x: cx, y: cy, w: 160 }]);
+    };
     reader.readAsDataURL(file); e.target.value = "";
+  };
+
+  const startDragImg = (e: React.MouseEvent, idx: number) => {
+    e.preventDefault(); e.stopPropagation();
+    const container = noteBodyRef.current;
+    if (!container) return;
+    const rect = container.getBoundingClientRect();
+    const img = newNoteImages[idx];
+    const ox = e.clientX - rect.left - img.x;
+    const oy = e.clientY - rect.top - img.y;
+    setDraggingImg({ idx, ox, oy });
+    const onMove = (me: MouseEvent) => {
+      const r = container.getBoundingClientRect();
+      setNewNoteImages(prev => prev.map((im, i) => i === idx ? { ...im, x: me.clientX - r.left - ox, y: me.clientY - r.top - oy } : im));
+    };
+    const onUp = () => { setDraggingImg(null); document.removeEventListener("mousemove", onMove); document.removeEventListener("mouseup", onUp); };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
   };
 
   const handleNoteAudioUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -980,8 +1005,12 @@ export default function Home() {
                       />
                     </div>
 
-                    {/* Body area — white card with border */}
-                    <div className="flex-1 mx-5 mb-0 border border-stone-100 rounded-xl overflow-hidden flex flex-col" style={{ minHeight: 500 }}>
+                    {/* Body area — white card with border, images float inside */}
+                    <div
+                      ref={noteBodyRef}
+                      className="flex-1 mx-5 mb-0 border border-stone-100 rounded-xl overflow-hidden flex flex-col relative"
+                      style={{ minHeight: 500 }}
+                    >
                       <textarea
                         ref={noteTextareaRef}
                         value={newNoteBody}
@@ -991,24 +1020,39 @@ export default function Home() {
                         onKeyDown={(e) => { if (e.key === "Enter" && e.ctrlKey) { selectedNoteId !== null ? handleSaveSelectedNote() : handleCreateNote(); } }}
                         style={{ minHeight: 500 }}
                       />
-                    </div>
-
-                    {/* Images preview strip */}
-                    {newNoteImages.length > 0 && (
-                      <div className="mx-5 mt-3 flex flex-wrap gap-2">
-                        {newNoteImages.map((src, idx) => (
-                          <div key={idx} className="relative group/img">
-                            <img src={src} alt="" className="w-20 h-20 object-cover rounded-xl border border-stone-200 shadow-sm" />
-                            <button
-                              onClick={() => setNewNoteImages(prev => prev.filter((_, i) => i !== idx))}
-                              className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-stone-800 text-white rounded-full flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity"
-                            >
-                              <X className="w-2.5 h-2.5" />
-                            </button>
+                      {/* Floating images inside body */}
+                      {newNoteImages.map((img, idx) => (
+                        <div
+                          key={idx}
+                          className="absolute group/fi"
+                          style={{ left: img.x, top: img.y, width: img.w, zIndex: draggingImg?.idx === idx ? 50 : 10, cursor: draggingImg?.idx === idx ? "grabbing" : "grab" }}
+                          onMouseDown={(e) => startDragImg(e, idx)}
+                        >
+                          <img src={img.src} alt="" className="w-full rounded-xl border-2 border-white shadow-lg object-cover select-none" style={{ pointerEvents: "none" }} />
+                          {/* Delete button */}
+                          <button
+                            onMouseDown={(e) => e.stopPropagation()}
+                            onClick={() => setNewNoteImages(prev => prev.filter((_, i) => i !== idx))}
+                            className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover/fi:opacity-100 transition-opacity shadow-md"
+                          >
+                            <X className="w-2.5 h-2.5" />
+                          </button>
+                          {/* Resize handle */}
+                          <div
+                            className="absolute bottom-0 right-0 w-4 h-4 bg-white/80 rounded-tl-md border border-stone-300 cursor-se-resize opacity-0 group-hover/fi:opacity-100 transition-opacity flex items-center justify-center"
+                            onMouseDown={(e) => {
+                              e.preventDefault(); e.stopPropagation();
+                              const startX = e.clientX; const startW = img.w;
+                              const onMove = (me: MouseEvent) => { setNewNoteImages(prev => prev.map((im, i) => i === idx ? { ...im, w: Math.max(60, startW + me.clientX - startX) } : im)); };
+                              const onUp = () => { document.removeEventListener("mousemove", onMove); document.removeEventListener("mouseup", onUp); };
+                              document.addEventListener("mousemove", onMove); document.addEventListener("mouseup", onUp);
+                            }}
+                          >
+                            <svg className="w-2 h-2 text-stone-500" viewBox="0 0 8 8" fill="currentColor"><path d="M6 0L8 0L8 8L0 8L0 6L6 6Z"/></svg>
                           </div>
-                        ))}
-                      </div>
-                    )}
+                        </div>
+                      ))}
+                    </div>
 
                     {/* Voices preview */}
                     {newNoteVoices.length > 0 && (
