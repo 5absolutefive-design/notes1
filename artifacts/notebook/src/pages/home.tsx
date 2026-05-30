@@ -771,9 +771,7 @@ export default function Home() {
 
               {/* LEFT: Big note form */}
               <div className="w-[58%] flex-shrink-0">
-                {/* Gradient border wrapper */}
-                <div className="p-[1.5px] rounded-2xl" style={{ background: "linear-gradient(135deg, #c4b5fd 0%, #f9a8d4 50%, #bfdbfe 100%)" }}>
-                  <div className="bg-stone-50 rounded-2xl flex flex-col overflow-visible" style={{ minHeight: 700 }}>
+                <div className="bg-stone-50 rounded-2xl flex flex-col overflow-visible" style={{ minHeight: 700, boxShadow: "0 8px 40px 0 rgba(0,0,0,0.10), 0 2px 8px 0 rgba(0,0,0,0.06)" }}>
 
                     {/* Form header */}
                     <div className="flex items-center justify-between px-6 py-4">
@@ -880,7 +878,6 @@ export default function Home() {
                       <span className="text-xs text-stone-300">{newNoteBody.length} / 2000</span>
                     </div>
 
-                  </div>
                 </div>
               </div>
 
