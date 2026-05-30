@@ -1660,17 +1660,17 @@ export default function Home() {
                   <div className="flex-[1]" />
 
                   {/* NEXT 7 DAY — horizontal pill strip at the bottom */}
-                  <div className="bg-white rounded-2xl border border-stone-200 flex-shrink-0 px-4 py-3">
-                    <p className="text-[9px] font-bold text-stone-400 tracking-widest uppercase mb-2">NEXT 7 DAY</p>
-                    <div className="flex gap-1.5 overflow-x-auto pb-0.5">
+                  <div className="bg-white rounded-2xl border border-stone-200 flex-shrink-0 px-5 py-[18px]">
+                    <p className="text-[9px] font-bold text-stone-400 tracking-widest uppercase mb-3">NEXT 7 DAY</p>
+                    <div className="flex gap-2 overflow-x-auto pb-0.5">
                       {days.map(d => (
                         <button
                           key={d.key}
                           onClick={() => setSelectedDate(d.key)}
-                          className={`flex flex-col items-center flex-shrink-0 px-2.5 py-1.5 rounded-xl border transition-all ${selectedDate === d.key ? "bg-stone-800 text-white border-stone-800" : "border-stone-300 text-stone-600 hover:border-stone-500 bg-white"}`}
+                          className={`flex flex-col items-center flex-shrink-0 px-3 py-2.5 rounded-xl border transition-all ${selectedDate === d.key ? "bg-stone-800 text-white border-stone-800" : "border-stone-300 text-stone-600 hover:border-stone-500 bg-white"}`}
                         >
-                          <span className="text-[8px] font-bold uppercase leading-none">{d.isToday ? "TO\nDAY" : d.day}</span>
-                          <span className="text-sm font-bold mt-0.5 tabular-nums">{d.label}</span>
+                          <span className="text-[9px] font-bold uppercase leading-none">{d.isToday ? "TO\nDAY" : d.day}</span>
+                          <span className="text-base font-bold mt-1 tabular-nums">{d.label}</span>
                         </button>
                       ))}
                     </div>
