@@ -770,19 +770,19 @@ export default function Home() {
             {showNoteCreate && (
               <div className="mb-6 rounded-2xl bg-stone-100 shadow-md p-4 flex flex-col gap-3 w-1/2 min-h-[260px]">
                 {/* Top row: title + add note */}
-                <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between gap-3">
                   <input
                     autoFocus
                     value={newNoteTitle}
                     onChange={(e) => setNewNoteTitle(e.target.value)}
                     placeholder="Title..."
-                    className="w-2/3 text-sm font-semibold text-stone-800 rounded-xl px-3 py-2 outline-none bg-white placeholder:text-stone-400 transition-colors"
+                    className="flex-1 text-sm font-semibold text-stone-800 rounded-xl px-3 py-2 outline-none bg-white placeholder:text-stone-400 transition-colors"
                   />
                   <button
                     onClick={handleCreateNote}
                     className="px-4 py-2 rounded-xl bg-stone-800 text-white text-sm font-semibold hover:bg-stone-700 transition-colors whitespace-nowrap"
                   >
-                    Add Note
+                    Save
                   </button>
                 </div>
                 {/* Body textarea fills remaining space */}
