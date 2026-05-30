@@ -773,7 +773,7 @@ export default function Home() {
               <div className="w-[58%] flex-shrink-0">
                 {/* Gradient border wrapper */}
                 <div className="p-[1.5px] rounded-2xl" style={{ background: "linear-gradient(135deg, #c4b5fd 0%, #f9a8d4 50%, #bfdbfe 100%)" }}>
-                  <div className="bg-white rounded-2xl flex flex-col overflow-visible" style={{ minHeight: 500 }}>
+                  <div className="bg-white rounded-2xl flex flex-col overflow-visible" style={{ minHeight: 700 }}>
 
                     {/* Form header */}
                     <div className="flex items-center justify-between px-6 py-4">
@@ -858,14 +858,14 @@ export default function Home() {
                     </div>
 
                     {/* Body area — white card with border */}
-                    <div className="flex-1 mx-5 mb-0 border border-stone-100 rounded-xl overflow-hidden flex flex-col" style={{ minHeight: 320 }}>
+                    <div className="flex-1 mx-5 mb-0 border border-stone-100 rounded-xl overflow-hidden flex flex-col" style={{ minHeight: 500 }}>
                       <textarea
                         value={newNoteBody}
                         onChange={(e) => setNewNoteBody(e.target.value)}
                         placeholder="Write your note here..."
                         className="flex-1 w-full px-4 py-3 text-sm text-stone-600 outline-none bg-white resize-none placeholder:text-stone-300 leading-relaxed"
                         onKeyDown={(e) => { if (e.key === "Enter" && e.ctrlKey) handleCreateNote(); }}
-                        style={{ minHeight: 320 }}
+                        style={{ minHeight: 500 }}
                       />
                     </div>
 
