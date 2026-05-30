@@ -157,7 +157,7 @@ export default function Home() {
   const [noteSearch, setNoteSearch] = useState("");
   const [newNoteTitle, setNewNoteTitle] = useState("");
   const [newNoteBody, setNewNoteBody] = useState("");
-  const [newNoteColor, setNewNoteColor] = useState(NOTE_COLORS[0]);
+  const [newNoteColor, setNewNoteColor] = useState("#f5f5f4");
   const [showNoteCreate, setShowNoteCreate] = useState(false);
   const [showColorPopup, setShowColorPopup] = useState(false);
   const [editingNoteId, setEditingNoteId] = useState<number | null>(null);
@@ -287,7 +287,7 @@ export default function Home() {
     const updated = [...shortNotes, note];
     saveShortNotes(updated);
     setShortNotes(updated);
-    setNewNoteTitle(""); setNewNoteBody(""); setNewNoteColor(NOTE_COLORS[0]); setShowNoteCreate(false);
+    setNewNoteTitle(""); setNewNoteBody(""); setNewNoteColor("#f5f5f4"); setShowNoteCreate(false);
   };
 
   const handleDeleteNote = (id: number) => {
