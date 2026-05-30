@@ -5,6 +5,7 @@ import {
   Camera, Pencil, Home as HomeIcon, ChevronLeft, ChevronRight,
   Check, BookMarked, Clock, StickyNote, FolderKanban,
   CheckSquare, CalendarDays, UserRound, AlertTriangle,
+  Smile, Image as ImageIcon, Type, List,
 } from "lucide-react";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { store, type Book } from "@/lib/store";
@@ -770,101 +771,115 @@ export default function Home() {
 
               {/* LEFT: Big note form */}
               <div className="w-[58%] flex-shrink-0">
-                <div className="bg-white rounded-2xl shadow-md border border-stone-100 flex flex-col overflow-visible" style={{ minHeight: 500 }}>
-                  {/* Form header */}
-                  <div className="flex items-center justify-between px-6 py-4 border-b border-stone-100">
-                    <span className="text-base font-semibold text-stone-700">New Note</span>
-                    <div className="flex items-center gap-2">
-                      {/* Priority button */}
-                      <div className="relative">
-                        <button
-                          onClick={() => { setShowPriorityPopup((v) => !v); setShowColorPopup(false); }}
-                          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
-                            newNotePriority === "low"       ? "bg-green-50  border-green-200  text-green-700"
-                            : newNotePriority === "medium" ? "bg-yellow-50 border-yellow-200 text-yellow-700"
-                            : newNotePriority === "important" ? "bg-red-50 border-red-200 text-red-600"
-                            : "bg-stone-50 border-stone-200 text-stone-400 hover:border-stone-300"
-                          }`}
-                        >
-                          <AlertTriangle className="w-3 h-3" />
-                          {newNotePriority ? newNotePriority.charAt(0).toUpperCase() + newNotePriority.slice(1) : "Priority"}
-                        </button>
-                        {showPriorityPopup && (
-                          <div className="absolute right-0 top-9 z-50 bg-white rounded-2xl shadow-xl p-3 flex flex-col gap-1.5 w-36 border border-stone-100">
-                            <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide mb-1">Priority</p>
-                            {([["low","Low","#bbf7d0","#16a34a"],["medium","Medium","#fef08a","#ca8a04"],["important","Important","#fecaca","#dc2626"]] as const).map(([val, label, bg, color]) => (
-                              <button
-                                key={val}
-                                onClick={() => { setNewNotePriority(newNotePriority === val ? null : val); setShowPriorityPopup(false); }}
-                                className="flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors hover:bg-stone-50 text-left"
-                                style={{ backgroundColor: newNotePriority === val ? bg : undefined }}
-                              >
-                                <AlertTriangle className="w-3 h-3 flex-shrink-0" style={{ color }} />
-                                <span className="text-xs font-medium text-stone-700">{label}</span>
-                              </button>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      {/* Color circle */}
-                      <div className="relative">
-                        <button
-                          onClick={() => { setShowColorPopup((v) => !v); setShowPriorityPopup(false); }}
-                          className="w-[26px] h-[26px] rounded-full border-2 border-stone-300 hover:border-stone-500 transition-colors shadow-sm"
-                          style={{ backgroundColor: newNoteColor }}
-                        />
-                        {showColorPopup && (
-                          <div className="absolute right-0 top-10 z-50 bg-white rounded-2xl shadow-xl p-3 flex flex-col gap-2 w-40 border border-stone-100">
-                            <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide">Card Colour</p>
-                            <div className="grid grid-cols-4 gap-2">
-                              {NOTE_COLORS.map((c) => (
+                {/* Gradient border wrapper */}
+                <div className="p-[1.5px] rounded-2xl" style={{ background: "linear-gradient(135deg, #c4b5fd 0%, #f9a8d4 50%, #bfdbfe 100%)" }}>
+                  <div className="bg-white rounded-2xl flex flex-col overflow-visible" style={{ minHeight: 500 }}>
+
+                    {/* Form header */}
+                    <div className="flex items-center justify-between px-6 py-4">
+                      <span className="text-lg font-bold text-stone-800">New Note</span>
+                      <div className="flex items-center gap-2">
+
+                        {/* Priority button — violet style */}
+                        <div className="relative">
+                          <button
+                            onClick={() => { setShowPriorityPopup((v) => !v); setShowColorPopup(false); }}
+                            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors border ${
+                              newNotePriority === "low"        ? "bg-green-50  border-green-200  text-green-700"
+                              : newNotePriority === "medium"  ? "bg-yellow-50 border-yellow-200 text-yellow-700"
+                              : newNotePriority === "important"? "bg-red-50    border-red-200    text-red-600"
+                              : "bg-violet-50 border-violet-200 text-violet-500 hover:bg-violet-100"
+                            }`}
+                          >
+                            <AlertTriangle className="w-3 h-3" />
+                            {newNotePriority ? newNotePriority.charAt(0).toUpperCase() + newNotePriority.slice(1) : "Priority"}
+                          </button>
+                          {showPriorityPopup && (
+                            <div className="absolute right-0 top-9 z-50 bg-white rounded-2xl shadow-xl p-3 flex flex-col gap-1.5 w-36 border border-stone-100">
+                              <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide mb-1">Priority</p>
+                              {([["low","Low","#bbf7d0","#16a34a"],["medium","Medium","#fef08a","#ca8a04"],["important","Important","#fecaca","#dc2626"]] as const).map(([val, label, bg, color]) => (
                                 <button
-                                  key={c}
-                                  onClick={() => { setNewNoteColor(c); setShowColorPopup(false); }}
-                                  className="w-7 h-7 rounded-full border-2 transition-all hover:scale-110"
-                                  style={{ backgroundColor: c, borderColor: newNoteColor === c ? "#1c1917" : "transparent" }}
-                                />
+                                  key={val}
+                                  onClick={() => { setNewNotePriority(newNotePriority === val ? null : val); setShowPriorityPopup(false); }}
+                                  className="flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors hover:bg-stone-50 text-left"
+                                  style={{ backgroundColor: newNotePriority === val ? bg : undefined }}
+                                >
+                                  <AlertTriangle className="w-3 h-3 flex-shrink-0" style={{ color }} />
+                                  <span className="text-xs font-medium text-stone-700">{label}</span>
+                                </button>
                               ))}
                             </div>
-                          </div>
-                        )}
+                          )}
+                        </div>
+
+                        {/* Color circle */}
+                        <div className="relative">
+                          <button
+                            onClick={() => { setShowColorPopup((v) => !v); setShowPriorityPopup(false); }}
+                            className="w-8 h-8 rounded-full border-2 border-stone-300 hover:border-stone-400 transition-colors shadow-sm"
+                            style={{ backgroundColor: newNoteColor }}
+                          />
+                          {showColorPopup && (
+                            <div className="absolute right-0 top-10 z-50 bg-white rounded-2xl shadow-xl p-3 flex flex-col gap-2 w-40 border border-stone-100">
+                              <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide">Card Colour</p>
+                              <div className="grid grid-cols-4 gap-2">
+                                {NOTE_COLORS.map((c) => (
+                                  <button
+                                    key={c}
+                                    onClick={() => { setNewNoteColor(c); setShowColorPopup(false); }}
+                                    className="w-7 h-7 rounded-full border-2 transition-all hover:scale-110"
+                                    style={{ backgroundColor: c, borderColor: newNoteColor === c ? "#1c1917" : "transparent" }}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Save — black rounded square */}
+                        <button
+                          onClick={handleCreateNote}
+                          className="w-9 h-9 rounded-xl bg-stone-900 text-white hover:bg-stone-700 transition-colors flex items-center justify-center shadow-sm"
+                        >
+                          <Check className="w-4 h-4" />
+                        </button>
                       </div>
-                      {/* Save */}
-                      <button
-                        onClick={handleCreateNote}
-                        className="w-8 h-8 rounded-lg bg-stone-800 text-white hover:bg-stone-700 transition-colors flex items-center justify-center shadow-sm"
-                      >
-                        <Check className="w-4 h-4" />
-                      </button>
                     </div>
-                  </div>
 
-                  {/* Title input */}
-                  <div className="px-6 pt-5 pb-3">
-                    <input
-                      autoFocus
-                      value={newNoteTitle}
-                      onChange={(e) => setNewNoteTitle(e.target.value)}
-                      placeholder="Give your note a title..."
-                      className="w-full text-lg font-semibold text-stone-800 outline-none placeholder:text-stone-300 bg-transparent"
-                    />
-                  </div>
-                  <div className="mx-6 border-b border-stone-100" />
+                    {/* Title input — gray pill bg */}
+                    <div className="px-5 pb-3">
+                      <input
+                        autoFocus
+                        value={newNoteTitle}
+                        onChange={(e) => setNewNoteTitle(e.target.value)}
+                        placeholder="Give your note a title..."
+                        className="w-full bg-stone-50 rounded-xl px-4 py-2.5 text-sm font-medium text-stone-700 outline-none placeholder:text-stone-300 border border-stone-100 focus:border-violet-200 focus:bg-white transition-colors"
+                      />
+                    </div>
 
-                  {/* Body textarea */}
-                  <textarea
-                    value={newNoteBody}
-                    onChange={(e) => setNewNoteBody(e.target.value)}
-                    placeholder="Write your note here..."
-                    className="flex-1 px-6 py-4 text-sm text-stone-600 outline-none bg-transparent resize-none placeholder:text-stone-300 leading-relaxed"
-                    onKeyDown={(e) => { if (e.key === "Enter" && e.ctrlKey) handleCreateNote(); }}
-                    style={{ minHeight: 340 }}
-                  />
+                    {/* Body area — white card with border */}
+                    <div className="flex-1 mx-5 mb-0 border border-stone-100 rounded-xl overflow-hidden flex flex-col" style={{ minHeight: 320 }}>
+                      <textarea
+                        value={newNoteBody}
+                        onChange={(e) => setNewNoteBody(e.target.value)}
+                        placeholder="Write your note here..."
+                        className="flex-1 w-full px-4 py-3 text-sm text-stone-600 outline-none bg-white resize-none placeholder:text-stone-300 leading-relaxed"
+                        onKeyDown={(e) => { if (e.key === "Enter" && e.ctrlKey) handleCreateNote(); }}
+                        style={{ minHeight: 320 }}
+                      />
+                    </div>
 
-                  {/* Bottom bar */}
-                  <div className="flex items-center justify-between px-6 py-3 border-t border-stone-100">
-                    <span className="text-[11px] text-stone-300">Ctrl+Enter to save</span>
-                    <span className="text-[11px] text-stone-300">{newNoteBody.length} / 2000</span>
+                    {/* Bottom toolbar */}
+                    <div className="flex items-center justify-between px-5 py-3">
+                      <div className="flex items-center gap-3">
+                        <button className="text-stone-400 hover:text-stone-600 transition-colors"><Smile className="w-4 h-4" /></button>
+                        <button className="text-stone-400 hover:text-stone-600 transition-colors"><ImageIcon className="w-4 h-4" /></button>
+                        <button className="text-stone-400 hover:text-stone-600 transition-colors"><Type className="w-4 h-4" /></button>
+                        <button className="text-stone-400 hover:text-stone-600 transition-colors"><List className="w-4 h-4" /></button>
+                      </div>
+                      <span className="text-xs text-stone-300">{newNoteBody.length} / 2000</span>
+                    </div>
+
                   </div>
                 </div>
               </div>
