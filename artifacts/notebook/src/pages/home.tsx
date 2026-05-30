@@ -744,7 +744,7 @@ export default function Home() {
           <div className="px-4 py-6 md:py-8 w-full flex flex-col gap-6">
 
             {/* Header */}
-            <div className="rounded-2xl border border-stone-200 bg-white shadow-sm px-8 py-3">
+            <div className="rounded-2xl border border-stone-200 bg-white shadow-sm px-6 py-2">
               <div className="flex items-center justify-between gap-4 flex-wrap">
                 <div className="flex flex-col gap-1 min-w-0">
                   <h1 className="text-2xl font-serif font-bold text-stone-800 leading-tight">Short Notes</h1>
