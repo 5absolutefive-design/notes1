@@ -863,7 +863,7 @@ export default function Home() {
                         value={newNoteBody}
                         onChange={(e) => setNewNoteBody(e.target.value)}
                         placeholder="Write your note here..."
-                        className="flex-1 w-full px-4 py-3 text-sm text-stone-600 outline-none bg-white resize-none placeholder:text-stone-300 leading-relaxed"
+                        className="flex-1 w-full px-4 py-3 text-sm text-stone-600 outline-none bg-stone-50 resize-none placeholder:text-stone-300 leading-relaxed"
                         onKeyDown={(e) => { if (e.key === "Enter" && e.ctrlKey) handleCreateNote(); }}
                         style={{ minHeight: 500 }}
                       />
