@@ -127,7 +127,7 @@ const DAY_TASK_TYPES_KEY = "nb_v2_task_types";
 
 interface DayTaskType { id: number; name: string; }
 
-type DayPriority = "low" | "high" | "urgent" | null;
+type DayPriority = "low" | "normal" | "medium" | "important" | "urgent" | null;
 
 interface DayTask {
   id: number;
@@ -172,9 +172,11 @@ function get7Days(today: Date) {
 }
 
 const DAY_PRIORITY_META: Record<NonNullable<DayPriority>, { label: string; color: string; bg: string; border: string }> = {
-  low:    { label: "Low",    color: "#16a34a", bg: "#dcfce7", border: "#86efac" },
-  high:   { label: "High",   color: "#ea580c", bg: "#ffedd5", border: "#fdba74" },
-  urgent: { label: "Urgent", color: "#dc2626", bg: "#fee2e2", border: "#fca5a5" },
+  low:       { label: "Low",       color: "#16a34a", bg: "#dcfce7", border: "#86efac" },
+  normal:    { label: "Normal",    color: "#2563eb", bg: "#dbeafe", border: "#93c5fd" },
+  medium:    { label: "Medium",    color: "#7c3aed", bg: "#ede9fe", border: "#c4b5fd" },
+  important: { label: "Important", color: "#ea580c", bg: "#ffedd5", border: "#fdba74" },
+  urgent:    { label: "Urgent",    color: "#dc2626", bg: "#fee2e2", border: "#fca5a5" },
 };
 // ─────────────────────────────────────────────────────────────
 
@@ -1599,7 +1601,7 @@ export default function Home() {
                               </button>
                               {priorityMenuId === task.id && (
                                 <div className="absolute top-full mt-1 right-0 bg-white border border-stone-200 rounded-xl shadow-xl py-1.5 z-50 min-w-[110px]">
-                                  {(["low", "high", "urgent"] as NonNullable<DayPriority>[]).map(p => (
+                                  {(["low", "normal", "medium", "important", "urgent"] as NonNullable<DayPriority>[]).map(p => (
                                     <button key={p} onClick={() => { updateTask(task.id, { priority: p }); setPriorityMenuId(null); }}
                                       className="w-full text-left text-xs font-semibold px-3 py-2 hover:bg-stone-50 flex items-center gap-2"
                                       style={{ color: DAY_PRIORITY_META[p].color }}>
