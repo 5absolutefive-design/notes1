@@ -1622,7 +1622,7 @@ export default function Home() {
                               </div>
 
                               {/* Trash delete */}
-                              <button onClick={() => deleteTask(task.id)} className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 ml-1">
+                              <button onClick={() => deleteTask(task.id)} className="flex-shrink-0 ml-1">
                                 <Trash2 className="w-3.5 h-3.5 text-red-400 hover:text-red-600" />
                               </button>
                             </div>
