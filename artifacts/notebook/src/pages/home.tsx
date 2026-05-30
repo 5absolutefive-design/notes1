@@ -5,7 +5,7 @@ import {
   Camera, Pencil, Home as HomeIcon, ChevronLeft, ChevronRight,
   Check, BookMarked, Clock, StickyNote, FolderKanban,
   CheckSquare, CalendarDays, UserRound, AlertTriangle,
-  Smile, Image as ImageIcon, Type, List,
+  Smile, Image as ImageIcon, Type, List, Mic, Square, Play, Pause,
 } from "lucide-react";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { store, type Book } from "@/lib/store";
@@ -89,6 +89,8 @@ interface ShortNote {
   body: string;
   color: string;
   priority?: "low" | "normal" | "medium" | "important" | "urgent";
+  images?: string[];
+  voices?: { name: string; data: string }[];
   createdAt: string;
   updatedAt: string;
 }
@@ -96,6 +98,17 @@ interface ShortNote {
 const NOTE_COLORS = [
   "#fef08a", "#bbf7d0", "#bfdbfe", "#fecaca",
   "#e9d5ff", "#fed7aa", "#f5f5f4", "#cffafe",
+];
+
+const EMOJI_CATEGORIES = [
+  { icon: "😀", name: "Smileys", emojis: ["😀","😃","😄","😁","😆","😅","🤣","😂","🙂","😊","😇","🥰","😍","🤩","😘","😗","😚","😙","😋","😛","😜","🤪","😝","🤑","🤗","🤭","🤫","🤔","🤐","🤨","😐","😑","😶","😏","😒","🙄","😬","🤥","😌","😔","😪","😴","😷","🤒","🤕","🤢","🤮","🤧","🥵","🥶","😵","🤯","🤠","🥸","😎","🧐","😕","😟","🙁","☹️","😮","😲","😳","🥺","😦","😧","😨","😰","😥","😢","😭","😱","😖","😣","😞","😓","😩","😫","🥱","😤","😡","😠","🤬","😈","👿","💀","☠️","💩","🤡","👹","👺","👻","👾","🤖","😺","😸","😹","😻","😼","😽","🙀","😿","😾"] },
+  { icon: "👍", name: "People", emojis: ["👋","🤚","🖐","✋","🖖","👌","🤌","🤏","✌️","🤞","🤟","🤘","🤙","👈","👉","👆","☝️","👇","👍","👎","✊","👊","🤛","🤜","👏","🙌","👐","🤲","🤝","🙏","✍️","💅","🤳","💪","🦵","🦶","👄","💋","👃","👂","👁","👀","🧠","👣","🫂","💏","💑","👪","👧","👦","👶","👩","👨","🧑","👴","👵","👮","💂","🧑‍⚕️","👩‍🍳","🧑‍🎓","🧑‍🎤","🧑‍🎨","🧑‍✈️","🧑‍🚒","🧑‍🚀","🧑‍⚖️","🧑‍💻","🧑‍🔬","🧑‍🏫","🧑‍🌾","🧑‍🔧","🧑‍🏭","🧑‍💼"] },
+  { icon: "🐶", name: "Animals", emojis: ["🐶","🐱","🐭","🐹","🐰","🦊","🐻","🐼","🐨","🐯","🦁","🐮","🐷","🐸","🐵","🐔","🐧","🐦","🐤","🦆","🦅","🦉","🦇","🐺","🐗","🐴","🦄","🐝","🐛","🦋","🐌","🐞","🐜","🦟","🦗","🕷","🦂","🐢","🐍","🦎","🐙","🦑","🦐","🦞","🦀","🐡","🐠","🐟","🐬","🐳","🐋","🦈","🐊","🐅","🐆","🦓","🦍","🐘","🦒","🦘","🐕","🐩","🐈","🦜","🐇","🦔","🌵","🌲","🌳","🌴","🍀","🌾","💐","🌷","🌹","🌺","🌸","🌼","🌻","🍄","🌙","⭐","🌟","✨","🌈","🌊","🔥","💧","❄️","⚡","🌀"] },
+  { icon: "🍕", name: "Food", emojis: ["🍏","🍎","🍐","🍊","🍋","🍌","🍉","🍇","🍓","🫐","🍒","🍑","🥭","🍍","🥥","🥝","🍅","🍆","🥑","🥦","🥕","🌽","🌶","🥔","🍠","🥐","🥯","🍞","🥖","🧀","🥚","🍳","🥞","🧇","🥓","🥩","🍗","🍖","🌭","🍔","🍟","🍕","🌮","🌯","🥗","🍝","🍜","🍲","🍛","🍣","🍱","🥟","🍤","🍙","🍚","🍘","🧁","🍰","🎂","🍮","🍭","🍬","🍫","🍿","🍩","🍪","🍯","☕","🍵","🧃","🥤","🧋","🍺","🍻","🥂","🍷","🥃","🍸","🍹","🧊"] },
+  { icon: "⚽", name: "Sports", emojis: ["⚽","🏀","🏈","⚾","🥎","🎾","🏐","🏉","🎱","🏓","🏸","🏒","🏑","🥍","🏏","⛳","🎣","🤿","🥊","🥋","🎽","🛹","🛷","⛸","🥌","🎿","⛷","🏂","🪂","🏋️","🤼","🤸","⛹","🏊","🚴","🏆","🥇","🥈","🥉","🏅","🎖","🏵","🎗","🎫","🎟","🎪","🎭","🎨","🎬","🎤","🎧","🎼","🎹","🥁","🎷","🎺","🎸","🎻","🎲","♟","🎯","🎳","🎮","🎰","🧩"] },
+  { icon: "✈️", name: "Travel", emojis: ["🚗","🚕","🚙","🚌","🏎","🚓","🚑","🚒","🛻","🚚","🚛","🏍","🛵","🚲","🛴","⛽","🚦","⚓","⛵","🚤","🛳","✈️","🛩","🛫","🛬","💺","🚁","🚀","🛸","🪐","🗺","🧭","🏔","⛰","🌋","🏕","🏖","🏜","🏝","🏟","🏛","🏠","🏡","🏢","🏥","🏦","🏨","🏪","🏫","🏬","🏭","🏯","🏰","💒","🗼","🗽","⛪","🕌","⛩","⛲","⛺","🌃","🏙","🌄","🌅","🌆","🌇","🌉","🎡","🎢","🎠","🎪"] },
+  { icon: "💡", name: "Objects", emojis: ["⌚","📱","💻","⌨️","🖥","🖨","🖱","🕹","💾","💿","📀","📷","📸","📹","🎥","📞","☎️","📺","📻","🧭","⏰","⌛","⏳","📡","🔋","🔌","💡","🔦","🕯","💰","🪙","💳","✉️","📧","📝","📁","📂","📅","📌","📍","✂️","🔒","🔓","🔑","🗝","🔨","⚒","🛠","🔧","🔩","⚙️","⚖️","🔗","🧲","⚗️","🔬","🔭","💉","💊","🩹","🚪","🛋","🚿","🛁","🧴","🧹","🧺","🧻","🧼","🛒","🎁","🎀","🎊","🎉","🎈","🎆","🎇","✨","🧸","🖼","🧶","🧵"] },
+  { icon: "❤️", name: "Symbols", emojis: ["❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💔","❤️‍🔥","💕","💞","💓","💗","💖","💘","💝","💟","☮️","✝️","☪️","🕉","☯️","✡️","🛐","💯","✅","❌","⭕","🛑","⛔","📛","🚫","💢","⚠️","♻️","✔️","🔴","🟠","🟡","🟢","🔵","🟣","⚫","⚪","🟤","🔷","🔶","🔹","🔸","🟥","🟧","🟨","🟩","🟦","🟪","⬛","⬜","🔈","🔉","🔊","🔔","🔕","📣","📢","💬","💭","🗯","♠️","♣️","♥️","♦️","🃏","🎲","🎯","➕","➖","➗","✖️","💲","™️","©️","®️","🔄","🔀","🔁","🔂","▶️","⏸","⏹","⏺","🔅","🔆","🔱","⚜️","🔰","♾"] },
 ];
 
 function loadShortNotes(): ShortNote[] {
@@ -169,6 +182,12 @@ export default function Home() {
   const [editNoteTitle, setEditNoteTitle] = useState("");
   const [editNoteBody, setEditNoteBody] = useState("");
   const [selectedNoteId, setSelectedNoteId] = useState<number | null>(null);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  const [emojiCategory, setEmojiCategory] = useState(0);
+  const [newNoteImages, setNewNoteImages] = useState<string[]>([]);
+  const [newNoteVoices, setNewNoteVoices] = useState<{ name: string; data: string }[]>([]);
+  const [isRecording, setIsRecording] = useState(false);
+  const [playingVoice, setPlayingVoice] = useState<number | null>(null);
 
   const popupRef = useRef<HTMLDivElement>(null);
   const imgInputRef = useRef<HTMLInputElement>(null);
@@ -177,6 +196,13 @@ export default function Home() {
   const unlockPopupRef = useRef<HTMLDivElement>(null);
   const profilePopupRef = useRef<HTMLDivElement>(null);
   const profilePhotoRef = useRef<HTMLInputElement>(null);
+  const noteImgInputRef = useRef<HTMLInputElement>(null);
+  const noteAudioInputRef = useRef<HTMLInputElement>(null);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const noteTextareaRef = useRef<HTMLTextAreaElement>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const audioElemsRef = useRef<Map<number, HTMLAudioElement>>(new Map());
 
   const refresh = useCallback(() => {
     const summary = store.getSummary();
@@ -218,6 +244,13 @@ export default function Home() {
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
   }, [unlockPopupId]);
+
+  useEffect(() => {
+    if (!showEmojiPicker) return;
+    const handler = (e: MouseEvent) => { if (emojiPickerRef.current && !emojiPickerRef.current.contains(e.target as Node)) setShowEmojiPicker(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showEmojiPicker]);
 
 
   const closeLockPopup = () => { setLockPopupId(null); setLockPw(""); setLockPwConfirm(""); setLockPwError(""); setShowLockPw(false); };
@@ -288,6 +321,8 @@ export default function Home() {
       body: newNoteBody.trim(),
       color: newNoteColor,
       priority: newNotePriority ?? undefined,
+      images: newNoteImages.length > 0 ? newNoteImages : undefined,
+      voices: newNoteVoices.length > 0 ? newNoteVoices : undefined,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     };
@@ -295,6 +330,7 @@ export default function Home() {
     saveShortNotes(updated);
     setShortNotes(updated);
     setNewNoteTitle(""); setNewNoteBody(""); setNewNoteColor("#f5f5f4"); setNewNotePriority(null);
+    setNewNoteImages([]); setNewNoteVoices([]);
   };
 
   const handleSelectNote = (note: ShortNote) => {
@@ -303,6 +339,8 @@ export default function Home() {
     setNewNoteBody(note.body);
     setNewNoteColor(note.color);
     setNewNotePriority(note.priority ?? null);
+    setNewNoteImages(note.images ?? []);
+    setNewNoteVoices(note.voices ?? []);
     setShowColorPopup(false);
     setShowPriorityPopup(false);
   };
@@ -311,7 +349,7 @@ export default function Home() {
     if (selectedNoteId === null) return;
     const updated = shortNotes.map((n) =>
       n.id === selectedNoteId
-        ? { ...n, title: newNoteTitle.trim() || "Untitled", body: newNoteBody, color: newNoteColor, priority: newNotePriority ?? undefined, updatedAt: new Date().toISOString() }
+        ? { ...n, title: newNoteTitle.trim() || "Untitled", body: newNoteBody, color: newNoteColor, priority: newNotePriority ?? undefined, images: newNoteImages.length > 0 ? newNoteImages : undefined, voices: newNoteVoices.length > 0 ? newNoteVoices : undefined, updatedAt: new Date().toISOString() }
         : n
     );
     saveShortNotes(updated);
@@ -321,6 +359,70 @@ export default function Home() {
   const clearSelectedNote = () => {
     setSelectedNoteId(null);
     setNewNoteTitle(""); setNewNoteBody(""); setNewNoteColor("#f5f5f4"); setNewNotePriority(null);
+    setNewNoteImages([]); setNewNoteVoices([]);
+  };
+
+  const insertEmoji = (emoji: string) => {
+    const textarea = noteTextareaRef.current;
+    if (textarea) {
+      const start = textarea.selectionStart ?? newNoteBody.length;
+      const end = textarea.selectionEnd ?? newNoteBody.length;
+      const newVal = newNoteBody.slice(0, start) + emoji + newNoteBody.slice(end);
+      setNewNoteBody(newVal);
+      setTimeout(() => { textarea.selectionStart = textarea.selectionEnd = start + emoji.length; textarea.focus(); }, 0);
+    } else {
+      setNewNoteBody(prev => prev + emoji);
+    }
+    setShowEmojiPicker(false);
+  };
+
+  const handleNoteImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => { setNewNoteImages(prev => [...prev, ev.target?.result as string]); };
+    reader.readAsDataURL(file); e.target.value = "";
+  };
+
+  const handleNoteAudioUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]; if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => { setNewNoteVoices(prev => [...prev, { name: file.name, data: ev.target?.result as string }]); };
+    reader.readAsDataURL(file); e.target.value = "";
+  };
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mr = new MediaRecorder(stream);
+      audioChunksRef.current = [];
+      mr.ondataavailable = (e) => { if (e.data.size > 0) audioChunksRef.current.push(e.data); };
+      mr.onstop = () => {
+        const blob = new Blob(audioChunksRef.current, { type: "audio/webm" });
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          setNewNoteVoices(prev => [...prev, { name: `Recording ${prev.length + 1}`, data: ev.target?.result as string }]);
+        };
+        reader.readAsDataURL(blob);
+        stream.getTracks().forEach(t => t.stop());
+      };
+      mr.start(); mediaRecorderRef.current = mr; setIsRecording(true);
+    } catch { alert("Microphone access denied."); }
+  };
+
+  const stopRecording = () => { mediaRecorderRef.current?.stop(); setIsRecording(false); };
+
+  const togglePlayVoice = (idx: number, data: string) => {
+    const existing = audioElemsRef.current.get(idx);
+    if (existing) { existing.pause(); existing.currentTime = 0; audioElemsRef.current.delete(idx); setPlayingVoice(null); return; }
+    if (playingVoice !== null) {
+      const prev = audioElemsRef.current.get(playingVoice);
+      if (prev) { prev.pause(); prev.currentTime = 0; audioElemsRef.current.delete(playingVoice); }
+    }
+    const audio = new Audio(data);
+    audio.onended = () => { audioElemsRef.current.delete(idx); setPlayingVoice(null); };
+    audio.play();
+    audioElemsRef.current.set(idx, audio);
+    setPlayingVoice(idx);
   };
 
   const handleDeleteNote = (id: number) => {
@@ -881,6 +983,7 @@ export default function Home() {
                     {/* Body area — white card with border */}
                     <div className="flex-1 mx-5 mb-0 border border-stone-100 rounded-xl overflow-hidden flex flex-col" style={{ minHeight: 500 }}>
                       <textarea
+                        ref={noteTextareaRef}
                         value={newNoteBody}
                         onChange={(e) => setNewNoteBody(e.target.value)}
                         placeholder="Write your note here..."
@@ -890,15 +993,127 @@ export default function Home() {
                       />
                     </div>
 
+                    {/* Images preview strip */}
+                    {newNoteImages.length > 0 && (
+                      <div className="mx-5 mt-3 flex flex-wrap gap-2">
+                        {newNoteImages.map((src, idx) => (
+                          <div key={idx} className="relative group/img">
+                            <img src={src} alt="" className="w-20 h-20 object-cover rounded-xl border border-stone-200 shadow-sm" />
+                            <button
+                              onClick={() => setNewNoteImages(prev => prev.filter((_, i) => i !== idx))}
+                              className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-stone-800 text-white rounded-full flex items-center justify-center opacity-0 group-hover/img:opacity-100 transition-opacity"
+                            >
+                              <X className="w-2.5 h-2.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    {/* Voices preview */}
+                    {newNoteVoices.length > 0 && (
+                      <div className="mx-5 mt-3 flex flex-col gap-2">
+                        {newNoteVoices.map((v, idx) => (
+                          <div key={idx} className="flex items-center gap-3 bg-teal-50 border border-teal-100 rounded-xl px-3 py-2">
+                            <button
+                              onClick={() => togglePlayVoice(idx, v.data)}
+                              className="w-8 h-8 rounded-full bg-teal-500 hover:bg-teal-600 text-white flex items-center justify-center flex-shrink-0 transition-colors"
+                            >
+                              {playingVoice === idx ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 ml-0.5" />}
+                            </button>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium text-teal-800 truncate">{v.name}</p>
+                              <div className="mt-1 h-1 bg-teal-200 rounded-full overflow-hidden">
+                                <div className={`h-full bg-teal-500 rounded-full transition-all duration-300 ${playingVoice === idx ? "w-1/2" : "w-0"}`} />
+                              </div>
+                            </div>
+                            <button
+                              onClick={() => { const a = audioElemsRef.current.get(idx); if (a) { a.pause(); audioElemsRef.current.delete(idx); if (playingVoice === idx) setPlayingVoice(null); } setNewNoteVoices(prev => prev.filter((_, i) => i !== idx)); }}
+                              className="text-teal-400 hover:text-red-500 transition-colors flex-shrink-0"
+                            >
+                              <X className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
                     {/* Bottom toolbar */}
-                    <div className="flex items-center justify-between px-5 py-3">
+                    <div className="relative flex items-center justify-between px-5 py-3">
+                      {/* Emoji picker popup */}
+                      {showEmojiPicker && (
+                        <div ref={emojiPickerRef} className="absolute bottom-full left-5 mb-2 z-50 bg-white rounded-2xl shadow-2xl border border-stone-100 w-80 overflow-hidden">
+                          {/* Category tabs */}
+                          <div className="flex gap-0.5 px-2 pt-2 pb-1 border-b border-stone-100 overflow-x-auto">
+                            {EMOJI_CATEGORIES.map((cat, i) => (
+                              <button
+                                key={i}
+                                onClick={() => setEmojiCategory(i)}
+                                title={cat.name}
+                                className={`flex-shrink-0 w-8 h-8 rounded-lg text-base flex items-center justify-center transition-colors ${emojiCategory === i ? "bg-stone-100" : "hover:bg-stone-50"}`}
+                              >
+                                {cat.icon}
+                              </button>
+                            ))}
+                          </div>
+                          {/* Emoji grid */}
+                          <div className="p-2 h-48 overflow-y-auto">
+                            <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide px-1 mb-1">{EMOJI_CATEGORIES[emojiCategory].name}</p>
+                            <div className="grid grid-cols-8 gap-0.5">
+                              {EMOJI_CATEGORIES[emojiCategory].emojis.map((emoji, i) => (
+                                <button
+                                  key={i}
+                                  onClick={() => insertEmoji(emoji)}
+                                  className="w-8 h-8 rounded-lg text-xl flex items-center justify-center hover:bg-stone-100 transition-colors"
+                                >
+                                  {emoji}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+
                       <div className="flex items-center gap-3">
-                        <button className="text-stone-400 hover:text-stone-600 transition-colors"><Smile className="w-4 h-4" /></button>
-                        <button className="text-stone-400 hover:text-stone-600 transition-colors"><ImageIcon className="w-4 h-4" /></button>
+                        <button
+                          onClick={() => setShowEmojiPicker(v => !v)}
+                          className={`transition-colors ${showEmojiPicker ? "text-violet-500" : "text-stone-400 hover:text-stone-600"}`}
+                          title="Emoji"
+                        >
+                          <Smile className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => noteImgInputRef.current?.click()}
+                          className="text-stone-400 hover:text-stone-600 transition-colors"
+                          title="Add image"
+                        >
+                          <ImageIcon className="w-4 h-4" />
+                        </button>
                         <button className="text-stone-400 hover:text-stone-600 transition-colors"><Type className="w-4 h-4" /></button>
                         <button className="text-stone-400 hover:text-stone-600 transition-colors"><List className="w-4 h-4" /></button>
+                        <div className="w-px h-4 bg-stone-200" />
+                        {/* Voice — upload or record */}
+                        <button
+                          onClick={() => noteAudioInputRef.current?.click()}
+                          className="text-stone-400 hover:text-teal-500 transition-colors"
+                          title="Upload audio"
+                        >
+                          <ImageIcon className="w-4 h-4 hidden" />
+                          <svg className="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 18V5l12-2v13"/><circle cx="6" cy="18" r="3"/><circle cx="18" cy="16" r="3"/></svg>
+                        </button>
+                        <button
+                          onClick={isRecording ? stopRecording : startRecording}
+                          className={`transition-colors ${isRecording ? "text-red-500 animate-pulse" : "text-stone-400 hover:text-teal-500"}`}
+                          title={isRecording ? "Stop recording" : "Record voice"}
+                        >
+                          {isRecording ? <Square className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+                        </button>
                       </div>
                       <span className="text-xs text-stone-300">{newNoteBody.length} / 2000</span>
+
+                      {/* Hidden inputs */}
+                      <input ref={noteImgInputRef} type="file" accept="image/*" className="hidden" onChange={handleNoteImageUpload} />
+                      <input ref={noteAudioInputRef} type="file" accept="audio/*" className="hidden" onChange={handleNoteAudioUpload} />
                     </div>
 
                 </div>
