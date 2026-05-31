@@ -1494,7 +1494,7 @@ export default function Home() {
                       const CARD_H = 48;
                       const closeAllPopups = () => { setNotePopupId(null); setTimePickerId(null); setPriorityMenuId(null); setProgressMenuId(null); setDeleteConfirmId(null); };
                       return (
-                        <div className="flex flex-col gap-2" onClick={closeAllPopups}>
+                        <div className="flex flex-col gap-2 items-center" onClick={closeAllPopups}>
                           {filteredTasks.map((task, idx) => {
                             const pm = task.priority ? DAY_PRIORITY_META[task.priority] : null;
                             return (
