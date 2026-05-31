@@ -1807,14 +1807,14 @@ export default function Home() {
                     <div className="px-5 pt-5 pb-3 flex-shrink-0">
                       <h3 className="text-sm font-bold text-stone-700 tracking-[0.15em]">TASK TYPE</h3>
                     </div>
-                    <div className="flex-1 overflow-y-auto px-4 pb-3">
+                    <div className="flex-1 overflow-y-auto px-4 pb-3 pt-1">
                       <div className="grid grid-cols-2 gap-2">
 
                         {dayTaskTypes.map(type => (
                           <div key={type.id} className="group/type relative">
                             <button
                               onClick={() => setSelectedTypeId(selectedTypeId === type.id ? "all" : type.id)}
-                              className={`w-full text-center text-xs px-2 py-1.5 rounded-lg border transition-all truncate shadow-sm hover:-translate-y-[2px] hover:shadow-md ${selectedTypeId === type.id ? "bg-stone-800 text-white border-transparent" : "border-stone-300 text-stone-700 bg-white"}`}
+                              className={`w-full text-center text-xs px-2 py-1 rounded-lg border transition-all truncate shadow-sm hover:-translate-y-[2px] hover:shadow-md ${selectedTypeId === type.id ? "bg-stone-800 text-white border-transparent" : "border-stone-300 text-stone-700 bg-white"}`}
                             >
                               {type.name}
                             </button>
