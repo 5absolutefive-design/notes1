@@ -1813,14 +1813,6 @@ export default function Home() {
                           </div>
                         ))}
 
-                        {selectedTypeId !== "all" && dayTaskTypes.length > 0 && (
-                          <button
-                            onClick={() => setSelectedTypeId("all")}
-                            className="col-span-2 w-full text-center text-xs px-2 py-2 rounded-lg border border-stone-200 text-stone-400 hover:border-stone-400 hover:text-stone-600 bg-white transition-all"
-                          >
-                            All Tasks
-                          </button>
-                        )}
 
                         {showTypeInput ? (
                           <div className="col-span-2 flex gap-1.5">
