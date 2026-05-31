@@ -1858,25 +1858,20 @@ export default function Home() {
                       <span className="text-xs font-bold tabular-nums mt-0.5">{days[0].label}</span>
                     </button>
 
-                    {/* Next 14 Days — CSS Grid 15 cols: cards span 2 cols each, gap = 1 empty col */}
+                    {/* Next 14 Days — 14 cols × 2 rows: each card occupies r1c1, r2c2, r1c3, r2c4 ... */}
                     <p className="text-[9px] font-bold text-stone-400 tracking-widest uppercase mt-4 mb-2">Next 14 Days</p>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(15, 1fr)", rowGap: "8px", overflow: "hidden" }}>
-                      {days.slice(1).map((d, i) => {
-                        const isTopRow = i % 2 === 0;
-                        const pos = Math.floor(i / 2);
-                        const colStart = isTopRow ? pos * 2 + 1 : pos * 2 + 2;
-                        return (
-                          <button
-                            key={d.key}
-                            onClick={() => setSelectedDate(d.key)}
-                            style={{ gridColumn: `${colStart} / span 2`, gridRow: isTopRow ? 1 : 2, aspectRatio: "1 / 1" }}
-                            className={`flex flex-col items-center justify-center rounded-xl border transition-all ${selectedDate === d.key ? "bg-stone-800 text-white border-stone-800" : "border-stone-300 text-stone-600 hover:border-stone-500 bg-white"}`}
-                          >
-                            <span className="text-[7px] font-bold uppercase leading-none">{d.day}</span>
-                            <span className="text-xs font-bold tabular-nums mt-0.5">{d.label}</span>
-                          </button>
-                        );
-                      })}
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(14, 1fr)", gridTemplateRows: "1fr 1fr", gap: "4px" }}>
+                      {days.slice(1).map((d, i) => (
+                        <button
+                          key={d.key}
+                          onClick={() => setSelectedDate(d.key)}
+                          style={{ gridColumn: i + 1, gridRow: i % 2 === 0 ? 1 : 2, aspectRatio: "1 / 1" }}
+                          className={`flex flex-col items-center justify-center rounded-lg border transition-all ${selectedDate === d.key ? "bg-stone-800 text-white border-stone-800" : "border-stone-300 text-stone-600 hover:border-stone-500 bg-white"}`}
+                        >
+                          <span className="text-[6px] font-bold uppercase leading-none">{d.day}</span>
+                          <span className="text-[10px] font-bold tabular-nums leading-none mt-0.5">{d.label}</span>
+                        </button>
+                      ))}
                     </div>
 
                   </div>
