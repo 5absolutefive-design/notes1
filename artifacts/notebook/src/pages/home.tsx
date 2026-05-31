@@ -1842,14 +1842,11 @@ export default function Home() {
                         ) : (
                           filteredTasks.filter(t => t.hasTime).map((task, idx) => {
                             const h12 = parseInt(task.hour || "12");
-                            const min = parseInt(task.minute || "00");
+                            const taskMin = parseInt(task.minute || "00");
                             const h24 = task.ampm === "PM" ? (h12 === 12 ? 12 : h12 + 12) : (h12 === 12 ? 0 : h12);
-                            // Use local date offset from today (avoids UTC/local mismatch from toISOString keys)
-                            const dayOffset = days.findIndex(day => day.key === selectedDate);
-                            const localBase = dayOffset >= 0
-                              ? new Date(today.getFullYear(), today.getMonth(), today.getDate() + dayOffset)
-                              : (() => { const [y, mo, d] = selectedDate.split("-").map(Number); return new Date(y, mo - 1, d); })();
-                            const taskDate = new Date(localBase.getFullYear(), localBase.getMonth(), localBase.getDate(), h24, min, 0, 0);
+                            // Use clockNow as single source of truth to avoid today vs clockNow drift
+                            const dayOffset = Math.max(0, days.findIndex(day => day.key === selectedDate));
+                            const taskDate = new Date(clockNow.getFullYear(), clockNow.getMonth(), clockNow.getDate() + dayOffset, h24, taskMin, 0, 0);
                             const diffMs = taskDate.getTime() - clockNow.getTime();
                             const diffMin = Math.floor(diffMs / 60000);
                             const isOverdue = diffMin < 0;
