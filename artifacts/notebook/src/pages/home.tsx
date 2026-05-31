@@ -193,6 +193,57 @@ const DAY_PRIORITY_META: Record<NonNullable<DayPriority>, { label: string; color
 };
 // ─────────────────────────────────────────────────────────────
 
+// ── Schedule ──────────────────────────────────────────────────
+const SCHEDULE_KEY = "nb_schedule_notes";
+
+function loadScheduleNotes(): Record<string, Record<number, string>> {
+  try { const r = localStorage.getItem(SCHEDULE_KEY); return r ? JSON.parse(r) : {}; } catch { return {}; }
+}
+function saveScheduleNotes(data: Record<string, Record<number, string>>) {
+  localStorage.setItem(SCHEDULE_KEY, JSON.stringify(data));
+}
+
+function MiniCalendar({ year, month, selectedDate, onSelectDate }: {
+  year: number; month: number; selectedDate: string; onSelectDate: (d: string) => void;
+}) {
+  const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const todayStr = new Date().toISOString().slice(0, 10);
+  const cells: (number | null)[] = [];
+  for (let i = 0; i < firstDay; i++) cells.push(null);
+  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+  return (
+    <div className="bg-white rounded-xl border border-stone-200 p-3 shadow-sm">
+      <div className="text-[11px] font-bold text-stone-700 text-center mb-2 tracking-wide">
+        {MONTH_NAMES[month]} {year}
+      </div>
+      <div className="grid grid-cols-7 gap-px text-center">
+        {["S","M","T","W","T","F","S"].map((d, i) => (
+          <div key={i} className="text-[9px] text-stone-400 font-semibold pb-1">{d}</div>
+        ))}
+        {cells.map((d, i) => {
+          if (d === null) return <div key={`e-${i}`} />;
+          const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
+          const isSel = dateStr === selectedDate;
+          const isToday = dateStr === todayStr;
+          return (
+            <button
+              key={d}
+              onClick={() => onSelectDate(dateStr)}
+              className={`text-[10px] rounded-full w-5 h-5 flex items-center justify-center mx-auto transition-colors
+                ${isSel ? "bg-stone-800 text-white font-bold" : isToday ? "bg-blue-100 text-blue-700 font-semibold" : "text-stone-600 hover:bg-stone-100"}`}
+            >
+              {d}
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+// ─────────────────────────────────────────────────────────────
+
 type ActiveView = "author" | "home" | "my-notebook" | "short-note" | "project" | "task" | "schedule";
 
 const NAV_ITEMS: { id: ActiveView; label: string; icon: React.ElementType; active: boolean }[] = [
@@ -202,7 +253,7 @@ const NAV_ITEMS: { id: ActiveView; label: string; icon: React.ElementType; activ
   { id: "my-notebook",label: "My Notebook", icon: BookMarked,     active: true  },
   { id: "project",    label: "Project",     icon: FolderKanban,   active: false },
   { id: "task",       label: "Task",        icon: CheckSquare,    active: true  },
-  { id: "schedule",   label: "Schedule",    icon: CalendarDays,   active: false },
+  { id: "schedule",   label: "Schedule",    icon: CalendarDays,   active: true  },
 ];
 
 function OrbitalClock24({ frozen = false }: { frozen?: boolean }) {
@@ -377,6 +428,26 @@ export default function Home() {
   const [tempAmpm, setTempAmpm] = useState<"AM" | "PM">("AM");
   const [cloneMode, setCloneMode] = useState(false);
   const [cloneTargetDates, setCloneTargetDates] = useState<string[]>([]);
+
+  // Schedule state
+  const [scheduleDate, setScheduleDate] = useState<string>(() => new Date().toISOString().slice(0, 10));
+  const [scheduleData, setScheduleData] = useState<Record<string, Record<number, string>>>(() => loadScheduleNotes());
+
+  function updateScheduleNote(date: string, hour: number, text: string) {
+    setScheduleData(prev => {
+      const next = { ...prev, [date]: { ...(prev[date] ?? {}), [hour]: text } };
+      saveScheduleNotes(next);
+      return next;
+    });
+  }
+
+  function scheduleNavDate(delta: number) {
+    setScheduleDate(prev => {
+      const d = new Date(prev);
+      d.setDate(d.getDate() + delta);
+      return d.toISOString().slice(0, 10);
+    });
+  }
 
   const popupRef = useRef<HTMLDivElement>(null);
   const imgInputRef = useRef<HTMLInputElement>(null);
@@ -2062,8 +2133,130 @@ export default function Home() {
           );
         })()}
 
+        {/* Schedule view */}
+        {activeView === "schedule" && (() => {
+          const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+          const DAY_NAMES = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+          const selD = new Date(scheduleDate + "T00:00:00");
+          const todayStr = new Date().toISOString().slice(0, 10);
+          const isToday = scheduleDate === todayStr;
+
+          const dayNotes = scheduleData[scheduleDate] ?? {};
+
+          function formatHour(h: number) {
+            if (h === 0)  return "12:00 AM";
+            if (h < 12)   return `${String(h).padStart(2,"0")}:00 AM`;
+            if (h === 12) return "12:00 PM";
+            return `${String(h - 12).padStart(2,"0")}:00 PM`;
+          }
+
+          const amHours  = Array.from({ length: 12 }, (_, i) => i);
+          const pmHours  = Array.from({ length: 12 }, (_, i) => i + 12);
+
+          const calMonths = (() => {
+            const base = new Date(selD.getFullYear(), selD.getMonth(), 1);
+            return Array.from({ length: 4 }, (_, i) => {
+              const d = new Date(base.getFullYear(), base.getMonth() - 1 + i, 1);
+              return { year: d.getFullYear(), month: d.getMonth() };
+            });
+          })();
+
+          function TimeColumn({ hours }: { hours: number[] }) {
+            return (
+              <div className="flex flex-col border border-stone-300 rounded-lg overflow-hidden bg-white">
+                {hours.map((h, idx) => (
+                  <div key={h} className={`flex flex-col ${idx < hours.length - 1 ? "border-b border-stone-300" : ""}`}>
+                    <div className="flex items-center gap-2 px-3 py-1 border-b border-stone-300 bg-stone-50">
+                      <span className="text-[11px] font-semibold text-stone-600 tracking-wide w-20 flex-shrink-0">{formatHour(h)}</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <div className="border-b border-dashed border-stone-300">
+                        <input
+                          type="text"
+                          value={dayNotes[h] ?? ""}
+                          onChange={e => updateScheduleNote(scheduleDate, h, e.target.value)}
+                          placeholder=""
+                          className="w-full px-3 py-1.5 text-xs text-stone-700 outline-none bg-transparent placeholder:text-stone-200"
+                        />
+                      </div>
+                      <div className="h-5 border-b border-dashed border-stone-200" />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          }
+
+          return (
+            <div className="flex-1 overflow-y-auto flex flex-col p-5 gap-4 bg-stone-50">
+
+              {/* Header */}
+              <div className="rounded-2xl border border-stone-200 bg-white shadow-sm px-6 py-3 flex items-center justify-between gap-4">
+                <div className="flex flex-col gap-0.5">
+                  <h1 className="text-2xl font-serif font-bold text-stone-800 leading-tight">Schedule</h1>
+                  <p className="text-xs text-stone-400">
+                    {DAY_NAMES[selD.getDay()]}, {MONTH_NAMES[selD.getMonth()]} {selD.getDate()}, {selD.getFullYear()}
+                    {isToday && <span className="ml-2 bg-blue-100 text-blue-600 text-[9px] font-semibold rounded-full px-2 py-0.5">Today</span>}
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => scheduleNavDate(-1)}
+                    className="w-8 h-8 rounded-lg border border-stone-200 bg-stone-50 hover:bg-stone-100 flex items-center justify-center transition-colors"
+                  >
+                    <ChevronLeft className="w-4 h-4 text-stone-600" />
+                  </button>
+                  <button
+                    onClick={() => setScheduleDate(new Date().toISOString().slice(0, 10))}
+                    className="px-3 h-8 rounded-lg border border-stone-200 bg-stone-50 hover:bg-stone-100 text-xs font-semibold text-stone-600 transition-colors"
+                  >
+                    Today
+                  </button>
+                  <button
+                    onClick={() => scheduleNavDate(1)}
+                    className="w-8 h-8 rounded-lg border border-stone-200 bg-stone-50 hover:bg-stone-100 flex items-center justify-center transition-colors"
+                  >
+                    <ChevronRight className="w-4 h-4 text-stone-600" />
+                  </button>
+                </div>
+              </div>
+
+              {/* 3-column body */}
+              <div className="flex gap-4 items-start">
+
+                {/* AM column */}
+                <div className="flex-1 min-w-0 flex flex-col gap-2">
+                  <div className="text-[10px] font-bold text-stone-400 uppercase tracking-widest px-1">AM</div>
+                  <TimeColumn hours={amHours} />
+                </div>
+
+                {/* PM column */}
+                <div className="flex-1 min-w-0 flex flex-col gap-2">
+                  <div className="text-[10px] font-bold text-stone-400 uppercase tracking-widest px-1">PM</div>
+                  <TimeColumn hours={pmHours} />
+                </div>
+
+                {/* Mini calendars */}
+                <div className="w-52 flex-shrink-0 flex flex-col gap-3">
+                  <div className="text-[10px] font-bold text-stone-400 uppercase tracking-widest px-1">Calendars</div>
+                  {calMonths.map(({ year, month }) => (
+                    <MiniCalendar
+                      key={`${year}-${month}`}
+                      year={year}
+                      month={month}
+                      selectedDate={scheduleDate}
+                      onSelectDate={setScheduleDate}
+                    />
+                  ))}
+                </div>
+
+              </div>
+            </div>
+          );
+        })()}
+
         {/* All other views — blank */}
-        {activeView !== "my-notebook" && activeView !== "short-note" && activeView !== "task" && (
+        {activeView !== "my-notebook" && activeView !== "short-note" && activeView !== "task" && activeView !== "schedule" && (
           <div className="flex-1" />
         )}
 
