@@ -1814,7 +1814,7 @@ export default function Home() {
                           <div key={type.id} className="group/type relative">
                             <button
                               onClick={() => setSelectedTypeId(selectedTypeId === type.id ? "all" : type.id)}
-                              className={`w-full text-center text-xs px-2 py-1 rounded-lg border transition-all truncate shadow-sm hover:-translate-y-[2px] hover:shadow-md ${selectedTypeId === type.id ? "bg-stone-800 text-white border-transparent" : "border-stone-300 text-stone-700 bg-white"}`}
+                              className={`w-full text-center text-xs px-2 py-3 rounded-lg border transition-all truncate shadow-sm hover:-translate-y-[2px] hover:shadow-md ${selectedTypeId === type.id ? "bg-stone-800 text-white border-transparent" : "border-stone-300 text-stone-700 bg-white"}`}
                             >
                               {type.name}
                             </button>
