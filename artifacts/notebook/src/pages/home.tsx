@@ -1814,7 +1814,7 @@ export default function Home() {
                           <div key={type.id} className="group/type relative">
                             <button
                               onClick={() => setSelectedTypeId(selectedTypeId === type.id ? "all" : type.id)}
-                              className={`w-full text-center text-xs px-2 py-2 rounded-lg border transition-all truncate shadow-sm hover:-translate-y-[2px] hover:shadow-md ${selectedTypeId === type.id ? "bg-stone-800 text-white border-stone-800" : "border-stone-300 text-stone-700 hover:border-stone-500 bg-white"}`}
+                              className={`w-full text-center text-xs px-2 py-2 rounded-lg border transition-all truncate shadow-sm hover:-translate-y-[2px] hover:shadow-md ${selectedTypeId === type.id ? "bg-stone-800 text-white border-transparent" : "border-stone-300 text-stone-700 hover:border-stone-500 bg-white"}`}
                             >
                               {type.name}
                             </button>
@@ -1860,7 +1860,7 @@ export default function Home() {
                     <p className="text-[9px] font-bold text-stone-400 tracking-widest uppercase mb-2">ToDay</p>
                     <button
                       onClick={() => setSelectedDate(days[0].key)}
-                      className={`flex flex-col items-center justify-center rounded-lg border transition-all shadow-sm hover:-translate-y-[2px] hover:shadow-md ${selectedDate === days[0].key ? "bg-stone-800 text-white border-stone-800" : "border-stone-300 text-stone-600 hover:border-stone-500 bg-white"}`}
+                      className={`flex flex-col items-center justify-center rounded-lg border transition-all shadow-sm hover:-translate-y-[2px] hover:shadow-md ${selectedDate === days[0].key ? "bg-stone-800 text-white border-transparent" : "border-stone-300 text-stone-600 hover:border-stone-500 bg-white"}`}
                       style={{ width: "calc(100% * 2 / 15 * 0.7)", aspectRatio: "1 / 1" }}
                     >
                       <span className="text-[5px] font-bold uppercase leading-none">{days[0].day}</span>
@@ -1875,7 +1875,7 @@ export default function Home() {
                           key={d.key}
                           onClick={() => setSelectedDate(d.key)}
                           style={{ gridColumn: i + 1, gridRow: i % 2 === 0 ? 1 : 2, aspectRatio: "1 / 1", transform: i % 2 === 0 ? "translateY(-4px)" : "none" }}
-                          className={`flex flex-col items-center justify-center rounded-lg border transition-all shadow-sm hover:-translate-y-[2px] hover:shadow-md ${selectedDate === d.key ? "bg-stone-800 text-white border-stone-800" : "border-stone-300 text-stone-600 hover:border-stone-500 bg-white"}`}
+                          className={`flex flex-col items-center justify-center rounded-lg border transition-all shadow-sm hover:-translate-y-[2px] hover:shadow-md ${selectedDate === d.key ? "bg-stone-800 text-white border-transparent" : "border-stone-300 text-stone-600 hover:border-stone-500 bg-white"}`}
                         >
                           <span className="text-[6px] font-bold uppercase leading-none">{d.day}</span>
                           <span className="text-[10px] font-bold tabular-nums leading-none mt-0.5">{d.label}</span>
