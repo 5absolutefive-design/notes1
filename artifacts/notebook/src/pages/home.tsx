@@ -1500,8 +1500,14 @@ export default function Home() {
                             return (
                               <div key={task.id} className="relative w-full group/card" style={{ opacity: task.done ? 0.3 : 1, transition: "opacity 0.2s" }}>
                                 {/* FlatC card */}
-                                <div className="flex items-center border border-stone-200 rounded-lg w-full shadow-sm transition-all duration-200 ease-out group-hover/card:-translate-y-[3px] group-hover/card:shadow-md group-hover/card:border-stone-300"
-                                  style={{ height: CARD_H, backgroundColor: pm ? pm.rowBg : "#ffffff" }}>
+                                <div className="flex items-center rounded-lg w-full shadow-sm transition-all duration-200 ease-out group-hover/card:-translate-y-[3px] group-hover/card:shadow-md"
+                                  style={{
+                                    height: CARD_H,
+                                    backgroundColor: pm ? pm.rowBg : "#ffffff",
+                                    border: task.title.trim()
+                                      ? `1.5px solid ${pm ? pm.bar : "#94a3b8"}`
+                                      : "1px solid #e7e5e4",
+                                  }}>
 
                                   {/* Left accent bar */}
                                   <div className="self-stretch flex-shrink-0 rounded-l-lg" style={{ width: 4, backgroundColor: pm ? pm.bar : "#e7e5e4" }} />
