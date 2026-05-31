@@ -1550,7 +1550,7 @@ export default function Home() {
               <div className="flex gap-4 flex-1 min-h-0 overflow-hidden p-1">
 
                 {/* ── LEFT — task pad ── */}
-                <div className="flex-[7] rounded-2xl flex flex-col overflow-hidden" style={{ background: "#ffffff", border: "1px solid rgba(0,0,0,0.12)" }}>
+                <div className="flex-[6] rounded-2xl flex flex-col overflow-hidden" style={{ background: "#ffffff", border: "1px solid rgba(0,0,0,0.12)" }}>
 
                   {/* Card header */}
                   <div className="flex-shrink-0 flex items-center justify-between px-5 py-3" style={{ borderBottom: "1px solid #d5d6de" }}>
@@ -1774,7 +1774,7 @@ export default function Home() {
                 </div>
 
                 {/* ── RIGHT panel ── */}
-                <div className="flex-[3] flex-shrink-0 flex flex-col gap-4 overflow-hidden">
+                <div className="flex-[4] flex-shrink-0 flex flex-col gap-4 overflow-hidden">
 
                   {/* Clock card — two parts */}
                   <div className="bg-white rounded-2xl border border-stone-200 flex-shrink-0 flex" style={{ height: "280px" }}>
@@ -1865,7 +1865,7 @@ export default function Home() {
                         <button
                           key={d.key}
                           onClick={() => setSelectedDate(d.key)}
-                          style={{ gridColumn: i + 1, gridRow: i % 2 === 0 ? 1 : 2, aspectRatio: "1 / 1" }}
+                          style={{ gridColumn: i + 1, gridRow: i % 2 === 0 ? 1 : 2, aspectRatio: "1 / 1", transform: i % 2 === 0 ? "translateY(-4px)" : "none" }}
                           className={`flex flex-col items-center justify-center rounded-lg border transition-all ${selectedDate === d.key ? "bg-stone-800 text-white border-stone-800" : "border-stone-300 text-stone-600 hover:border-stone-500 bg-white"}`}
                         >
                           <span className="text-[6px] font-bold uppercase leading-none">{d.day}</span>
