@@ -2324,34 +2324,29 @@ export default function Home() {
               {/* Body row — stretches to fill remaining screen height */}
               <div className="flex gap-4 flex-1 min-h-0">
 
-                {/* Main card — AM + PM joined, fills full height */}
-                <div className="rounded-2xl border border-stone-200 bg-white shadow-md flex-1 min-w-0 min-h-0 flex flex-col overflow-hidden">
-                  <div className="flex flex-1 min-h-0">
+                {/* Main background card with two floating AM/PM cards on top */}
+                <div className="rounded-2xl border border-stone-200 bg-stone-100/70 shadow-inner flex-1 min-w-0 min-h-0 flex gap-3 p-3">
 
-                    {/* AM column */}
-                    <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
-                      <div className="flex-shrink-0 px-2 py-1.5 border-b border-stone-200 bg-stone-100">
-                        <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">AM</span>
-                      </div>
-                      <div className="flex-1 min-h-0">
-                        {renderTimeColumn(amHours)}
-                      </div>
+                  {/* Floating AM card */}
+                  <div className="flex-1 min-w-0 rounded-xl border border-stone-200 bg-white shadow-lg flex flex-col overflow-hidden">
+                    <div className="flex-shrink-0 px-3 py-2 border-b border-stone-200 bg-stone-50">
+                      <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">AM</span>
                     </div>
-
-                    {/* Divider */}
-                    <div className="w-px bg-stone-200 flex-shrink-0" />
-
-                    {/* PM column */}
-                    <div className="flex-1 min-w-0 flex flex-col overflow-hidden">
-                      <div className="flex-shrink-0 px-2 py-1.5 border-b border-stone-200 bg-stone-100">
-                        <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">PM</span>
-                      </div>
-                      <div className="flex-1 min-h-0">
-                        {renderTimeColumn(pmHours)}
-                      </div>
+                    <div className="flex-1 min-h-0">
+                      {renderTimeColumn(amHours)}
                     </div>
-
                   </div>
+
+                  {/* Floating PM card */}
+                  <div className="flex-1 min-w-0 rounded-xl border border-stone-200 bg-white shadow-lg flex flex-col overflow-hidden">
+                    <div className="flex-shrink-0 px-3 py-2 border-b border-stone-200 bg-stone-50">
+                      <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">PM</span>
+                    </div>
+                    <div className="flex-1 min-h-0">
+                      {renderTimeColumn(pmHours)}
+                    </div>
+                  </div>
+
                 </div>
 
                 {/* Mini calendars — outside */}
