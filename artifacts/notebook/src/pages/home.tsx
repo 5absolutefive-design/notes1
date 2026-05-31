@@ -1856,16 +1856,12 @@ export default function Home() {
                             const absMin = Math.abs(diffMin);
                             const hrs = Math.floor(absMin / 60);
                             const mins = absMin % 60;
-                            const timeLabel = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
+                            const timeLabel = isOverdue ? "Time Up" : (hrs > 0 ? `${hrs} Hour ${mins} Minutes` : `${mins} Minutes`);
                             return (
-                              <div key={task.id} className="flex flex-col rounded-lg px-2 py-1.5 border" style={{ backgroundColor: isOverdue ? "#fff5f5" : "#f8faf8", borderColor: isOverdue ? "#fecaca" : "#d1fae5" }}>
-                                <div className="flex items-center gap-1">
-                                  <span className="text-[8px] font-bold text-stone-400 flex-shrink-0">T{idx + 1}</span>
-                                  <span className="text-[9px] font-medium text-stone-600 flex-1 truncate">{task.title || "Untitled"}</span>
-                                </div>
-                                <span className={`text-[10px] font-bold tabular-nums mt-0.5 ${isOverdue ? "text-red-400" : "text-emerald-500"}`}>
-                                  {isOverdue ? "Time Up" : timeLabel}
-                                </span>
+                              <div key={task.id} className="flex items-center gap-1.5 rounded-lg px-2.5 py-2 border" style={{ backgroundColor: isOverdue ? "#fff5f5" : "#f8faf8", borderColor: isOverdue ? "#fecaca" : "#d1fae5" }}>
+                                <span className="text-[9px] font-bold text-stone-400 flex-shrink-0">T{idx + 1}</span>
+                                <span className="text-[9px] text-stone-400 flex-shrink-0">:</span>
+                                <span className={`text-[9px] font-bold tabular-nums ${isOverdue ? "text-red-400" : "text-emerald-600"}`}>{timeLabel}</span>
                               </div>
                             );
                           })
