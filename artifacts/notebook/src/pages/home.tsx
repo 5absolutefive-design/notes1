@@ -1884,7 +1884,7 @@ export default function Home() {
 
                         {dayTaskTypes.length === 7 && (
                           <div className="w-full flex items-center justify-center py-2 rounded-lg border border-dashed border-stone-200 bg-stone-50">
-                            <Lock className="w-3.5 h-3.5 text-stone-300" />
+                            <span className="text-[10px] font-semibold text-stone-400">Seriously 😏</span>
                           </div>
                         )}
 
