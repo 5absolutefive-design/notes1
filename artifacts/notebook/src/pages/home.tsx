@@ -1489,31 +1489,28 @@ export default function Home() {
                     )}
 
                     {(() => {
-                      const COL = { num: 36, check: 44, title: 640, note: 64, time: 98, priority: 88, progress: 90, trash: 44 };
-                      const CARD_W = Object.values(COL).reduce((a, b) => a + b, 0) + 4;
                       const CARD_H = 48;
                       const closeAllPopups = () => { setNotePopupId(null); setTimePickerId(null); setPriorityMenuId(null); setProgressMenuId(null); setDeleteConfirmId(null); };
                       return (
-                        <div className="flex flex-col gap-2 items-center" onClick={closeAllPopups}>
+                        <div className="flex flex-col gap-2" onClick={closeAllPopups}>
                           {filteredTasks.map((task, idx) => {
                             const pm = task.priority ? DAY_PRIORITY_META[task.priority] : null;
                             return (
-                              <div key={task.id} className="relative flex-shrink-0" style={{ opacity: task.done ? 0.3 : 1, transition: "opacity 0.2s" }}>
+                              <div key={task.id} className="relative w-full" style={{ opacity: task.done ? 0.3 : 1, transition: "opacity 0.2s" }}>
                                 {/* FlatC card */}
-                                <div className="flex items-center overflow-hidden border border-stone-200 rounded-md"
-                                  style={{ width: CARD_W, height: CARD_H, backgroundColor: pm ? pm.rowBg : "#ffffff" }}>
+                                <div className="flex items-center overflow-hidden border border-stone-200 rounded-md w-full"
+                                  style={{ height: CARD_H, backgroundColor: pm ? pm.rowBg : "#ffffff" }}>
 
                                   {/* Left accent bar */}
                                   <div className="self-stretch flex-shrink-0" style={{ width: 4, backgroundColor: pm ? pm.bar : "#e7e5e4" }} />
 
                                   {/* Num */}
-                                  <div className="flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch text-[11px] font-bold text-stone-400"
-                                    style={{ width: COL.num }}>
+                                  <div className="w-9 flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch text-[11px] font-bold text-stone-400">
                                     {idx + 1}
                                   </div>
 
                                   {/* Checkbox */}
-                                  <div className="flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch" style={{ width: COL.check }}>
+                                  <div className="w-11 flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch">
                                     <button
                                       onClick={e => { e.stopPropagation(); toggleDone(task.id); }}
                                       className="w-[18px] h-[18px] rounded flex-shrink-0 flex items-center justify-center border transition-all"
@@ -1524,8 +1521,8 @@ export default function Home() {
                                     </button>
                                   </div>
 
-                                  {/* Title */}
-                                  <div className="flex items-center flex-shrink-0 border-r border-stone-200 self-stretch px-3" style={{ width: COL.title }}
+                                  {/* Title — takes all remaining space */}
+                                  <div className="flex-1 min-w-0 flex items-center border-r border-stone-200 self-stretch px-3"
                                     onClick={e => e.stopPropagation()}>
                                     <input
                                       autoFocus={task.id === newTaskFocusId}
@@ -1533,36 +1530,90 @@ export default function Home() {
                                       onChange={e => updateTask(task.id, { title: e.target.value })}
                                       onFocus={() => setNewTaskFocusId(null)}
                                       placeholder="Task name..."
-                                      className={`text-sm w-full bg-transparent outline-none border-none placeholder-stone-300 ${task.done ? "line-through text-stone-400" : "text-stone-700"}`}
+                                      className={`text-sm w-full bg-transparent outline-none border-none placeholder-stone-300 truncate ${task.done ? "line-through text-stone-400" : "text-stone-700"}`}
                                     />
                                   </div>
 
                                   {/* Note */}
-                                  <div className="flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch cursor-pointer select-none" style={{ width: COL.note }}
+                                  <div className="relative w-16 flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch cursor-pointer select-none"
                                     onClick={e => { e.stopPropagation(); setNotePopupId(notePopupId === task.id ? null : task.id); setTimePickerId(null); setPriorityMenuId(null); setProgressMenuId(null); setDeleteConfirmId(null); }}>
                                     <span className={`text-[11px] font-medium ${task.note ? "text-indigo-500" : "text-stone-400"}`}>
                                       Note{task.note && <span className="ml-1 w-1.5 h-1.5 rounded-full bg-indigo-400 inline-block align-middle" />}
                                     </span>
+                                    {notePopupId === task.id && (
+                                      <div className="absolute z-50 bg-white border border-stone-200 rounded-xl shadow-lg p-3 flex flex-col gap-2"
+                                        style={{ top: CARD_H + 6, right: 0, width: 320 }}
+                                        onClick={e => e.stopPropagation()}>
+                                        <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Note</p>
+                                        <textarea autoFocus value={task.note} onChange={e => updateTask(task.id, { note: e.target.value })} placeholder="Write a note..." rows={3}
+                                          className="w-full text-xs text-stone-700 border border-stone-200 rounded-lg p-2 outline-none resize-none focus:border-indigo-300 placeholder-stone-300" />
+                                        <button onClick={() => setNotePopupId(null)} className="text-[11px] font-bold text-white bg-stone-800 rounded-lg px-3 py-1.5 hover:bg-stone-700 w-full">Done</button>
+                                      </div>
+                                    )}
                                   </div>
 
                                   {/* Time */}
-                                  <div className="flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch cursor-pointer select-none" style={{ width: COL.time }}
+                                  <div className="relative w-24 flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch cursor-pointer select-none"
                                     onClick={e => { e.stopPropagation(); if (timePickerId !== task.id) { setTempHour(task.hour || "12"); setTempMinute(task.minute || "00"); setTempAmpm(task.ampm || "AM"); setTimePickerId(task.id); setPriorityMenuId(null); setNotePopupId(null); setProgressMenuId(null); setDeleteConfirmId(null); } else { setTimePickerId(null); } }}>
                                     <span className={`text-[11px] tabular-nums ${!task.hasTime ? "text-stone-300" : "text-stone-600"}`}>
                                       {task.hasTime ? `${task.hour}:${task.minute} ${task.ampm}` : "--:-- --"}
                                     </span>
+                                    {timePickerId === task.id && (
+                                      <div className="absolute z-50 bg-white border border-stone-200 rounded-xl shadow-lg p-3 flex flex-col gap-2.5"
+                                        style={{ top: CARD_H + 6, right: 0, width: 220 }}
+                                        onClick={e => e.stopPropagation()}>
+                                        <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Time</p>
+                                        <div className="flex items-center gap-2">
+                                          <select value={tempHour} onChange={e => setTempHour(e.target.value)} className="flex-1 text-sm border border-stone-200 rounded-lg px-2 py-1.5 outline-none bg-white text-stone-700">
+                                            {Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0")).map(v => <option key={v} value={v}>{v}</option>)}
+                                          </select>
+                                          <span className="text-stone-400 font-bold">:</span>
+                                          <select value={tempMinute} onChange={e => setTempMinute(e.target.value)} className="flex-1 text-sm border border-stone-200 rounded-lg px-2 py-1.5 outline-none bg-white text-stone-700">
+                                            {["00","05","10","15","20","25","30","35","40","45","50","55"].map(v => <option key={v} value={v}>{v}</option>)}
+                                          </select>
+                                          <select value={tempAmpm} onChange={e => setTempAmpm(e.target.value as "AM" | "PM")} className="text-sm border border-stone-200 rounded-lg px-2 py-1.5 outline-none bg-white text-stone-700">
+                                            <option value="AM">AM</option>
+                                            <option value="PM">PM</option>
+                                          </select>
+                                        </div>
+                                        <div className="flex gap-1.5">
+                                          <button onClick={() => { updateTask(task.id, { hour: tempHour, minute: tempMinute, ampm: tempAmpm, hasTime: true }); setTimePickerId(null); }} className="flex-1 text-[11px] font-bold text-white bg-stone-800 rounded-lg py-1.5 hover:bg-stone-700">Set</button>
+                                          {task.hasTime && <button onClick={() => { updateTask(task.id, { hasTime: false }); setTimePickerId(null); }} className="text-[11px] text-stone-400 border border-stone-200 rounded-lg px-3 py-1.5 hover:text-stone-600">Clear</button>}
+                                        </div>
+                                      </div>
+                                    )}
                                   </div>
 
                                   {/* Priority */}
-                                  <div className="flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch cursor-pointer select-none" style={{ width: COL.priority }}
+                                  <div className="relative w-[88px] flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch cursor-pointer select-none"
                                     onClick={e => { e.stopPropagation(); setPriorityMenuId(priorityMenuId === task.id ? null : task.id); setTimePickerId(null); setNotePopupId(null); setProgressMenuId(null); setDeleteConfirmId(null); }}>
                                     <span className="text-[11px] font-semibold" style={pm ? { color: pm.color } : { color: "#c8c4bf" }}>
                                       {pm ? pm.label : "N/A"}
                                     </span>
+                                    {priorityMenuId === task.id && (
+                                      <div className="absolute z-50 bg-white border border-stone-200 rounded-xl shadow-lg py-2"
+                                        style={{ top: CARD_H + 6, right: 0, width: 160 }}
+                                        onClick={e => e.stopPropagation()}>
+                                        <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest px-3 pb-1.5">Priority</p>
+                                        {(["low", "normal", "medium", "important", "urgent"] as NonNullable<DayPriority>[]).map(p => (
+                                          <button key={p} onClick={() => { updateTask(task.id, { priority: p }); setPriorityMenuId(null); }}
+                                            className={`w-full flex items-center gap-2.5 px-3 py-2 hover:bg-stone-50 text-left ${task.priority === p ? "bg-stone-50" : ""}`}>
+                                            <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: DAY_PRIORITY_META[p].dot }} />
+                                            <span className="text-[12px] font-medium text-stone-700">{DAY_PRIORITY_META[p].label}</span>
+                                          </button>
+                                        ))}
+                                        {task.priority && (
+                                          <button onClick={() => { updateTask(task.id, { priority: null }); setPriorityMenuId(null); }}
+                                            className="w-full text-left text-[11px] text-stone-400 px-3 py-1.5 hover:bg-stone-50 border-t border-stone-100 mt-1">
+                                            Clear
+                                          </button>
+                                        )}
+                                      </div>
+                                    )}
                                   </div>
 
                                   {/* Progress */}
-                                  <div className="flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch cursor-pointer select-none px-3" style={{ width: COL.progress }}
+                                  <div className="relative w-[90px] flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch cursor-pointer select-none px-3"
                                     onClick={e => { e.stopPropagation(); setProgressMenuId(progressMenuId === task.id ? null : task.id); setTimePickerId(null); setNotePopupId(null); setPriorityMenuId(null); setDeleteConfirmId(null); }}>
                                     {task.progress > 0 ? (
                                       <div className="flex items-center gap-1.5 w-full">
@@ -1574,10 +1625,22 @@ export default function Home() {
                                     ) : (
                                       <span className="text-[11px] text-stone-300">Progress %</span>
                                     )}
+                                    {progressMenuId === task.id && (
+                                      <div className="absolute z-50 bg-white border border-stone-200 rounded-xl shadow-lg py-2"
+                                        style={{ top: CARD_H + 6, right: 0, width: 110 }}
+                                        onClick={e => e.stopPropagation()}>
+                                        {[0, 10, 25, 50, 75, 90, 100].map(p => (
+                                          <button key={p} onClick={() => { updateTask(task.id, { progress: p }); setProgressMenuId(null); }}
+                                            className={`w-full text-left px-4 py-1.5 hover:bg-stone-50 text-[12px] ${task.progress === p ? "font-bold text-stone-800" : "text-stone-600"}`}>
+                                            {p}%
+                                          </button>
+                                        ))}
+                                      </div>
+                                    )}
                                   </div>
 
                                   {/* Trash */}
-                                  <div className="flex items-center justify-center flex-shrink-0 self-stretch cursor-pointer" style={{ width: COL.trash }}
+                                  <div className="w-11 flex items-center justify-center flex-shrink-0 self-stretch cursor-pointer"
                                     onClick={e => { e.stopPropagation(); setNotePopupId(null); setTimePickerId(null); setPriorityMenuId(null); setProgressMenuId(null); setDeleteConfirmId(task.id); }}>
                                     <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
                                       <path d="M1.5 3.5h10M4.5 1.5h4M3 3.5l.65 7.5h5.7L10 3.5" stroke="#f87171" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
@@ -1595,80 +1658,6 @@ export default function Home() {
                                       className="text-[11px] font-bold text-white bg-red-500 hover:bg-red-600 rounded-lg px-3 py-1 transition-colors">Yes</button>
                                     <button onClick={() => setDeleteConfirmId(null)}
                                       className="text-[11px] font-medium text-stone-500 border border-stone-200 hover:border-stone-400 bg-white rounded-lg px-3 py-1 transition-colors">No</button>
-                                  </div>
-                                )}
-
-                                {/* ── Note popup ── */}
-                                {notePopupId === task.id && (
-                                  <div className="absolute z-50 bg-white border border-stone-200 rounded-xl shadow-lg p-3 flex flex-col gap-2"
-                                    style={{ top: CARD_H + 6, left: 4 + COL.num + COL.check + COL.title + COL.note / 2 - 240, width: 480 }}
-                                    onClick={e => e.stopPropagation()}>
-                                    <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Note</p>
-                                    <textarea autoFocus value={task.note} onChange={e => updateTask(task.id, { note: e.target.value })} placeholder="Write a note..." rows={3}
-                                      className="w-full text-xs text-stone-700 border border-stone-200 rounded-lg p-2 outline-none resize-none focus:border-indigo-300 placeholder-stone-300" />
-                                    <button onClick={() => setNotePopupId(null)} className="text-[11px] font-bold text-white bg-stone-800 rounded-lg px-3 py-1.5 hover:bg-stone-700 w-full">Done</button>
-                                  </div>
-                                )}
-
-                                {/* ── Time popup ── */}
-                                {timePickerId === task.id && (
-                                  <div className="absolute z-50 bg-white border border-stone-200 rounded-xl shadow-lg p-3 flex flex-col gap-2.5"
-                                    style={{ top: CARD_H + 6, left: 4 + COL.num + COL.check + COL.title + COL.note - 4, width: 220 }}
-                                    onClick={e => e.stopPropagation()}>
-                                    <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Time</p>
-                                    <div className="flex items-center gap-2">
-                                      <select value={tempHour} onChange={e => setTempHour(e.target.value)} className="flex-1 text-sm border border-stone-200 rounded-lg px-2 py-1.5 outline-none bg-white text-stone-700">
-                                        {Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0")).map(v => <option key={v} value={v}>{v}</option>)}
-                                      </select>
-                                      <span className="text-stone-400 font-bold">:</span>
-                                      <select value={tempMinute} onChange={e => setTempMinute(e.target.value)} className="flex-1 text-sm border border-stone-200 rounded-lg px-2 py-1.5 outline-none bg-white text-stone-700">
-                                        {["00","05","10","15","20","25","30","35","40","45","50","55"].map(v => <option key={v} value={v}>{v}</option>)}
-                                      </select>
-                                      <select value={tempAmpm} onChange={e => setTempAmpm(e.target.value as "AM" | "PM")} className="text-sm border border-stone-200 rounded-lg px-2 py-1.5 outline-none bg-white text-stone-700">
-                                        <option value="AM">AM</option>
-                                        <option value="PM">PM</option>
-                                      </select>
-                                    </div>
-                                    <div className="flex gap-1.5">
-                                      <button onClick={() => { updateTask(task.id, { hour: tempHour, minute: tempMinute, ampm: tempAmpm, hasTime: true }); setTimePickerId(null); }} className="flex-1 text-[11px] font-bold text-white bg-stone-800 rounded-lg py-1.5 hover:bg-stone-700">Set</button>
-                                      {task.hasTime && <button onClick={() => { updateTask(task.id, { hasTime: false }); setTimePickerId(null); }} className="text-[11px] text-stone-400 border border-stone-200 rounded-lg px-3 py-1.5 hover:text-stone-600">Clear</button>}
-                                    </div>
-                                  </div>
-                                )}
-
-                                {/* ── Priority popup ── */}
-                                {priorityMenuId === task.id && (
-                                  <div className="absolute z-50 bg-white border border-stone-200 rounded-xl shadow-lg py-2"
-                                    style={{ top: CARD_H + 6, left: 4 + COL.num + COL.check + COL.title + COL.note + COL.time - 4, width: 160 }}
-                                    onClick={e => e.stopPropagation()}>
-                                    <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest px-3 pb-1.5">Priority</p>
-                                    {(["low", "normal", "medium", "important", "urgent"] as NonNullable<DayPriority>[]).map(p => (
-                                      <button key={p} onClick={() => { updateTask(task.id, { priority: p }); setPriorityMenuId(null); }}
-                                        className={`w-full flex items-center gap-2.5 px-3 py-2 hover:bg-stone-50 text-left ${task.priority === p ? "bg-stone-50" : ""}`}>
-                                        <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: DAY_PRIORITY_META[p].dot }} />
-                                        <span className="text-[12px] font-medium text-stone-700">{DAY_PRIORITY_META[p].label}</span>
-                                      </button>
-                                    ))}
-                                    {task.priority && (
-                                      <button onClick={() => { updateTask(task.id, { priority: null }); setPriorityMenuId(null); }}
-                                        className="w-full text-left text-[11px] text-stone-400 px-3 py-1.5 hover:bg-stone-50 border-t border-stone-100 mt-1">
-                                        Clear
-                                      </button>
-                                    )}
-                                  </div>
-                                )}
-
-                                {/* ── Progress popup ── */}
-                                {progressMenuId === task.id && (
-                                  <div className="absolute z-50 bg-white border border-stone-200 rounded-xl shadow-lg py-2"
-                                    style={{ top: CARD_H + 6, left: 4 + COL.num + COL.check + COL.title + COL.note + COL.time + COL.priority - 4, width: 110 }}
-                                    onClick={e => e.stopPropagation()}>
-                                    {[0, 10, 25, 50, 75, 90, 100].map(p => (
-                                      <button key={p} onClick={() => { updateTask(task.id, { progress: p }); setProgressMenuId(null); }}
-                                        className={`w-full text-left px-4 py-1.5 hover:bg-stone-50 text-[12px] ${task.progress === p ? "font-bold text-stone-800" : "text-stone-600"}`}>
-                                        {p}%
-                                      </button>
-                                    ))}
                                   </div>
                                 )}
                               </div>
