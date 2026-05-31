@@ -112,7 +112,7 @@ export function FlatC() {
                 style={{ width: COL.priority }}>
                 <span
                   className="text-[11px] font-semibold"
-                  style={pm ? { color: pm.color } : { color: "rgba(255,255,255,0.7)" }}>
+                  style={pm ? { color: pm.color } : { color: "#c8c4bf" }}>
                   {pm ? pm.label : "N/A"}
                 </span>
               </div>
