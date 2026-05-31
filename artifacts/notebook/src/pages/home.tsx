@@ -214,6 +214,12 @@ function loadScheduleCellColors(): Record<string, Record<number, string>> {
 function saveScheduleCellColors(data: Record<string, Record<number, string>>) {
   localStorage.setItem("nb_schedule_cell_colors", JSON.stringify(data));
 }
+function loadSchedulePlanDone(): Record<string, Record<number, boolean>> {
+  try { const r = localStorage.getItem("nb_schedule_plan_done"); return r ? JSON.parse(r) : {}; } catch { return {}; }
+}
+function saveSchedulePlanDone(data: Record<string, Record<number, boolean>>) {
+  localStorage.setItem("nb_schedule_plan_done", JSON.stringify(data));
+}
 
 const SLOT_COLORS = [
   { label: "Urgent",    bg: "#fecaca", dot: "#ef4444" },
@@ -462,6 +468,8 @@ export default function Home() {
   const [amPlanMode, setAmPlanMode] = useState(false);
   const [scheduleCellColors, setScheduleCellColors] = useState<Record<string, Record<number, string>>>(() => loadScheduleCellColors());
   const [colorPickerSlot, setColorPickerSlot] = useState<number | null>(null);
+  const [schedulePlanDone, setSchedulePlanDone] = useState<Record<string, Record<number, boolean>>>(() => loadSchedulePlanDone());
+  const colorPickerRef = useRef<HTMLDivElement>(null);
 
   function updateScheduleNote(date: string, hour: number, text: string) {
     setScheduleData(prev => {
@@ -485,6 +493,16 @@ export default function Home() {
       if (color === null) { delete dateCols[hour]; } else { dateCols[hour] = color; }
       const next = { ...prev, [date]: dateCols };
       saveScheduleCellColors(next);
+      return next;
+    });
+  }
+
+  function toggleSchedulePlanDone(date: string, hour: number) {
+    setSchedulePlanDone(prev => {
+      const dateDone = { ...(prev[date] ?? {}) };
+      dateDone[hour] = !dateDone[hour];
+      const next = { ...prev, [date]: dateDone };
+      saveSchedulePlanDone(next);
       return next;
     });
   }
@@ -531,6 +549,17 @@ export default function Home() {
     const t = setInterval(() => setClockNow(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
+
+  useEffect(() => {
+    if (colorPickerSlot === null) return;
+    function handleClick(e: MouseEvent) {
+      if (colorPickerRef.current && !colorPickerRef.current.contains(e.target as Node)) {
+        setColorPickerSlot(null);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [colorPickerSlot]);
 
   // Reload tasks when date changes
   useEffect(() => {
@@ -2311,6 +2340,7 @@ export default function Home() {
                       {/* Color picker popup */}
                       {colorPickerSlot === h && (
                         <div
+                          ref={colorPickerRef}
                           className="absolute right-0 top-full z-50 bg-white border border-stone-200 rounded-xl shadow-xl p-2.5 flex flex-col gap-1.5"
                           style={{ minWidth: 140 }}
                           onMouseDown={e => e.stopPropagation()}
@@ -2426,14 +2456,25 @@ export default function Home() {
                             {entries.map((entry, i) => {
                               const entryColor = cellColorsForDate[entry.hour] ?? null;
                               const slotMeta = entryColor ? SLOT_COLORS.find(c => c.bg === entryColor) : null;
+                              const isDone = (schedulePlanDone[scheduleDate] ?? {})[entry.hour] ?? false;
                               return (
-                                <div key={entry.hour} className="flex flex-col items-center w-full">
+                                <div key={entry.hour} className="flex flex-col items-center w-full" style={{ opacity: isDone ? 0.2 : 1, transition: "opacity 0.2s" }}>
                                   <div
-                                    className="w-full rounded-xl px-4 py-2 flex flex-col items-center gap-0.5 shadow-sm border"
+                                    className="relative w-full rounded-xl px-4 py-2 flex flex-col items-center gap-0.5 shadow-sm border"
                                     style={entryColor
                                       ? { backgroundColor: entryColor + "66", borderColor: entryColor }
                                       : { backgroundColor: "#f8f8f7", borderColor: "#e7e5e4" }}
                                   >
+                                    {/* Tick checkbox — top right */}
+                                    <button
+                                      onClick={() => toggleSchedulePlanDone(scheduleDate, entry.hour)}
+                                      className="absolute top-1.5 right-1.5 w-4 h-4 rounded flex items-center justify-center border transition-all"
+                                      style={isDone
+                                        ? { backgroundColor: "#22c55e", borderColor: "#22c55e" }
+                                        : { backgroundColor: "white", borderColor: "#d6d3d1" }}
+                                    >
+                                      {isDone && <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5L3.5 6.5L7.5 2.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                                    </button>
                                     <div className="flex items-center gap-1.5">
                                       {slotMeta && <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: slotMeta.dot }} />}
                                       <span className="text-[10px] font-semibold text-stone-400 tracking-wide">{entry.time}</span>
