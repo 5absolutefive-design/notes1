@@ -445,7 +445,7 @@ export default function Home() {
   const [scheduleCustomTimes, setScheduleCustomTimes] = useState<Record<string, Record<number, string>>>(() => loadScheduleCustomTimes());
   const [editingTimeSlot, setEditingTimeSlot] = useState<number | null>(null);
   const [editingTimeStr, setEditingTimeStr] = useState<string>("");
-  const [pmPlanMode, setPmPlanMode] = useState(false);
+  const [amPlanMode, setAmPlanMode] = useState(false);
 
   function updateScheduleNote(date: string, hour: number, text: string) {
     setScheduleData(prev => {
@@ -2332,35 +2332,26 @@ export default function Home() {
                   <div className="flex-1 min-w-0 rounded-xl border border-stone-200 bg-white shadow-lg flex flex-col overflow-hidden">
                     <div className="flex-shrink-0 px-3 py-2 border-b border-stone-200 bg-stone-50 flex items-center justify-between">
                       <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">AM</span>
-                      <button
-                        onClick={() => setPmPlanMode(true)}
-                        className="px-3 py-0.5 rounded-full text-[10px] font-bold text-white tracking-wide transition-all hover:scale-105 active:scale-95"
-                        style={{ backgroundColor: "#22c55e" }}
-                      >
-                        Done
-                      </button>
-                    </div>
-                    <div className="flex-1 min-h-0">
-                      {renderTimeColumn(amHours)}
-                    </div>
-                  </div>
-
-                  {/* Floating PM card */}
-                  <div className="flex-1 min-w-0 rounded-xl border border-stone-200 bg-white shadow-lg flex flex-col overflow-hidden">
-                    <div className="flex-shrink-0 px-3 py-2 border-b border-stone-200 bg-stone-50 flex items-center justify-between">
-                      <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">PM</span>
-                      {pmPlanMode && (
+                      {amPlanMode ? (
                         <button
-                          onClick={() => setPmPlanMode(false)}
+                          onClick={() => setAmPlanMode(false)}
                           className="px-3 py-0.5 rounded-full text-[10px] font-bold text-white tracking-wide transition-all hover:scale-105 active:scale-95"
                           style={{ backgroundColor: "#06b6d4" }}
                         >
                           Redo
                         </button>
+                      ) : (
+                        <button
+                          onClick={() => setAmPlanMode(true)}
+                          className="px-3 py-0.5 rounded-full text-[10px] font-bold text-white tracking-wide transition-all hover:scale-105 active:scale-95"
+                          style={{ backgroundColor: "#22c55e" }}
+                        >
+                          Done
+                        </button>
                       )}
                     </div>
                     <div className="flex-1 min-h-0 overflow-y-auto">
-                      {pmPlanMode ? (() => {
+                      {amPlanMode ? (() => {
                         const allHours = [...amHours, ...pmHours];
                         const entries = allHours
                           .filter(h => (dayNotes[h] ?? "").trim() !== "")
@@ -2392,7 +2383,17 @@ export default function Home() {
                             ))}
                           </div>
                         );
-                      })() : renderTimeColumn(pmHours)}
+                      })() : renderTimeColumn(amHours)}
+                    </div>
+                  </div>
+
+                  {/* Floating PM card */}
+                  <div className="flex-1 min-w-0 rounded-xl border border-stone-200 bg-white shadow-lg flex flex-col overflow-hidden">
+                    <div className="flex-shrink-0 px-3 py-2 border-b border-stone-200 bg-stone-50">
+                      <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">PM</span>
+                    </div>
+                    <div className="flex-1 min-h-0">
+                      {renderTimeColumn(pmHours)}
                     </div>
                   </div>
 
