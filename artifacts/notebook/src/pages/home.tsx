@@ -2222,7 +2222,7 @@ export default function Home() {
               <div className="flex gap-4 items-start">
 
                 {/* Main card — AM + PM only */}
-                <div className="rounded-2xl border border-stone-200 bg-stone-50 shadow-md p-2.5 flex gap-2.5 flex-1 min-w-0">
+                <div className="rounded-2xl border border-stone-200 bg-stone-50 shadow-md p-2.5 pb-[50px] flex gap-2.5 flex-1 min-w-0">
 
                   {/* AM column */}
                   <div className="flex-1 min-w-0 rounded-xl border border-stone-200 bg-white shadow-sm overflow-hidden">
