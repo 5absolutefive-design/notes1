@@ -15,18 +15,17 @@ function Clock24Dark({ now }: { now: Date }) {
   const r = 138;
 
   const ticks = Array.from({ length: 24 }, (_, i) => {
+    const hour = i === 0 ? 24 : i;
     const angle = (i * 15 - 90) * (Math.PI / 180);
-    const isMajor = i % 6 === 0;
-    const isMid = i % 3 === 0 && !isMajor;
-    const inner = r - (isMajor ? 20 : isMid ? 13 : 7);
+    const isMajor = i % 3 === 0; // every 3 hours: 3/6/9/12/15/18/21/24
+    const inner = r - (isMajor ? 20 : 7);
     return {
       x1: cx + inner * Math.cos(angle),
       y1: cy + inner * Math.sin(angle),
       x2: cx + r * Math.cos(angle),
       y2: cy + r * Math.sin(angle),
       isMajor,
-      isMid,
-      label: i === 0 ? "0" : String(i),
+      label: String(hour),
       lx: cx + (r - 32) * Math.cos(angle),
       ly: cy + (r - 32) * Math.sin(angle),
     };
