@@ -2226,7 +2226,7 @@ export default function Home() {
             <div className="flex flex-col h-full">
               {hours.map((h, idx) => (
                 <div key={h} className={`flex flex-col flex-1 ${idx < hours.length - 1 ? "border-b border-stone-200" : ""}`}>
-                  <div className="relative flex items-center px-2 py-0.5 border-b border-stone-100 bg-stone-50/60">
+                  <div className="relative flex items-center justify-between px-2 py-0.5 border-b border-stone-100 bg-stone-50/60 group/row">
                     <span
                       onClick={() => openTimeEditor(h)}
                       className="text-[9px] font-semibold tracking-wide cursor-pointer select-none hover:text-blue-500 transition-colors"
@@ -2234,6 +2234,15 @@ export default function Home() {
                     >
                       {getDisplayTime(h)}
                     </span>
+                    {(dayNotes[h] ?? "") !== "" && (
+                      <button
+                        onClick={() => updateScheduleNote(scheduleDate, h, "")}
+                        className="opacity-0 group-hover/row:opacity-100 transition-opacity w-3.5 h-3.5 rounded-full bg-stone-300 hover:bg-red-400 flex items-center justify-center flex-shrink-0"
+                        title="Clear"
+                      >
+                        <span className="text-[8px] text-white font-bold leading-none">✕</span>
+                      </button>
+                    )}
 
                     {editingTimeSlot === h && (
                       <div
@@ -2328,7 +2337,7 @@ export default function Home() {
                 <div className="rounded-2xl border border-stone-200 bg-stone-100/70 shadow-inner flex-1 min-w-0 min-h-0 flex gap-3 p-3">
 
                   {/* Floating AM card */}
-                  <div className="flex-1 min-w-0 rounded-xl border border-stone-200 bg-white shadow-lg flex flex-col overflow-hidden">
+                  <div className="flex-1 min-w-0 rounded-xl border border-stone-200 bg-white shadow-lg flex flex-col overflow-hidden transition-transform duration-200 hover:-translate-y-1 hover:shadow-xl">
                     <div className="flex-shrink-0 px-3 py-2 border-b border-stone-200 bg-stone-50">
                       <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">AM</span>
                     </div>
@@ -2338,7 +2347,7 @@ export default function Home() {
                   </div>
 
                   {/* Floating PM card */}
-                  <div className="flex-1 min-w-0 rounded-xl border border-stone-200 bg-white shadow-lg flex flex-col overflow-hidden">
+                  <div className="flex-1 min-w-0 rounded-xl border border-stone-200 bg-white shadow-lg flex flex-col overflow-hidden transition-transform duration-200 hover:-translate-y-1 hover:shadow-xl">
                     <div className="flex-shrink-0 px-3 py-2 border-b border-stone-200 bg-stone-50">
                       <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">PM</span>
                     </div>
