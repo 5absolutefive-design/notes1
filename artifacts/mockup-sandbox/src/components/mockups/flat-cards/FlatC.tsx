@@ -24,13 +24,17 @@ export function FlatC() {
   const [priorityOpenId, setPriorityOpenId] = useState<number | null>(null);
   const [progressOpenId, setProgressOpenId] = useState<number | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
 
   /* temp time edit */
   const [tempHour,   setTempHour]   = useState("12");
   const [tempMinute, setTempMinute] = useState("00");
   const [tempAmpm,   setTempAmpm]   = useState<"AM"|"PM">("AM");
 
-  const closeAll = () => { setNoteOpenId(null); setTimeOpenId(null); setPriorityOpenId(null); setProgressOpenId(null); setDeleteConfirmId(null); };
+  const closeAll = () => { setNoteOpenId(null); setTimeOpenId(null); setPriorityOpenId(null); setProgressOpenId(null); setDeleteConfirmId(null); setEditingId(null); };
+
+  const updateTitle = (id: number, title: string) =>
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, title } : t));
 
   const toggleDone = (id: number) =>
     setTasks(prev => prev.map(t => t.id === id ? { ...t, done: !t.done } : t));
@@ -98,10 +102,24 @@ export function FlatC() {
                 </div>
 
                 {/* Title */}
-                <div className="flex items-center flex-shrink-0 border-r border-stone-200 self-stretch px-3" style={{ width: COL.title }}>
-                  <span className={`text-sm w-full truncate ${task.done ? "line-through text-stone-400" : "text-stone-700"}`} style={{ display: "block" }}>
-                    {task.title}
-                  </span>
+                <div className="flex items-center flex-shrink-0 border-r border-stone-200 self-stretch px-3" style={{ width: COL.title }}
+                  onClick={e => { e.stopPropagation(); closeAll(); setEditingId(task.id); }}>
+                  {editingId === task.id ? (
+                    <input
+                      autoFocus
+                      value={task.title}
+                      onChange={e => updateTitle(task.id, e.target.value)}
+                      onBlur={() => setEditingId(null)}
+                      onKeyDown={e => { if (e.key === "Enter" || e.key === "Escape") setEditingId(null); }}
+                      onClick={e => e.stopPropagation()}
+                      className="text-sm w-full text-stone-700 bg-transparent outline-none border-none"
+                      style={{ fontFamily: "inherit" }}
+                    />
+                  ) : (
+                    <span className={`text-sm w-full truncate ${task.done ? "line-through text-stone-400" : "text-stone-700"}`} style={{ display: "block" }}>
+                      {task.title}
+                    </span>
+                  )}
                 </div>
 
                 {/* Note */}
