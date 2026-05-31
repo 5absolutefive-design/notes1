@@ -2226,7 +2226,7 @@ export default function Home() {
             <div className="flex flex-col h-full">
               {hours.map((h, idx) => (
                 <div key={h} className={`relative flex flex-col flex-1 transition-all duration-150 hover:-translate-y-px hover:shadow-md hover:z-10 hover:bg-blue-50/30 ${idx < hours.length - 1 ? "border-b border-stone-200" : ""}`}>
-                  <div className="relative flex items-center px-2 py-0.5 border-b border-stone-100" style={{ backgroundColor: "#ababab" }}>
+                  <div className="relative flex items-center px-2 py-0.5 border-b border-stone-100" style={{ backgroundColor: "#e3e3e3" }}>
                     <span
                       onClick={() => openTimeEditor(h)}
                       className="text-[9px] font-semibold tracking-wide cursor-pointer select-none hover:text-blue-500 transition-colors"
