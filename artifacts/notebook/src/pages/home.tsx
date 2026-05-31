@@ -2165,19 +2165,15 @@ export default function Home() {
             return (
               <div className="flex flex-col flex-1 min-w-0">
                 {hours.map((h, idx) => (
-                  <div key={h} className={`flex flex-col ${idx < hours.length - 1 ? "border-b border-stone-200" : ""}`}>
-                    <div className="flex items-center gap-2 px-3 py-1 border-b border-stone-200 bg-stone-50/60">
-                      <span className="text-[11px] font-semibold text-stone-500 tracking-wide w-20 flex-shrink-0">{formatHour(h)}</span>
-                    </div>
-                    <div className="border-b border-dashed border-stone-200">
-                      <input
-                        type="text"
-                        value={dayNotes[h] ?? ""}
-                        onChange={e => updateScheduleNote(scheduleDate, h, e.target.value)}
-                        placeholder=""
-                        className="w-full px-3 py-1.5 text-xs text-stone-700 outline-none bg-transparent"
-                      />
-                    </div>
+                  <div key={h} className={`flex items-center gap-0 ${idx < hours.length - 1 ? "border-b border-stone-100" : ""}`}>
+                    <span className="text-[9px] font-semibold text-stone-400 tracking-wide w-16 flex-shrink-0 px-2 py-1 border-r border-stone-100 bg-stone-50/80 leading-none">{formatHour(h)}</span>
+                    <input
+                      type="text"
+                      value={dayNotes[h] ?? ""}
+                      onChange={e => updateScheduleNote(scheduleDate, h, e.target.value)}
+                      placeholder=""
+                      className="flex-1 min-w-0 px-2 py-1 text-[10px] text-stone-700 outline-none bg-transparent leading-none"
+                    />
                   </div>
                 ))}
               </div>
