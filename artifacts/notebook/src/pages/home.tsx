@@ -205,10 +205,11 @@ const NAV_ITEMS: { id: ActiveView; label: string; icon: React.ElementType; activ
   { id: "schedule",   label: "Schedule",    icon: CalendarDays,   active: false },
 ];
 
-function OrbitalClock24() {
+function OrbitalClock24({ frozen = false }: { frozen?: boolean }) {
   const [tick, setTick] = useState({ d: new Date(), ms: 0 });
   const rafRef = useRef<number>(0);
   useEffect(() => {
+    if (frozen) return;
     const loop = () => {
       const d = new Date();
       setTick({ d, ms: d.getMilliseconds() });
@@ -216,12 +217,12 @@ function OrbitalClock24() {
     };
     rafRef.current = requestAnimationFrame(loop);
     return () => cancelAnimationFrame(rafRef.current);
-  }, []);
+  }, [frozen]);
 
-  const { d, ms } = tick;
-  const h = d.getHours();
-  const m = d.getMinutes();
-  const s = d.getSeconds();
+  const ms = frozen ? 0 : tick.ms;
+  const h  = frozen ? 0 : tick.d.getHours();
+  const m  = frozen ? 0 : tick.d.getMinutes();
+  const s  = frozen ? 0 : tick.d.getSeconds();
   const secSmooth  = s + ms / 1000;
   const minSmooth  = m + secSmooth / 60;
   const hourSmooth = h + minSmooth / 60;
@@ -1830,7 +1831,7 @@ export default function Home() {
                     {/* Part 1 — square clock */}
                     <div className="flex items-center justify-center flex-shrink-0" style={{ width: "280px", height: "280px" }}>
                       <div className="w-[220px] h-[220px]" style={{ overflow: "visible" }}>
-                        <OrbitalClock24 />
+                        <OrbitalClock24 frozen={selectedDate !== days[0].key} />
                       </div>
                     </div>
                     {/* Part 2 — Task countdown */}
