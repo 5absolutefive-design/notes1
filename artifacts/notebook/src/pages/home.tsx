@@ -1809,7 +1809,7 @@ export default function Home() {
                       <h3 className="text-sm font-bold text-stone-700 tracking-[0.15em]">TASK TYPE</h3>
                       <button
                         onClick={() => setSelectedTypeId("all")}
-                        style={{ width: 60, height: 30 }}
+                        style={{ width: 60, height: 20 }}
                         className={`flex-shrink-0 flex flex-col items-center justify-center rounded-md border transition-all shadow-sm ${selectedTypeId === "all" ? "bg-stone-800 text-white border-transparent" : "border-stone-300 text-stone-500 bg-white hover:-translate-y-[2px] hover:shadow-md"}`}
                       >
                         <span className="text-[7px] font-bold leading-none">All</span>
