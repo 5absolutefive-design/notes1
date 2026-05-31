@@ -171,12 +171,12 @@ function get7Days(today: Date) {
   });
 }
 
-const DAY_PRIORITY_META: Record<NonNullable<DayPriority>, { label: string; color: string; bg: string; border: string }> = {
-  low:       { label: "Low",       color: "#16a34a", bg: "#dcfce7", border: "#86efac" },
-  normal:    { label: "Normal",    color: "#2563eb", bg: "#dbeafe", border: "#93c5fd" },
-  medium:    { label: "Medium",    color: "#7c3aed", bg: "#ede9fe", border: "#c4b5fd" },
-  important: { label: "Important", color: "#ea580c", bg: "#ffedd5", border: "#fdba74" },
-  urgent:    { label: "Urgent",    color: "#dc2626", bg: "#fee2e2", border: "#fca5a5" },
+const DAY_PRIORITY_META: Record<NonNullable<DayPriority>, { label: string; color: string; bg: string; border: string; dot: string; rowBg: string; bar: string }> = {
+  low:       { label: "Low",       color: "#16a34a", bg: "#dcfce7", border: "#86efac", dot: "#22c55e", rowBg: "#f0fdf4", bar: "#22c55e" },
+  normal:    { label: "Normal",    color: "#6b7280", bg: "#f9fafb", border: "#9ca3af", dot: "#9ca3af", rowBg: "#f9fafb", bar: "#9ca3af" },
+  medium:    { label: "Medium",    color: "#2563eb", bg: "#eff6ff", border: "#93c5fd", dot: "#3b82f6", rowBg: "#eff6ff", bar: "#3b82f6" },
+  important: { label: "Important", color: "#ea580c", bg: "#fff7ed", border: "#fdba74", dot: "#f97316", rowBg: "#fff7ed", bar: "#f97316" },
+  urgent:    { label: "Urgent",    color: "#dc2626", bg: "#fef2f2", border: "#fca5a5", dot: "#ef4444", rowBg: "#fef2f2", bar: "#ef4444" },
 };
 // ─────────────────────────────────────────────────────────────
 
@@ -290,6 +290,7 @@ export default function Home() {
   const [priorityMenuId, setPriorityMenuId] = useState<number | null>(null);
   const [notePopupId, setNotePopupId] = useState<number | null>(null);
   const [progressMenuId, setProgressMenuId] = useState<number | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [tempHour, setTempHour] = useState("12");
   const [tempMinute, setTempMinute] = useState("00");
   const [tempAmpm, setTempAmpm] = useState<"AM" | "PM">("AM");
@@ -1480,177 +1481,202 @@ export default function Home() {
                   </div>
 
                   {/* Task list */}
-                  <div className="flex-1 overflow-y-auto px-4 py-3">
+                  <div className="flex-1 overflow-y-auto px-4 py-3 overflow-x-auto">
                     {filteredTasks.length === 0 && (
                       <div className="flex items-center justify-center h-20">
                         <p className="text-sm text-stone-300">No tasks — press + to add</p>
                       </div>
                     )}
 
-                    <div className="flex flex-col gap-2">
-                      {filteredTasks.map((task, idx) => {
-                        const pm = task.priority ? DAY_PRIORITY_META[task.priority] : null;
-                        return (
-                          <div key={task.id} className="rounded-2xl flex items-center gap-2.5 px-4 py-4" style={{ background: "#ffffff", boxShadow: "6px 6px 14px #d0d0d0, -6px -6px 14px #ffffff" }}>
+                    {(() => {
+                      const COL = { num: 36, check: 44, title: 384, note: 64, time: 98, priority: 88, progress: 90, trash: 44 };
+                      const CARD_W = Object.values(COL).reduce((a, b) => a + b, 0) + 4;
+                      const CARD_H = 48;
+                      const closeAllPopups = () => { setNotePopupId(null); setTimePickerId(null); setPriorityMenuId(null); setProgressMenuId(null); setDeleteConfirmId(null); };
+                      return (
+                        <div className="flex flex-col gap-2" onClick={closeAllPopups}>
+                          {filteredTasks.map((task, idx) => {
+                            const pm = task.priority ? DAY_PRIORITY_META[task.priority] : null;
+                            return (
+                              <div key={task.id} className="relative flex-shrink-0" style={{ opacity: task.done ? 0.3 : 1, transition: "opacity 0.2s" }}>
+                                {/* FlatC card */}
+                                <div className="flex items-center overflow-hidden border border-stone-200 rounded-md"
+                                  style={{ width: CARD_W, height: CARD_H, backgroundColor: pm ? pm.rowBg : "#ffffff" }}>
 
-                            {/* Row number badge */}
-                            <span className="text-[11px] font-bold text-stone-500 rounded-lg px-2.5 py-3.5 flex-shrink-0" style={{ background: "#ffffff", boxShadow: "3px 3px 7px #d0d0d0, -3px -3px 7px #ffffff" }}>T{idx + 1}</span>
+                                  {/* Left accent bar */}
+                                  <div className="self-stretch flex-shrink-0" style={{ width: 4, backgroundColor: pm ? pm.bar : "#e7e5e4" }} />
 
-                            {/* Checkbox */}
-                            <button
-                              onClick={() => toggleDone(task.id)}
-                              className="w-[22px] h-[22px] rounded flex-shrink-0 flex items-center justify-center transition-all"
-                              style={task.done
-                                ? { background: "#6366f1", boxShadow: "inset 2px 2px 5px #4f52c7, inset -2px -2px 5px #7779ff" }
-                                : { background: "#ffffff", boxShadow: "inset 3px 3px 6px #d0d0d0, inset -3px -3px 6px #ffffff" }}
-                            >
-                              {task.done && <Check className="w-3 h-3 text-white" />}
-                            </button>
+                                  {/* Num */}
+                                  <div className="flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch text-[11px] font-bold text-stone-400"
+                                    style={{ width: COL.num }}>
+                                    {idx + 1}
+                                  </div>
 
-                            {/* Title input */}
-                            <input
-                              autoFocus={task.id === newTaskFocusId}
-                              value={task.title}
-                              onChange={e => updateTask(task.id, { title: e.target.value })}
-                              onFocus={() => setNewTaskFocusId(null)}
-                              placeholder="Task name..."
-                              className={`flex-1 text-sm outline-none min-w-0 px-3 py-3.5 rounded-xl placeholder-stone-400 ${task.done ? "line-through text-stone-400" : "text-stone-700"}`}
-                              style={{ background: "#ffffff", boxShadow: "inset 3px 3px 7px #d0d0d0, inset -3px -3px 7px #ffffff" }}
-                            />
-
-                            {/* Note button */}
-                            <div className="relative flex-shrink-0">
-                              <button
-                                onClick={() => { setNotePopupId(notePopupId === task.id ? null : task.id); setTimePickerId(null); setPriorityMenuId(null); setProgressMenuId(null); }}
-                                className="text-[11px] px-3 py-3.5 rounded-xl flex items-center gap-1 transition-all text-stone-500"
-                                style={task.note || notePopupId === task.id
-                                  ? { background: "#ffffff", boxShadow: "inset 3px 3px 7px #d0d0d0, inset -3px -3px 7px #ffffff" }
-                                  : { background: "#ffffff", boxShadow: "3px 3px 7px #d0d0d0, -3px -3px 7px #ffffff" }}
-                              >
-                                Note {task.note && <span className="w-1.5 h-1.5 rounded-full bg-indigo-400 inline-block" />}
-                              </button>
-                              {notePopupId === task.id && (
-                                <div className="absolute top-full mt-1 left-0 bg-white border border-stone-200 rounded-xl shadow-xl p-3 z-50 w-56">
-                                  <textarea
-                                    autoFocus
-                                    value={task.note}
-                                    onChange={e => updateTask(task.id, { note: e.target.value })}
-                                    placeholder="Add a note..."
-                                    rows={3}
-                                    className="w-full text-xs border border-stone-200 rounded-lg p-2 outline-none resize-none focus:border-stone-500"
-                                  />
-                                  <button onClick={() => setNotePopupId(null)} className="mt-1 text-xs font-bold text-white bg-stone-800 rounded-lg px-3 py-1 hover:bg-stone-700 w-full">Done</button>
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Time button */}
-                            <div className="relative flex-shrink-0">
-                              <button
-                                onClick={() => {
-                                  if (timePickerId === task.id) { setTimePickerId(null); return; }
-                                  setTempHour(task.hour || "12");
-                                  setTempMinute(task.minute || "00");
-                                  setTempAmpm(task.ampm || "AM");
-                                  setTimePickerId(task.id);
-                                  setPriorityMenuId(null); setNotePopupId(null); setProgressMenuId(null);
-                                }}
-                                className="text-[11px] px-3 py-3.5 rounded-xl text-stone-600 tabular-nums transition-all min-w-[76px] text-center"
-                                style={timePickerId === task.id
-                                  ? { background: "#ffffff", boxShadow: "inset 3px 3px 7px #d0d0d0, inset -3px -3px 7px #ffffff" }
-                                  : { background: "#ffffff", boxShadow: "3px 3px 7px #d0d0d0, -3px -3px 7px #ffffff" }}
-                              >
-                                {task.hasTime
-                                  ? <>{task.hour}:{task.minute}<span className="text-[9px] ml-0.5">{task.ampm}</span></>
-                                  : <span className="text-stone-300">--:-- --</span>}
-                              </button>
-                              {timePickerId === task.id && (
-                                <div className="absolute top-full mt-1 right-0 bg-white border border-stone-200 rounded-xl shadow-xl p-3 z-50 flex gap-2 items-center">
-                                  <select value={tempHour} onChange={e => setTempHour(e.target.value)} className="text-sm border border-stone-200 rounded-lg px-1.5 py-1 outline-none bg-white">
-                                    {Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0")).map(v => <option key={v} value={v}>{v}</option>)}
-                                  </select>
-                                  <span className="text-stone-400 font-bold">:</span>
-                                  <select value={tempMinute} onChange={e => setTempMinute(e.target.value)} className="text-sm border border-stone-200 rounded-lg px-1.5 py-1 outline-none bg-white">
-                                    {["00","05","10","15","20","25","30","35","40","45","50","55"].map(v => <option key={v} value={v}>{v}</option>)}
-                                  </select>
-                                  <select value={tempAmpm} onChange={e => setTempAmpm(e.target.value as "AM" | "PM")} className="text-sm border border-stone-200 rounded-lg px-1.5 py-1 outline-none bg-white">
-                                    <option value="AM">AM</option>
-                                    <option value="PM">PM</option>
-                                  </select>
-                                  <button onClick={() => { updateTask(task.id, { hour: tempHour, minute: tempMinute, ampm: tempAmpm, hasTime: true }); setTimePickerId(null); }}
-                                    className="text-xs font-bold text-white bg-stone-800 rounded-lg px-2.5 py-1 hover:bg-stone-700">✓</button>
-                                  {task.hasTime && (
-                                    <button onClick={() => { updateTask(task.id, { hasTime: false }); setTimePickerId(null); }} className="text-xs text-stone-400 hover:text-stone-600 px-1">✕</button>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-
-                            {/* Priority button */}
-                            <div className="relative flex-shrink-0">
-                              <button
-                                onClick={() => { setPriorityMenuId(priorityMenuId === task.id ? null : task.id); setTimePickerId(null); setNotePopupId(null); setProgressMenuId(null); }}
-                                className="text-[10px] font-bold px-3 py-3.5 rounded-xl transition-all min-w-[62px] text-center"
-                                style={pm
-                                  ? { backgroundColor: pm.bg, color: pm.color, boxShadow: `3px 3px 7px #d0d0d0, -3px -3px 7px #ffffff` }
-                                  : priorityMenuId === task.id
-                                    ? { background: "#ffffff", color: "#a0a0b0", boxShadow: "inset 3px 3px 7px #d0d0d0, inset -3px -3px 7px #ffffff" }
-                                    : { background: "#ffffff", color: "#a0a0b0", boxShadow: "3px 3px 7px #d0d0d0, -3px -3px 7px #ffffff" }}
-                              >
-                                {pm ? pm.label : "Priority"}
-                              </button>
-                              {priorityMenuId === task.id && (
-                                <div className="absolute top-full mt-1 right-0 bg-white border border-stone-200 rounded-xl shadow-xl py-1.5 z-50 min-w-[110px]">
-                                  {(["low", "normal", "medium", "important", "urgent"] as NonNullable<DayPriority>[]).map(p => (
-                                    <button key={p} onClick={() => { updateTask(task.id, { priority: p }); setPriorityMenuId(null); }}
-                                      className="w-full text-left text-xs font-semibold px-3 py-2 hover:bg-stone-50 flex items-center gap-2"
-                                      style={{ color: DAY_PRIORITY_META[p].color }}>
-                                      <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: DAY_PRIORITY_META[p].color }} />
-                                      {DAY_PRIORITY_META[p].label}
+                                  {/* Checkbox */}
+                                  <div className="flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch" style={{ width: COL.check }}>
+                                    <button
+                                      onClick={e => { e.stopPropagation(); toggleDone(task.id); }}
+                                      className="w-[18px] h-[18px] rounded flex-shrink-0 flex items-center justify-center border transition-all"
+                                      style={task.done
+                                        ? { backgroundColor: "#78716c", borderColor: "#78716c" }
+                                        : { backgroundColor: "#ffffff", borderColor: "#d6d3d1" }}>
+                                      {task.done && <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5l2 2L7.5 2" stroke="white" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                                     </button>
-                                  ))}
-                                  {task.priority && (
-                                    <button onClick={() => { updateTask(task.id, { priority: null }); setPriorityMenuId(null); }}
-                                      className="w-full text-left text-[11px] text-stone-400 px-3 py-1.5 hover:bg-stone-50 border-t border-stone-100 mt-0.5">
-                                      Clear
-                                    </button>
-                                  )}
+                                  </div>
+
+                                  {/* Title */}
+                                  <div className="flex items-center flex-shrink-0 border-r border-stone-200 self-stretch px-3" style={{ width: COL.title }}
+                                    onClick={e => e.stopPropagation()}>
+                                    <input
+                                      autoFocus={task.id === newTaskFocusId}
+                                      value={task.title}
+                                      onChange={e => updateTask(task.id, { title: e.target.value })}
+                                      onFocus={() => setNewTaskFocusId(null)}
+                                      placeholder="Task name..."
+                                      className={`text-sm w-full bg-transparent outline-none border-none placeholder-stone-300 ${task.done ? "line-through text-stone-400" : "text-stone-700"}`}
+                                    />
+                                  </div>
+
+                                  {/* Note */}
+                                  <div className="flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch cursor-pointer select-none" style={{ width: COL.note }}
+                                    onClick={e => { e.stopPropagation(); setNotePopupId(notePopupId === task.id ? null : task.id); setTimePickerId(null); setPriorityMenuId(null); setProgressMenuId(null); setDeleteConfirmId(null); }}>
+                                    <span className={`text-[11px] font-medium ${task.note ? "text-indigo-500" : "text-stone-400"}`}>
+                                      Note{task.note && <span className="ml-1 w-1.5 h-1.5 rounded-full bg-indigo-400 inline-block align-middle" />}
+                                    </span>
+                                  </div>
+
+                                  {/* Time */}
+                                  <div className="flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch cursor-pointer select-none" style={{ width: COL.time }}
+                                    onClick={e => { e.stopPropagation(); if (timePickerId !== task.id) { setTempHour(task.hour || "12"); setTempMinute(task.minute || "00"); setTempAmpm(task.ampm || "AM"); setTimePickerId(task.id); setPriorityMenuId(null); setNotePopupId(null); setProgressMenuId(null); setDeleteConfirmId(null); } else { setTimePickerId(null); } }}>
+                                    <span className={`text-[11px] tabular-nums ${!task.hasTime ? "text-stone-300" : "text-stone-600"}`}>
+                                      {task.hasTime ? `${task.hour}:${task.minute} ${task.ampm}` : "--:-- --"}
+                                    </span>
+                                  </div>
+
+                                  {/* Priority */}
+                                  <div className="flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch cursor-pointer select-none" style={{ width: COL.priority }}
+                                    onClick={e => { e.stopPropagation(); setPriorityMenuId(priorityMenuId === task.id ? null : task.id); setTimePickerId(null); setNotePopupId(null); setProgressMenuId(null); setDeleteConfirmId(null); }}>
+                                    <span className="text-[11px] font-semibold" style={pm ? { color: pm.color } : { color: "#c8c4bf" }}>
+                                      {pm ? pm.label : "N/A"}
+                                    </span>
+                                  </div>
+
+                                  {/* Progress */}
+                                  <div className="flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch cursor-pointer select-none px-3" style={{ width: COL.progress }}
+                                    onClick={e => { e.stopPropagation(); setProgressMenuId(progressMenuId === task.id ? null : task.id); setTimePickerId(null); setNotePopupId(null); setPriorityMenuId(null); setDeleteConfirmId(null); }}>
+                                    {task.progress > 0 ? (
+                                      <div className="flex items-center gap-1.5 w-full">
+                                        <div className="flex-1 h-[3px] bg-stone-200 rounded-full overflow-hidden">
+                                          <div className="h-full rounded-full" style={{ width: `${task.progress}%`, backgroundColor: task.progress >= 50 ? "#22c55e" : "#ef4444" }} />
+                                        </div>
+                                        <span className="text-[10px] text-stone-500 tabular-nums flex-shrink-0">{task.progress}%</span>
+                                      </div>
+                                    ) : (
+                                      <span className="text-[11px] text-stone-300">Progress %</span>
+                                    )}
+                                  </div>
+
+                                  {/* Trash */}
+                                  <div className="flex items-center justify-center flex-shrink-0 self-stretch cursor-pointer" style={{ width: COL.trash }}
+                                    onClick={e => { e.stopPropagation(); setNotePopupId(null); setTimePickerId(null); setPriorityMenuId(null); setProgressMenuId(null); setDeleteConfirmId(task.id); }}>
+                                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                                      <path d="M1.5 3.5h10M4.5 1.5h4M3 3.5l.65 7.5h5.7L10 3.5" stroke="#f87171" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                                    </svg>
+                                  </div>
                                 </div>
-                              )}
-                            </div>
 
-                            {/* Progress button */}
-                            <div className="relative flex-shrink-0">
-                              <button
-                                onClick={() => { setProgressMenuId(progressMenuId === task.id ? null : task.id); setTimePickerId(null); setNotePopupId(null); setPriorityMenuId(null); }}
-                                className="text-[11px] px-3 py-3.5 rounded-xl transition-all min-w-[72px] text-center text-stone-500"
-                                style={progressMenuId === task.id
-                                  ? { background: "#ffffff", boxShadow: "inset 3px 3px 7px #d0d0d0, inset -3px -3px 7px #ffffff" }
-                                  : { background: "#ffffff", boxShadow: "3px 3px 7px #d0d0d0, -3px -3px 7px #ffffff" }}
-                              >
-                                {task.progress > 0 ? `${task.progress}%` : "Progress %"}
-                              </button>
-                              {progressMenuId === task.id && (
-                                <div className="absolute top-full mt-1 right-0 bg-white border border-stone-200 rounded-xl shadow-xl py-1.5 z-50 min-w-[90px]">
-                                  {[0, 10, 25, 50, 75, 90, 100].map(p => (
-                                    <button key={p} onClick={() => { updateTask(task.id, { progress: p }); setProgressMenuId(null); }}
-                                      className={`w-full text-left text-xs px-3 py-1.5 hover:bg-stone-50 ${task.progress === p ? "font-bold text-stone-800" : "text-stone-600"}`}>
-                                      {p}%
-                                    </button>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
+                                {/* ── Delete confirmation overlay ── */}
+                                {deleteConfirmId === task.id && (
+                                  <div className="absolute inset-0 z-50 flex items-center justify-center gap-3 rounded-md border border-red-200"
+                                    style={{ backgroundColor: "rgba(255,241,241,0.97)" }}
+                                    onClick={e => e.stopPropagation()}>
+                                    <span className="text-[12px] font-semibold text-red-600">Delete this task?</span>
+                                    <button onClick={() => { deleteTask(task.id); setDeleteConfirmId(null); }}
+                                      className="text-[11px] font-bold text-white bg-red-500 hover:bg-red-600 rounded-lg px-3 py-1 transition-colors">Yes</button>
+                                    <button onClick={() => setDeleteConfirmId(null)}
+                                      className="text-[11px] font-medium text-stone-500 border border-stone-200 hover:border-stone-400 bg-white rounded-lg px-3 py-1 transition-colors">No</button>
+                                  </div>
+                                )}
 
-                            {/* Trash button — neumorphic */}
-                            <button onClick={() => deleteTask(task.id)} className="flex-shrink-0 w-10 h-12 rounded-xl flex items-center justify-center transition-all" style={{ background: "#ffffff", boxShadow: "3px 3px 7px #d0d0d0, -3px -3px 7px #ffffff" }}>
-                              <Trash2 className="w-3.5 h-3.5 text-red-400" />
-                            </button>
-                          </div>
-                        );
-                      })}
+                                {/* ── Note popup ── */}
+                                {notePopupId === task.id && (
+                                  <div className="absolute z-50 bg-white border border-stone-200 rounded-xl shadow-lg p-3 flex flex-col gap-2"
+                                    style={{ top: CARD_H + 6, left: 4 + COL.num + COL.check + COL.title - 4, width: 240 }}
+                                    onClick={e => e.stopPropagation()}>
+                                    <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Note</p>
+                                    <textarea autoFocus value={task.note} onChange={e => updateTask(task.id, { note: e.target.value })} placeholder="Write a note..." rows={3}
+                                      className="w-full text-xs text-stone-700 border border-stone-200 rounded-lg p-2 outline-none resize-none focus:border-indigo-300 placeholder-stone-300" />
+                                    <button onClick={() => setNotePopupId(null)} className="text-[11px] font-bold text-white bg-stone-800 rounded-lg px-3 py-1.5 hover:bg-stone-700 w-full">Done</button>
+                                  </div>
+                                )}
 
-                    </div>
+                                {/* ── Time popup ── */}
+                                {timePickerId === task.id && (
+                                  <div className="absolute z-50 bg-white border border-stone-200 rounded-xl shadow-lg p-3 flex flex-col gap-2.5"
+                                    style={{ top: CARD_H + 6, left: 4 + COL.num + COL.check + COL.title + COL.note - 4, width: 220 }}
+                                    onClick={e => e.stopPropagation()}>
+                                    <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Time</p>
+                                    <div className="flex items-center gap-2">
+                                      <select value={tempHour} onChange={e => setTempHour(e.target.value)} className="flex-1 text-sm border border-stone-200 rounded-lg px-2 py-1.5 outline-none bg-white text-stone-700">
+                                        {Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0")).map(v => <option key={v} value={v}>{v}</option>)}
+                                      </select>
+                                      <span className="text-stone-400 font-bold">:</span>
+                                      <select value={tempMinute} onChange={e => setTempMinute(e.target.value)} className="flex-1 text-sm border border-stone-200 rounded-lg px-2 py-1.5 outline-none bg-white text-stone-700">
+                                        {["00","05","10","15","20","25","30","35","40","45","50","55"].map(v => <option key={v} value={v}>{v}</option>)}
+                                      </select>
+                                      <select value={tempAmpm} onChange={e => setTempAmpm(e.target.value as "AM" | "PM")} className="text-sm border border-stone-200 rounded-lg px-2 py-1.5 outline-none bg-white text-stone-700">
+                                        <option value="AM">AM</option>
+                                        <option value="PM">PM</option>
+                                      </select>
+                                    </div>
+                                    <div className="flex gap-1.5">
+                                      <button onClick={() => { updateTask(task.id, { hour: tempHour, minute: tempMinute, ampm: tempAmpm, hasTime: true }); setTimePickerId(null); }} className="flex-1 text-[11px] font-bold text-white bg-stone-800 rounded-lg py-1.5 hover:bg-stone-700">Set</button>
+                                      {task.hasTime && <button onClick={() => { updateTask(task.id, { hasTime: false }); setTimePickerId(null); }} className="text-[11px] text-stone-400 border border-stone-200 rounded-lg px-3 py-1.5 hover:text-stone-600">Clear</button>}
+                                    </div>
+                                  </div>
+                                )}
+
+                                {/* ── Priority popup ── */}
+                                {priorityMenuId === task.id && (
+                                  <div className="absolute z-50 bg-white border border-stone-200 rounded-xl shadow-lg py-2"
+                                    style={{ top: CARD_H + 6, left: 4 + COL.num + COL.check + COL.title + COL.note + COL.time - 4, width: 160 }}
+                                    onClick={e => e.stopPropagation()}>
+                                    <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest px-3 pb-1.5">Priority</p>
+                                    {(["low", "normal", "medium", "important", "urgent"] as NonNullable<DayPriority>[]).map(p => (
+                                      <button key={p} onClick={() => { updateTask(task.id, { priority: p }); setPriorityMenuId(null); }}
+                                        className={`w-full flex items-center gap-2.5 px-3 py-2 hover:bg-stone-50 text-left ${task.priority === p ? "bg-stone-50" : ""}`}>
+                                        <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: DAY_PRIORITY_META[p].dot }} />
+                                        <span className="text-[12px] font-medium text-stone-700">{DAY_PRIORITY_META[p].label}</span>
+                                      </button>
+                                    ))}
+                                    {task.priority && (
+                                      <button onClick={() => { updateTask(task.id, { priority: null }); setPriorityMenuId(null); }}
+                                        className="w-full text-left text-[11px] text-stone-400 px-3 py-1.5 hover:bg-stone-50 border-t border-stone-100 mt-1">
+                                        Clear
+                                      </button>
+                                    )}
+                                  </div>
+                                )}
+
+                                {/* ── Progress popup ── */}
+                                {progressMenuId === task.id && (
+                                  <div className="absolute z-50 bg-white border border-stone-200 rounded-xl shadow-lg py-2"
+                                    style={{ top: CARD_H + 6, left: 4 + COL.num + COL.check + COL.title + COL.note + COL.time + COL.priority - 4, width: 110 }}
+                                    onClick={e => e.stopPropagation()}>
+                                    {[0, 10, 25, 50, 75, 90, 100].map(p => (
+                                      <button key={p} onClick={() => { updateTask(task.id, { progress: p }); setProgressMenuId(null); }}
+                                        className={`w-full text-left px-4 py-1.5 hover:bg-stone-50 text-[12px] ${task.progress === p ? "font-bold text-stone-800" : "text-stone-600"}`}>
+                                        {p}%
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
                   </div>
 
                 </div>
