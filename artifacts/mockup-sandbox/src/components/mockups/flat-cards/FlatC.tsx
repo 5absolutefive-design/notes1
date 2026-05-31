@@ -47,6 +47,7 @@ export function FlatC() {
                 height: CARD_H,
                 backgroundColor: pm ? pm.rowBg : "#ffffff",
                 boxShadow: "0 2px 8px rgba(0,0,0,0.08), 0 0 0 1px rgba(0,0,0,0.04)",
+                opacity: task.done ? 0.5 : 1,
               }}
             >
               {/* Priority accent bar */}
