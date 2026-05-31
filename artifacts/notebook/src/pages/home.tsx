@@ -173,7 +173,7 @@ function get7Days(today: Date) {
 }
 
 function get15Days(today: Date) {
-  return Array.from({ length: 15 }, (_, i) => {
+  return Array.from({ length: 41 }, (_, i) => {
     const d = new Date(today); d.setDate(today.getDate() + i);
     return {
       key: getDateKey(d),
@@ -1906,9 +1906,9 @@ export default function Home() {
                       <span className="text-[8px] font-bold tabular-nums mt-0.5">{days[0].label}</span>
                     </button>
 
-                    {/* Next 14 Days — 14 cols × 2 rows: each card occupies r1c1, r2c2, r1c3, r2c4 ... */}
-                    <p className="text-[9px] font-bold text-stone-400 tracking-widest uppercase mt-4 mb-2">Next 14 Days</p>
-                    <div style={{ display: "grid", gridTemplateColumns: "repeat(14, 1fr)", gridTemplateRows: "1fr 1fr", gap: "4px" }}>
+                    {/* Next 40 Days — 40 cols × 2 rows: each card occupies r1c1, r2c2, r1c3, r2c4 ... */}
+                    <p className="text-[9px] font-bold text-stone-400 tracking-widest uppercase mt-4 mb-2 text-center">Next 40 Days</p>
+                    <div style={{ display: "grid", gridTemplateColumns: "repeat(40, 1fr)", gridTemplateRows: "1fr 1fr", gap: "4px" }}>
                       {days.slice(1).map((d, i) => (
                         <button
                           key={d.key}
