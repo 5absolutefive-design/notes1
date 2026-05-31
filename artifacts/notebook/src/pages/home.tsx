@@ -1545,7 +1545,7 @@ export default function Home() {
               </div>
 
               {/* RIGHT: Mini note cards */}
-              <div className="flex-1 w-full overflow-y-auto pr-1" style={{ maxHeight: "clamp(800px, 82vh, 1100px)" }}>
+              <div className="flex-1 w-full overflow-y-auto pr-1" style={{ maxHeight: "788px" }}>
                 <div className="flex flex-col gap-3">
                 {filteredNotes.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-20 text-stone-300 gap-3">
