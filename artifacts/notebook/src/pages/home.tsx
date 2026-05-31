@@ -2163,19 +2163,19 @@ export default function Home() {
 
           function TimeColumn({ hours }: { hours: number[] }) {
             return (
-              <div className="flex flex-col flex-1 min-w-0">
+              <div className="flex flex-col h-full">
                 {hours.map((h, idx) => (
-                  <div key={h} className={`flex flex-col ${idx < hours.length - 1 ? "border-b border-stone-200" : ""}`}>
-                    <div className="flex items-center gap-2 px-3 py-1 border-b border-stone-200 bg-stone-50/60">
-                      <span className="text-[11px] font-semibold text-stone-500 tracking-wide w-20 flex-shrink-0">{formatHour(h)}</span>
+                  <div key={h} className={`flex flex-col flex-1 ${idx < hours.length - 1 ? "border-b border-stone-200" : ""}`}>
+                    <div className="flex items-center px-2 py-0.5 border-b border-stone-100 bg-stone-50/60">
+                      <span className="text-[9px] font-semibold text-stone-400 tracking-wide">{formatHour(h)}</span>
                     </div>
-                    <div className="border-b border-dashed border-stone-200">
+                    <div className="flex-1">
                       <input
                         type="text"
                         value={dayNotes[h] ?? ""}
                         onChange={e => updateScheduleNote(scheduleDate, h, e.target.value)}
                         placeholder=""
-                        className="w-full px-3 py-1 text-xs text-stone-700 outline-none bg-transparent"
+                        className="w-full h-full px-2 py-0.5 text-[10px] text-stone-700 outline-none bg-transparent"
                       />
                     </div>
                   </div>
@@ -2224,30 +2224,30 @@ export default function Home() {
                 {/* Main card — AM + PM, fills full height */}
                 <div className="rounded-2xl border border-stone-200 bg-stone-50 shadow-md p-2.5 flex gap-2.5 flex-1 min-w-0 min-h-0">
 
-                  {/* AM column — inner scroll */}
+                  {/* AM column */}
                   <div className="flex-1 min-w-0 rounded-xl border border-stone-200 bg-white shadow-sm flex flex-col overflow-hidden">
                     <div className="flex-shrink-0 px-2 py-1.5 border-b border-stone-200 bg-stone-100">
                       <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">AM</span>
                     </div>
-                    <div className="flex-1 overflow-y-auto min-h-0">
+                    <div className="flex-1 min-h-0">
                       <TimeColumn hours={amHours} />
                     </div>
                   </div>
 
-                  {/* PM column — inner scroll */}
+                  {/* PM column */}
                   <div className="flex-1 min-w-0 rounded-xl border border-stone-200 bg-white shadow-sm flex flex-col overflow-hidden">
                     <div className="flex-shrink-0 px-2 py-1.5 border-b border-stone-200 bg-stone-100">
                       <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">PM</span>
                     </div>
-                    <div className="flex-1 overflow-y-auto min-h-0">
+                    <div className="flex-1 min-h-0">
                       <TimeColumn hours={pmHours} />
                     </div>
                   </div>
 
                 </div>
 
-                {/* Mini calendars — outside, scrollable if needed */}
-                <div className="w-44 flex-shrink-0 flex flex-col gap-2 overflow-y-auto min-h-0">
+                {/* Mini calendars — outside */}
+                <div className="w-44 flex-shrink-0 flex flex-col gap-2 overflow-hidden">
                   {calMonths.map(({ year, month }) => (
                     <MiniCalendar
                       key={`${year}-${month}`}
