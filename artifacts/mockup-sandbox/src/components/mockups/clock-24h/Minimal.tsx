@@ -25,8 +25,11 @@ function Clock24Minimal({ now }: { now: Date }) {
   const secDeg  = s * 6;
   const hourDeg = h * 15 + m * 0.25 + s * (0.25 / 60);
 
-  const cx = 160, cy = 160;
-  const r = 145; // full clock radius — sectors fill entire circle
+  // cx/cy = 180 so orbit dot (r=145+18+7=170) fits within 360x360
+  const cx = 180, cy = 180;
+  const r = 130;
+  const orbitR = r + 20;
+  const dotR = 7;
 
   const elapsedSweep   = Math.max(0.01, Math.min(hourDeg, 359.99));
   const remainingSweep = 360 - elapsedSweep;
@@ -39,16 +42,21 @@ function Clock24Minimal({ now }: { now: Date }) {
     return { x: cx + len * Math.cos(a), y: cy + len * Math.sin(a) };
   };
 
-  const m1 = handEnd(minDeg, 90);
-  const s1 = handEnd(secDeg, 108);
+  const m1 = handEnd(minDeg, 82);
 
-  // ticks sit just inside the edge
+  // Orbiting second dot — moon around earth
+  const secRad = (secDeg - 90) * (Math.PI / 180);
+  const orbitDot = {
+    x: cx + orbitR * Math.cos(secRad),
+    y: cy + orbitR * Math.sin(secRad),
+  };
+
   const ticks = Array.from({ length: 24 }, (_, i) => {
     const hour  = i === 0 ? 24 : i;
     const angle = (i * 15 - 90) * (Math.PI / 180);
     const isMajor = i % 3 === 0;
     const outer = r - 4;
-    const inner = outer - (isMajor ? 16 : 7);
+    const inner = outer - (isMajor ? 14 : 6);
     return {
       x1: cx + inner * Math.cos(angle),
       y1: cy + inner * Math.sin(angle),
@@ -63,16 +71,17 @@ function Clock24Minimal({ now }: { now: Date }) {
 
   return (
     <div className="flex items-center justify-center">
-      <svg width="320" height="320" viewBox="0 0 320 320">
+      {/* SVG 360×360, center at 180,180; orbit dot max reach = 180+150+7 = 337 — fits */}
+      <svg width="360" height="360" viewBox="0 0 360 360">
         {/* Remaining sector — pure white */}
         <path d={remainingPath} fill="#ffffff" />
         {/* Elapsed sector — off-white warm cream */}
         <path d={elapsedPath} fill="#e8e4db" />
 
-        {/* Outer border ring — on top of sectors */}
+        {/* Clock border */}
         <circle cx={cx} cy={cy} r={r} fill="none" stroke="#d1cec7" strokeWidth="2" />
 
-        {/* Boundary line between sectors */}
+        {/* Sector boundary line */}
         {hourDeg > 0.5 && hourDeg < 359.5 && (
           <line
             x1={cx} y1={cy}
@@ -87,18 +96,12 @@ function Clock24Minimal({ now }: { now: Date }) {
           <g key={i}>
             <line
               x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2}
-              stroke="#9ca3af"
-              strokeWidth={t.isMajor ? 2 : 1}
-              strokeLinecap="round"
-              opacity={t.isMajor ? 0.8 : 0.45}
+              stroke="#9ca3af" strokeWidth={t.isMajor ? 2 : 1}
+              strokeLinecap="round" opacity={t.isMajor ? 0.8 : 0.45}
             />
             {t.isMajor && (
-              <text
-                x={t.lx} y={t.ly}
-                textAnchor="middle" dominantBaseline="central"
-                fontSize="10" fontWeight="600" fill="#6b7280"
-                fontFamily="system-ui, sans-serif"
-              >
+              <text x={t.lx} y={t.ly} textAnchor="middle" dominantBaseline="central"
+                fontSize="10" fontWeight="600" fill="#6b7280" fontFamily="system-ui, sans-serif">
                 {t.label}
               </text>
             )}
@@ -108,13 +111,12 @@ function Clock24Minimal({ now }: { now: Date }) {
         {/* Minute hand */}
         <line x1={cx} y1={cy} x2={m1.x} y2={m1.y}
           stroke="#374151" strokeWidth="2.5" strokeLinecap="round" />
-        {/* Second hand */}
-        <line x1={cx} y1={cy} x2={s1.x} y2={s1.y}
-          stroke="#f59e0b" strokeWidth="1.5" strokeLinecap="round" />
 
         {/* Center dot */}
         <circle cx={cx} cy={cy} r="5" fill="#374151" />
-        <circle cx={cx} cy={cy} r="2.5" fill="#f59e0b" />
+
+        {/* Orbiting second moon — travels outside the clock face */}
+        <circle cx={orbitDot.x} cy={orbitDot.y} r={dotR} fill="#1f2937" />
       </svg>
     </div>
   );
@@ -129,7 +131,7 @@ export function Minimal() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 flex items-center justify-center">
+      <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-4 flex items-center justify-center">
         <Clock24Minimal now={now} />
       </div>
     </div>

@@ -25,8 +25,10 @@ function Clock24Dark({ now }: { now: Date }) {
   const secDeg  = s * 6;
   const hourDeg = h * 15 + m * 0.25 + s * (0.25 / 60);
 
-  const cx = 160, cy = 160;
-  const r = 145; // full clock radius
+  const cx = 180, cy = 180;
+  const r = 130;
+  const orbitR = r + 20;
+  const dotR = 7;
 
   const elapsedSweep   = Math.max(0.01, Math.min(hourDeg, 359.99));
   const remainingSweep = 360 - elapsedSweep;
@@ -38,21 +40,22 @@ function Clock24Dark({ now }: { now: Date }) {
     const a = (deg - 90) * (Math.PI / 180);
     return { x: cx + len * Math.cos(a), y: cy + len * Math.sin(a) };
   };
-  const tailEnd = (deg: number, len: number) => {
-    const a = (deg + 90) * (Math.PI / 180);
-    return { x: cx + len * Math.cos(a), y: cy + len * Math.sin(a) };
-  };
 
-  const m1 = handEnd(minDeg, 92);
-  const s1 = handEnd(secDeg, 108);
-  const st = tailEnd(secDeg, 18);
+  const m1 = handEnd(minDeg, 84);
+
+  // Orbiting second moon
+  const secRad = (secDeg - 90) * (Math.PI / 180);
+  const orbitDot = {
+    x: cx + orbitR * Math.cos(secRad),
+    y: cy + orbitR * Math.sin(secRad),
+  };
 
   const ticks = Array.from({ length: 24 }, (_, i) => {
     const hour  = i === 0 ? 24 : i;
     const angle = (i * 15 - 90) * (Math.PI / 180);
     const isMajor = i % 3 === 0;
     const outer = r - 4;
-    const inner = outer - (isMajor ? 16 : 7);
+    const inner = outer - (isMajor ? 14 : 6);
     return {
       x1: cx + inner * Math.cos(angle),
       y1: cy + inner * Math.sin(angle),
@@ -68,13 +71,15 @@ function Clock24Dark({ now }: { now: Date }) {
   const isDay = h >= 6 && h < 18;
   const sectorColor = isDay ? "#ef4444" : "#7c3aed";
   const sectorGlow  = isDay ? "#ef444450" : "#7c3aed50";
+  const moonColor   = isDay ? "#fbbf24" : "#e2e8f0";
+  const moonGlow    = isDay ? "#fbbf2488" : "#e2e8f066";
 
   return (
     <div className="flex items-center justify-center">
-      <svg width="320" height="320" viewBox="0 0 320 320">
+      <svg width="360" height="360" viewBox="0 0 360 360">
         <defs>
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="4" result="blur" />
+          <filter id="moonGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
             <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
           </filter>
         </defs>
@@ -85,10 +90,10 @@ function Clock24Dark({ now }: { now: Date }) {
         <path d={elapsedPath} fill={sectorColor}
           style={{ filter: `drop-shadow(0 0 6px ${sectorGlow})` }} />
 
-        {/* Outer border ring */}
+        {/* Clock border */}
         <circle cx={cx} cy={cy} r={r} fill="none" stroke="#334155" strokeWidth="2" />
 
-        {/* Boundary line */}
+        {/* Sector boundary line */}
         {hourDeg > 0.5 && hourDeg < 359.5 && (
           <line
             x1={cx} y1={cy}
@@ -103,18 +108,13 @@ function Clock24Dark({ now }: { now: Date }) {
           <g key={i}>
             <line
               x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2}
-              stroke="white"
-              strokeWidth={t.isMajor ? 2 : 1}
-              strokeLinecap="round"
-              opacity={t.isMajor ? 0.8 : 0.25}
+              stroke="white" strokeWidth={t.isMajor ? 2 : 1}
+              strokeLinecap="round" opacity={t.isMajor ? 0.8 : 0.25}
             />
             {t.isMajor && (
-              <text
-                x={t.lx} y={t.ly}
-                textAnchor="middle" dominantBaseline="central"
+              <text x={t.lx} y={t.ly} textAnchor="middle" dominantBaseline="central"
                 fontSize="10" fontWeight="700" fill="#94a3b8"
-                fontFamily="'Courier New', monospace"
-              >
+                fontFamily="'Courier New', monospace">
                 {t.label}
               </text>
             )}
@@ -125,14 +125,13 @@ function Clock24Dark({ now }: { now: Date }) {
         <line x1={cx} y1={cy} x2={m1.x} y2={m1.y}
           stroke="white" strokeWidth="2.5" strokeLinecap="round"
           style={{ filter: "drop-shadow(0 0 3px rgba(255,255,255,0.5))" }} />
-        {/* Second hand + tail */}
-        <line x1={st.x} y1={st.y} x2={s1.x} y2={s1.y}
-          stroke="#fbbf24" strokeWidth="1.5" strokeLinecap="round"
-          style={{ filter: "drop-shadow(0 0 3px #fbbf2488)" }} />
 
-        {/* Center */}
+        {/* Center dot */}
         <circle cx={cx} cy={cy} r="6" fill="#0f172a" stroke="white" strokeWidth="1.5" />
-        <circle cx={cx} cy={cy} r="2.5" fill="#fbbf24" />
+
+        {/* Orbiting second moon — glowing dot outside the clock */}
+        <circle cx={orbitDot.x} cy={orbitDot.y} r={dotR} fill={moonColor}
+          style={{ filter: `drop-shadow(0 0 5px ${moonGlow})` }} />
       </svg>
     </div>
   );
@@ -148,7 +147,7 @@ export function Dark() {
   return (
     <div className="min-h-screen flex items-center justify-center"
       style={{ background: "radial-gradient(ellipse at 50% 30%, #0f1f3d 0%, #060b17 100%)" }}>
-      <div className="p-6 rounded-3xl flex items-center justify-center"
+      <div className="p-4 rounded-3xl flex items-center justify-center"
         style={{ background: "rgba(15,23,42,0.9)", border: "1px solid #1e3a5f", boxShadow: "0 0 40px #1e3a5f55, 0 20px 60px #00000088" }}>
         <Clock24Dark now={now} />
       </div>
