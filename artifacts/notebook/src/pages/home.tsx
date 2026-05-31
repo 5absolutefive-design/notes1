@@ -445,6 +445,7 @@ export default function Home() {
   const [scheduleCustomTimes, setScheduleCustomTimes] = useState<Record<string, Record<number, string>>>(() => loadScheduleCustomTimes());
   const [editingTimeSlot, setEditingTimeSlot] = useState<number | null>(null);
   const [editingTimeStr, setEditingTimeStr] = useState<string>("");
+  const [pmPlanMode, setPmPlanMode] = useState(false);
 
   function updateScheduleNote(date: string, hour: number, text: string) {
     setScheduleData(prev => {
@@ -2329,8 +2330,15 @@ export default function Home() {
 
                   {/* Floating AM card */}
                   <div className="flex-1 min-w-0 rounded-xl border border-stone-200 bg-white shadow-lg flex flex-col overflow-hidden">
-                    <div className="flex-shrink-0 px-3 py-2 border-b border-stone-200 bg-stone-50">
+                    <div className="flex-shrink-0 px-3 py-2 border-b border-stone-200 bg-stone-50 flex items-center justify-between">
                       <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">AM</span>
+                      <button
+                        onClick={() => setPmPlanMode(true)}
+                        className="px-3 py-0.5 rounded-full text-[10px] font-bold text-white tracking-wide transition-all hover:scale-105 active:scale-95"
+                        style={{ backgroundColor: "#22c55e" }}
+                      >
+                        Done
+                      </button>
                     </div>
                     <div className="flex-1 min-h-0">
                       {renderTimeColumn(amHours)}
@@ -2339,11 +2347,52 @@ export default function Home() {
 
                   {/* Floating PM card */}
                   <div className="flex-1 min-w-0 rounded-xl border border-stone-200 bg-white shadow-lg flex flex-col overflow-hidden">
-                    <div className="flex-shrink-0 px-3 py-2 border-b border-stone-200 bg-stone-50">
+                    <div className="flex-shrink-0 px-3 py-2 border-b border-stone-200 bg-stone-50 flex items-center justify-between">
                       <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">PM</span>
+                      {pmPlanMode && (
+                        <button
+                          onClick={() => setPmPlanMode(false)}
+                          className="px-3 py-0.5 rounded-full text-[10px] font-bold text-white tracking-wide transition-all hover:scale-105 active:scale-95"
+                          style={{ backgroundColor: "#06b6d4" }}
+                        >
+                          Redo
+                        </button>
+                      )}
                     </div>
-                    <div className="flex-1 min-h-0">
-                      {renderTimeColumn(pmHours)}
+                    <div className="flex-1 min-h-0 overflow-y-auto">
+                      {pmPlanMode ? (() => {
+                        const allHours = [...amHours, ...pmHours];
+                        const entries = allHours
+                          .filter(h => (dayNotes[h] ?? "").trim() !== "")
+                          .map(h => ({ hour: h, time: getDisplayTime(h), text: dayNotes[h] ?? "" }));
+                        if (entries.length === 0) {
+                          return (
+                            <div className="flex flex-col items-center justify-center h-full text-stone-300 gap-2">
+                              <span className="text-3xl">📋</span>
+                              <span className="text-[11px] font-medium">No entries yet</span>
+                            </div>
+                          );
+                        }
+                        return (
+                          <div className="flex flex-col items-center py-4 px-3 gap-0">
+                            {entries.map((entry, i) => (
+                              <div key={entry.hour} className="flex flex-col items-center w-full">
+                                <div className="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-2 flex flex-col items-center gap-0.5 shadow-sm">
+                                  <span className="text-[10px] font-semibold text-stone-400 tracking-wide">{entry.time}</span>
+                                  <span className="text-[13px] font-medium text-stone-700 text-center">{entry.text}</span>
+                                </div>
+                                {i < entries.length - 1 && (
+                                  <div className="flex flex-col items-center my-1">
+                                    <div className="w-px h-3 bg-stone-300" />
+                                    <span className="text-stone-400 text-[14px] leading-none">↓</span>
+                                    <div className="w-px h-3 bg-stone-300" />
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        );
+                      })() : renderTimeColumn(pmHours)}
                     </div>
                   </div>
 
