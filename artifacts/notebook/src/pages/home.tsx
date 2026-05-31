@@ -1489,7 +1489,7 @@ export default function Home() {
                     )}
 
                     {(() => {
-                      const COL = { num: 36, check: 44, title: 384, note: 64, time: 98, priority: 88, progress: 90, trash: 44 };
+                      const COL = { num: 36, check: 44, title: 512, note: 64, time: 98, priority: 88, progress: 90, trash: 44 };
                       const CARD_W = Object.values(COL).reduce((a, b) => a + b, 0) + 4;
                       const CARD_H = 48;
                       const closeAllPopups = () => { setNotePopupId(null); setTimePickerId(null); setPriorityMenuId(null); setProgressMenuId(null); setDeleteConfirmId(null); };
