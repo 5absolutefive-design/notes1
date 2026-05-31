@@ -263,15 +263,10 @@ function MiniCalendar({ year, month, selectedDate, onSelectDate, markedDates }: 
             <button
               key={d}
               onClick={() => onSelectDate(dateStr)}
-              className={`text-xs rounded-full w-7 h-7 flex flex-col items-center justify-center mx-auto transition-colors relative
-                ${isSel ? "bg-stone-800 text-white font-bold" : isToday ? "bg-blue-100 text-blue-700 font-semibold" : "text-stone-600 hover:bg-stone-100"}`}
+              className={`text-xs rounded-full w-7 h-7 flex items-center justify-center mx-auto transition-colors
+                ${isSel ? "bg-stone-800 text-white font-bold" : isToday ? "bg-blue-100 text-blue-700 font-semibold" : hasSchedule ? "bg-stone-800 text-white font-bold" : "text-stone-600 hover:bg-stone-100"}`}
             >
-              <span className="leading-none">{d}</span>
-              {hasSchedule && (
-                <span
-                  className={`absolute bottom-[3px] left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${isSel ? "bg-white" : "bg-stone-800"}`}
-                />
-              )}
+              {d}
             </button>
           );
         })}
