@@ -375,6 +375,14 @@ export default function Home() {
     return () => document.removeEventListener("mousedown", handler);
   }, [showEmojiPicker]);
 
+  useEffect(() => {
+    const anyOpen = notePopupId !== null || timePickerId !== null || priorityMenuId !== null || progressMenuId !== null;
+    if (!anyOpen) return;
+    const handler = () => { setNotePopupId(null); setTimePickerId(null); setPriorityMenuId(null); setProgressMenuId(null); setDeleteConfirmId(null); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [notePopupId, timePickerId, priorityMenuId, progressMenuId]);
+
 
   const closeLockPopup = () => { setLockPopupId(null); setLockPw(""); setLockPwConfirm(""); setLockPwError(""); setShowLockPw(false); };
   const closeUnlockPopup = () => { setUnlockPopupId(null); setUnlockInput(""); setUnlockError(""); setShowUnlockPw(false); };
@@ -1559,7 +1567,7 @@ export default function Home() {
                                   {notePopupId === task.id && popupPos && ReactDOM.createPortal(
                                     <div className="bg-white border border-stone-200 rounded-xl shadow-xl p-3 flex flex-col gap-2"
                                       style={{ position: "fixed", top: popupPos.top, right: popupPos.right, width: 320, zIndex: 9999 }}
-                                      onClick={e => e.stopPropagation()}>
+                                      onMouseDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
                                       <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Note</p>
                                       <textarea autoFocus value={task.note} onChange={e => updateTask(task.id, { note: e.target.value })} placeholder="Write a note..." rows={3}
                                         className="w-full text-xs text-stone-700 border border-stone-200 rounded-lg p-2 outline-none resize-none focus:border-indigo-300 placeholder-stone-300" />
@@ -1578,7 +1586,7 @@ export default function Home() {
                                   {timePickerId === task.id && popupPos && ReactDOM.createPortal(
                                     <div className="bg-white border border-stone-200 rounded-xl shadow-xl p-3 flex flex-col gap-2.5"
                                       style={{ position: "fixed", top: popupPos.top, right: popupPos.right, width: 220, zIndex: 9999 }}
-                                      onClick={e => e.stopPropagation()}>
+                                      onMouseDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
                                       <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Time</p>
                                       <div className="flex items-center gap-2">
                                         <select value={tempHour} onChange={e => setTempHour(e.target.value)} className="flex-1 text-sm border border-stone-200 rounded-lg px-2 py-1.5 outline-none bg-white text-stone-700">
@@ -1611,7 +1619,7 @@ export default function Home() {
                                   {priorityMenuId === task.id && popupPos && ReactDOM.createPortal(
                                     <div className="bg-white border border-stone-200 rounded-xl shadow-xl py-2"
                                       style={{ position: "fixed", top: popupPos.top, right: popupPos.right, width: 160, zIndex: 9999 }}
-                                      onClick={e => e.stopPropagation()}>
+                                      onMouseDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
                                       <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest px-3 pb-1.5">Priority</p>
                                       {(["low", "normal", "medium", "important", "urgent"] as NonNullable<DayPriority>[]).map(p => (
                                         <button key={p} onClick={() => { updateTask(task.id, { priority: p }); setPriorityMenuId(null); }}
@@ -1647,7 +1655,7 @@ export default function Home() {
                                   {progressMenuId === task.id && popupPos && ReactDOM.createPortal(
                                     <div className="bg-white border border-stone-200 rounded-xl shadow-xl py-2"
                                       style={{ position: "fixed", top: popupPos.top, right: popupPos.right, width: 110, zIndex: 9999 }}
-                                      onClick={e => e.stopPropagation()}>
+                                      onMouseDown={e => e.stopPropagation()} onClick={e => e.stopPropagation()}>
                                       {[0, 10, 25, 50, 75, 90, 100].map(p => (
                                         <button key={p} onClick={() => { updateTask(task.id, { progress: p }); setProgressMenuId(null); }}
                                           className={`w-full text-left px-4 py-1.5 hover:bg-stone-50 text-[12px] ${task.progress === p ? "font-bold text-stone-800" : "text-stone-600"}`}>
