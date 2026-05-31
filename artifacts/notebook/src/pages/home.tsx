@@ -362,6 +362,7 @@ export default function Home() {
   const [newTaskFocusId, setNewTaskFocusId] = useState<number | null>(null);
   const [showTypeInput, setShowTypeInput] = useState(false);
   const [newTypeName, setNewTypeName] = useState("");
+  const [deleteTypeConfirmId, setDeleteTypeConfirmId] = useState<number | null>(null);
   const [timePickerId, setTimePickerId] = useState<number | null>(null);
   const [priorityMenuId, setPriorityMenuId] = useState<number | null>(null);
   const [notePopupId, setNotePopupId] = useState<number | null>(null);
@@ -1810,22 +1811,42 @@ export default function Home() {
                     <div className="flex-1 overflow-y-auto px-4 pb-3 pt-1">
                       <div className="grid grid-cols-2 gap-2">
 
-                        {dayTaskTypes.map(type => (
-                          <div key={type.id} className="group/type relative">
-                            <button
-                              onClick={() => setSelectedTypeId(selectedTypeId === type.id ? "all" : type.id)}
-                              className={`w-full text-center text-xs px-2 py-3 rounded-lg border transition-all truncate shadow-sm hover:-translate-y-[2px] hover:shadow-md ${selectedTypeId === type.id ? "bg-stone-800 text-white border-transparent" : "border-stone-300 text-stone-700 bg-white"}`}
-                            >
-                              {type.name}
-                            </button>
-                            <button
-                              onClick={() => deleteType(type.id)}
-                              className="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover/type:opacity-100 transition-opacity"
-                            >
-                              <X className={`w-2.5 h-2.5 ${selectedTypeId === type.id ? "text-white/60 hover:text-white" : "text-stone-300 hover:text-red-400"}`} />
-                            </button>
-                          </div>
-                        ))}
+                        {dayTaskTypes.map(type => {
+                          const typeCount = dayTasks.filter(t => t.typeId === type.id).length;
+                          const isSelected = selectedTypeId === type.id;
+                          return (
+                            <div key={type.id} className="group/type relative">
+                              <button
+                                onClick={() => { setDeleteTypeConfirmId(null); setSelectedTypeId(isSelected ? "all" : type.id); }}
+                                className={`w-full text-center text-xs px-2 py-3 rounded-lg border transition-all shadow-sm hover:-translate-y-[2px] hover:shadow-md relative ${isSelected ? "bg-stone-800 text-white border-transparent" : "border-stone-300 text-stone-700 bg-white"}`}
+                              >
+                                {typeCount > 0 && (
+                                  <span className={`absolute left-1.5 top-1 text-[9px] font-bold tabular-nums leading-none ${isSelected ? "text-white/50" : "text-stone-400"}`}>
+                                    {typeCount}
+                                  </span>
+                                )}
+                                <span className="truncate block">{type.name}</span>
+                              </button>
+                              {deleteTypeConfirmId === type.id ? (
+                                <div className="absolute inset-0 z-10 flex items-center justify-center gap-1.5 rounded-lg"
+                                  style={{ backgroundColor: isSelected ? "rgba(28,25,23,0.92)" : "rgba(255,241,241,0.97)", border: "1px solid #fca5a5" }}>
+                                  <span className={`text-[10px] font-semibold ${isSelected ? "text-white/80" : "text-red-600"}`}>Delete?</span>
+                                  <button onClick={e => { e.stopPropagation(); deleteType(type.id); setDeleteTypeConfirmId(null); }}
+                                    className="text-[10px] font-bold text-white bg-red-500 hover:bg-red-600 rounded px-1.5 py-0.5">Yes</button>
+                                  <button onClick={e => { e.stopPropagation(); setDeleteTypeConfirmId(null); }}
+                                    className="text-[10px] font-medium text-stone-500 bg-white border border-stone-200 hover:border-stone-400 rounded px-1.5 py-0.5">No</button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={e => { e.stopPropagation(); setDeleteTypeConfirmId(type.id); }}
+                                  className="absolute right-1.5 top-1.5 opacity-0 group-hover/type:opacity-100 transition-opacity"
+                                >
+                                  <X className={`w-2.5 h-2.5 ${isSelected ? "text-white/60 hover:text-white" : "text-stone-300 hover:text-red-400"}`} />
+                                </button>
+                              )}
+                            </div>
+                          );
+                        })}
 
 
                         {showTypeInput ? (
