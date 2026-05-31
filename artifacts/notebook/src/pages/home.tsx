@@ -1601,7 +1601,7 @@ export default function Home() {
                                 {/* ── Note popup ── */}
                                 {notePopupId === task.id && (
                                   <div className="absolute z-50 bg-white border border-stone-200 rounded-xl shadow-lg p-3 flex flex-col gap-2"
-                                    style={{ top: CARD_H + 6, left: 4 + COL.num + COL.check + COL.title - 4, width: 240 }}
+                                    style={{ top: CARD_H + 6, left: 4 + COL.num + COL.check + COL.title + COL.note / 2 - 240, width: 480 }}
                                     onClick={e => e.stopPropagation()}>
                                     <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Note</p>
                                     <textarea autoFocus value={task.note} onChange={e => updateTask(task.id, { note: e.target.value })} placeholder="Write a note..." rows={3}
