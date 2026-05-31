@@ -2166,7 +2166,7 @@ export default function Home() {
               <div className="flex flex-col flex-1 min-w-0">
                 {hours.map((h, idx) => (
                   <div key={h} className={`flex flex-col ${idx < hours.length - 1 ? "border-b border-stone-200" : ""}`}>
-                    <div className="flex items-center gap-2 px-3 py-1 border-b border-stone-200 bg-stone-50/60">
+                    <div className="flex items-center gap-2 px-3 py-2 border-b border-stone-200 bg-stone-50/60">
                       <span className="text-[11px] font-semibold text-stone-500 tracking-wide w-20 flex-shrink-0">{formatHour(h)}</span>
                     </div>
                     <div className="border-b border-dashed border-stone-200">
@@ -2175,7 +2175,7 @@ export default function Home() {
                         value={dayNotes[h] ?? ""}
                         onChange={e => updateScheduleNote(scheduleDate, h, e.target.value)}
                         placeholder=""
-                        className="w-full px-3 py-1.5 text-xs text-stone-700 outline-none bg-transparent"
+                        className="w-full px-3 py-2.5 text-xs text-stone-700 outline-none bg-transparent"
                       />
                     </div>
                   </div>
