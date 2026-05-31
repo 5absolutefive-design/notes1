@@ -55,7 +55,7 @@ export function FlatC() {
   };
 
   /* ── Fixed column widths (px) ── */
-  const COL = { num: 40, check: 44, title: 256, note: 64, time: 98, priority: 88, progress: 90, trash: 44 };
+  const COL = { num: 40, check: 44, title: 384, note: 64, time: 98, priority: 88, progress: 90, trash: 44 };
   const CARD_W = Object.values(COL).reduce((a, b) => a + b, 0);
   const CARD_H = 48;
 
