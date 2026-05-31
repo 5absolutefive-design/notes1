@@ -202,6 +202,12 @@ function loadScheduleNotes(): Record<string, Record<number, string>> {
 function saveScheduleNotes(data: Record<string, Record<number, string>>) {
   localStorage.setItem(SCHEDULE_KEY, JSON.stringify(data));
 }
+function loadScheduleCustomTimes(): Record<string, Record<number, string>> {
+  try { const r = localStorage.getItem("nb_schedule_custom_times"); return r ? JSON.parse(r) : {}; } catch { return {}; }
+}
+function saveScheduleCustomTimes(data: Record<string, Record<number, string>>) {
+  localStorage.setItem("nb_schedule_custom_times", JSON.stringify(data));
+}
 
 function MiniCalendar({ year, month, selectedDate, onSelectDate }: {
   year: number; month: number; selectedDate: string; onSelectDate: (d: string) => void;
@@ -436,11 +442,22 @@ export default function Home() {
   // Schedule state
   const [scheduleDate, setScheduleDate] = useState<string>(() => new Date().toISOString().slice(0, 10));
   const [scheduleData, setScheduleData] = useState<Record<string, Record<number, string>>>(() => loadScheduleNotes());
+  const [scheduleCustomTimes, setScheduleCustomTimes] = useState<Record<string, Record<number, string>>>(() => loadScheduleCustomTimes());
+  const [editingTimeSlot, setEditingTimeSlot] = useState<number | null>(null);
+  const [editingTimeStr, setEditingTimeStr] = useState<string>("");
 
   function updateScheduleNote(date: string, hour: number, text: string) {
     setScheduleData(prev => {
       const next = { ...prev, [date]: { ...(prev[date] ?? {}), [hour]: text } };
       saveScheduleNotes(next);
+      return next;
+    });
+  }
+
+  function updateScheduleCustomTime(date: string, hour: number, time: string) {
+    setScheduleCustomTimes(prev => {
+      const next = { ...prev, [date]: { ...(prev[date] ?? {}), [hour]: time } };
+      saveScheduleCustomTimes(next);
       return next;
     });
   }
@@ -2165,12 +2182,96 @@ export default function Home() {
             });
           })();
 
+          const customTimesForDate = scheduleCustomTimes[scheduleDate] ?? {};
+
+          const getDisplayTime = (h: number) => customTimesForDate[h] ?? formatHour(h);
+
+          const openTimeEditor = (h: number) => {
+            const custom = customTimesForDate[h];
+            if (custom) {
+              setEditingTimeStr(custom);
+            } else {
+              const hh = String(h).padStart(2, "0");
+              setEditingTimeStr(`${hh}:00`);
+            }
+            setEditingTimeSlot(h);
+          };
+
+          const saveTimeEdit = () => {
+            if (editingTimeSlot === null) return;
+            if (editingTimeStr.trim()) {
+              const [hhStr, mmStr] = editingTimeStr.split(":");
+              const hh = parseInt(hhStr, 10);
+              const mm = parseInt(mmStr ?? "0", 10);
+              const ampm = hh < 12 ? "AM" : "PM";
+              const displayH = hh === 0 ? 12 : hh > 12 ? hh - 12 : hh;
+              const label = `${String(displayH).padStart(2, "0")}:${String(mm).padStart(2, "0")} ${ampm}`;
+              updateScheduleCustomTime(scheduleDate, editingTimeSlot, label);
+            }
+            setEditingTimeSlot(null);
+          };
+
+          const resetTimeLabel = (h: number) => {
+            setScheduleCustomTimes(prev => {
+              const dateTimes = { ...(prev[scheduleDate] ?? {}) };
+              delete dateTimes[h];
+              const next = { ...prev, [scheduleDate]: dateTimes };
+              saveScheduleCustomTimes(next);
+              return next;
+            });
+            setEditingTimeSlot(null);
+          };
+
           const renderTimeColumn = (hours: number[]) => (
             <div className="flex flex-col h-full">
               {hours.map((h, idx) => (
                 <div key={h} className={`flex flex-col flex-1 ${idx < hours.length - 1 ? "border-b border-stone-200" : ""}`}>
-                  <div className="flex items-center px-2 py-0.5 border-b border-stone-100 bg-stone-50/60">
-                    <span className="text-[9px] font-semibold text-stone-400 tracking-wide">{formatHour(h)}</span>
+                  <div className="relative flex items-center px-2 py-0.5 border-b border-stone-100 bg-stone-50/60">
+                    <span
+                      onClick={() => openTimeEditor(h)}
+                      className="text-[9px] font-semibold tracking-wide cursor-pointer select-none hover:text-blue-500 transition-colors"
+                      style={{ color: customTimesForDate[h] ? "#3b82f6" : undefined }}
+                    >
+                      {getDisplayTime(h)}
+                    </span>
+
+                    {editingTimeSlot === h && (
+                      <div
+                        className="absolute left-0 top-full z-50 bg-white border border-stone-200 rounded-xl shadow-xl p-3 flex flex-col gap-2"
+                        style={{ minWidth: 180 }}
+                        onMouseDown={e => e.stopPropagation()}
+                      >
+                        <p className="text-[10px] font-semibold text-stone-500 mb-0.5">Set custom time</p>
+                        <input
+                          type="time"
+                          value={editingTimeStr}
+                          onChange={e => setEditingTimeStr(e.target.value)}
+                          onKeyDown={e => { if (e.key === "Enter") saveTimeEdit(); if (e.key === "Escape") setEditingTimeSlot(null); }}
+                          autoFocus
+                          className="w-full border border-stone-200 rounded-lg px-2 py-1 text-[12px] text-stone-700 outline-none focus:border-blue-400"
+                        />
+                        <div className="flex gap-1.5">
+                          <button
+                            onClick={saveTimeEdit}
+                            className="flex-1 bg-stone-800 text-white text-[10px] font-semibold rounded-lg py-1 hover:bg-stone-700 transition-colors"
+                          >
+                            Save
+                          </button>
+                          <button
+                            onClick={() => resetTimeLabel(h)}
+                            className="flex-1 bg-stone-100 text-stone-500 text-[10px] font-semibold rounded-lg py-1 hover:bg-stone-200 transition-colors"
+                          >
+                            Reset
+                          </button>
+                          <button
+                            onClick={() => setEditingTimeSlot(null)}
+                            className="px-2 bg-stone-100 text-stone-400 text-[10px] rounded-lg py-1 hover:bg-stone-200 transition-colors"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   <div className="flex-1">
                     <input
