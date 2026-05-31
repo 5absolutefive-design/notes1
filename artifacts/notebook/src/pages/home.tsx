@@ -208,6 +208,20 @@ function loadScheduleCustomTimes(): Record<string, Record<number, string>> {
 function saveScheduleCustomTimes(data: Record<string, Record<number, string>>) {
   localStorage.setItem("nb_schedule_custom_times", JSON.stringify(data));
 }
+function loadScheduleCellColors(): Record<string, Record<number, string>> {
+  try { const r = localStorage.getItem("nb_schedule_cell_colors"); return r ? JSON.parse(r) : {}; } catch { return {}; }
+}
+function saveScheduleCellColors(data: Record<string, Record<number, string>>) {
+  localStorage.setItem("nb_schedule_cell_colors", JSON.stringify(data));
+}
+
+const SLOT_COLORS = [
+  { label: "Urgent",    bg: "#fecaca", dot: "#ef4444" },
+  { label: "Important", bg: "#fed7aa", dot: "#f97316" },
+  { label: "Medium",    bg: "#fef08a", dot: "#eab308" },
+  { label: "Normal",    bg: "#bbf7d0", dot: "#22c55e" },
+  { label: "Low",       bg: "#bfdbfe", dot: "#3b82f6" },
+];
 
 function MiniCalendar({ year, month, selectedDate, onSelectDate }: {
   year: number; month: number; selectedDate: string; onSelectDate: (d: string) => void;
@@ -446,6 +460,8 @@ export default function Home() {
   const [editingTimeSlot, setEditingTimeSlot] = useState<number | null>(null);
   const [editingTimeStr, setEditingTimeStr] = useState<string>("");
   const [amPlanMode, setAmPlanMode] = useState(false);
+  const [scheduleCellColors, setScheduleCellColors] = useState<Record<string, Record<number, string>>>(() => loadScheduleCellColors());
+  const [colorPickerSlot, setColorPickerSlot] = useState<number | null>(null);
 
   function updateScheduleNote(date: string, hour: number, text: string) {
     setScheduleData(prev => {
@@ -459,6 +475,16 @@ export default function Home() {
     setScheduleCustomTimes(prev => {
       const next = { ...prev, [date]: { ...(prev[date] ?? {}), [hour]: time } };
       saveScheduleCustomTimes(next);
+      return next;
+    });
+  }
+
+  function updateScheduleCellColor(date: string, hour: number, color: string | null) {
+    setScheduleCellColors(prev => {
+      const dateCols = { ...(prev[date] ?? {}) };
+      if (color === null) { delete dateCols[hour]; } else { dateCols[hour] = color; }
+      const next = { ...prev, [date]: dateCols };
+      saveScheduleCellColors(next);
       return next;
     });
   }
@@ -2223,68 +2249,99 @@ export default function Home() {
             setEditingTimeSlot(null);
           };
 
+          const cellColorsForDate = scheduleCellColors[scheduleDate] ?? {};
+
           const renderTimeColumn = (hours: number[]) => (
             <div className="flex flex-col h-full">
-              {hours.map((h, idx) => (
-                <div key={h} className={`relative flex flex-col flex-1 transition-all duration-150 hover:-translate-y-px hover:shadow-md hover:z-10 hover:bg-blue-50/30 ${idx < hours.length - 1 ? "border-b border-stone-200" : ""}`}>
-                  <div className="relative flex items-center px-2 py-0.5 border-b border-stone-100" style={{ backgroundColor: "#e3e3e3" }}>
-                    <span
-                      onClick={() => openTimeEditor(h)}
-                      className="text-[9px] font-semibold tracking-wide cursor-pointer select-none hover:text-blue-500 transition-colors"
-                      style={{ color: customTimesForDate[h] ? "#3b82f6" : undefined }}
-                    >
-                      {getDisplayTime(h)}
-                    </span>
-
-                    {editingTimeSlot === h && (
-                      <div
-                        className="absolute left-0 top-full z-50 bg-white border border-stone-200 rounded-xl shadow-xl p-3 flex flex-col gap-2"
-                        style={{ minWidth: 180 }}
-                        onMouseDown={e => e.stopPropagation()}
+              {hours.map((h, idx) => {
+                const cellBg = cellColorsForDate[h] ?? null;
+                return (
+                  <div key={h} className={`group/cell relative flex flex-col flex-1 transition-all duration-150 hover:-translate-y-px hover:shadow-md hover:z-10 ${idx < hours.length - 1 ? "border-b border-stone-200" : ""}`}
+                    style={cellBg ? { backgroundColor: cellBg + "55" } : {}}>
+                    <div className="relative flex items-center px-2 py-0.5 border-b border-stone-100" style={{ backgroundColor: cellBg ? cellBg + "99" : "#e3e3e3" }}>
+                      <span
+                        onClick={() => openTimeEditor(h)}
+                        className="text-[9px] font-semibold tracking-wide cursor-pointer select-none hover:text-blue-500 transition-colors"
+                        style={{ color: customTimesForDate[h] ? "#3b82f6" : undefined }}
                       >
-                        <p className="text-[10px] font-semibold text-stone-500 mb-0.5">Set custom time</p>
-                        <input
-                          type="time"
-                          value={editingTimeStr}
-                          onChange={e => setEditingTimeStr(e.target.value)}
-                          onKeyDown={e => { if (e.key === "Enter") saveTimeEdit(); if (e.key === "Escape") setEditingTimeSlot(null); }}
-                          autoFocus
-                          className="w-full border border-stone-200 rounded-lg px-2 py-1 text-[12px] text-stone-700 outline-none focus:border-blue-400"
-                        />
-                        <div className="flex gap-1.5">
-                          <button
-                            onClick={saveTimeEdit}
-                            className="flex-1 bg-stone-800 text-white text-[10px] font-semibold rounded-lg py-1 hover:bg-stone-700 transition-colors"
-                          >
-                            Save
-                          </button>
-                          <button
-                            onClick={() => resetTimeLabel(h)}
-                            className="flex-1 bg-stone-100 text-stone-500 text-[10px] font-semibold rounded-lg py-1 hover:bg-stone-200 transition-colors"
-                          >
-                            Reset
-                          </button>
-                          <button
-                            onClick={() => setEditingTimeSlot(null)}
-                            className="px-2 bg-stone-100 text-stone-400 text-[10px] rounded-lg py-1 hover:bg-stone-200 transition-colors"
-                          >
-                            ✕
-                          </button>
+                        {getDisplayTime(h)}
+                      </span>
+
+                      {editingTimeSlot === h && (
+                        <div
+                          className="absolute left-0 top-full z-50 bg-white border border-stone-200 rounded-xl shadow-xl p-3 flex flex-col gap-2"
+                          style={{ minWidth: 180 }}
+                          onMouseDown={e => e.stopPropagation()}
+                        >
+                          <p className="text-[10px] font-semibold text-stone-500 mb-0.5">Set custom time</p>
+                          <input
+                            type="time"
+                            value={editingTimeStr}
+                            onChange={e => setEditingTimeStr(e.target.value)}
+                            onKeyDown={e => { if (e.key === "Enter") saveTimeEdit(); if (e.key === "Escape") setEditingTimeSlot(null); }}
+                            autoFocus
+                            className="w-full border border-stone-200 rounded-lg px-2 py-1 text-[12px] text-stone-700 outline-none focus:border-blue-400"
+                          />
+                          <div className="flex gap-1.5">
+                            <button onClick={saveTimeEdit} className="flex-1 bg-stone-800 text-white text-[10px] font-semibold rounded-lg py-1 hover:bg-stone-700 transition-colors">Save</button>
+                            <button onClick={() => resetTimeLabel(h)} className="flex-1 bg-stone-100 text-stone-500 text-[10px] font-semibold rounded-lg py-1 hover:bg-stone-200 transition-colors">Reset</button>
+                            <button onClick={() => setEditingTimeSlot(null)} className="px-2 bg-stone-100 text-stone-400 text-[10px] rounded-lg py-1 hover:bg-stone-200 transition-colors">✕</button>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
+                    <div className="flex-1 flex items-stretch">
+                      <input
+                        type="text"
+                        value={dayNotes[h] ?? ""}
+                        onChange={e => updateScheduleNote(scheduleDate, h, e.target.value)}
+                        placeholder=""
+                        className="flex-1 px-2 py-0.5 text-[13px] text-stone-700 outline-none bg-transparent"
+                      />
+                      {/* 3-dot priority button */}
+                      <button
+                        onMouseDown={e => e.preventDefault()}
+                        onClick={e => { e.stopPropagation(); setColorPickerSlot(colorPickerSlot === h ? null : h); setEditingTimeSlot(null); }}
+                        className="flex-shrink-0 w-6 flex items-center justify-center opacity-0 hover:opacity-100 group-hover/cell:opacity-100 focus:opacity-100 transition-opacity text-stone-300 hover:text-stone-500 self-stretch"
+                        style={cellBg ? { opacity: 1 } : {}}
+                      >
+                        <span className="text-[14px] leading-none select-none">⋯</span>
+                      </button>
+
+                      {/* Color picker popup */}
+                      {colorPickerSlot === h && (
+                        <div
+                          className="absolute right-0 top-full z-50 bg-white border border-stone-200 rounded-xl shadow-xl p-2.5 flex flex-col gap-1.5"
+                          style={{ minWidth: 140 }}
+                          onMouseDown={e => e.stopPropagation()}
+                          onClick={e => e.stopPropagation()}
+                        >
+                          <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest mb-0.5">Priority</p>
+                          {SLOT_COLORS.map(c => (
+                            <button
+                              key={c.label}
+                              onClick={() => { updateScheduleCellColor(scheduleDate, h, c.bg); setColorPickerSlot(null); }}
+                              className="flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-stone-50 transition-colors w-full text-left"
+                              style={cellBg === c.bg ? { backgroundColor: c.bg + "55" } : {}}
+                            >
+                              <span className="w-3 h-3 rounded-full flex-shrink-0 border border-white shadow-sm" style={{ backgroundColor: c.dot }} />
+                              <span className="text-[11px] font-medium text-stone-600">{c.label}</span>
+                            </button>
+                          ))}
+                          {cellBg && (
+                            <button
+                              onClick={() => { updateScheduleCellColor(scheduleDate, h, null); setColorPickerSlot(null); }}
+                              className="text-[10px] text-stone-400 hover:text-stone-600 px-2 py-1 border-t border-stone-100 mt-0.5 text-left transition-colors"
+                            >
+                              Clear
+                            </button>
+                          )}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex-1">
-                    <input
-                      type="text"
-                      value={dayNotes[h] ?? ""}
-                      onChange={e => updateScheduleNote(scheduleDate, h, e.target.value)}
-                      placeholder=""
-                      className="w-full h-full px-2 py-0.5 text-[13px] text-stone-700 outline-none bg-transparent"
-                    />
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           );
 
@@ -2366,21 +2423,34 @@ export default function Home() {
                         }
                         return (
                           <div className="flex flex-col items-center py-4 px-3 gap-0">
-                            {entries.map((entry, i) => (
-                              <div key={entry.hour} className="flex flex-col items-center w-full">
-                                <div className="w-full rounded-xl border border-stone-200 bg-stone-50 px-4 py-2 flex flex-col items-center gap-0.5 shadow-sm">
-                                  <span className="text-[10px] font-semibold text-stone-400 tracking-wide">{entry.time}</span>
-                                  <span className="text-[13px] font-medium text-stone-700 text-center">{entry.text}</span>
-                                </div>
-                                {i < entries.length - 1 && (
-                                  <div className="flex flex-col items-center my-1">
-                                    <div className="w-px h-3 bg-stone-300" />
-                                    <span className="text-stone-400 text-[14px] leading-none">↓</span>
-                                    <div className="w-px h-3 bg-stone-300" />
+                            {entries.map((entry, i) => {
+                              const entryColor = cellColorsForDate[entry.hour] ?? null;
+                              const slotMeta = entryColor ? SLOT_COLORS.find(c => c.bg === entryColor) : null;
+                              return (
+                                <div key={entry.hour} className="flex flex-col items-center w-full">
+                                  <div
+                                    className="w-full rounded-xl px-4 py-2 flex flex-col items-center gap-0.5 shadow-sm border"
+                                    style={entryColor
+                                      ? { backgroundColor: entryColor + "66", borderColor: entryColor }
+                                      : { backgroundColor: "#f8f8f7", borderColor: "#e7e5e4" }}
+                                  >
+                                    <div className="flex items-center gap-1.5">
+                                      {slotMeta && <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: slotMeta.dot }} />}
+                                      <span className="text-[10px] font-semibold text-stone-400 tracking-wide">{entry.time}</span>
+                                      {slotMeta && <span className="text-[9px] font-bold tracking-wide" style={{ color: slotMeta.dot }}>{slotMeta.label}</span>}
+                                    </div>
+                                    <span className="text-[13px] font-medium text-stone-700 text-center">{entry.text}</span>
                                   </div>
-                                )}
-                              </div>
-                            ))}
+                                  {i < entries.length - 1 && (
+                                    <div className="flex flex-col items-center my-1">
+                                      <div className="w-px h-3 bg-stone-300" />
+                                      <span className="text-stone-400 text-[14px] leading-none">↓</span>
+                                      <div className="w-px h-3 bg-stone-300" />
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
                           </div>
                         );
                       })() : renderTimeColumn(amHours)}
