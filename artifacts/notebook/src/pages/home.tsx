@@ -1546,9 +1546,12 @@ export default function Home() {
           };
 
           const deleteType = (id: number) => {
-            const updated = dayTaskTypes.filter(t => t.id !== id);
-            saveDayTaskTypes(updated);
-            setDayTaskTypes(updated);
+            const updatedTypes = dayTaskTypes.filter(t => t.id !== id);
+            saveDayTaskTypes(updatedTypes);
+            setDayTaskTypes(updatedTypes);
+            const updatedTasks = dayTasks.map(t => t.typeId === id ? { ...t, typeId: null } : t);
+            saveDayTasksStore(selectedDate, updatedTasks);
+            setDayTasks(updatedTasks);
             if (selectedTypeId === id) setSelectedTypeId("all");
           };
 
