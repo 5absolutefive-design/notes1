@@ -1764,14 +1764,14 @@ export default function Home() {
                 {/* ── RIGHT panel ── */}
                 <div className="flex-[3] flex-shrink-0 flex flex-col gap-4 overflow-hidden">
 
-                  {/* Clock card — analog clock + empty right half */}
+                  {/* Clock card — orbital clock + digital time */}
                   <div className="bg-white rounded-2xl border border-stone-200 flex-shrink-0 flex items-center">
-                    <div className="flex-1 flex items-center justify-center p-5">
-                      <div className="w-[150px] h-[150px]" style={{ overflow: "visible" }}>
+                    <div className="flex-1 flex items-center justify-center p-6">
+                      <div className="w-[180px] h-[180px]" style={{ overflow: "visible" }}>
                         <OrbitalClock24 />
                       </div>
                     </div>
-                    <div className="flex-1 flex flex-col items-center justify-center p-4 border-l border-stone-100">
+                    <div className="flex-1 flex flex-col items-center justify-center p-5 border-l border-stone-100">
                       <div className="text-2xl font-bold text-stone-800 tabular-nums leading-tight">
                         {clockNow.toLocaleTimeString("en-US", { hour: "2-digit", minute: "2-digit", hour12: true })}
                       </div>
