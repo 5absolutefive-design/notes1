@@ -264,7 +264,7 @@ function MiniCalendar({ year, month, selectedDate, onSelectDate, markedDates }: 
               key={d}
               onClick={() => onSelectDate(dateStr)}
               className={`text-xs rounded-full w-7 h-7 flex items-center justify-center mx-auto transition-colors
-                ${isSel ? "bg-stone-800 text-white font-bold" : isToday ? "bg-blue-100 text-blue-700 font-semibold" : hasSchedule ? "bg-stone-800 text-white font-bold" : "text-stone-600 hover:bg-stone-100"}`}
+                ${isSel ? "bg-stone-800 text-white font-bold" : isToday ? "bg-blue-100 text-blue-700 font-semibold" : hasSchedule ? "border-2 border-stone-300 text-stone-700 font-semibold bg-stone-50" : "text-stone-600 hover:bg-stone-100"}`}
             >
               {d}
             </button>
