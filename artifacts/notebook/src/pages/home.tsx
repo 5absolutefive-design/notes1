@@ -1837,7 +1837,7 @@ export default function Home() {
                         ) : (
                           <button
                             onClick={() => setShowTypeInput(true)}
-                            className="col-span-2 w-full flex items-center justify-center py-2 rounded-lg bg-stone-100 hover:bg-stone-200 transition-colors text-stone-400 hover:text-stone-600 text-lg font-light leading-none"
+                            className="w-full flex items-center justify-center py-2 rounded-lg bg-stone-100 hover:bg-stone-200 transition-colors text-stone-400 hover:text-stone-600 text-lg font-light leading-none"
                           >
                             +
                           </button>
