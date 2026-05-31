@@ -2175,7 +2175,7 @@ export default function Home() {
                         value={dayNotes[h] ?? ""}
                         onChange={e => updateScheduleNote(scheduleDate, h, e.target.value)}
                         placeholder=""
-                        className="w-full px-3 py-2.5 text-xs text-stone-700 outline-none bg-transparent"
+                        className="w-full px-3 py-1 text-xs text-stone-700 outline-none bg-transparent"
                       />
                     </div>
                   </div>
