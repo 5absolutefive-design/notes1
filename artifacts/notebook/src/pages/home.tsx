@@ -1544,8 +1544,15 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* RIGHT: Mini note cards */}
-              <div className="flex-1 w-full overflow-y-auto pr-1" style={{ maxHeight: "788px" }}>
+              {/* RIGHT: Mini note cards — wrapped in main card */}
+              <div className="flex-1 w-full bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden flex flex-col" style={{ height: "788px" }}>
+                {/* Header */}
+                <div className="flex-shrink-0 px-4 py-2.5 border-b border-stone-100 flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-stone-400 uppercase tracking-widest">Notes</span>
+                  <span className="text-[10px] text-stone-300">{filteredNotes.length} total</span>
+                </div>
+                {/* Scrollable list */}
+                <div className="flex-1 overflow-y-auto px-3 py-3">
                 <div className="flex flex-col gap-3">
                 {filteredNotes.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-20 text-stone-300 gap-3">
@@ -1650,6 +1657,7 @@ export default function Home() {
                     </div>
                   );
                 })}
+                </div>
                 </div>
               </div>
 
