@@ -1831,8 +1831,43 @@ export default function Home() {
                         <OrbitalClock24 />
                       </div>
                     </div>
-                    {/* Part 2 — info (coming soon) */}
-                    <div className="flex-1 border-l border-stone-100" />
+                    {/* Part 2 — Task countdown */}
+                    <div className="flex-1 border-l border-stone-100 flex flex-col overflow-hidden">
+                      <p className="text-[9px] font-bold text-stone-400 tracking-widest uppercase px-3 pt-3 pb-2 flex-shrink-0">Time Left</p>
+                      <div className="flex-1 overflow-y-auto px-2 pb-3 flex flex-col gap-1.5">
+                        {filteredTasks.filter(t => t.hasTime).length === 0 ? (
+                          <div className="flex items-center justify-center h-full">
+                            <p className="text-[10px] text-stone-300 text-center leading-relaxed">No timed<br/>tasks</p>
+                          </div>
+                        ) : (
+                          filteredTasks.filter(t => t.hasTime).map((task, idx) => {
+                            const [y, mo, d] = selectedDate.split("-").map(Number);
+                            const h12 = parseInt(task.hour || "12");
+                            const min = parseInt(task.minute || "00");
+                            const h24 = task.ampm === "PM" ? (h12 === 12 ? 12 : h12 + 12) : (h12 === 12 ? 0 : h12);
+                            const taskDate = new Date(y, mo - 1, d, h24, min, 0, 0);
+                            const diffMs = taskDate.getTime() - clockNow.getTime();
+                            const diffMin = Math.floor(diffMs / 60000);
+                            const isOverdue = diffMin < 0;
+                            const absMin = Math.abs(diffMin);
+                            const hrs = Math.floor(absMin / 60);
+                            const mins = absMin % 60;
+                            const timeLabel = hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`;
+                            return (
+                              <div key={task.id} className="flex flex-col rounded-lg px-2 py-1.5 border" style={{ backgroundColor: isOverdue ? "#fff5f5" : "#f8faf8", borderColor: isOverdue ? "#fecaca" : "#d1fae5" }}>
+                                <div className="flex items-center gap-1">
+                                  <span className="text-[8px] font-bold text-stone-400 flex-shrink-0">T{idx + 1}</span>
+                                  <span className="text-[9px] font-medium text-stone-600 flex-1 truncate">{task.title || "Untitled"}</span>
+                                </div>
+                                <span className={`text-[10px] font-bold tabular-nums mt-0.5 ${isOverdue ? "text-red-400" : "text-emerald-500"}`}>
+                                  {isOverdue ? `−${timeLabel} ago` : timeLabel}
+                                </span>
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                    </div>
                   </div>
 
                   {/* TASK TYPE section */}
