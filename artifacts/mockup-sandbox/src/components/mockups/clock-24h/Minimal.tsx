@@ -118,22 +118,7 @@ function Clock24Minimal({ now }: { now: Date }) {
         <circle cx={cx} cy={cy} r="5" fill="#374151" />
         <circle cx={cx} cy={cy} r="2.5" fill="#f59e0b" />
 
-        {/* Hour digit */}
-        <text
-          x={cx} y={cy + 30}
-          textAnchor="middle" fontSize="20" fontWeight="800"
-          fill="#374151" fontFamily="system-ui, sans-serif" opacity="0.85"
-        >
-          {pad(h)}
-        </text>
       </svg>
-
-      <div className="text-2xl font-mono font-bold text-gray-700 tracking-widest">
-        {pad(h)}:{pad(m)}:{pad(s)}
-      </div>
-      <div className="text-[11px] text-gray-400 tracking-widest uppercase">
-        {now.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
-      </div>
     </div>
   );
 }
@@ -147,10 +132,8 @@ export function Minimal() {
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center">
-      <div className="bg-white rounded-3xl shadow-xl border border-gray-100 px-10 py-8 flex flex-col items-center gap-2">
-        <p className="text-[9px] font-bold text-gray-400 tracking-[0.25em] uppercase mb-1">24-Hour Sector Clock</p>
+      <div className="bg-white rounded-3xl shadow-xl border border-gray-100 p-6 flex items-center justify-center">
         <Clock24Minimal now={now} />
-        <p className="text-[9px] text-gray-300 tracking-widest mt-1">Off-white = elapsed · White = remaining</p>
       </div>
     </div>
   );

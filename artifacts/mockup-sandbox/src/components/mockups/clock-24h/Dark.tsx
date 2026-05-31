@@ -135,30 +135,7 @@ function Clock24Dark({ now }: { now: Date }) {
         <circle cx={cx} cy={cy} r="6" fill="#0f172a" stroke="white" strokeWidth="1.5" />
         <circle cx={cx} cy={cy} r="2.5" fill="#fbbf24" />
 
-        {/* Hour digit */}
-        <text
-          x={cx} y={cy + 28}
-          textAnchor="middle" fontSize="20" fontWeight="900"
-          fill="white" fontFamily="'Courier New', monospace" opacity="0.9"
-          style={{ filter: `drop-shadow(0 0 5px ${sectorColor})` }}
-        >
-          {pad(h)}
-        </text>
       </svg>
-
-      <div className="font-mono text-2xl font-bold tracking-widest"
-        style={{ color: sectorColor, textShadow: `0 0 12px ${sectorGlow}` }}>
-        {pad(h)}:{pad(m)}:{pad(s)}
-      </div>
-
-      <div className="flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full"
-          style={{ backgroundColor: sectorColor, boxShadow: `0 0 6px ${sectorColor}` }} />
-        <span className="text-[10px] font-bold tracking-[0.2em]"
-          style={{ color: sectorColor }}>{isDay ? "DAY" : "NIGHT"}</span>
-        <span className="text-[10px] text-slate-500">·</span>
-        <span className="text-[10px] text-slate-400 tracking-widest">24H SECTOR</span>
-      </div>
     </div>
   );
 }
@@ -173,11 +150,9 @@ export function Dark() {
   return (
     <div className="min-h-screen flex items-center justify-center"
       style={{ background: "radial-gradient(ellipse at 50% 30%, #0f1f3d 0%, #060b17 100%)" }}>
-      <div className="flex flex-col items-center gap-3 px-10 py-8 rounded-3xl"
+      <div className="p-6 rounded-3xl flex items-center justify-center"
         style={{ background: "rgba(15,23,42,0.9)", border: "1px solid #1e3a5f", boxShadow: "0 0 40px #1e3a5f55, 0 20px 60px #00000088" }}>
-        <p className="text-[9px] font-bold tracking-[0.3em] text-slate-500 uppercase mb-1">24-Hour Sector Clock</p>
         <Clock24Dark now={now} />
-        <p className="text-[9px] text-slate-600 tracking-widest mt-1">Red = day · Purple = night</p>
       </div>
     </div>
   );
