@@ -1803,7 +1803,7 @@ export default function Home() {
                   </div>
 
                   {/* TASK TYPE section */}
-                  <div className="bg-white rounded-2xl border border-stone-200 flex-[3] flex flex-col overflow-hidden">
+                  <div className="bg-white rounded-2xl border border-stone-200 flex-[3] flex flex-col">
                     <div className="px-5 pt-5 pb-3 flex-shrink-0">
                       <h3 className="text-sm font-bold text-stone-700 tracking-[0.15em]">TASK TYPE</h3>
                     </div>
