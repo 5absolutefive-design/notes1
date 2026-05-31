@@ -1853,7 +1853,7 @@ export default function Home() {
                             const absMin = Math.abs(diffMin);
                             const hrs = Math.floor(absMin / 60);
                             const mins = absMin % 60;
-                            const timeLabel = isOverdue ? "Time Up" : (hrs > 0 ? `${hrs} Hour ${mins} Minutes` : `${mins} Minutes`);
+                            const timeLabel = isOverdue ? "Time Up" : (hrs > 0 ? `${hrs} H . ${mins} M` : `${mins} M`);
                             return (
                               <div key={task.id} className="flex items-center gap-1.5 rounded-lg px-2.5 py-2 border" style={{ backgroundColor: isOverdue ? "#fff5f5" : "#f8faf8", borderColor: isOverdue ? "#fecaca" : "#d1fae5" }}>
                                 <span className="text-[11px] font-bold text-stone-400 flex-shrink-0">T{idx + 1}</span>
