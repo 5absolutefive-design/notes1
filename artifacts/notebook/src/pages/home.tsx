@@ -173,11 +173,11 @@ function get7Days(today: Date) {
 }
 
 const DAY_PRIORITY_META: Record<NonNullable<DayPriority>, { label: string; color: string; bg: string; border: string; dot: string; rowBg: string; bar: string }> = {
-  low:       { label: "Low",       color: "#16a34a", bg: "#dcfce7", border: "#86efac", dot: "#22c55e", rowBg: "#f0fdf4", bar: "#22c55e" },
-  normal:    { label: "Normal",    color: "#6b7280", bg: "#f9fafb", border: "#9ca3af", dot: "#9ca3af", rowBg: "#f9fafb", bar: "#9ca3af" },
-  medium:    { label: "Medium",    color: "#2563eb", bg: "#eff6ff", border: "#93c5fd", dot: "#3b82f6", rowBg: "#eff6ff", bar: "#3b82f6" },
-  important: { label: "Important", color: "#ea580c", bg: "#fff7ed", border: "#fdba74", dot: "#f97316", rowBg: "#fff7ed", bar: "#f97316" },
-  urgent:    { label: "Urgent",    color: "#dc2626", bg: "#fef2f2", border: "#fca5a5", dot: "#ef4444", rowBg: "#fef2f2", bar: "#ef4444" },
+  low:       { label: "Low",       color: "#15803d", bg: "#bbf7d0", border: "#4ade80", dot: "#16a34a", rowBg: "#dcfce7", bar: "#16a34a" },
+  normal:    { label: "Normal",    color: "#374151", bg: "#e5e7eb", border: "#6b7280", dot: "#4b5563", rowBg: "#f3f4f6", bar: "#6b7280" },
+  medium:    { label: "Medium",    color: "#1d4ed8", bg: "#bfdbfe", border: "#60a5fa", dot: "#2563eb", rowBg: "#dbeafe", bar: "#2563eb" },
+  important: { label: "Important", color: "#c2410c", bg: "#fed7aa", border: "#fb923c", dot: "#ea580c", rowBg: "#ffedd5", bar: "#ea580c" },
+  urgent:    { label: "Urgent",    color: "#b91c1c", bg: "#fecaca", border: "#f87171", dot: "#dc2626", rowBg: "#fee2e2", bar: "#dc2626" },
 };
 // ─────────────────────────────────────────────────────────────
 
