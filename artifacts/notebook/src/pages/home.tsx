@@ -1545,7 +1545,7 @@ export default function Home() {
               </div>
 
               {/* RIGHT: Mini note cards — wrapped in main card */}
-              <div className="flex-1 w-full bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden flex flex-col" style={{ height: "788px" }}>
+              <div className="flex-1 w-full min-w-0 bg-white rounded-2xl border border-stone-200 shadow-sm overflow-hidden flex flex-col" style={{ height: "clamp(600px, 82vh, 788px)" }}>
                 {/* Header */}
                 <div className="flex-shrink-0 px-4 py-2.5 border-b border-stone-100 flex items-center justify-between">
                   <span className="text-[11px] font-bold text-stone-400 uppercase tracking-widest">Notes</span>
