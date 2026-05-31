@@ -10,14 +10,19 @@ export function FlatC() {
   };
 
   const [tasks, setTasks] = useState([
-    { id: 1, title: "Design new landing page", time: "10:00 AM", priority: "urgent" as const, progress: 75, done: false },
-    { id: 2, title: "Review pull request from team", time: "04:50 PM", priority: null, progress: 0, done: false },
-    { id: 3, title: "Update documentation files", time: "", priority: "low" as const, progress: 100, done: true },
-    { id: 4, title: "Setup CI/CD pipeline", time: "02:00 PM", priority: "medium" as const, progress: 30, done: false },
+    { id: 1, title: "Design new landing page", time: "10:00 AM", priority: "urgent" as const, progress: 75, done: false, note: "" },
+    { id: 2, title: "Review pull request from team", time: "04:50 PM", priority: null, progress: 0, done: false, note: "" },
+    { id: 3, title: "Update documentation files", time: "", priority: "low" as const, progress: 100, done: true, note: "Already pushed to main branch." },
+    { id: 4, title: "Setup CI/CD pipeline", time: "02:00 PM", priority: "medium" as const, progress: 30, done: false, note: "" },
   ]);
+
+  const [noteOpenId, setNoteOpenId] = useState<number | null>(null);
 
   const toggleDone = (id: number) =>
     setTasks(prev => prev.map(t => t.id === id ? { ...t, done: !t.done } : t));
+
+  const updateNote = (id: number, note: string) =>
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, note } : t));
 
   /* ── Fixed column widths (px) ── */
   const COL = {
@@ -44,8 +49,8 @@ export function FlatC() {
           const pm = task.priority ? pmeta[task.priority] : null;
 
           return (
+            <div key={task.id} className="relative">
             <div
-              key={task.id}
               className="flex items-center flex-shrink-0 overflow-hidden border border-stone-200 rounded-md"
               style={{
                 width: CARD_W,
@@ -99,9 +104,12 @@ export function FlatC() {
 
               {/* Note */}
               <div
-                className="flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch"
-                style={{ width: COL.note }}>
-                <span className="text-[11px] text-stone-500">Note</span>
+                className="flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch cursor-pointer select-none"
+                style={{ width: COL.note }}
+                onClick={() => setNoteOpenId(noteOpenId === task.id ? null : task.id)}>
+                <span className={`text-[11px] font-medium ${task.note ? "text-indigo-500" : "text-stone-400 hover:text-stone-600"}`}>
+                  Note{task.note && <span className="ml-1 w-1.5 h-1.5 rounded-full bg-indigo-400 inline-block align-middle" />}
+                </span>
               </div>
 
               {/* Time */}
@@ -148,6 +156,29 @@ export function FlatC() {
                   <path d="M1.5 3.5h10M4.5 1.5h4M3 3.5l.65 7.5h5.7L10 3.5" stroke="#f87171" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </div>
+            </div>
+
+            {/* Note popup — opens below the card */}
+            {noteOpenId === task.id && (
+              <div
+                className="absolute z-50 bg-white border border-stone-200 rounded-xl shadow-lg p-3 flex flex-col gap-2"
+                style={{ top: CARD_H + 6, left: COL.num + COL.check + COL.title - 4, width: 240 }}>
+                <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Note</p>
+                <textarea
+                  autoFocus
+                  value={task.note}
+                  onChange={e => updateNote(task.id, e.target.value)}
+                  placeholder="Write a note..."
+                  rows={3}
+                  className="w-full text-xs text-stone-700 border border-stone-200 rounded-lg p-2 outline-none resize-none focus:border-indigo-300 placeholder-stone-300"
+                />
+                <button
+                  onClick={() => setNoteOpenId(null)}
+                  className="text-[11px] font-bold text-white bg-stone-800 rounded-lg px-3 py-1.5 hover:bg-stone-700 w-full">
+                  Done
+                </button>
+              </div>
+            )}
             </div>
           );
         })}
