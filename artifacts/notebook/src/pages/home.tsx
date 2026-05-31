@@ -1668,7 +1668,7 @@ export default function Home() {
 
                                   {/* Trash */}
                                   <div className="w-11 flex items-center justify-center flex-shrink-0 self-stretch cursor-pointer"
-                                    onClick={e => { e.stopPropagation(); setNotePopupId(null); setTimePickerId(null); setPriorityMenuId(null); setProgressMenuId(null); setDeleteConfirmId(task.id); }}>
+                                    onClick={e => { e.stopPropagation(); if (e.ctrlKey) { deleteTask(task.id); setDeleteConfirmId(null); } else { setNotePopupId(null); setTimePickerId(null); setPriorityMenuId(null); setProgressMenuId(null); setDeleteConfirmId(task.id); } }}>
                                     <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
                                       <path d="M1.5 3.5h10M4.5 1.5h4M3 3.5l.65 7.5h5.7L10 3.5" stroke="#f87171" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
                                     </svg>
@@ -1680,6 +1680,7 @@ export default function Home() {
                                   <div className="absolute inset-0 z-50 flex items-center justify-center gap-3 rounded-md border border-red-200"
                                     style={{ backgroundColor: "rgba(255,241,241,0.97)" }}
                                     onClick={e => e.stopPropagation()}>
+                                    <span className="text-[9px] text-red-300 font-medium mr-1">Quick: Ctrl + Click</span>
                                     <span className="text-[12px] font-semibold text-red-600">Delete this task?</span>
                                     <button onClick={() => { deleteTask(task.id); setDeleteConfirmId(null); }}
                                       className="text-[11px] font-bold text-white bg-red-500 hover:bg-red-600 rounded-lg px-3 py-1 transition-colors">Yes</button>
