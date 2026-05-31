@@ -210,9 +210,11 @@ function MiniCalendar({ year, month, selectedDate, onSelectDate }: {
   const firstDay = new Date(year, month, 1).getDay();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const todayStr = new Date().toISOString().slice(0, 10);
+  const overflow = Math.max(0, firstDay + daysInMonth - 35);
   const cells: (number | null)[] = [];
-  for (let i = 0; i < firstDay; i++) cells.push(null);
-  for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+  for (let i = 0; i < firstDay - overflow; i++) cells.push(null);
+  for (let d = daysInMonth - overflow + 1; d <= daysInMonth; d++) cells.push(d);
+  for (let d = 1; d <= daysInMonth - overflow; d++) cells.push(d);
   return (
     <div className="bg-white rounded-xl border border-stone-200 p-4 shadow-sm h-full flex flex-col">
       <div className="text-sm font-bold text-stone-700 text-center mb-3 tracking-wide">
