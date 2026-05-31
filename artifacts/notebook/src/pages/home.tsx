@@ -1549,7 +1549,7 @@ export default function Home() {
             const updatedTypes = dayTaskTypes.filter(t => t.id !== id);
             saveDayTaskTypes(updatedTypes);
             setDayTaskTypes(updatedTypes);
-            const updatedTasks = dayTasks.map(t => t.typeId === id ? { ...t, typeId: null } : t);
+            const updatedTasks = dayTasks.filter(t => t.typeId !== id);
             saveDayTasksStore(selectedDate, updatedTasks);
             setDayTasks(updatedTasks);
             if (selectedTypeId === id) setSelectedTypeId("all");
