@@ -1573,16 +1573,26 @@ export default function Home() {
 
                   {/* Card header */}
                   <div className="flex-shrink-0 flex items-center justify-between px-5 py-3" style={{ borderBottom: "1px solid #d5d6de" }}>
-                    <span className="text-sm font-semibold text-stone-700">{selectedTypeName}</span>
-                    <div className="flex items-center gap-4 text-[11px] text-stone-400">
-                      <span>Total Task: <span className="font-semibold text-stone-600">{totalTasks}</span></span>
-                      <span>complete: <span className="font-semibold text-green-600">{completeTasks}</span></span>
-                      <span>Pending Task: <span className="font-semibold text-orange-500">{pendingTasks}</span></span>
-                      <button
-                        onClick={() => { addTask(); setNotePopupId(null); setProgressMenuId(null); setPriorityMenuId(null); setTimePickerId(null); }}
-                        className="ml-2 w-6 h-6 rounded-full bg-stone-800 text-white flex items-center justify-center text-base font-light hover:bg-stone-600 transition-colors leading-none"
-                      >+</button>
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-sm font-semibold text-stone-700">{selectedTypeName}</span>
+                      <div className="flex items-center gap-1.5">
+                        {[
+                          { label: "TT", value: totalTasks, color: "text-stone-600" },
+                          { label: "CT", value: completeTasks, color: "text-green-600" },
+                          { label: "PT", value: pendingTasks, color: "text-orange-500" },
+                        ].map(({ label, value, color }) => (
+                          <div key={label} className="flex items-center gap-1 px-2 py-0.5 rounded-md bg-white border border-stone-200 shadow-sm">
+                            <span className="text-[9px] font-bold text-stone-400">{label}</span>
+                            <span className="text-[9px] font-bold text-stone-300">:</span>
+                            <span className={`text-[10px] font-bold tabular-nums ${color}`}>{value}</span>
+                          </div>
+                        ))}
+                      </div>
                     </div>
+                    <button
+                      onClick={() => { addTask(); setNotePopupId(null); setProgressMenuId(null); setPriorityMenuId(null); setTimePickerId(null); }}
+                      className="w-6 h-6 rounded-full bg-stone-800 text-white flex items-center justify-center text-base font-light hover:bg-stone-600 transition-colors leading-none"
+                    >+</button>
                   </div>
 
                   {/* Task list */}
