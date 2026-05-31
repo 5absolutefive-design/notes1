@@ -1647,7 +1647,7 @@ export default function Home() {
                                   </div>
 
                                   {/* Note */}
-                                  <div className="w-16 flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch cursor-pointer select-none"
+                                  <div className="w-12 flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch cursor-pointer select-none"
                                     onClick={e => { e.stopPropagation(); const r = (e.currentTarget as HTMLElement).getBoundingClientRect(); setPopupPos({ top: r.bottom + 6, right: window.innerWidth - r.right }); setNotePopupId(notePopupId === task.id ? null : task.id); setTimePickerId(null); setPriorityMenuId(null); setProgressMenuId(null); setDeleteConfirmId(null); }}>
                                     <span className={`text-[11px] font-medium ${task.note ? "text-indigo-500" : "text-stone-400"}`}>
                                       Note{task.note && <span className="ml-1 w-1.5 h-1.5 rounded-full bg-indigo-400 inline-block align-middle" />}
@@ -1666,7 +1666,7 @@ export default function Home() {
                                   )}
 
                                   {/* Time */}
-                                  <div className="w-24 flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch cursor-pointer select-none"
+                                  <div className="w-[70px] flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch cursor-pointer select-none"
                                     onClick={e => { e.stopPropagation(); const r = (e.currentTarget as HTMLElement).getBoundingClientRect(); setPopupPos({ top: r.bottom + 6, right: window.innerWidth - r.right }); if (timePickerId !== task.id) { setTempHour(task.hour || "12"); setTempMinute(task.minute || "00"); setTempAmpm(task.ampm || "AM"); setTimePickerId(task.id); setPriorityMenuId(null); setNotePopupId(null); setProgressMenuId(null); setDeleteConfirmId(null); } else { setTimePickerId(null); } }}>
                                     <span className={`text-[11px] tabular-nums ${!task.hasTime ? "text-stone-300" : "text-stone-600"}`}>
                                       {task.hasTime ? `${task.hour}:${task.minute} ${task.ampm}` : "--:-- --"}
@@ -1699,7 +1699,7 @@ export default function Home() {
                                   )}
 
                                   {/* Priority */}
-                                  <div className="w-[88px] flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch cursor-pointer select-none"
+                                  <div className="w-[70px] flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch cursor-pointer select-none"
                                     onClick={e => { e.stopPropagation(); const r = (e.currentTarget as HTMLElement).getBoundingClientRect(); setPopupPos({ top: r.bottom + 6, right: window.innerWidth - r.right }); setPriorityMenuId(priorityMenuId === task.id ? null : task.id); setTimePickerId(null); setNotePopupId(null); setProgressMenuId(null); setDeleteConfirmId(null); }}>
                                     <span className="text-[11px] font-semibold" style={pm ? { color: pm.color } : { color: "#c8c4bf" }}>
                                       {pm ? pm.label : "N/A"}
