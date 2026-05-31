@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en" style="height:100%;margin:0;padding:0;">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>24-Hour Orbital Clock</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    height: 100%; width: 100%;
+    background: #f3f4f6;
+    display: flex; align-items: center; justify-content: center;
+    font-family: system-ui, sans-serif;
+    overflow: hidden;
+  }
+  .card {
+    background: #ffffff;
+    border-radius: 2rem;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.10), 0 4px 16px rgba(0,0,0,0.06);
+    border: 1px solid #f1f0ee;
+    padding: 2.5rem;
+    overflow: visible;
+  }
+  svg { overflow: visible; display: block; }
+</style>
+</head>
+<body>
+<div class="card">
+  <svg id="clock" width="320" height="320" viewBox="0 0 320 320" overflow="visible"></svg>
+</div>
+
+<script>
+const SVG_NS = "http://www.w3.org/2000/svg";
+const cx = 160, cy = 160, R = 120;
+const orbitR = R + 22;
+
+function el(tag, attrs) {
+  const e = document.createElementNS(SVG_NS, tag);
+  for (const [k, v] of Object.entries(attrs)) e.setAttribute(k, v);
+  return e;
+}
+
+function polarXY(deg, r, ox = cx, oy = cy) {
+  const rad = (deg - 90) * Math.PI / 180;
+  return [ox + r * Math.cos(rad), oy + r * Math.sin(rad)];
+}
+
+function sectorPath(startDeg, sweepDeg) {
+  if (sweepDeg <= 0) return "";
+  if (sweepDeg >= 359.99) {
+    return `M ${cx} ${cy} m -${R} 0 a ${R} ${R} 0 1 0 ${R*2} 0 a ${R} ${R} 0 1 0 -${R*2} 0`;
+  }
+  const [sx, sy] = polarXY(startDeg, R);
+  const [ex, ey] = polarXY(startDeg + sweepDeg, R);
+  const large = sweepDeg > 180 ? 1 : 0;
+  return `M ${cx} ${cy} L ${sx} ${sy} A ${R} ${R} 0 ${large} 1 ${ex} ${ey} Z`;
+}
+
+// Build static parts once
+const svg = document.getElementById("clock");
+
+// Background circle
+svg.appendChild(el("circle", { cx, cy, r: R, fill: "#ffffff", stroke: "#d6d3ce", "stroke-width": "1.5" }));
+
+// Sector paths (will be updated)
+const elapsedPath = el("path", { fill: "#e8e4db" });
+svg.appendChild(elapsedPath);
+
+// Hour sector divider line (updated each frame)
+const sectorLine = el("line", { stroke: "#d6d3ce", "stroke-width": "1.2", opacity: "0.7" });
+svg.appendChild(sectorLine);
+
+// Circle border on top
+svg.appendChild(el("circle", { cx, cy, r: R, fill: "none", stroke: "#d6d3ce", "stroke-width": "1.5" }));
+
+// Ticks + labels
+for (let i = 0; i < 24; i++) {
+  const angle = i * 15;
+  const isMajor = i % 3 === 0;
+  const outer = R - 2;
+  const inner = outer - (isMajor ? 13 : 5);
+  const [x1, y1] = polarXY(angle, outer);
+  const [x2, y2] = polarXY(angle, inner);
+  svg.appendChild(el("line", {
+    x1, y1, x2, y2,
+    stroke: "#9ca3af",
+    "stroke-width": isMajor ? "1.8" : "1",
+    "stroke-linecap": "round",
+    opacity: isMajor ? "0.75" : "0.4"
+  }));
+  if (isMajor) {
+    const label = i === 0 ? "24" : String(i);
+    const [lx, ly] = polarXY(angle, inner - 13);
+    const t = el("text", {
+      x: lx, y: ly,
+      "text-anchor": "middle",
+      "dominant-baseline": "central",
+      "font-size": "10",
+      "font-weight": "600",
+      fill: "#6b7280",
+      "font-family": "system-ui, sans-serif"
+    });
+    t.textContent = label;
+    svg.appendChild(t);
+  }
+}
+
+// Minute hand
+const minHand = el("line", {
+  x1: cx, y1: cy,
+  x2: cx, y2: cy - 85,
+  stroke: "#374151",
+  "stroke-width": "2.5",
+  "stroke-linecap": "round"
+});
+svg.appendChild(minHand);
+
+// Center dot
+svg.appendChild(el("circle", { cx, cy, r: "5", fill: "#374151" }));
+
+// Orbit track (subtle dashed circle)
+svg.appendChild(el("circle", {
+  cx, cy, r: orbitR,
+  fill: "none",
+  stroke: "#d1d5db",
+  "stroke-width": "1",
+  "stroke-dasharray": "2 4",
+  opacity: "0.5"
+}));
+
+// Orbiting ball (second indicator)
+const orbitDot = el("circle", { r: "7.5", fill: "#1f2937" });
+svg.appendChild(orbitDot);
+
+// Smooth glow ring around orbit ball
+const orbitGlow = el("circle", { r: "11", fill: "none", stroke: "#374151", "stroke-width": "1.5", opacity: "0.15" });
+svg.appendChild(orbitGlow);
+
+function draw() {
+  const now = new Date();
+  const h = now.getHours();
+  const m = now.getMinutes();
+  const s = now.getSeconds();
+  const ms = now.getMilliseconds();
+
+  const secSmooth = s + ms / 1000;
+  const minSmooth = m + secSmooth / 60;
+  const hourSmooth = h + minSmooth / 60;
+
+  // 24h clock: full circle = 24 hours, so 1 hour = 15 degrees
+  const hourDeg = hourSmooth * 15;   // 0–360 over 24h
+  const minDeg  = minSmooth * 6;     // 0–360 over 60 min
+  const secDeg  = secSmooth * 6;     // 0–360 over 60 sec
+
+  // Shaded sector: from top (0°) to current hour angle
+  const sweep = Math.max(0.01, Math.min(hourDeg, 359.99));
+  elapsedPath.setAttribute("d", sectorPath(0, sweep));
+
+  // Hour sector divider line (from center to rim)
+  const [lx, ly] = polarXY(hourDeg, R);
+  sectorLine.setAttribute("x1", cx);
+  sectorLine.setAttribute("y1", cy);
+  sectorLine.setAttribute("x2", lx);
+  sectorLine.setAttribute("y2", ly);
+
+  // Minute hand
+  const [mx, my] = polarXY(minDeg, 85);
+  minHand.setAttribute("x2", mx);
+  minHand.setAttribute("y2", my);
+
+  // Orbiting second ball
+  const [ox, oy] = polarXY(secDeg, orbitR);
+  orbitDot.setAttribute("cx", ox);
+  orbitDot.setAttribute("cy", oy);
+  orbitGlow.setAttribute("cx", ox);
+  orbitGlow.setAttribute("cy", oy);
+
+  requestAnimationFrame(draw);
+}
+
+requestAnimationFrame(draw);
+</script>
+</body>
+</html>
