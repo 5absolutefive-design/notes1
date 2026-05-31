@@ -231,7 +231,7 @@ const SLOT_COLORS = [
 
 function MiniCalendar({ year, month, selectedDate, onSelectDate, markedDates }: {
   year: number; month: number; selectedDate: string; onSelectDate: (d: string) => void;
-  markedDates?: Set<string>;
+  markedDates?: Map<string, string>;
 }) {
   const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
   const firstDay = new Date(year, month, 1).getDay();
@@ -258,13 +258,15 @@ function MiniCalendar({ year, month, selectedDate, onSelectDate, markedDates }: 
           const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
           const isSel = dateStr === selectedDate;
           const isToday = dateStr === todayStr;
-          const hasSchedule = markedDates?.has(dateStr) ?? false;
+          const scheduleBorderColor = markedDates?.get(dateStr);
+          const hasSchedule = !!scheduleBorderColor;
           return (
             <button
               key={d}
               onClick={() => onSelectDate(dateStr)}
               className={`text-xs rounded-full w-7 h-7 flex items-center justify-center mx-auto transition-colors
-                ${isSel ? "bg-stone-800 text-white font-bold" : isToday ? "bg-blue-100 text-blue-700 font-semibold" : hasSchedule ? "border-2 border-stone-300 text-stone-700 font-semibold bg-stone-50" : "text-stone-600 hover:bg-stone-100"}`}
+                ${isSel ? "bg-stone-800 text-white font-bold" : isToday ? "bg-blue-100 text-blue-700 font-semibold" : hasSchedule ? "text-stone-700 font-semibold bg-stone-50" : "text-stone-600 hover:bg-stone-100"}`}
+              style={hasSchedule && !isSel && !isToday ? { border: `2px solid ${scheduleBorderColor}` } : undefined}
             >
               {d}
             </button>
@@ -2241,6 +2243,23 @@ export default function Home() {
             });
           })();
 
+          const calMarkedDates = (() => {
+            const map = new Map<string, string>();
+            const priorityOrder = SLOT_COLORS.map(c => c.bg);
+            const dotByBg: Record<string, string> = Object.fromEntries(SLOT_COLORS.map(c => [c.bg, c.dot]));
+            Object.keys(scheduleData).forEach(date => {
+              const slots = scheduleData[date];
+              if (!slots || !Object.values(slots).some(v => v && v.trim() !== "")) return;
+              const cellColors = Object.values(scheduleCellColors[date] ?? {});
+              let borderColor = "#a8a29e";
+              for (const bg of priorityOrder) {
+                if (cellColors.includes(bg)) { borderColor = dotByBg[bg]; break; }
+              }
+              map.set(date, borderColor);
+            });
+            return map;
+          })();
+
           const customTimesForDate = scheduleCustomTimes[scheduleDate] ?? {};
 
           const getDisplayTime = (h: number) => customTimesForDate[h] ?? formatHour(h);
@@ -2592,10 +2611,7 @@ export default function Home() {
                         month={month}
                         selectedDate={scheduleDate}
                         onSelectDate={setScheduleDate}
-                        markedDates={new Set(Object.keys(scheduleData).filter(date => {
-                          const slots = scheduleData[date];
-                          return slots && Object.values(slots).some(v => v && v.trim() !== "");
-                        }))}
+                        markedDates={calMarkedDates}
                       />
                     </div>
                   ))}
