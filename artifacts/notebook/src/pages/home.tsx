@@ -375,7 +375,7 @@ export default function Home() {
   const [tempMinute, setTempMinute] = useState("00");
   const [tempAmpm, setTempAmpm] = useState<"AM" | "PM">("AM");
   const [cloneMode, setCloneMode] = useState(false);
-  const [cloneTargetDate, setCloneTargetDate] = useState<string | null>(null);
+  const [cloneTargetDates, setCloneTargetDates] = useState<string[]>([]);
 
   const popupRef = useRef<HTMLDivElement>(null);
   const imgInputRef = useRef<HTMLInputElement>(null);
@@ -1961,49 +1961,40 @@ export default function Home() {
                     {/* Header row: ToDay label + Clone/Done buttons */}
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-[9px] font-bold text-stone-400 tracking-widest uppercase">
-                        {cloneMode ? (cloneTargetDate ? "Click Done to Clone →" : "Select Target Date") : "ToDay"}
+                        {cloneMode ? (cloneTargetDates.length > 0 ? `${cloneTargetDates.length} date selected` : "Select Dates") : "ToDay"}
                       </p>
                       <div className="flex items-center gap-1.5">
-                        {cloneMode && cloneTargetDate && (
+                        {cloneMode && cloneTargetDates.length > 0 && (
                           <button
                             onClick={() => {
-                              // Clone: copy all dayTasks + task types to target date with new IDs
-                              const existingTargetTasks = loadDayTasks(cloneTargetDate);
-                              const existingTargetTypes = loadDayTaskTypes();
-                              // Merge task types (add ones that don't exist by name)
-                              let mergedTypes = [...existingTargetTypes];
+                              let mergedTypes = [...loadDayTaskTypes()];
                               const typeIdMap: Record<number, number> = {};
                               for (const t of dayTaskTypes) {
                                 const existing = mergedTypes.find(et => et.name === t.name);
-                                if (existing) {
-                                  typeIdMap[t.id] = existing.id;
-                                } else {
-                                  const newId = nextTypeId(mergedTypes);
-                                  mergedTypes = [...mergedTypes, { id: newId, name: t.name }];
-                                  typeIdMap[t.id] = newId;
-                                }
+                                if (existing) { typeIdMap[t.id] = existing.id; }
+                                else { const newId = nextTypeId(mergedTypes); mergedTypes = [...mergedTypes, { id: newId, name: t.name }]; typeIdMap[t.id] = newId; }
                               }
                               saveDayTaskTypes(mergedTypes);
                               setDayTaskTypes(mergedTypes);
-                              // Clone tasks with new IDs and remapped typeIds
-                              let idCounter = nextDayTaskId(existingTargetTasks);
-                              const clonedTasks: DayTask[] = dayTasks.map(task => ({
-                                ...task,
-                                id: idCounter++,
-                                typeId: task.typeId != null ? (typeIdMap[task.typeId] ?? task.typeId) : null,
-                                done: false,
-                              }));
-                              const merged = [...existingTargetTasks, ...clonedTasks];
-                              saveDayTasksStore(cloneTargetDate, merged);
+                              for (const targetDate of cloneTargetDates) {
+                                const existingTargetTasks = loadDayTasks(targetDate);
+                                let idCounter = nextDayTaskId(existingTargetTasks);
+                                const clonedTasks: DayTask[] = dayTasks.map(task => ({
+                                  ...task, id: idCounter++,
+                                  typeId: task.typeId != null ? (typeIdMap[task.typeId] ?? task.typeId) : null,
+                                  done: false,
+                                }));
+                                saveDayTasksStore(targetDate, [...existingTargetTasks, ...clonedTasks]);
+                              }
                               setCloneMode(false);
-                              setCloneTargetDate(null);
+                              setCloneTargetDates([]);
                             }}
                             className="text-[10px] font-bold px-2.5 py-1 rounded-lg text-white transition-all"
                             style={{ backgroundColor: "#22c55e", boxShadow: "0 0 8px #22c55e66" }}
                           >Done</button>
                         )}
                         <button
-                          onClick={() => { setCloneMode(m => !m); setCloneTargetDate(null); }}
+                          onClick={() => { setCloneMode(m => !m); setCloneTargetDates([]); }}
                           className="text-[10px] font-bold px-2.5 py-1 rounded-lg border transition-all"
                           style={cloneMode
                             ? { backgroundColor: "#3b82f6", color: "#fff", borderColor: "transparent", boxShadow: "0 0 12px #3b82f688", animation: "pulse-blue 1.4s ease-in-out infinite" }
@@ -2014,22 +2005,11 @@ export default function Home() {
 
                     <style>{`@keyframes pulse-blue { 0%,100%{filter:brightness(1)} 50%{filter:brightness(1.3)} }`}</style>
 
-                    {/* ToDay button */}
+                    {/* ToDay button — always normal, no clone interaction */}
                     <button
-                      onClick={() => cloneMode ? setCloneTargetDate(days[0].key) : setSelectedDate(days[0].key)}
-                      className={`flex flex-col items-center justify-center rounded-lg border transition-all shadow-sm hover:-translate-y-[2px] hover:shadow-md ${
-                        cloneMode
-                          ? cloneTargetDate === days[0].key
-                            ? "bg-blue-500 text-white border-transparent"
-                            : "border-blue-300 text-blue-500 bg-blue-50 hover:bg-blue-100"
-                          : selectedDate === days[0].key
-                            ? "bg-stone-800 text-white border-transparent"
-                            : "border-stone-300 text-stone-600 bg-white"
-                      }`}
-                      style={{
-                        width: "calc(100% * 2 / 15 * 0.7)", aspectRatio: "1 / 1",
-                        ...(cloneMode && cloneTargetDate === days[0].key ? { boxShadow: "0 0 10px #3b82f688" } : {})
-                      }}
+                      onClick={() => setSelectedDate(days[0].key)}
+                      className={`flex flex-col items-center justify-center rounded-lg border transition-all shadow-sm hover:-translate-y-[2px] hover:shadow-md ${selectedDate === days[0].key ? "bg-stone-800 text-white border-transparent" : "border-stone-300 text-stone-600 bg-white"}`}
+                      style={{ width: "calc(100% * 2 / 15 * 0.7)", aspectRatio: "1 / 1" }}
                     >
                       <span className="text-[5px] font-bold uppercase leading-none">{days[0].day}</span>
                       <span className="text-[8px] font-bold tabular-nums mt-0.5">{days[0].label}</span>
@@ -2039,12 +2019,20 @@ export default function Home() {
                     <p className="text-[9px] font-bold text-stone-400 tracking-widest uppercase mt-4 mb-2 text-center">Next 14 Days</p>
                     <div style={{ display: "grid", gridTemplateColumns: "repeat(14, 1fr)", gridTemplateRows: "1fr 1fr", gap: "4px" }}>
                       {days.slice(1).map((d, i) => {
-                        const isCloneTarget = cloneMode && cloneTargetDate === d.key;
+                        const isCloneTarget = cloneMode && cloneTargetDates.includes(d.key);
                         const isSelected = !cloneMode && selectedDate === d.key;
                         return (
                           <button
                             key={d.key}
-                            onClick={() => cloneMode ? setCloneTargetDate(d.key) : setSelectedDate(d.key)}
+                            onClick={() => {
+                              if (cloneMode) {
+                                setCloneTargetDates(prev =>
+                                  prev.includes(d.key) ? prev.filter(x => x !== d.key) : [...prev, d.key]
+                                );
+                              } else {
+                                setSelectedDate(d.key);
+                              }
+                            }}
                             style={{
                               gridColumn: i + 1, gridRow: i % 2 === 0 ? 1 : 2, aspectRatio: "1 / 1",
                               transform: i % 2 === 0 ? "translateY(-4px)" : "none",
@@ -2053,11 +2041,9 @@ export default function Home() {
                             className={`flex flex-col items-center justify-center rounded-lg border transition-all shadow-sm hover:-translate-y-[2px] hover:shadow-md ${
                               isCloneTarget
                                 ? "bg-blue-500 text-white border-transparent"
-                                : cloneMode
-                                  ? "border-blue-200 text-blue-400 bg-blue-50 hover:bg-blue-100"
-                                  : isSelected
-                                    ? "bg-stone-800 text-white border-transparent"
-                                    : "border-stone-300 text-stone-600 bg-white"
+                                : isSelected
+                                  ? "bg-stone-800 text-white border-transparent"
+                                  : "border-stone-300 text-stone-600 bg-white"
                             }`}
                           >
                             <span className="text-[6px] font-bold uppercase leading-none">{d.day}</span>
