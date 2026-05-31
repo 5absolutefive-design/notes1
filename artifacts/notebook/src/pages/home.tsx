@@ -1302,11 +1302,11 @@ export default function Home() {
             </div>
 
             {/* Two-panel layout */}
-            <div className="flex gap-5 items-start">
+            <div className="flex flex-col xl:flex-row gap-5 items-start">
 
               {/* LEFT: Big note form */}
-              <div className="w-[58%] flex-shrink-0">
-                <div className="bg-stone-50 rounded-2xl flex flex-col overflow-visible" style={{ minHeight: 780, boxShadow: "0 8px 40px 0 rgba(0,0,0,0.10), 0 2px 8px 0 rgba(0,0,0,0.06)" }}>
+              <div className="w-full xl:w-[58%] xl:flex-shrink-0">
+                <div className="bg-stone-50 rounded-2xl flex flex-col overflow-visible" style={{ minHeight: "clamp(480px, 60vh, 780px)", boxShadow: "0 8px 40px 0 rgba(0,0,0,0.10), 0 2px 8px 0 rgba(0,0,0,0.06)" }}>
 
                     {/* Form header */}
                     <div className="relative flex items-center justify-between px-6 py-4">
@@ -1390,7 +1390,7 @@ export default function Home() {
                     <div
                       ref={noteBodyRef}
                       className="flex-1 mx-5 mb-0 border border-stone-100 rounded-xl overflow-hidden flex flex-col relative"
-                      style={{ minHeight: 500 }}
+                      style={{ minHeight: "clamp(260px, 35vh, 500px)" }}
                     >
                       <textarea
                         ref={noteTextareaRef}
@@ -1399,7 +1399,7 @@ export default function Home() {
                         placeholder="Write your note here..."
                         className="flex-1 w-full px-4 py-3 text-sm text-stone-600 outline-none bg-white resize-none placeholder:text-stone-300 leading-relaxed"
                         onKeyDown={(e) => { if (e.key === "Enter" && e.ctrlKey) { selectedNoteId !== null ? handleSaveSelectedNote() : handleCreateNote(); } }}
-                        style={{ minHeight: 500 }}
+                        style={{ minHeight: "clamp(260px, 35vh, 500px)" }}
                       />
                       {/* Floating images inside body */}
                       {newNoteImages.map((img, idx) => (
@@ -1545,7 +1545,7 @@ export default function Home() {
               </div>
 
               {/* RIGHT: Mini note cards */}
-              <div className="flex-1 overflow-y-auto max-h-[780px] pr-1">
+              <div className="flex-1 w-full overflow-y-auto pr-1" style={{ maxHeight: "clamp(400px, 60vh, 780px)" }}>
                 <div className="flex flex-col gap-3">
                 {filteredNotes.length === 0 && (
                   <div className="flex flex-col items-center justify-center py-20 text-stone-300 gap-3">
