@@ -1805,8 +1805,16 @@ export default function Home() {
 
                   {/* TASK TYPE section */}
                   <div className="bg-white rounded-2xl border border-stone-200 flex-[3] flex flex-col">
-                    <div className="px-5 pt-5 pb-3 flex-shrink-0">
+                    <div className="px-5 pt-5 pb-3 flex-shrink-0 flex items-center justify-between">
                       <h3 className="text-sm font-bold text-stone-700 tracking-[0.15em]">TASK TYPE</h3>
+                      <button
+                        onClick={() => setSelectedTypeId("all")}
+                        style={{ width: 20, height: 40 }}
+                        className={`flex-shrink-0 flex flex-col items-center justify-center rounded-md border transition-all shadow-sm ${selectedTypeId === "all" ? "bg-stone-800 text-white border-transparent" : "border-stone-300 text-stone-500 bg-white hover:-translate-y-[2px] hover:shadow-md"}`}
+                      >
+                        <span className="text-[7px] font-bold leading-none">All</span>
+                        <span className="text-[10px] font-bold tabular-nums leading-none mt-0.5">{dayTasks.length}</span>
+                      </button>
                     </div>
                     <div className="flex-1 overflow-y-auto px-4 pb-3 pt-1">
                       <div className="grid grid-cols-2 gap-2">
