@@ -2218,26 +2218,31 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* One big main card — all elements inside */}
-              <div className="rounded-2xl border border-stone-200 bg-stone-50 shadow-md p-3 flex gap-3">
+              {/* Body row: main card + calendars outside */}
+              <div className="flex gap-4 items-start">
 
-                {/* AM column */}
-                <div className="flex-1 min-w-0 rounded-xl border border-stone-200 bg-white shadow-sm overflow-hidden">
-                  <div className="px-2 py-1.5 border-b border-stone-200 bg-stone-100">
-                    <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">AM</span>
+                {/* Main card — AM + PM only */}
+                <div className="rounded-2xl border border-stone-200 bg-stone-50 shadow-md p-2.5 flex gap-2.5 flex-1 min-w-0">
+
+                  {/* AM column */}
+                  <div className="flex-1 min-w-0 rounded-xl border border-stone-200 bg-white shadow-sm overflow-hidden">
+                    <div className="px-2 py-1.5 border-b border-stone-200 bg-stone-100">
+                      <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">AM</span>
+                    </div>
+                    <TimeColumn hours={amHours} />
                   </div>
-                  <TimeColumn hours={amHours} />
+
+                  {/* PM column */}
+                  <div className="flex-1 min-w-0 rounded-xl border border-stone-200 bg-white shadow-sm overflow-hidden">
+                    <div className="px-2 py-1.5 border-b border-stone-200 bg-stone-100">
+                      <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">PM</span>
+                    </div>
+                    <TimeColumn hours={pmHours} />
+                  </div>
+
                 </div>
 
-                {/* PM column */}
-                <div className="flex-1 min-w-0 rounded-xl border border-stone-200 bg-white shadow-sm overflow-hidden">
-                  <div className="px-2 py-1.5 border-b border-stone-200 bg-stone-100">
-                    <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">PM</span>
-                  </div>
-                  <TimeColumn hours={pmHours} />
-                </div>
-
-                {/* Mini calendars */}
+                {/* Mini calendars — outside the main card */}
                 <div className="w-44 flex-shrink-0 flex flex-col gap-2">
                   {calMonths.map(({ year, month }) => (
                     <MiniCalendar
