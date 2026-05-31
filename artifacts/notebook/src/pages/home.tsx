@@ -2187,7 +2187,7 @@ export default function Home() {
           );
 
           return (
-            <div className="flex-1 overflow-hidden flex flex-col p-5 gap-4 bg-stone-50 min-h-0">
+            <div className="flex-1 overflow-hidden flex flex-col p-[15px] gap-4 bg-stone-50 min-h-0">
 
               {/* Header */}
               <div className="flex-shrink-0 rounded-2xl border border-stone-200 bg-white shadow-sm px-6 py-3 flex items-center justify-between gap-4">
