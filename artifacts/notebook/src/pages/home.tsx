@@ -1911,7 +1911,7 @@ export default function Home() {
                   </div>
 
                   {/* Date strip — ToDay + Next 14 Days staggered */}
-                  <div className="bg-white rounded-2xl border border-stone-200 flex-shrink-0 px-4 py-4">
+                  <div className="bg-white rounded-2xl border border-stone-200 flex-shrink-0 px-4 py-4 -mt-2">
 
                     {/* ToDay */}
                     <p className="text-[9px] font-bold text-stone-400 tracking-widest uppercase mb-2">ToDay</p>
