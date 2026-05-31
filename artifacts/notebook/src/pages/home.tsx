@@ -1498,11 +1498,11 @@ export default function Home() {
                             return (
                               <div key={task.id} className="relative w-full group/card" style={{ opacity: task.done ? 0.3 : 1, transition: "opacity 0.2s" }}>
                                 {/* FlatC card */}
-                                <div className="flex items-center overflow-hidden border border-stone-200 rounded-lg w-full shadow-sm transition-all duration-200 ease-out group-hover/card:-translate-y-[3px] group-hover/card:shadow-md group-hover/card:border-stone-300"
+                                <div className="flex items-center border border-stone-200 rounded-lg w-full shadow-sm transition-all duration-200 ease-out group-hover/card:-translate-y-[3px] group-hover/card:shadow-md group-hover/card:border-stone-300"
                                   style={{ height: CARD_H, backgroundColor: pm ? pm.rowBg : "#ffffff" }}>
 
                                   {/* Left accent bar */}
-                                  <div className="self-stretch flex-shrink-0" style={{ width: 4, backgroundColor: pm ? pm.bar : "#e7e5e4" }} />
+                                  <div className="self-stretch flex-shrink-0 rounded-l-lg" style={{ width: 4, backgroundColor: pm ? pm.bar : "#e7e5e4" }} />
 
                                   {/* Num */}
                                   <div className="w-9 flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch text-[11px] font-bold text-stone-400">
