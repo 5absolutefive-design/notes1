@@ -1864,7 +1864,7 @@ export default function Home() {
                                   <span className="text-[9px] font-medium text-stone-600 flex-1 truncate">{task.title || "Untitled"}</span>
                                 </div>
                                 <span className={`text-[10px] font-bold tabular-nums mt-0.5 ${isOverdue ? "text-red-400" : "text-emerald-500"}`}>
-                                  {isOverdue ? `−${timeLabel} ago` : timeLabel}
+                                  {isOverdue ? "Time Up" : timeLabel}
                                 </span>
                               </div>
                             );
