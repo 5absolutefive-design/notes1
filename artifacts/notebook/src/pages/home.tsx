@@ -2440,8 +2440,7 @@ export default function Home() {
                     </div>
                     <div className="flex-1 min-h-0 overflow-y-auto">
                       {amPlanMode ? (() => {
-                        const allHours = [...amHours, ...pmHours];
-                        const entries = allHours
+                        const entries = amHours
                           .filter(h => (dayNotes[h] ?? "").trim() !== "")
                           .map(h => ({ hour: h, time: getDisplayTime(h), text: dayNotes[h] ?? "" }));
                         if (entries.length === 0) {
@@ -2523,8 +2522,7 @@ export default function Home() {
                     </div>
                     <div className="flex-1 min-h-0 overflow-y-auto">
                       {pmPlanMode ? (() => {
-                        const allHours = [...amHours, ...pmHours];
-                        const entries = allHours
+                        const entries = pmHours
                           .filter(h => (dayNotes[h] ?? "").trim() !== "")
                           .map(h => ({ hour: h, time: getDisplayTime(h), text: dayNotes[h] ?? "" }));
                         if (entries.length === 0) {
