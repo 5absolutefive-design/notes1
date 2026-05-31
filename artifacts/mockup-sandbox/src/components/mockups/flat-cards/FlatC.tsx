@@ -23,13 +23,14 @@ export function FlatC() {
   const [timeOpenId,     setTimeOpenId]     = useState<number | null>(null);
   const [priorityOpenId, setPriorityOpenId] = useState<number | null>(null);
   const [progressOpenId, setProgressOpenId] = useState<number | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
 
   /* temp time edit */
   const [tempHour,   setTempHour]   = useState("12");
   const [tempMinute, setTempMinute] = useState("00");
   const [tempAmpm,   setTempAmpm]   = useState<"AM"|"PM">("AM");
 
-  const closeAll = () => { setNoteOpenId(null); setTimeOpenId(null); setPriorityOpenId(null); setProgressOpenId(null); };
+  const closeAll = () => { setNoteOpenId(null); setTimeOpenId(null); setPriorityOpenId(null); setProgressOpenId(null); setDeleteConfirmId(null); };
 
   const toggleDone = (id: number) =>
     setTasks(prev => prev.map(t => t.id === id ? { ...t, done: !t.done } : t));
@@ -144,12 +145,32 @@ export function FlatC() {
 
                 {/* Trash */}
                 <div className="flex items-center justify-center flex-shrink-0 self-stretch cursor-pointer" style={{ width: COL.trash }}
-                  onClick={e => { e.stopPropagation(); setTasks(prev => prev.filter(t => t.id !== task.id)); closeAll(); }}>
+                  onClick={e => { e.stopPropagation(); closeAll(); setDeleteConfirmId(task.id); }}>
                   <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
                     <path d="M1.5 3.5h10M4.5 1.5h4M3 3.5l.65 7.5h5.7L10 3.5" stroke="#f87171" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
                 </div>
               </div>
+
+              {/* ── Delete confirmation overlay ── */}
+              {deleteConfirmId === task.id && (
+                <div
+                  className="absolute inset-0 z-50 flex items-center justify-center gap-3 rounded-md border border-red-200"
+                  style={{ backgroundColor: "rgba(255,241,241,0.97)", backdropFilter: "blur(2px)" }}
+                  onClick={e => e.stopPropagation()}>
+                  <span className="text-[12px] font-semibold text-red-600">Delete this task?</span>
+                  <button
+                    onClick={() => { setTasks(prev => prev.filter(t => t.id !== task.id)); setDeleteConfirmId(null); }}
+                    className="text-[11px] font-bold text-white bg-red-500 hover:bg-red-600 rounded-lg px-3 py-1 transition-colors">
+                    Yes
+                  </button>
+                  <button
+                    onClick={() => setDeleteConfirmId(null)}
+                    className="text-[11px] font-medium text-stone-500 border border-stone-200 hover:border-stone-400 bg-white rounded-lg px-3 py-1 transition-colors">
+                    No
+                  </button>
+                </div>
+              )}
 
               {/* ── Note popup ── */}
               {noteOpenId === task.id && (
