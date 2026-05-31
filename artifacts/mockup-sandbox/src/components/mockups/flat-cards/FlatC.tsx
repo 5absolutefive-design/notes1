@@ -133,7 +133,7 @@ export function FlatC() {
                   {task.progress > 0 ? (
                     <div className="flex items-center gap-1.5 w-full">
                       <div className="flex-1 h-[3px] bg-stone-200 rounded-full overflow-hidden">
-                        <div className="h-full bg-stone-500 rounded-full" style={{ width: `${task.progress}%` }} />
+                        <div className="h-full rounded-full" style={{ width: `${task.progress}%`, backgroundColor: task.progress >= 50 ? "#22c55e" : "#ef4444" }} />
                       </div>
                       <span className="text-[10px] text-stone-500 tabular-nums flex-shrink-0">{task.progress}%</span>
                     </div>
