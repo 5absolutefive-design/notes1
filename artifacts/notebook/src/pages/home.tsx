@@ -2165,28 +2165,26 @@ export default function Home() {
             });
           })();
 
-          function TimeColumn({ hours }: { hours: number[] }) {
-            return (
-              <div className="flex flex-col h-full">
-                {hours.map((h, idx) => (
-                  <div key={h} className={`flex flex-col flex-1 ${idx < hours.length - 1 ? "border-b border-stone-200" : ""}`}>
-                    <div className="flex items-center px-2 py-0.5 border-b border-stone-100 bg-stone-50/60">
-                      <span className="text-[9px] font-semibold text-stone-400 tracking-wide">{formatHour(h)}</span>
-                    </div>
-                    <div className="flex-1">
-                      <input
-                        type="text"
-                        value={dayNotes[h] ?? ""}
-                        onChange={e => updateScheduleNote(scheduleDate, h, e.target.value)}
-                        placeholder=""
-                        className="w-full h-full px-2 py-0.5 text-[10px] text-stone-700 outline-none bg-transparent"
-                      />
-                    </div>
+          const renderTimeColumn = (hours: number[]) => (
+            <div className="flex flex-col h-full">
+              {hours.map((h, idx) => (
+                <div key={h} className={`flex flex-col flex-1 ${idx < hours.length - 1 ? "border-b border-stone-200" : ""}`}>
+                  <div className="flex items-center px-2 py-0.5 border-b border-stone-100 bg-stone-50/60">
+                    <span className="text-[9px] font-semibold text-stone-400 tracking-wide">{formatHour(h)}</span>
                   </div>
-                ))}
-              </div>
-            );
-          }
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      value={dayNotes[h] ?? ""}
+                      onChange={e => updateScheduleNote(scheduleDate, h, e.target.value)}
+                      placeholder=""
+                      className="w-full h-full px-2 py-0.5 text-[10px] text-stone-700 outline-none bg-transparent"
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          );
 
           return (
             <div className="flex-1 overflow-hidden flex flex-col p-5 gap-4 bg-stone-50 min-h-0">
@@ -2234,7 +2232,7 @@ export default function Home() {
                       <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">AM</span>
                     </div>
                     <div className="flex-1 min-h-0">
-                      <TimeColumn hours={amHours} />
+                      {renderTimeColumn(amHours)}
                     </div>
                   </div>
 
@@ -2244,7 +2242,7 @@ export default function Home() {
                       <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">PM</span>
                     </div>
                     <div className="flex-1 min-h-0">
-                      <TimeColumn hours={pmHours} />
+                      {renderTimeColumn(pmHours)}
                     </div>
                   </div>
 
