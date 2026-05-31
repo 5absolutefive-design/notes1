@@ -172,6 +172,18 @@ function get7Days(today: Date) {
   });
 }
 
+function get15Days(today: Date) {
+  return Array.from({ length: 15 }, (_, i) => {
+    const d = new Date(today); d.setDate(today.getDate() + i);
+    return {
+      key: getDateKey(d),
+      label: String(d.getDate()).padStart(2, "0"),
+      day: d.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase().slice(0, 3),
+      isToday: i === 0,
+    };
+  });
+}
+
 const DAY_PRIORITY_META: Record<NonNullable<DayPriority>, { label: string; color: string; bg: string; border: string; dot: string; rowBg: string; bar: string }> = {
   low:       { label: "Low",       color: "#15803d", bg: "#bbf7d0", border: "#4ade80", dot: "#16a34a", rowBg: "#dcfce7", bar: "#16a34a" },
   normal:    { label: "Normal",    color: "#374151", bg: "#e5e7eb", border: "#6b7280", dot: "#4b5563", rowBg: "#f3f4f6", bar: "#6b7280" },
@@ -1471,7 +1483,7 @@ export default function Home() {
         {/* Task view */}
         {activeView === "task" && (() => {
           const today = new Date();
-          const days = get7Days(today);
+          const days = get15Days(today);
 
           const filteredTasks = selectedTypeId === "all"
             ? dayTasks
@@ -1835,21 +1847,48 @@ export default function Home() {
                   {/* Spacer — 1/4 of flexible space */}
                   <div className="flex-[1]" />
 
-                  {/* NEXT 7 DAY — horizontal pill strip at the bottom */}
-                  <div className="bg-white rounded-2xl border border-stone-200 flex-shrink-0 px-5 py-[18px]">
-                    <p className="text-[9px] font-bold text-stone-400 tracking-widest uppercase mb-3">NEXT 7 DAY</p>
-                    <div className="flex gap-2 overflow-x-auto pb-0.5">
-                      {days.map(d => (
+                  {/* Date strip — ToDay + Next 14 Days staggered */}
+                  <div className="bg-white rounded-2xl border border-stone-200 flex-shrink-0 px-5 py-4">
+
+                    {/* ToDay */}
+                    <p className="text-[9px] font-bold text-stone-400 tracking-widest uppercase mb-2">ToDay</p>
+                    <button
+                      onClick={() => setSelectedDate(days[0].key)}
+                      className={`flex flex-col items-center w-11 h-11 justify-center rounded-xl border transition-all ${selectedDate === days[0].key ? "bg-stone-800 text-white border-stone-800" : "border-stone-300 text-stone-600 hover:border-stone-500 bg-white"}`}
+                    >
+                      <span className="text-[8px] font-bold uppercase leading-none">{days[0].day}</span>
+                      <span className="text-sm font-bold tabular-nums mt-0.5">{days[0].label}</span>
+                    </button>
+
+                    {/* Next 14 Days — staggered two-row grid */}
+                    <p className="text-[9px] font-bold text-stone-400 tracking-widest uppercase mt-4 mb-2">Next 14 Days</p>
+                    {/* Top row: days 1,3,5,7,9,11,13 */}
+                    <div className="flex gap-2">
+                      {days.slice(1).filter((_, i) => i % 2 === 0).map(d => (
                         <button
                           key={d.key}
                           onClick={() => setSelectedDate(d.key)}
-                          className={`flex flex-col items-center flex-shrink-0 px-3 py-2.5 rounded-xl border transition-all ${selectedDate === d.key ? "bg-stone-800 text-white border-stone-800" : "border-stone-300 text-stone-600 hover:border-stone-500 bg-white"}`}
+                          className={`flex flex-col items-center w-11 h-11 justify-center rounded-xl border transition-all flex-shrink-0 ${selectedDate === d.key ? "bg-stone-800 text-white border-stone-800" : "border-stone-300 text-stone-600 hover:border-stone-500 bg-white"}`}
                         >
-                          <span className="text-[9px] font-bold uppercase leading-none">{d.isToday ? "TO\nDAY" : d.day}</span>
-                          <span className="text-base font-bold mt-1 tabular-nums">{d.label}</span>
+                          <span className="text-[8px] font-bold uppercase leading-none">{d.day}</span>
+                          <span className="text-sm font-bold tabular-nums mt-0.5">{d.label}</span>
                         </button>
                       ))}
                     </div>
+                    {/* Bottom row: days 2,4,6,8,10,12,14 — offset right by half card+gap */}
+                    <div className="flex gap-2 mt-2" style={{ paddingLeft: "26px" }}>
+                      {days.slice(1).filter((_, i) => i % 2 === 1).map(d => (
+                        <button
+                          key={d.key}
+                          onClick={() => setSelectedDate(d.key)}
+                          className={`flex flex-col items-center w-11 h-11 justify-center rounded-xl border transition-all flex-shrink-0 ${selectedDate === d.key ? "bg-stone-800 text-white border-stone-800" : "border-stone-300 text-stone-600 hover:border-stone-500 bg-white"}`}
+                        >
+                          <span className="text-[8px] font-bold uppercase leading-none">{d.day}</span>
+                          <span className="text-sm font-bold tabular-nums mt-0.5">{d.label}</span>
+                        </button>
+                      ))}
+                    </div>
+
                   </div>
 
                 </div>
