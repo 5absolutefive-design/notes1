@@ -1538,7 +1538,7 @@ export default function Home() {
 
           const addType = () => {
             if (!newTypeName.trim()) return;
-            if (dayTaskTypes.length >= 8) { setShowTypeInput(false); setNewTypeName(""); return; }
+            if (dayTaskTypes.length >= 7) { setShowTypeInput(false); setNewTypeName(""); return; }
             const type: DayTaskType = { id: nextTypeId(dayTaskTypes), name: newTypeName.trim() };
             const updated = [...dayTaskTypes, type];
             saveDayTaskTypes(updated);
@@ -1861,7 +1861,7 @@ export default function Home() {
                         })}
 
 
-                        {dayTaskTypes.length < 8 && (showTypeInput ? (
+                        {dayTaskTypes.length < 7 && (showTypeInput ? (
                           <div className="col-span-2 flex gap-1.5">
                             <input
                               autoFocus
@@ -1881,6 +1881,12 @@ export default function Home() {
                             +
                           </button>
                         ))}
+
+                        {dayTaskTypes.length === 7 && (
+                          <div className="w-full flex items-center justify-center py-2 rounded-lg border border-dashed border-stone-200 bg-stone-50">
+                            <Lock className="w-3.5 h-3.5 text-stone-300" />
+                          </div>
+                        )}
 
                       </div>
                     </div>
