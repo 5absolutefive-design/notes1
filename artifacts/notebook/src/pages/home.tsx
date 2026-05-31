@@ -1821,7 +1821,7 @@ export default function Home() {
                                 className={`w-full text-center text-xs px-2 py-3 rounded-lg border transition-all shadow-sm hover:-translate-y-[2px] hover:shadow-md relative ${isSelected ? "bg-stone-800 text-white border-transparent" : "border-stone-300 text-stone-700 bg-white"}`}
                               >
                                 {typeCount > 0 && (
-                                  <span className={`absolute left-1.5 top-1 text-[9px] font-bold tabular-nums leading-none ${isSelected ? "text-white/50" : "text-stone-400"}`}>
+                                  <span className={`absolute left-1.5 top-1/2 -translate-y-1/2 text-[12px] font-bold tabular-nums leading-none ${isSelected ? "text-white/50" : "text-stone-400"}`}>
                                     {typeCount}
                                   </span>
                                 )}
@@ -1839,9 +1839,9 @@ export default function Home() {
                               ) : (
                                 <button
                                   onClick={e => { e.stopPropagation(); setDeleteTypeConfirmId(type.id); }}
-                                  className="absolute right-1.5 top-1.5 opacity-0 group-hover/type:opacity-100 transition-opacity"
+                                  className="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover/type:opacity-100 transition-opacity"
                                 >
-                                  <X className={`w-2.5 h-2.5 ${isSelected ? "text-white/60 hover:text-white" : "text-stone-300 hover:text-red-400"}`} />
+                                  <X className={`w-[13px] h-[13px] ${isSelected ? "text-white/60 hover:text-white" : "text-stone-300 hover:text-red-400"}`} />
                                 </button>
                               )}
                             </div>
