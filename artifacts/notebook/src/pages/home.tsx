@@ -1767,7 +1767,7 @@ export default function Home() {
                   {/* Clock card — orbital clock + digital time */}
                   <div className="bg-white rounded-2xl border border-stone-200 flex-shrink-0 flex items-center">
                     <div className="flex-1 flex items-center justify-center p-6">
-                      <div className="w-[180px] h-[180px]" style={{ overflow: "visible" }}>
+                      <div className="w-[220px] h-[220px]" style={{ overflow: "visible" }}>
                         <OrbitalClock24 />
                       </div>
                     </div>
