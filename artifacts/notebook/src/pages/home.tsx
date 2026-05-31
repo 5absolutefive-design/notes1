@@ -1812,11 +1812,11 @@ export default function Home() {
                       <h3 className="text-sm font-bold text-stone-700 tracking-[0.15em]">TASK TYPE</h3>
                       <button
                         onClick={() => setSelectedTypeId("all")}
-                        style={{ width: 60, height: 20 }}
-                        className={`flex-shrink-0 flex flex-col items-center justify-center rounded-md border transition-all shadow-sm ${selectedTypeId === "all" ? "bg-stone-800 text-white border-transparent" : "border-stone-300 text-stone-500 bg-white hover:-translate-y-[2px] hover:shadow-md"}`}
+                        className={`flex-shrink-0 flex flex-row items-center justify-center gap-1 rounded-md border px-2.5 py-1 transition-all shadow-sm ${selectedTypeId === "all" ? "bg-stone-800 text-white border-transparent" : "border-stone-300 text-stone-500 bg-white hover:-translate-y-[2px] hover:shadow-md"}`}
                       >
-                        <span className="text-[7px] font-bold leading-none">All</span>
-                        <span className="text-[10px] font-bold tabular-nums leading-none mt-0.5">{dayTasks.length}</span>
+                        <span className="text-[10px] font-bold leading-none">All</span>
+                        <span className="text-[10px] font-bold leading-none">-</span>
+                        <span className="text-[10px] font-bold tabular-nums leading-none">{String(dayTasks.length).padStart(2, "0")}</span>
                       </button>
                     </div>
                     <div className="flex-1 overflow-y-auto px-4 pb-3 pt-1">
