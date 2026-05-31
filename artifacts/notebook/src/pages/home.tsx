@@ -1495,13 +1495,27 @@ export default function Home() {
           };
 
           const addTask = () => {
+            let typeId: number | null = selectedTypeId === "all" ? null : selectedTypeId;
+
+            if (typeId === null) {
+              let unknown = dayTaskTypes.find(t => t.name === "Unknown");
+              if (!unknown) {
+                unknown = { id: nextTypeId(dayTaskTypes), name: "Unknown" };
+                const updatedTypes = [...dayTaskTypes, unknown];
+                saveDayTaskTypes(updatedTypes);
+                setDayTaskTypes(updatedTypes);
+              }
+              typeId = unknown.id;
+              setSelectedTypeId(unknown.id);
+            }
+
             const id = nextDayTaskId(dayTasks);
             const task: DayTask = {
               id,
               title: "",
               hour: "12", minute: "00", ampm: "AM", hasTime: false,
               priority: null,
-              typeId: selectedTypeId === "all" ? null : selectedTypeId,
+              typeId,
               done: false,
               note: "",
               progress: 0,
