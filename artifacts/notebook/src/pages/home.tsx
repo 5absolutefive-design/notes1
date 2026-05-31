@@ -1487,9 +1487,19 @@ export default function Home() {
           const today = new Date();
           const days = get15Days(today);
 
-          const filteredTasks = selectedTypeId === "all"
-            ? dayTasks
-            : dayTasks.filter(t => t.typeId === selectedTypeId);
+          const filteredTasks = (() => {
+            const tasks = selectedTypeId === "all"
+              ? dayTasks
+              : dayTasks.filter(t => t.typeId === selectedTypeId);
+            const toMinutes = (t: DayTask) => {
+              if (!t.hasTime) return Infinity;
+              const h = parseInt(t.hour || "12") % 12;
+              const m = parseInt(t.minute || "00");
+              const offset = t.ampm === "PM" ? 12 * 60 : 0;
+              return h * 60 + m + offset;
+            };
+            return [...tasks].sort((a, b) => toMinutes(a) - toMinutes(b));
+          })();
 
           const saveDay = (updated: DayTask[]) => {
             saveDayTasksStore(selectedDate, updated);
