@@ -229,8 +229,9 @@ const SLOT_COLORS = [
   { label: "Low",       bg: "#bfdbfe", dot: "#3b82f6" },
 ];
 
-function MiniCalendar({ year, month, selectedDate, onSelectDate }: {
+function MiniCalendar({ year, month, selectedDate, onSelectDate, markedDates }: {
   year: number; month: number; selectedDate: string; onSelectDate: (d: string) => void;
+  markedDates?: Set<string>;
 }) {
   const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
   const firstDay = new Date(year, month, 1).getDay();
@@ -257,14 +258,20 @@ function MiniCalendar({ year, month, selectedDate, onSelectDate }: {
           const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
           const isSel = dateStr === selectedDate;
           const isToday = dateStr === todayStr;
+          const hasSchedule = markedDates?.has(dateStr) ?? false;
           return (
             <button
               key={d}
               onClick={() => onSelectDate(dateStr)}
-              className={`text-xs rounded-full w-7 h-7 flex items-center justify-center mx-auto transition-colors
+              className={`text-xs rounded-full w-7 h-7 flex flex-col items-center justify-center mx-auto transition-colors relative
                 ${isSel ? "bg-stone-800 text-white font-bold" : isToday ? "bg-blue-100 text-blue-700 font-semibold" : "text-stone-600 hover:bg-stone-100"}`}
             >
-              {d}
+              <span className="leading-none">{d}</span>
+              {hasSchedule && (
+                <span
+                  className={`absolute bottom-[3px] left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${isSel ? "bg-white" : "bg-stone-800"}`}
+                />
+              )}
             </button>
           );
         })}
@@ -2590,6 +2597,10 @@ export default function Home() {
                         month={month}
                         selectedDate={scheduleDate}
                         onSelectDate={setScheduleDate}
+                        markedDates={new Set(Object.keys(scheduleData).filter(date => {
+                          const slots = scheduleData[date];
+                          return slots && Object.values(slots).some(v => v && v.trim() !== "");
+                        }))}
                       />
                     </div>
                   ))}
