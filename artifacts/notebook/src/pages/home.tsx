@@ -2163,23 +2163,20 @@ export default function Home() {
 
           function TimeColumn({ hours }: { hours: number[] }) {
             return (
-              <div className="flex flex-col border border-stone-300 rounded-lg overflow-hidden bg-white">
+              <div className="flex flex-col flex-1 min-w-0">
                 {hours.map((h, idx) => (
-                  <div key={h} className={`flex flex-col ${idx < hours.length - 1 ? "border-b border-stone-300" : ""}`}>
-                    <div className="flex items-center gap-2 px-3 py-1 border-b border-stone-300 bg-stone-50">
-                      <span className="text-[11px] font-semibold text-stone-600 tracking-wide w-20 flex-shrink-0">{formatHour(h)}</span>
+                  <div key={h} className={`flex flex-col ${idx < hours.length - 1 ? "border-b border-stone-200" : ""}`}>
+                    <div className="flex items-center gap-2 px-3 py-1 border-b border-stone-200 bg-stone-50/60">
+                      <span className="text-[11px] font-semibold text-stone-500 tracking-wide w-20 flex-shrink-0">{formatHour(h)}</span>
                     </div>
-                    <div className="flex flex-col">
-                      <div className="border-b border-dashed border-stone-300">
-                        <input
-                          type="text"
-                          value={dayNotes[h] ?? ""}
-                          onChange={e => updateScheduleNote(scheduleDate, h, e.target.value)}
-                          placeholder=""
-                          className="w-full px-3 py-1.5 text-xs text-stone-700 outline-none bg-transparent placeholder:text-stone-200"
-                        />
-                      </div>
-                      <div className="h-5 border-b border-dashed border-stone-200" />
+                    <div className="border-b border-dashed border-stone-200">
+                      <input
+                        type="text"
+                        value={dayNotes[h] ?? ""}
+                        onChange={e => updateScheduleNote(scheduleDate, h, e.target.value)}
+                        placeholder=""
+                        className="w-full px-3 py-1.5 text-xs text-stone-700 outline-none bg-transparent"
+                      />
                     </div>
                   </div>
                 ))}
@@ -2221,24 +2218,31 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* 3-column body */}
+              {/* Body: big time card + calendars */}
               <div className="flex gap-4 items-start">
 
-                {/* AM column */}
-                <div className="flex-1 min-w-0 flex flex-col gap-2">
-                  <div className="text-[10px] font-bold text-stone-400 uppercase tracking-widest px-1">AM</div>
-                  <TimeColumn hours={amHours} />
-                </div>
-
-                {/* PM column */}
-                <div className="flex-1 min-w-0 flex flex-col gap-2">
-                  <div className="text-[10px] font-bold text-stone-400 uppercase tracking-widest px-1">PM</div>
-                  <TimeColumn hours={pmHours} />
+                {/* Big card with AM + PM side by side */}
+                <div className="flex-1 min-w-0 rounded-xl border border-stone-300 bg-white shadow-sm overflow-hidden">
+                  <div className="flex">
+                    {/* AM column */}
+                    <div className="flex-1 min-w-0 border-r border-stone-300">
+                      <div className="px-3 py-2 border-b border-stone-300 bg-stone-100">
+                        <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">AM</span>
+                      </div>
+                      <TimeColumn hours={amHours} />
+                    </div>
+                    {/* PM column */}
+                    <div className="flex-1 min-w-0">
+                      <div className="px-3 py-2 border-b border-stone-300 bg-stone-100">
+                        <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">PM</span>
+                      </div>
+                      <TimeColumn hours={pmHours} />
+                    </div>
+                  </div>
                 </div>
 
                 {/* Mini calendars */}
                 <div className="w-52 flex-shrink-0 flex flex-col gap-3">
-                  <div className="text-[10px] font-bold text-stone-400 uppercase tracking-widest px-1">Calendars</div>
                   {calMonths.map(({ year, month }) => (
                     <MiniCalendar
                       key={`${year}-${month}`}
