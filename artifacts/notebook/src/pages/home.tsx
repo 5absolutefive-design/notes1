@@ -2155,7 +2155,7 @@ export default function Home() {
 
           const calMonths = (() => {
             const base = new Date(selD.getFullYear(), selD.getMonth(), 1);
-            return Array.from({ length: 4 }, (_, i) => {
+            return Array.from({ length: 3 }, (_, i) => {
               const d = new Date(base.getFullYear(), base.getMonth() - 1 + i, 1);
               return { year: d.getFullYear(), month: d.getMonth() };
             });
@@ -2247,7 +2247,7 @@ export default function Home() {
                 </div>
 
                 {/* Mini calendars — outside */}
-                <div className="w-44 flex-shrink-0 flex flex-col gap-2 overflow-hidden">
+                <div className="w-[321px] flex-shrink-0 flex flex-col gap-2 overflow-hidden">
                   {calMonths.map(({ year, month }) => (
                     <MiniCalendar
                       key={`${year}-${month}`}
