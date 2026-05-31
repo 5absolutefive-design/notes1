@@ -370,6 +370,7 @@ export default function Home() {
   const [popupPos, setPopupPos] = useState<{ top: number; right: number } | null>(null);
   const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
+  const [addBtnColorIdx, setAddBtnColorIdx] = useState(0);
   const [tempHour, setTempHour] = useState("12");
   const [tempMinute, setTempMinute] = useState("00");
   const [tempAmpm, setTempAmpm] = useState<"AM" | "PM">("AM");
@@ -1589,10 +1590,17 @@ export default function Home() {
                         ))}
                       </div>
                     </div>
-                    <button
-                      onClick={() => { addTask(); setNotePopupId(null); setProgressMenuId(null); setPriorityMenuId(null); setTimePickerId(null); }}
-                      className="w-6 h-6 rounded-full bg-stone-800 text-white flex items-center justify-center text-base font-light hover:bg-stone-600 transition-colors leading-none"
-                    >+</button>
+                    {(() => {
+                      const ADD_COLORS = ["#1c1917","#6366f1","#0ea5e9","#10b981","#f59e0b","#ef4444","#8b5cf6","#ec4899"];
+                      const bg = ADD_COLORS[addBtnColorIdx % ADD_COLORS.length];
+                      return (
+                        <button
+                          onClick={() => { addTask(); setNotePopupId(null); setProgressMenuId(null); setPriorityMenuId(null); setTimePickerId(null); setAddBtnColorIdx(i => i + 1); }}
+                          className="w-6 h-6 rounded-md text-white flex items-center justify-center text-base font-light transition-all leading-none hover:scale-110 active:scale-95"
+                          style={{ backgroundColor: bg, boxShadow: `0 2px 8px ${bg}66` }}
+                        >+</button>
+                      );
+                    })()}
                   </div>
 
                   {/* Task list */}
