@@ -1764,11 +1764,16 @@ export default function Home() {
                 {/* ── RIGHT panel ── */}
                 <div className="flex-[3] flex-shrink-0 flex flex-col gap-4 overflow-hidden">
 
-                  {/* Clock card — orbital clock only */}
-                  <div className="bg-white rounded-2xl border border-stone-200 flex-shrink-0 flex items-center justify-center p-6">
-                    <div className="w-[220px] h-[220px]" style={{ overflow: "visible" }}>
-                      <OrbitalClock24 />
+                  {/* Clock card — two parts */}
+                  <div className="bg-white rounded-2xl border border-stone-200 flex-shrink-0 flex" style={{ height: "280px" }}>
+                    {/* Part 1 — square clock */}
+                    <div className="flex items-center justify-center flex-shrink-0" style={{ width: "280px", height: "280px" }}>
+                      <div className="w-[220px] h-[220px]" style={{ overflow: "visible" }}>
+                        <OrbitalClock24 />
+                      </div>
                     </div>
+                    {/* Part 2 — info (coming soon) */}
+                    <div className="flex-1 border-l border-stone-100" />
                   </div>
 
                   {/* TASK TYPE section */}
