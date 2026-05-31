@@ -1306,7 +1306,7 @@ export default function Home() {
 
               {/* LEFT: Big note form */}
               <div className="w-full xl:w-[58%] xl:flex-shrink-0">
-                <div className="bg-stone-50 rounded-2xl flex flex-col overflow-visible" style={{ minHeight: "clamp(600px, 60vh, 900px)", boxShadow: "0 8px 40px 0 rgba(0,0,0,0.10), 0 2px 8px 0 rgba(0,0,0,0.06)" }}>
+                <div className="bg-stone-50 rounded-2xl flex flex-col overflow-hidden" style={{ height: "clamp(600px, 82vh, 788px)", boxShadow: "0 8px 40px 0 rgba(0,0,0,0.10), 0 2px 8px 0 rgba(0,0,0,0.06)" }}>
 
                     {/* Form header */}
                     <div className="relative flex items-center justify-between px-6 py-4">
@@ -1389,8 +1389,7 @@ export default function Home() {
                     {/* Body area — white card with border, images float inside */}
                     <div
                       ref={noteBodyRef}
-                      className="flex-1 mx-5 mb-0 border border-stone-100 rounded-xl overflow-hidden flex flex-col relative"
-                      style={{ minHeight: "clamp(380px, 35vh, 620px)" }}
+                      className="flex-1 mx-5 mb-0 border border-stone-100 rounded-xl overflow-hidden flex flex-col relative min-h-0"
                     >
                       <textarea
                         ref={noteTextareaRef}
@@ -1399,7 +1398,6 @@ export default function Home() {
                         placeholder="Write your note here..."
                         className="flex-1 w-full px-4 py-3 text-sm text-stone-600 outline-none bg-white resize-none placeholder:text-stone-300 leading-relaxed"
                         onKeyDown={(e) => { if (e.key === "Enter" && e.ctrlKey) { selectedNoteId !== null ? handleSaveSelectedNote() : handleCreateNote(); } }}
-                        style={{ minHeight: "clamp(380px, 35vh, 620px)" }}
                       />
                       {/* Floating images inside body */}
                       {newNoteImages.map((img, idx) => (
