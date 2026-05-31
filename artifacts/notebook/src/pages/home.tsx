@@ -214,13 +214,13 @@ function MiniCalendar({ year, month, selectedDate, onSelectDate }: {
   for (let i = 0; i < firstDay; i++) cells.push(null);
   for (let d = 1; d <= daysInMonth; d++) cells.push(d);
   return (
-    <div className="bg-white rounded-xl border border-stone-200 p-3 shadow-sm">
-      <div className="text-[11px] font-bold text-stone-700 text-center mb-2 tracking-wide">
+    <div className="bg-white rounded-xl border border-stone-200 p-4 shadow-sm h-full flex flex-col">
+      <div className="text-sm font-bold text-stone-700 text-center mb-3 tracking-wide">
         {MONTH_NAMES[month]} {year}
       </div>
-      <div className="grid grid-cols-7 gap-px text-center">
+      <div className="grid grid-cols-7 gap-1 text-center flex-1 content-start">
         {["S","M","T","W","T","F","S"].map((d, i) => (
-          <div key={i} className="text-[9px] text-stone-400 font-semibold pb-1">{d}</div>
+          <div key={i} className="text-xs text-stone-400 font-semibold pb-1">{d}</div>
         ))}
         {cells.map((d, i) => {
           if (d === null) return <div key={`e-${i}`} />;
@@ -231,7 +231,7 @@ function MiniCalendar({ year, month, selectedDate, onSelectDate }: {
             <button
               key={d}
               onClick={() => onSelectDate(dateStr)}
-              className={`text-[10px] rounded-full w-5 h-5 flex items-center justify-center mx-auto transition-colors
+              className={`text-xs rounded-full w-7 h-7 flex items-center justify-center mx-auto transition-colors
                 ${isSel ? "bg-stone-800 text-white font-bold" : isToday ? "bg-blue-100 text-blue-700 font-semibold" : "text-stone-600 hover:bg-stone-100"}`}
             >
               {d}
@@ -2247,15 +2247,16 @@ export default function Home() {
                 </div>
 
                 {/* Mini calendars — outside */}
-                <div className="w-[321px] flex-shrink-0 flex flex-col gap-2 overflow-hidden">
+                <div className="w-[321px] flex-shrink-0 flex flex-col gap-2 overflow-hidden min-h-0">
                   {calMonths.map(({ year, month }) => (
-                    <MiniCalendar
-                      key={`${year}-${month}`}
-                      year={year}
-                      month={month}
-                      selectedDate={scheduleDate}
-                      onSelectDate={setScheduleDate}
-                    />
+                    <div key={`${year}-${month}`} className="flex-1 min-h-0">
+                      <MiniCalendar
+                        year={year}
+                        month={month}
+                        selectedDate={scheduleDate}
+                        onSelectDate={setScheduleDate}
+                      />
+                    </div>
                   ))}
                 </div>
 
