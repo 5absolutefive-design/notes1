@@ -292,6 +292,7 @@ export default function Home() {
   const [notePopupId, setNotePopupId] = useState<number | null>(null);
   const [progressMenuId, setProgressMenuId] = useState<number | null>(null);
   const [popupPos, setPopupPos] = useState<{ top: number; right: number } | null>(null);
+  const [editingTaskId, setEditingTaskId] = useState<number | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [tempHour, setTempHour] = useState("12");
   const [tempMinute, setTempMinute] = useState("00");
@@ -1497,6 +1498,8 @@ export default function Home() {
                         <div className="flex flex-col gap-2" onClick={closeAllPopups}>
                           {filteredTasks.map((task, idx) => {
                             const pm = task.priority ? DAY_PRIORITY_META[task.priority] : null;
+                            const isActive = editingTaskId === task.id || notePopupId === task.id || timePickerId === task.id || priorityMenuId === task.id || progressMenuId === task.id;
+                            const accentColor = pm ? pm.bar : "#6366f1";
                             return (
                               <div key={task.id} className="relative w-full group/card" style={{ opacity: task.done ? 0.3 : 1, transition: "opacity 0.2s" }}>
                                 {/* FlatC card */}
@@ -1504,9 +1507,12 @@ export default function Home() {
                                   style={{
                                     height: CARD_H,
                                     backgroundColor: pm ? pm.rowBg : "#ffffff",
-                                    border: task.title.trim()
-                                      ? `1.5px solid ${pm ? pm.bar : "#94a3b8"}`
+                                    border: isActive
+                                      ? `2px solid ${accentColor}`
                                       : "1px solid #e7e5e4",
+                                    boxShadow: isActive
+                                      ? `0 0 0 3px ${accentColor}33`
+                                      : undefined,
                                   }}>
 
                                   {/* Left accent bar */}
@@ -1536,7 +1542,8 @@ export default function Home() {
                                       autoFocus={task.id === newTaskFocusId}
                                       value={task.title}
                                       onChange={e => updateTask(task.id, { title: e.target.value })}
-                                      onFocus={() => setNewTaskFocusId(null)}
+                                      onFocus={() => { setNewTaskFocusId(null); setEditingTaskId(task.id); }}
+                                      onBlur={() => setEditingTaskId(null)}
                                       placeholder="Task name..."
                                       className={`text-sm w-full bg-transparent outline-none border-none placeholder-stone-300 truncate ${task.done ? "line-through text-stone-400" : "text-stone-700"}`}
                                     />
