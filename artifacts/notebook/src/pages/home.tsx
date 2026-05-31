@@ -2185,10 +2185,10 @@ export default function Home() {
           }
 
           return (
-            <div className="flex-1 overflow-y-auto flex flex-col p-5 gap-4 bg-stone-50">
+            <div className="flex-1 overflow-hidden flex flex-col p-5 gap-4 bg-stone-50 min-h-0">
 
               {/* Header */}
-              <div className="rounded-2xl border border-stone-200 bg-white shadow-sm px-6 py-3 flex items-center justify-between gap-4">
+              <div className="flex-shrink-0 rounded-2xl border border-stone-200 bg-white shadow-sm px-6 py-3 flex items-center justify-between gap-4">
                 <div className="flex flex-col gap-0.5">
                   <h1 className="text-2xl font-serif font-bold text-stone-800 leading-tight">Schedule</h1>
                   <p className="text-xs text-stone-400">
@@ -2218,32 +2218,36 @@ export default function Home() {
                 </div>
               </div>
 
-              {/* Body row: main card + calendars outside */}
-              <div className="flex gap-4 items-start">
+              {/* Body row — stretches to fill remaining screen height */}
+              <div className="flex gap-4 flex-1 min-h-0">
 
-                {/* Main card — AM + PM only */}
-                <div className="rounded-2xl border border-stone-200 bg-stone-50 shadow-md p-2.5 pb-[50px] flex gap-2.5 flex-1 min-w-0">
+                {/* Main card — AM + PM, fills full height */}
+                <div className="rounded-2xl border border-stone-200 bg-stone-50 shadow-md p-2.5 flex gap-2.5 flex-1 min-w-0 min-h-0">
 
-                  {/* AM column */}
-                  <div className="flex-1 min-w-0 rounded-xl border border-stone-200 bg-white shadow-sm overflow-hidden">
-                    <div className="px-2 py-1.5 border-b border-stone-200 bg-stone-100">
+                  {/* AM column — inner scroll */}
+                  <div className="flex-1 min-w-0 rounded-xl border border-stone-200 bg-white shadow-sm flex flex-col overflow-hidden">
+                    <div className="flex-shrink-0 px-2 py-1.5 border-b border-stone-200 bg-stone-100">
                       <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">AM</span>
                     </div>
-                    <TimeColumn hours={amHours} />
+                    <div className="flex-1 overflow-y-auto min-h-0">
+                      <TimeColumn hours={amHours} />
+                    </div>
                   </div>
 
-                  {/* PM column */}
-                  <div className="flex-1 min-w-0 rounded-xl border border-stone-200 bg-white shadow-sm overflow-hidden">
-                    <div className="px-2 py-1.5 border-b border-stone-200 bg-stone-100">
+                  {/* PM column — inner scroll */}
+                  <div className="flex-1 min-w-0 rounded-xl border border-stone-200 bg-white shadow-sm flex flex-col overflow-hidden">
+                    <div className="flex-shrink-0 px-2 py-1.5 border-b border-stone-200 bg-stone-100">
                       <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">PM</span>
                     </div>
-                    <TimeColumn hours={pmHours} />
+                    <div className="flex-1 overflow-y-auto min-h-0">
+                      <TimeColumn hours={pmHours} />
+                    </div>
                   </div>
 
                 </div>
 
-                {/* Mini calendars — outside the main card */}
-                <div className="w-44 flex-shrink-0 flex flex-col gap-2">
+                {/* Mini calendars — outside, scrollable if needed */}
+                <div className="w-44 flex-shrink-0 flex flex-col gap-2 overflow-y-auto min-h-0">
                   {calMonths.map(({ year, month }) => (
                     <MiniCalendar
                       key={`${year}-${month}`}
