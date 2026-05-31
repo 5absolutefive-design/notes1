@@ -2155,7 +2155,7 @@ export default function Home() {
 
           const calMonths = (() => {
             const base = new Date(selD.getFullYear(), selD.getMonth(), 1);
-            return Array.from({ length: 3 }, (_, i) => {
+            return Array.from({ length: 4 }, (_, i) => {
               const d = new Date(base.getFullYear(), base.getMonth() - 1 + i, 1);
               return { year: d.getFullYear(), month: d.getMonth() };
             });
@@ -2221,22 +2221,8 @@ export default function Home() {
               {/* Body row — stretches to fill remaining screen height */}
               <div className="flex gap-4 flex-1 min-h-0">
 
-                {/* Mini calendars — LEFT side, 3 months filling full height */}
-                <div className="w-44 flex-shrink-0 flex flex-col gap-2 min-h-0 overflow-hidden">
-                  {calMonths.map(({ year, month }) => (
-                    <div key={`${year}-${month}`} className="flex-1 min-h-0 overflow-hidden">
-                      <MiniCalendar
-                        year={year}
-                        month={month}
-                        selectedDate={scheduleDate}
-                        onSelectDate={setScheduleDate}
-                      />
-                    </div>
-                  ))}
-                </div>
-
                 {/* Main card — AM + PM, fills full height */}
-                <div className="rounded-2xl border border-stone-200 bg-stone-50 shadow-md p-2.5 flex gap-2.5 flex-1 min-w-0 min-h-0">
+                <div className="rounded-2xl border border-stone-200 bg-stone-50 shadow-md p-2.5 flex gap-2.5 flex-1 min-w-0 min-h-0 mr-[160px]">
 
                   {/* AM column */}
                   <div className="flex-1 min-w-0 rounded-xl border border-stone-200 bg-white shadow-sm flex flex-col overflow-hidden">
@@ -2258,6 +2244,19 @@ export default function Home() {
                     </div>
                   </div>
 
+                </div>
+
+                {/* Mini calendars — outside */}
+                <div className="w-44 flex-shrink-0 flex flex-col gap-2 overflow-hidden">
+                  {calMonths.map(({ year, month }) => (
+                    <MiniCalendar
+                      key={`${year}-${month}`}
+                      year={year}
+                      month={month}
+                      selectedDate={scheduleDate}
+                      onSelectDate={setScheduleDate}
+                    />
+                  ))}
                 </div>
 
               </div>
