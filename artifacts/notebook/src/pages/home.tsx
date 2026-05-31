@@ -1538,6 +1538,7 @@ export default function Home() {
 
           const addType = () => {
             if (!newTypeName.trim()) return;
+            if (dayTaskTypes.length >= 8) { setShowTypeInput(false); setNewTypeName(""); return; }
             const type: DayTaskType = { id: nextTypeId(dayTaskTypes), name: newTypeName.trim() };
             const updated = [...dayTaskTypes, type];
             saveDayTaskTypes(updated);
@@ -1860,7 +1861,7 @@ export default function Home() {
                         })}
 
 
-                        {showTypeInput ? (
+                        {dayTaskTypes.length < 8 && (showTypeInput ? (
                           <div className="col-span-2 flex gap-1.5">
                             <input
                               autoFocus
@@ -1879,7 +1880,7 @@ export default function Home() {
                           >
                             +
                           </button>
-                        )}
+                        ))}
 
                       </div>
                     </div>
