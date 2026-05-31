@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 export function FlatC() {
   const pmeta: Record<string, { label: string; color: string; rowBg: string; bar: string }> = {
     low:       { label: "Low",       color: "#16a34a", rowBg: "#f0fdf4", bar: "#22c55e" },
@@ -7,12 +9,15 @@ export function FlatC() {
     urgent:    { label: "Urgent",    color: "#dc2626", rowBg: "#fef2f2", bar: "#ef4444" },
   };
 
-  const tasks = [
+  const [tasks, setTasks] = useState([
     { id: 1, title: "Design new landing page", time: "10:00 AM", priority: "urgent" as const, progress: 75, done: false },
     { id: 2, title: "Review pull request from team", time: "04:50 PM", priority: null, progress: 0, done: false },
     { id: 3, title: "Update documentation files", time: "", priority: "low" as const, progress: 100, done: true },
     { id: 4, title: "Setup CI/CD pipeline", time: "02:00 PM", priority: "medium" as const, progress: 30, done: false },
-  ];
+  ]);
+
+  const toggleDone = (id: number) =>
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, done: !t.done } : t));
 
   /* ── Fixed column widths (px) ── */
   const COL = {
@@ -65,8 +70,9 @@ export function FlatC() {
 
               {/* Checkbox */}
               <div
-                className="flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch"
-                style={{ width: COL.check }}>
+                className="flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch cursor-pointer"
+                style={{ width: COL.check }}
+                onClick={() => toggleDone(task.id)}>
                 <div
                   className="w-[17px] h-[17px] border flex items-center justify-center"
                   style={task.done
