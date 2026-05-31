@@ -119,11 +119,18 @@ export function FlatC() {
 
               {/* Progress */}
               <div
-                className="flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch"
+                className="flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch px-3"
                 style={{ width: COL.progress }}>
-                <span className={`text-[11px] ${task.progress === 0 ? "text-stone-300" : "text-stone-600"}`}>
-                  {task.progress === 0 ? "Progress %" : `${task.progress}%`}
-                </span>
+                {task.progress > 0 ? (
+                  <div className="flex items-center gap-1.5 w-full">
+                    <div className="flex-1 h-[3px] bg-stone-200 rounded-full overflow-hidden">
+                      <div className="h-full bg-stone-500 rounded-full" style={{ width: `${task.progress}%` }} />
+                    </div>
+                    <span className="text-[10px] text-stone-500 tabular-nums flex-shrink-0">{task.progress}%</span>
+                  </div>
+                ) : (
+                  <span className="text-[11px] text-stone-300">Progress %</span>
+                )}
               </div>
 
               {/* Trash */}
