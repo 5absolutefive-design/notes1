@@ -1859,9 +1859,9 @@ export default function Home() {
                             const timeLabel = isOverdue ? "Time Up" : (hrs > 0 ? `${hrs} Hour ${mins} Minutes` : `${mins} Minutes`);
                             return (
                               <div key={task.id} className="flex items-center gap-1.5 rounded-lg px-2.5 py-2 border" style={{ backgroundColor: isOverdue ? "#fff5f5" : "#f8faf8", borderColor: isOverdue ? "#fecaca" : "#d1fae5" }}>
-                                <span className="text-[9px] font-bold text-stone-400 flex-shrink-0">T{idx + 1}</span>
-                                <span className="text-[9px] text-stone-400 flex-shrink-0">:</span>
-                                <span className={`text-[9px] font-bold tabular-nums ${isOverdue ? "text-red-400" : "text-emerald-600"}`}>{timeLabel}</span>
+                                <span className="text-[11px] font-bold text-stone-400 flex-shrink-0">T{idx + 1}</span>
+                                <span className="text-[11px] text-stone-400 flex-shrink-0">:</span>
+                                <span className={`text-[11px] font-bold tabular-nums ${isOverdue ? "text-red-400" : "text-emerald-600"}`}>{timeLabel}</span>
                               </div>
                             );
                           })
