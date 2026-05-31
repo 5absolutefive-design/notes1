@@ -1596,7 +1596,7 @@ export default function Home() {
                       return (
                         <button
                           onClick={() => { addTask(); setNotePopupId(null); setProgressMenuId(null); setPriorityMenuId(null); setTimePickerId(null); setAddBtnColorIdx(i => i + 1); }}
-                          className="w-6 h-6 rounded-md text-white flex items-center justify-center text-base font-light transition-all leading-none hover:scale-110 active:scale-95"
+                          className="w-12 h-6 rounded-md text-white flex items-center justify-center text-base font-light transition-all leading-none hover:scale-110 active:scale-95"
                           style={{ backgroundColor: bg, boxShadow: `0 2px 8px ${bg}66` }}
                         >+</button>
                       );
