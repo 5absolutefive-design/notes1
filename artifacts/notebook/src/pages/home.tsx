@@ -2223,29 +2223,13 @@ export default function Home() {
               {/* Body row — stretches to fill remaining screen height */}
               <div className="flex gap-4 flex-1 min-h-0">
 
-                {/* Main card — AM + PM, fills full height */}
-                <div className="rounded-2xl border border-stone-200 bg-stone-50 shadow-md p-2.5 flex gap-2.5 flex-1 min-w-0 min-h-0">
-
-                  {/* AM column */}
-                  <div className="flex-1 min-w-0 rounded-xl border border-stone-200 bg-white shadow-sm flex flex-col overflow-hidden">
-                    <div className="flex-shrink-0 px-2 py-1.5 border-b border-stone-200 bg-stone-100">
-                      <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">AM</span>
-                    </div>
+                {/* Main card — all 24 hours, fills full height */}
+                <div className="rounded-2xl border border-stone-200 bg-stone-50 shadow-md p-2.5 flex-1 min-w-0 min-h-0 flex flex-col">
+                  <div className="flex-1 min-h-0 rounded-xl border border-stone-200 bg-white shadow-sm flex flex-col overflow-hidden">
                     <div className="flex-1 min-h-0">
-                      {renderTimeColumn(amHours)}
+                      {renderTimeColumn([...amHours, ...pmHours])}
                     </div>
                   </div>
-
-                  {/* PM column */}
-                  <div className="flex-1 min-w-0 rounded-xl border border-stone-200 bg-white shadow-sm flex flex-col overflow-hidden">
-                    <div className="flex-shrink-0 px-2 py-1.5 border-b border-stone-200 bg-stone-100">
-                      <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">PM</span>
-                    </div>
-                    <div className="flex-1 min-h-0">
-                      {renderTimeColumn(pmHours)}
-                    </div>
-                  </div>
-
                 </div>
 
                 {/* Mini calendars — outside */}
