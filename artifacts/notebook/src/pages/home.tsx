@@ -193,31 +193,94 @@ const NAV_ITEMS: { id: ActiveView; label: string; icon: React.ElementType; activ
   { id: "schedule",   label: "Schedule",    icon: CalendarDays,   active: false },
 ];
 
-function AnalogClock({ now }: { now: Date }) {
-  const h = now.getHours() % 12;
-  const m = now.getMinutes();
-  const s = now.getSeconds();
-  const secDeg  = s * 6;
-  const minDeg  = m * 6 + s * 0.1;
-  const hourDeg = h * 30 + m * 0.5;
-  const pt = (deg: number, r: number) => ({
-    x: 50 + r * Math.cos((deg - 90) * Math.PI / 180),
-    y: 50 + r * Math.sin((deg - 90) * Math.PI / 180),
+function OrbitalClock24() {
+  const [tick, setTick] = useState({ d: new Date(), ms: 0 });
+  const rafRef = useRef<number>(0);
+  useEffect(() => {
+    const loop = () => {
+      const d = new Date();
+      setTick({ d, ms: d.getMilliseconds() });
+      rafRef.current = requestAnimationFrame(loop);
+    };
+    rafRef.current = requestAnimationFrame(loop);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, []);
+
+  const { d, ms } = tick;
+  const h = d.getHours();
+  const m = d.getMinutes();
+  const s = d.getSeconds();
+  const secSmooth  = s + ms / 1000;
+  const minSmooth  = m + secSmooth / 60;
+  const hourSmooth = h + minSmooth / 60;
+
+  const cx = 80, cy = 80, R = 58;
+  const orbitR = R + 14;
+
+  const polar = (deg: number, r: number) => ({
+    x: cx + r * Math.cos((deg - 90) * Math.PI / 180),
+    y: cy + r * Math.sin((deg - 90) * Math.PI / 180),
   });
+
+  const hourDeg = hourSmooth * 15;
+  const minDeg  = minSmooth  * 6;
+  const secDeg  = secSmooth  * 6;
+
+  const sweep = Math.max(0.01, Math.min(hourDeg, 359.99));
+  const toRad = (d: number) => (d - 90) * Math.PI / 180;
+  const sx = cx + R * Math.cos(toRad(0));
+  const sy = cy + R * Math.sin(toRad(0));
+  const ex = cx + R * Math.cos(toRad(sweep));
+  const ey = cy + R * Math.sin(toRad(sweep));
+  const large = sweep > 180 ? 1 : 0;
+  const sectorD = `M ${cx} ${cy} L ${sx} ${sy} A ${R} ${R} 0 ${large} 1 ${ex} ${ey} Z`;
+
+  const mp = polar(minDeg, 40);
+  const op = polar(secDeg, orbitR);
+  const divP = polar(hourDeg, R);
+
+  const ticks = Array.from({ length: 24 }, (_, i) => {
+    const deg = i * 15;
+    const isMajor = i % 3 === 0;
+    const o = polar(deg, R - 2);
+    const inn = polar(deg, R - 2 - (isMajor ? 9 : 4));
+    const lp = polar(deg, R - 2 - (isMajor ? 18 : 4));
+    return { o, inn, lp, isMajor, label: i === 0 ? "24" : String(i) };
+  });
+
   return (
-    <svg viewBox="0 0 100 100" className="w-full h-full">
-      <circle cx="50" cy="50" r="47" fill="white" stroke="#e2e8f0" strokeWidth="2" />
-      {Array.from({ length: 12 }, (_, i) => {
-        const a = i * 30; const p1 = pt(a, 38); const p2 = pt(a, i % 3 === 0 ? 44 : 42);
-        return <line key={i} x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y} stroke="#94a3b8" strokeWidth={i % 3 === 0 ? 2 : 1} />;
-      })}
-      {/* hour hand */}
-      <line x1="50" y1="50" x2={pt(hourDeg, 26).x} y2={pt(hourDeg, 26).y} stroke="#1e293b" strokeWidth="3.5" strokeLinecap="round" />
+    <svg viewBox="0 0 160 160" className="w-full h-full" style={{ overflow: "visible" }}>
+      {/* Filled sectors */}
+      <circle cx={cx} cy={cy} r={R} fill="#ffffff" />
+      <path d={sectorD} fill="#e8e4db" />
+      {/* sector divider line */}
+      <line x1={cx} y1={cy} x2={divP.x} y2={divP.y} stroke="#c9c5bc" strokeWidth="1" />
+      {/* rim */}
+      <circle cx={cx} cy={cy} r={R} fill="none" stroke="#d6d3ce" strokeWidth="1.5" />
+      {/* ticks + labels */}
+      {ticks.map((t, i) => (
+        <g key={i}>
+          <line x1={t.o.x} y1={t.o.y} x2={t.inn.x} y2={t.inn.y}
+            stroke="#9ca3af" strokeWidth={t.isMajor ? 1.5 : 0.8}
+            strokeLinecap="round" opacity={t.isMajor ? 0.75 : 0.4} />
+          {t.isMajor && (
+            <text x={t.lp.x} y={t.lp.y} textAnchor="middle" dominantBaseline="central"
+              fontSize="7" fontWeight="600" fill="#6b7280" fontFamily="system-ui,sans-serif">
+              {t.label}
+            </text>
+          )}
+        </g>
+      ))}
       {/* minute hand */}
-      <line x1="50" y1="50" x2={pt(minDeg, 34).x}  y2={pt(minDeg, 34).y}  stroke="#1e293b" strokeWidth="2.5" strokeLinecap="round" />
-      {/* second hand */}
-      <line x1="50" y1="50" x2={pt(secDeg, 38).x}  y2={pt(secDeg, 38).y}  stroke="#ef4444" strokeWidth="1.2" strokeLinecap="round" />
-      <circle cx="50" cy="50" r="2.5" fill="#1e293b" />
+      <line x1={cx} y1={cy} x2={mp.x} y2={mp.y}
+        stroke="#374151" strokeWidth="2" strokeLinecap="round" />
+      {/* center dot */}
+      <circle cx={cx} cy={cy} r="3.5" fill="#374151" />
+      {/* orbit track */}
+      <circle cx={cx} cy={cy} r={orbitR} fill="none" stroke="#d1d5db"
+        strokeWidth="0.8" strokeDasharray="2 3" opacity="0.5" />
+      {/* orbiting second ball */}
+      <circle cx={op.x} cy={op.y} r="5.5" fill="#1f2937" />
     </svg>
   );
 }
@@ -1704,8 +1767,8 @@ export default function Home() {
                   {/* Clock card — analog clock + empty right half */}
                   <div className="bg-white rounded-2xl border border-stone-200 flex-shrink-0 flex items-center">
                     <div className="flex-1 flex items-center justify-center p-5">
-                      <div className="w-[150px] h-[150px]">
-                        <AnalogClock now={clockNow} />
+                      <div className="w-[150px] h-[150px]" style={{ overflow: "visible" }}>
+                        <OrbitalClock24 />
                       </div>
                     </div>
                     <div className="flex-1 flex flex-col items-center justify-center p-4 border-l border-stone-100">
