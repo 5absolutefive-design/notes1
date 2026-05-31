@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 function sectorPath(cx: number, cy: number, r: number, startDeg: number, sweepDeg: number) {
   if (sweepDeg <= 0) return "";
   if (sweepDeg >= 360) {
-    // full circle as two arcs
     const top = { x: cx, y: cy - r };
     const bot = { x: cx, y: cy + r };
     return `M ${cx} ${cy} L ${top.x} ${top.y} A ${r} ${r} 0 0 1 ${bot.x} ${bot.y} A ${r} ${r} 0 0 1 ${top.x} ${top.y} Z`;
@@ -24,12 +23,11 @@ function Clock24Minimal({ now }: { now: Date }) {
 
   const minDeg  = m * 6 + s * 0.1;
   const secDeg  = s * 6;
-  const hourDeg = h * 15 + m * 0.25 + s * (0.25 / 60); // 0–360
+  const hourDeg = h * 15 + m * 0.25 + s * (0.25 / 60);
 
-  const cx = 160, cy = 160, r = 120;
-  const outerR = r + 18; // bezel radius
+  const cx = 160, cy = 160;
+  const r = 145; // full clock radius — sectors fill entire circle
 
-  // elapsed sweep = hourDeg, remaining = 360 - hourDeg
   const elapsedSweep   = Math.max(0.01, Math.min(hourDeg, 359.99));
   const remainingSweep = 360 - elapsedSweep;
 
@@ -41,46 +39,46 @@ function Clock24Minimal({ now }: { now: Date }) {
     return { x: cx + len * Math.cos(a), y: cy + len * Math.sin(a) };
   };
 
-  const m1 = handEnd(minDeg, 82);
-  const s1 = handEnd(secDeg, 96);
+  const m1 = handEnd(minDeg, 90);
+  const s1 = handEnd(secDeg, 108);
 
+  // ticks sit just inside the edge
   const ticks = Array.from({ length: 24 }, (_, i) => {
     const hour  = i === 0 ? 24 : i;
     const angle = (i * 15 - 90) * (Math.PI / 180);
     const isMajor = i % 3 === 0;
-    const inner = r - (isMajor ? 14 : 6);
+    const outer = r - 4;
+    const inner = outer - (isMajor ? 16 : 7);
     return {
-      x1: cx + inner   * Math.cos(angle),
-      y1: cy + inner   * Math.sin(angle),
-      x2: cx + r       * Math.cos(angle),
-      y2: cy + r       * Math.sin(angle),
+      x1: cx + inner * Math.cos(angle),
+      y1: cy + inner * Math.sin(angle),
+      x2: cx + outer * Math.cos(angle),
+      y2: cy + outer * Math.sin(angle),
       isMajor,
       label: String(hour),
-      lx: cx + (r + 12) * Math.cos(angle),
-      ly: cy + (r + 12) * Math.sin(angle),
+      lx: cx + (inner - 10) * Math.cos(angle),
+      ly: cy + (inner - 10) * Math.sin(angle),
     };
   });
 
-  const pad = (n: number) => String(n).padStart(2, "0");
-
   return (
-    <div className="flex flex-col items-center gap-4">
+    <div className="flex items-center justify-center">
       <svg width="320" height="320" viewBox="0 0 320 320">
-        {/* Bezel — same center as sectors */}
-        <circle cx={cx} cy={cy} r={outerR} fill="#f9f9f7" stroke="#e4e4e0" strokeWidth="2" />
-
         {/* Remaining sector — pure white */}
         <path d={remainingPath} fill="#ffffff" />
-        {/* Elapsed sector — off-white / warm cream */}
+        {/* Elapsed sector — off-white warm cream */}
         <path d={elapsedPath} fill="#e8e4db" />
 
-        {/* Thin boundary line at current hour position */}
+        {/* Outer border ring — on top of sectors */}
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="#d1cec7" strokeWidth="2" />
+
+        {/* Boundary line between sectors */}
         {hourDeg > 0.5 && hourDeg < 359.5 && (
           <line
             x1={cx} y1={cy}
             x2={cx + r * Math.cos((hourDeg - 90) * Math.PI / 180)}
             y2={cy + r * Math.sin((hourDeg - 90) * Math.PI / 180)}
-            stroke="#c8c4bb" strokeWidth="1.5"
+            stroke="#c0bbb2" strokeWidth="1.5"
           />
         )}
 
@@ -92,7 +90,7 @@ function Clock24Minimal({ now }: { now: Date }) {
               stroke="#9ca3af"
               strokeWidth={t.isMajor ? 2 : 1}
               strokeLinecap="round"
-              opacity={t.isMajor ? 0.8 : 0.4}
+              opacity={t.isMajor ? 0.8 : 0.45}
             />
             {t.isMajor && (
               <text
@@ -117,7 +115,6 @@ function Clock24Minimal({ now }: { now: Date }) {
         {/* Center dot */}
         <circle cx={cx} cy={cy} r="5" fill="#374151" />
         <circle cx={cx} cy={cy} r="2.5" fill="#f59e0b" />
-
       </svg>
     </div>
   );

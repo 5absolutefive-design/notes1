@@ -25,8 +25,8 @@ function Clock24Dark({ now }: { now: Date }) {
   const secDeg  = s * 6;
   const hourDeg = h * 15 + m * 0.25 + s * (0.25 / 60);
 
-  const cx = 160, cy = 160, r = 120;
-  const outerR = r + 18;
+  const cx = 160, cy = 160;
+  const r = 145; // full clock radius
 
   const elapsedSweep   = Math.max(0.01, Math.min(hourDeg, 359.99));
   const remainingSweep = 360 - elapsedSweep;
@@ -43,35 +43,34 @@ function Clock24Dark({ now }: { now: Date }) {
     return { x: cx + len * Math.cos(a), y: cy + len * Math.sin(a) };
   };
 
-  const m1 = handEnd(minDeg, 84);
-  const s1 = handEnd(secDeg, 98);
+  const m1 = handEnd(minDeg, 92);
+  const s1 = handEnd(secDeg, 108);
   const st = tailEnd(secDeg, 18);
 
   const ticks = Array.from({ length: 24 }, (_, i) => {
     const hour  = i === 0 ? 24 : i;
     const angle = (i * 15 - 90) * (Math.PI / 180);
     const isMajor = i % 3 === 0;
-    const inner = r - (isMajor ? 14 : 6);
+    const outer = r - 4;
+    const inner = outer - (isMajor ? 16 : 7);
     return {
-      x1: cx + inner    * Math.cos(angle),
-      y1: cy + inner    * Math.sin(angle),
-      x2: cx + r        * Math.cos(angle),
-      y2: cy + r        * Math.sin(angle),
+      x1: cx + inner * Math.cos(angle),
+      y1: cy + inner * Math.sin(angle),
+      x2: cx + outer * Math.cos(angle),
+      y2: cy + outer * Math.sin(angle),
       isMajor,
       label: String(hour),
-      lx: cx + (r + 13) * Math.cos(angle),
-      ly: cy + (r + 13) * Math.sin(angle),
+      lx: cx + (inner - 10) * Math.cos(angle),
+      ly: cy + (inner - 10) * Math.sin(angle),
     };
   });
-
-  const pad = (n: number) => String(n).padStart(2, "0");
 
   const isDay = h >= 6 && h < 18;
   const sectorColor = isDay ? "#ef4444" : "#7c3aed";
   const sectorGlow  = isDay ? "#ef444450" : "#7c3aed50";
 
   return (
-    <div className="flex flex-col items-center gap-4">
+    <div className="flex items-center justify-center">
       <svg width="320" height="320" viewBox="0 0 320 320">
         <defs>
           <filter id="glow">
@@ -80,14 +79,14 @@ function Clock24Dark({ now }: { now: Date }) {
           </filter>
         </defs>
 
-        {/* Bezel — centered */}
-        <circle cx={cx} cy={cy} r={outerR} fill="#0f172a" stroke="#334155" strokeWidth="2" />
-
         {/* Remaining sector — dark navy */}
         <path d={remainingPath} fill="#111827" />
         {/* Elapsed sector — colored */}
         <path d={elapsedPath} fill={sectorColor}
           style={{ filter: `drop-shadow(0 0 6px ${sectorGlow})` }} />
+
+        {/* Outer border ring */}
+        <circle cx={cx} cy={cy} r={r} fill="none" stroke="#334155" strokeWidth="2" />
 
         {/* Boundary line */}
         {hourDeg > 0.5 && hourDeg < 359.5 && (
@@ -95,7 +94,7 @@ function Clock24Dark({ now }: { now: Date }) {
             x1={cx} y1={cy}
             x2={cx + r * Math.cos((hourDeg - 90) * Math.PI / 180)}
             y2={cy + r * Math.sin((hourDeg - 90) * Math.PI / 180)}
-            stroke="white" strokeWidth="1.5" opacity="0.4"
+            stroke="white" strokeWidth="1.5" opacity="0.35"
           />
         )}
 
@@ -134,7 +133,6 @@ function Clock24Dark({ now }: { now: Date }) {
         {/* Center */}
         <circle cx={cx} cy={cy} r="6" fill="#0f172a" stroke="white" strokeWidth="1.5" />
         <circle cx={cx} cy={cy} r="2.5" fill="#fbbf24" />
-
       </svg>
     </div>
   );
