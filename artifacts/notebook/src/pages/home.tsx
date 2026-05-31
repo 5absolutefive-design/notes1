@@ -1496,9 +1496,9 @@ export default function Home() {
                           {filteredTasks.map((task, idx) => {
                             const pm = task.priority ? DAY_PRIORITY_META[task.priority] : null;
                             return (
-                              <div key={task.id} className="relative w-full" style={{ opacity: task.done ? 0.3 : 1, transition: "opacity 0.2s" }}>
+                              <div key={task.id} className="relative w-full group/card" style={{ opacity: task.done ? 0.3 : 1, transition: "opacity 0.2s" }}>
                                 {/* FlatC card */}
-                                <div className="flex items-center overflow-hidden border border-stone-200 rounded-md w-full"
+                                <div className="flex items-center overflow-hidden border border-stone-200 rounded-lg w-full shadow-sm transition-all duration-200 ease-out group-hover/card:-translate-y-[3px] group-hover/card:shadow-md group-hover/card:border-stone-300"
                                   style={{ height: CARD_H, backgroundColor: pm ? pm.rowBg : "#ffffff" }}>
 
                                   {/* Left accent bar */}
