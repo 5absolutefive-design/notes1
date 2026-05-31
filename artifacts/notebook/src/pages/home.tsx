@@ -1851,11 +1851,11 @@ export default function Home() {
                     <p className="text-[9px] font-bold text-stone-400 tracking-widest uppercase mb-2">ToDay</p>
                     <button
                       onClick={() => setSelectedDate(days[0].key)}
-                      className={`flex flex-col items-center justify-center rounded-xl border transition-all ${selectedDate === days[0].key ? "bg-stone-800 text-white border-stone-800" : "border-stone-300 text-stone-600 hover:border-stone-500 bg-white"}`}
-                      style={{ width: "calc(100% * 2 / 15)", aspectRatio: "1 / 1" }}
+                      className={`flex flex-col items-center justify-center rounded-lg border transition-all ${selectedDate === days[0].key ? "bg-stone-800 text-white border-stone-800" : "border-stone-300 text-stone-600 hover:border-stone-500 bg-white"}`}
+                      style={{ width: "calc(100% * 2 / 15 * 0.7)", aspectRatio: "1 / 1" }}
                     >
-                      <span className="text-[7px] font-bold uppercase leading-none">{days[0].day}</span>
-                      <span className="text-xs font-bold tabular-nums mt-0.5">{days[0].label}</span>
+                      <span className="text-[5px] font-bold uppercase leading-none">{days[0].day}</span>
+                      <span className="text-[8px] font-bold tabular-nums mt-0.5">{days[0].label}</span>
                     </button>
 
                     {/* Next 14 Days — 14 cols × 2 rows: each card occupies r1c1, r2c2, r1c3, r2c4 ... */}
