@@ -466,6 +466,7 @@ export default function Home() {
   const [editingTimeSlot, setEditingTimeSlot] = useState<number | null>(null);
   const [editingTimeStr, setEditingTimeStr] = useState<string>("");
   const [amPlanMode, setAmPlanMode] = useState(false);
+  const [pmPlanMode, setPmPlanMode] = useState(false);
   const [scheduleCellColors, setScheduleCellColors] = useState<Record<string, Record<number, string>>>(() => loadScheduleCellColors());
   const [colorPickerSlot, setColorPickerSlot] = useState<number | null>(null);
   const [schedulePlanDone, setSchedulePlanDone] = useState<Record<string, Record<number, boolean>>>(() => loadSchedulePlanDone());
@@ -2500,11 +2501,83 @@ export default function Home() {
 
                   {/* Floating PM card */}
                   <div className="flex-1 min-w-0 rounded-xl border border-stone-200 bg-white shadow-lg flex flex-col overflow-hidden">
-                    <div className="flex-shrink-0 px-3 py-2 border-b border-stone-200 bg-stone-50">
+                    <div className="flex-shrink-0 px-3 py-2 border-b border-stone-200 bg-stone-50 flex items-center justify-between">
                       <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">PM</span>
+                      {pmPlanMode ? (
+                        <button
+                          onClick={() => setPmPlanMode(false)}
+                          className="px-3 py-0.5 rounded-full text-[10px] font-bold text-white tracking-wide transition-all hover:scale-105 active:scale-95"
+                          style={{ backgroundColor: "#06b6d4" }}
+                        >
+                          Redo
+                        </button>
+                      ) : (
+                        <button
+                          onClick={() => setPmPlanMode(true)}
+                          className="px-3 py-0.5 rounded-full text-[10px] font-bold text-white tracking-wide transition-all hover:scale-105 active:scale-95"
+                          style={{ backgroundColor: "#22c55e" }}
+                        >
+                          Done
+                        </button>
+                      )}
                     </div>
-                    <div className="flex-1 min-h-0">
-                      {renderTimeColumn(pmHours)}
+                    <div className="flex-1 min-h-0 overflow-y-auto">
+                      {pmPlanMode ? (() => {
+                        const allHours = [...amHours, ...pmHours];
+                        const entries = allHours
+                          .filter(h => (dayNotes[h] ?? "").trim() !== "")
+                          .map(h => ({ hour: h, time: getDisplayTime(h), text: dayNotes[h] ?? "" }));
+                        if (entries.length === 0) {
+                          return (
+                            <div className="flex flex-col items-center justify-center h-full text-stone-300 gap-2">
+                              <span className="text-3xl">📋</span>
+                              <span className="text-[11px] font-medium">No entries yet</span>
+                            </div>
+                          );
+                        }
+                        return (
+                          <div className="flex flex-col items-center py-4 px-3 gap-0">
+                            {entries.map((entry, i) => {
+                              const entryColor = cellColorsForDate[entry.hour] ?? null;
+                              const slotMeta = entryColor ? SLOT_COLORS.find(c => c.bg === entryColor) : null;
+                              const isDone = (schedulePlanDone[scheduleDate] ?? {})[entry.hour] ?? false;
+                              return (
+                                <div key={entry.hour} className="flex flex-col items-center w-full" style={{ opacity: isDone ? 0.2 : 1, transition: "opacity 0.2s" }}>
+                                  <div
+                                    className="relative w-full rounded-xl px-4 py-2 flex flex-col items-center gap-0.5 shadow-sm border"
+                                    style={entryColor
+                                      ? { backgroundColor: entryColor + "66", borderColor: entryColor }
+                                      : { backgroundColor: "#f8f8f7", borderColor: "#e7e5e4" }}
+                                  >
+                                    <button
+                                      onClick={() => toggleSchedulePlanDone(scheduleDate, entry.hour)}
+                                      className="absolute top-1.5 right-1.5 w-4 h-4 rounded flex items-center justify-center border transition-all"
+                                      style={isDone
+                                        ? { backgroundColor: "#22c55e", borderColor: "#22c55e" }
+                                        : { backgroundColor: "white", borderColor: "#d6d3d1" }}
+                                    >
+                                      {isDone && <svg width="9" height="9" viewBox="0 0 9 9" fill="none"><path d="M1.5 4.5L3.5 6.5L7.5 2.5" stroke="white" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                                    </button>
+                                    <div className="flex items-center gap-1.5">
+                                      {slotMeta && <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: slotMeta.dot }} />}
+                                      <span className="text-[10px] font-semibold text-stone-400 tracking-wide">{entry.time}</span>
+                                      {slotMeta && <span className="text-[9px] font-bold tracking-wide" style={{ color: slotMeta.dot }}>{slotMeta.label}</span>}
+                                    </div>
+                                    <span className="text-[13px] font-medium text-stone-700 text-center">{entry.text}</span>
+                                  </div>
+                                  {i < entries.length - 1 && (
+                                    <div className="flex flex-col items-center my-1">
+                                      <div className="w-px h-3 bg-stone-300" />
+                                      <span className="text-stone-400 text-[14px] leading-none">↓</span>
+                                      <div className="w-px h-3 bg-stone-300" />
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        );
+                      })() : renderTimeColumn(pmHours)}
                     </div>
                   </div>
 
