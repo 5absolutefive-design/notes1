@@ -8,6 +8,7 @@ import {
   Smile, Image as ImageIcon, Type, List, Mic, Square, Play, Pause,
 } from "lucide-react";
 import { useState, useEffect, useCallback, useRef } from "react";
+import ReactDOM from "react-dom";
 import { store, type Book } from "@/lib/store";
 
 interface ProfileData {
@@ -290,6 +291,7 @@ export default function Home() {
   const [priorityMenuId, setPriorityMenuId] = useState<number | null>(null);
   const [notePopupId, setNotePopupId] = useState<number | null>(null);
   const [progressMenuId, setProgressMenuId] = useState<number | null>(null);
+  const [popupPos, setPopupPos] = useState<{ top: number; right: number } | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<number | null>(null);
   const [tempHour, setTempHour] = useState("12");
   const [tempMinute, setTempMinute] = useState("00");
@@ -1535,86 +1537,89 @@ export default function Home() {
                                   </div>
 
                                   {/* Note */}
-                                  <div className="relative w-16 flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch cursor-pointer select-none"
-                                    onClick={e => { e.stopPropagation(); setNotePopupId(notePopupId === task.id ? null : task.id); setTimePickerId(null); setPriorityMenuId(null); setProgressMenuId(null); setDeleteConfirmId(null); }}>
+                                  <div className="w-16 flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch cursor-pointer select-none"
+                                    onClick={e => { e.stopPropagation(); const r = (e.currentTarget as HTMLElement).getBoundingClientRect(); setPopupPos({ top: r.bottom + 6, right: window.innerWidth - r.right }); setNotePopupId(notePopupId === task.id ? null : task.id); setTimePickerId(null); setPriorityMenuId(null); setProgressMenuId(null); setDeleteConfirmId(null); }}>
                                     <span className={`text-[11px] font-medium ${task.note ? "text-indigo-500" : "text-stone-400"}`}>
                                       Note{task.note && <span className="ml-1 w-1.5 h-1.5 rounded-full bg-indigo-400 inline-block align-middle" />}
                                     </span>
-                                    {notePopupId === task.id && (
-                                      <div className="absolute z-50 bg-white border border-stone-200 rounded-xl shadow-lg p-3 flex flex-col gap-2"
-                                        style={{ top: CARD_H + 6, right: 0, width: 320 }}
-                                        onClick={e => e.stopPropagation()}>
-                                        <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Note</p>
-                                        <textarea autoFocus value={task.note} onChange={e => updateTask(task.id, { note: e.target.value })} placeholder="Write a note..." rows={3}
-                                          className="w-full text-xs text-stone-700 border border-stone-200 rounded-lg p-2 outline-none resize-none focus:border-indigo-300 placeholder-stone-300" />
-                                        <button onClick={() => setNotePopupId(null)} className="text-[11px] font-bold text-white bg-stone-800 rounded-lg px-3 py-1.5 hover:bg-stone-700 w-full">Done</button>
-                                      </div>
-                                    )}
                                   </div>
+                                  {notePopupId === task.id && popupPos && ReactDOM.createPortal(
+                                    <div className="bg-white border border-stone-200 rounded-xl shadow-xl p-3 flex flex-col gap-2"
+                                      style={{ position: "fixed", top: popupPos.top, right: popupPos.right, width: 320, zIndex: 9999 }}
+                                      onClick={e => e.stopPropagation()}>
+                                      <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Note</p>
+                                      <textarea autoFocus value={task.note} onChange={e => updateTask(task.id, { note: e.target.value })} placeholder="Write a note..." rows={3}
+                                        className="w-full text-xs text-stone-700 border border-stone-200 rounded-lg p-2 outline-none resize-none focus:border-indigo-300 placeholder-stone-300" />
+                                      <button onClick={() => setNotePopupId(null)} className="text-[11px] font-bold text-white bg-stone-800 rounded-lg px-3 py-1.5 hover:bg-stone-700 w-full">Done</button>
+                                    </div>,
+                                    document.body
+                                  )}
 
                                   {/* Time */}
-                                  <div className="relative w-24 flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch cursor-pointer select-none"
-                                    onClick={e => { e.stopPropagation(); if (timePickerId !== task.id) { setTempHour(task.hour || "12"); setTempMinute(task.minute || "00"); setTempAmpm(task.ampm || "AM"); setTimePickerId(task.id); setPriorityMenuId(null); setNotePopupId(null); setProgressMenuId(null); setDeleteConfirmId(null); } else { setTimePickerId(null); } }}>
+                                  <div className="w-24 flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch cursor-pointer select-none"
+                                    onClick={e => { e.stopPropagation(); const r = (e.currentTarget as HTMLElement).getBoundingClientRect(); setPopupPos({ top: r.bottom + 6, right: window.innerWidth - r.right }); if (timePickerId !== task.id) { setTempHour(task.hour || "12"); setTempMinute(task.minute || "00"); setTempAmpm(task.ampm || "AM"); setTimePickerId(task.id); setPriorityMenuId(null); setNotePopupId(null); setProgressMenuId(null); setDeleteConfirmId(null); } else { setTimePickerId(null); } }}>
                                     <span className={`text-[11px] tabular-nums ${!task.hasTime ? "text-stone-300" : "text-stone-600"}`}>
                                       {task.hasTime ? `${task.hour}:${task.minute} ${task.ampm}` : "--:-- --"}
                                     </span>
-                                    {timePickerId === task.id && (
-                                      <div className="absolute z-50 bg-white border border-stone-200 rounded-xl shadow-lg p-3 flex flex-col gap-2.5"
-                                        style={{ top: CARD_H + 6, right: 0, width: 220 }}
-                                        onClick={e => e.stopPropagation()}>
-                                        <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Time</p>
-                                        <div className="flex items-center gap-2">
-                                          <select value={tempHour} onChange={e => setTempHour(e.target.value)} className="flex-1 text-sm border border-stone-200 rounded-lg px-2 py-1.5 outline-none bg-white text-stone-700">
-                                            {Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0")).map(v => <option key={v} value={v}>{v}</option>)}
-                                          </select>
-                                          <span className="text-stone-400 font-bold">:</span>
-                                          <select value={tempMinute} onChange={e => setTempMinute(e.target.value)} className="flex-1 text-sm border border-stone-200 rounded-lg px-2 py-1.5 outline-none bg-white text-stone-700">
-                                            {["00","05","10","15","20","25","30","35","40","45","50","55"].map(v => <option key={v} value={v}>{v}</option>)}
-                                          </select>
-                                          <select value={tempAmpm} onChange={e => setTempAmpm(e.target.value as "AM" | "PM")} className="text-sm border border-stone-200 rounded-lg px-2 py-1.5 outline-none bg-white text-stone-700">
-                                            <option value="AM">AM</option>
-                                            <option value="PM">PM</option>
-                                          </select>
-                                        </div>
-                                        <div className="flex gap-1.5">
-                                          <button onClick={() => { updateTask(task.id, { hour: tempHour, minute: tempMinute, ampm: tempAmpm, hasTime: true }); setTimePickerId(null); }} className="flex-1 text-[11px] font-bold text-white bg-stone-800 rounded-lg py-1.5 hover:bg-stone-700">Set</button>
-                                          {task.hasTime && <button onClick={() => { updateTask(task.id, { hasTime: false }); setTimePickerId(null); }} className="text-[11px] text-stone-400 border border-stone-200 rounded-lg px-3 py-1.5 hover:text-stone-600">Clear</button>}
-                                        </div>
-                                      </div>
-                                    )}
                                   </div>
+                                  {timePickerId === task.id && popupPos && ReactDOM.createPortal(
+                                    <div className="bg-white border border-stone-200 rounded-xl shadow-xl p-3 flex flex-col gap-2.5"
+                                      style={{ position: "fixed", top: popupPos.top, right: popupPos.right, width: 220, zIndex: 9999 }}
+                                      onClick={e => e.stopPropagation()}>
+                                      <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Time</p>
+                                      <div className="flex items-center gap-2">
+                                        <select value={tempHour} onChange={e => setTempHour(e.target.value)} className="flex-1 text-sm border border-stone-200 rounded-lg px-2 py-1.5 outline-none bg-white text-stone-700">
+                                          {Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, "0")).map(v => <option key={v} value={v}>{v}</option>)}
+                                        </select>
+                                        <span className="text-stone-400 font-bold">:</span>
+                                        <select value={tempMinute} onChange={e => setTempMinute(e.target.value)} className="flex-1 text-sm border border-stone-200 rounded-lg px-2 py-1.5 outline-none bg-white text-stone-700">
+                                          {["00","05","10","15","20","25","30","35","40","45","50","55"].map(v => <option key={v} value={v}>{v}</option>)}
+                                        </select>
+                                        <select value={tempAmpm} onChange={e => setTempAmpm(e.target.value as "AM" | "PM")} className="text-sm border border-stone-200 rounded-lg px-2 py-1.5 outline-none bg-white text-stone-700">
+                                          <option value="AM">AM</option>
+                                          <option value="PM">PM</option>
+                                        </select>
+                                      </div>
+                                      <div className="flex gap-1.5">
+                                        <button onClick={() => { updateTask(task.id, { hour: tempHour, minute: tempMinute, ampm: tempAmpm, hasTime: true }); setTimePickerId(null); }} className="flex-1 text-[11px] font-bold text-white bg-stone-800 rounded-lg py-1.5 hover:bg-stone-700">Set</button>
+                                        {task.hasTime && <button onClick={() => { updateTask(task.id, { hasTime: false }); setTimePickerId(null); }} className="text-[11px] text-stone-400 border border-stone-200 rounded-lg px-3 py-1.5 hover:text-stone-600">Clear</button>}
+                                      </div>
+                                    </div>,
+                                    document.body
+                                  )}
 
                                   {/* Priority */}
-                                  <div className="relative w-[88px] flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch cursor-pointer select-none"
-                                    onClick={e => { e.stopPropagation(); setPriorityMenuId(priorityMenuId === task.id ? null : task.id); setTimePickerId(null); setNotePopupId(null); setProgressMenuId(null); setDeleteConfirmId(null); }}>
+                                  <div className="w-[88px] flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch cursor-pointer select-none"
+                                    onClick={e => { e.stopPropagation(); const r = (e.currentTarget as HTMLElement).getBoundingClientRect(); setPopupPos({ top: r.bottom + 6, right: window.innerWidth - r.right }); setPriorityMenuId(priorityMenuId === task.id ? null : task.id); setTimePickerId(null); setNotePopupId(null); setProgressMenuId(null); setDeleteConfirmId(null); }}>
                                     <span className="text-[11px] font-semibold" style={pm ? { color: pm.color } : { color: "#c8c4bf" }}>
                                       {pm ? pm.label : "N/A"}
                                     </span>
-                                    {priorityMenuId === task.id && (
-                                      <div className="absolute z-50 bg-white border border-stone-200 rounded-xl shadow-lg py-2"
-                                        style={{ top: CARD_H + 6, right: 0, width: 160 }}
-                                        onClick={e => e.stopPropagation()}>
-                                        <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest px-3 pb-1.5">Priority</p>
-                                        {(["low", "normal", "medium", "important", "urgent"] as NonNullable<DayPriority>[]).map(p => (
-                                          <button key={p} onClick={() => { updateTask(task.id, { priority: p }); setPriorityMenuId(null); }}
-                                            className={`w-full flex items-center gap-2.5 px-3 py-2 hover:bg-stone-50 text-left ${task.priority === p ? "bg-stone-50" : ""}`}>
-                                            <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: DAY_PRIORITY_META[p].dot }} />
-                                            <span className="text-[12px] font-medium text-stone-700">{DAY_PRIORITY_META[p].label}</span>
-                                          </button>
-                                        ))}
-                                        {task.priority && (
-                                          <button onClick={() => { updateTask(task.id, { priority: null }); setPriorityMenuId(null); }}
-                                            className="w-full text-left text-[11px] text-stone-400 px-3 py-1.5 hover:bg-stone-50 border-t border-stone-100 mt-1">
-                                            Clear
-                                          </button>
-                                        )}
-                                      </div>
-                                    )}
                                   </div>
+                                  {priorityMenuId === task.id && popupPos && ReactDOM.createPortal(
+                                    <div className="bg-white border border-stone-200 rounded-xl shadow-xl py-2"
+                                      style={{ position: "fixed", top: popupPos.top, right: popupPos.right, width: 160, zIndex: 9999 }}
+                                      onClick={e => e.stopPropagation()}>
+                                      <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest px-3 pb-1.5">Priority</p>
+                                      {(["low", "normal", "medium", "important", "urgent"] as NonNullable<DayPriority>[]).map(p => (
+                                        <button key={p} onClick={() => { updateTask(task.id, { priority: p }); setPriorityMenuId(null); }}
+                                          className={`w-full flex items-center gap-2.5 px-3 py-2 hover:bg-stone-50 text-left ${task.priority === p ? "bg-stone-50" : ""}`}>
+                                          <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: DAY_PRIORITY_META[p].dot }} />
+                                          <span className="text-[12px] font-medium text-stone-700">{DAY_PRIORITY_META[p].label}</span>
+                                        </button>
+                                      ))}
+                                      {task.priority && (
+                                        <button onClick={() => { updateTask(task.id, { priority: null }); setPriorityMenuId(null); }}
+                                          className="w-full text-left text-[11px] text-stone-400 px-3 py-1.5 hover:bg-stone-50 border-t border-stone-100 mt-1">
+                                          Clear
+                                        </button>
+                                      )}
+                                    </div>,
+                                    document.body
+                                  )}
 
                                   {/* Progress */}
-                                  <div className="relative w-[90px] flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch cursor-pointer select-none px-3"
-                                    onClick={e => { e.stopPropagation(); setProgressMenuId(progressMenuId === task.id ? null : task.id); setTimePickerId(null); setNotePopupId(null); setPriorityMenuId(null); setDeleteConfirmId(null); }}>
+                                  <div className="w-[90px] flex items-center justify-center flex-shrink-0 border-r border-stone-200 self-stretch cursor-pointer select-none px-3"
+                                    onClick={e => { e.stopPropagation(); const r = (e.currentTarget as HTMLElement).getBoundingClientRect(); setPopupPos({ top: r.bottom + 6, right: window.innerWidth - r.right }); setProgressMenuId(progressMenuId === task.id ? null : task.id); setTimePickerId(null); setNotePopupId(null); setPriorityMenuId(null); setDeleteConfirmId(null); }}>
                                     {task.progress > 0 ? (
                                       <div className="flex items-center gap-1.5 w-full">
                                         <div className="flex-1 h-[3px] bg-stone-200 rounded-full overflow-hidden">
@@ -1625,19 +1630,20 @@ export default function Home() {
                                     ) : (
                                       <span className="text-[11px] text-stone-300">Progress %</span>
                                     )}
-                                    {progressMenuId === task.id && (
-                                      <div className="absolute z-50 bg-white border border-stone-200 rounded-xl shadow-lg py-2"
-                                        style={{ top: CARD_H + 6, right: 0, width: 110 }}
-                                        onClick={e => e.stopPropagation()}>
-                                        {[0, 10, 25, 50, 75, 90, 100].map(p => (
-                                          <button key={p} onClick={() => { updateTask(task.id, { progress: p }); setProgressMenuId(null); }}
-                                            className={`w-full text-left px-4 py-1.5 hover:bg-stone-50 text-[12px] ${task.progress === p ? "font-bold text-stone-800" : "text-stone-600"}`}>
-                                            {p}%
-                                          </button>
-                                        ))}
-                                      </div>
-                                    )}
                                   </div>
+                                  {progressMenuId === task.id && popupPos && ReactDOM.createPortal(
+                                    <div className="bg-white border border-stone-200 rounded-xl shadow-xl py-2"
+                                      style={{ position: "fixed", top: popupPos.top, right: popupPos.right, width: 110, zIndex: 9999 }}
+                                      onClick={e => e.stopPropagation()}>
+                                      {[0, 10, 25, 50, 75, 90, 100].map(p => (
+                                        <button key={p} onClick={() => { updateTask(task.id, { progress: p }); setProgressMenuId(null); }}
+                                          className={`w-full text-left px-4 py-1.5 hover:bg-stone-50 text-[12px] ${task.progress === p ? "font-bold text-stone-800" : "text-stone-600"}`}>
+                                          {p}%
+                                        </button>
+                                      ))}
+                                    </div>,
+                                    document.body
+                                  )}
 
                                   {/* Trash */}
                                   <div className="w-11 flex items-center justify-center flex-shrink-0 self-stretch cursor-pointer"
