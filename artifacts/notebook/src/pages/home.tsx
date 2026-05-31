@@ -220,6 +220,12 @@ function loadSchedulePlanDone(): Record<string, Record<number, boolean>> {
 function saveSchedulePlanDone(data: Record<string, Record<number, boolean>>) {
   localStorage.setItem("nb_schedule_plan_done", JSON.stringify(data));
 }
+function loadSchedulePlanMode(): Record<string, { am: boolean; pm: boolean }> {
+  try { const r = localStorage.getItem("nb_schedule_plan_mode"); return r ? JSON.parse(r) : {}; } catch { return {}; }
+}
+function saveSchedulePlanMode(data: Record<string, { am: boolean; pm: boolean }>) {
+  localStorage.setItem("nb_schedule_plan_mode", JSON.stringify(data));
+}
 
 const SLOT_COLORS = [
   { label: "Urgent",    bg: "#fecaca", dot: "#ef4444" },
@@ -469,8 +475,14 @@ export default function Home() {
   const [scheduleCustomTimes, setScheduleCustomTimes] = useState<Record<string, Record<number, string>>>(() => loadScheduleCustomTimes());
   const [editingTimeSlot, setEditingTimeSlot] = useState<number | null>(null);
   const [editingTimeStr, setEditingTimeStr] = useState<string>("");
-  const [amPlanMode, setAmPlanMode] = useState(false);
-  const [pmPlanMode, setPmPlanMode] = useState(false);
+  const [amPlanMode, setAmPlanMode] = useState<boolean>(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    return loadSchedulePlanMode()[today]?.am ?? false;
+  });
+  const [pmPlanMode, setPmPlanMode] = useState<boolean>(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    return loadSchedulePlanMode()[today]?.pm ?? false;
+  });
   const [scheduleCellColors, setScheduleCellColors] = useState<Record<string, Record<number, string>>>(() => loadScheduleCellColors());
   const [colorPickerSlot, setColorPickerSlot] = useState<number | null>(null);
   const [schedulePlanDone, setSchedulePlanDone] = useState<Record<string, Record<number, boolean>>>(() => loadSchedulePlanDone());
@@ -572,6 +584,13 @@ export default function Home() {
     setSelectedTypeId("all");
     setNewTaskFocusId(null);
   }, [selectedDate]);
+
+  // Reload AM/PM plan mode when schedule date changes
+  useEffect(() => {
+    const saved = loadSchedulePlanMode()[scheduleDate];
+    setAmPlanMode(saved?.am ?? false);
+    setPmPlanMode(saved?.pm ?? false);
+  }, [scheduleDate]);
 
   useEffect(() => {
     if (!showCreate) return;
@@ -2443,15 +2462,23 @@ export default function Home() {
                       <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">AM</span>
                       {amPlanMode ? (
                         <button
-                          onClick={() => setAmPlanMode(false)}
+                          onClick={() => {
+                            setAmPlanMode(false);
+                            const all = loadSchedulePlanMode();
+                            saveSchedulePlanMode({ ...all, [scheduleDate]: { am: false, pm: all[scheduleDate]?.pm ?? false } });
+                          }}
                           className="px-3 py-0.5 rounded-full text-[10px] font-bold text-white tracking-wide transition-all hover:scale-105 active:scale-95"
                           style={{ backgroundColor: "#06b6d4" }}
                         >
-                          Redo
+                          Edit
                         </button>
                       ) : (
                         <button
-                          onClick={() => setAmPlanMode(true)}
+                          onClick={() => {
+                            setAmPlanMode(true);
+                            const all = loadSchedulePlanMode();
+                            saveSchedulePlanMode({ ...all, [scheduleDate]: { am: true, pm: all[scheduleDate]?.pm ?? false } });
+                          }}
                           className="px-3 py-0.5 rounded-full text-[10px] font-bold text-white tracking-wide transition-all hover:scale-105 active:scale-95"
                           style={{ backgroundColor: "#22c55e" }}
                         >
@@ -2525,15 +2552,23 @@ export default function Home() {
                       <span className="text-[10px] font-bold text-stone-500 uppercase tracking-widest">PM</span>
                       {pmPlanMode ? (
                         <button
-                          onClick={() => setPmPlanMode(false)}
+                          onClick={() => {
+                            setPmPlanMode(false);
+                            const all = loadSchedulePlanMode();
+                            saveSchedulePlanMode({ ...all, [scheduleDate]: { am: all[scheduleDate]?.am ?? false, pm: false } });
+                          }}
                           className="px-3 py-0.5 rounded-full text-[10px] font-bold text-white tracking-wide transition-all hover:scale-105 active:scale-95"
                           style={{ backgroundColor: "#06b6d4" }}
                         >
-                          Redo
+                          Edit
                         </button>
                       ) : (
                         <button
-                          onClick={() => setPmPlanMode(true)}
+                          onClick={() => {
+                            setPmPlanMode(true);
+                            const all = loadSchedulePlanMode();
+                            saveSchedulePlanMode({ ...all, [scheduleDate]: { am: all[scheduleDate]?.am ?? false, pm: true } });
+                          }}
                           className="px-3 py-0.5 rounded-full text-[10px] font-bold text-white tracking-wide transition-all hover:scale-105 active:scale-95"
                           style={{ backgroundColor: "#22c55e" }}
                         >
