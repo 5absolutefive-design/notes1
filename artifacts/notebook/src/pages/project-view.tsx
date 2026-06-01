@@ -114,6 +114,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const bannerUploadRef = useRef<HTMLInputElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const colResizeRef = useRef<{ startX: number; startY: number; cell: HTMLTableCellElement; startW: number; startH: number; mode: "col" | "row" } | null>(null);
   const [lastTodoPos, setLastTodoPos] = useState<{ top: number; left: number } | null>(null);
   const [showTodoButtons, setShowTodoButtons] = useState(false);
 
@@ -250,6 +251,64 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
       setCtxMenu(m => m ? { ...m, x: newX, y: newY } : null);
     }
   }, [ctxMenu?.x, ctxMenu?.y]);
+
+  // ── Table column/row resize drag handlers
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      const r = colResizeRef.current;
+      if (!r) return;
+      if (r.mode === "col") {
+        const newW = Math.max(40, r.startW + (e.clientX - r.startX));
+        r.cell.style.width = `${newW}px`;
+        r.cell.style.minWidth = `${newW}px`;
+      } else {
+        const newH = Math.max(24, r.startH + (e.clientY - r.startY));
+        r.cell.style.height = `${newH}px`;
+      }
+    };
+    const onUp = () => {
+      if (colResizeRef.current) {
+        colResizeRef.current = null;
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+        debouncedSave();
+      }
+    };
+    window.addEventListener("mousemove", onMove);
+    window.addEventListener("mouseup", onUp);
+    return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
+  }, [debouncedSave]);
+
+  const handleEditorMouseDown = (e: React.MouseEvent) => {
+    const cell = (e.target as HTMLElement).closest("td, th") as HTMLTableCellElement | null;
+    if (!cell) return;
+    const rect = cell.getBoundingClientRect();
+    const nearRight = e.clientX >= rect.right - 6;
+    const nearBottom = e.clientY >= rect.bottom - 6;
+    if (nearRight || nearBottom) {
+      e.preventDefault();
+      colResizeRef.current = {
+        startX: e.clientX, startY: e.clientY,
+        cell,
+        startW: cell.offsetWidth, startH: cell.offsetHeight,
+        mode: nearBottom && !nearRight ? "row" : "col",
+      };
+      document.body.style.cursor = nearBottom && !nearRight ? "row-resize" : "col-resize";
+      document.body.style.userSelect = "none";
+    }
+  };
+
+  const handleEditorMouseMove = (e: React.MouseEvent) => {
+    if (colResizeRef.current) return;
+    const cell = (e.target as HTMLElement).closest("td, th") as HTMLTableCellElement | null;
+    if (!cell) { if (editorRef.current) editorRef.current.style.cursor = ""; return; }
+    const rect = cell.getBoundingClientRect();
+    const nearRight = e.clientX >= rect.right - 6;
+    const nearBottom = e.clientY >= rect.bottom - 6;
+    if (editorRef.current) {
+      editorRef.current.style.cursor = nearRight ? "col-resize" : nearBottom ? "row-resize" : "";
+    }
+  };
 
   // ── Formatting commands
   const execFmt = (cmd: string, value?: string) => {
@@ -580,6 +639,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             onInput={debouncedSave}
             onKeyDown={handleEditorKeyDown}
             onContextMenu={handleContextMenu}
+            onMouseDown={handleEditorMouseDown}
+            onMouseMove={handleEditorMouseMove}
             className="outline-none text-stone-800 text-[15px] leading-relaxed"
             style={{
               fontFamily: "Georgia, 'Times New Roman', serif",
@@ -675,8 +736,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
         [contenteditable] h3 { font-size: 1.2em; font-weight: 600; margin: 0.4em 0 0.2em; line-height: 1.4; }
         [contenteditable] ul { list-style-type: disc; padding-left: 1.5em; margin: 4px 0; }
         [contenteditable] ol { list-style-type: decimal; padding-left: 1.5em; margin: 4px 0; }
-        [contenteditable] table { border-collapse: collapse; }
-        [contenteditable] td, [contenteditable] th { border: 1px solid #d1d5db; padding: 6px 10px; min-width: 80px; }
+        [contenteditable] table { border-collapse: collapse; table-layout: fixed; }
+        [contenteditable] td, [contenteditable] th { border: 1px solid #d1d5db; padding: 6px 10px; min-width: 40px; overflow: hidden; box-sizing: border-box; }
         [contenteditable] th { background: #f9fafb; font-weight: 600; }
       `}</style>
     </div>
