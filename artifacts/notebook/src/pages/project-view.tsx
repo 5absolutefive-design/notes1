@@ -357,9 +357,24 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     };
 
     const onUp = () => {
-      // ── Cancel pending drag (was just a click)
+      // ── Cancel pending drag (was just a click, not a drag)
       if (pendingDragRef.current) {
+        const pd = pendingDragRef.current;
         pendingDragRef.current = null;
+        // For col clicks: manually place cursor in the header cell so it stays editable
+        if (pd.type === "col" && pd.cell) {
+          pd.cell.focus();
+          try {
+            const range = document.createRange();
+            const sel = window.getSelection();
+            range.selectNodeContents(pd.cell);
+            range.collapse(false);
+            sel?.removeAllRanges();
+            sel?.addRange(range);
+          } catch { /* ignore */ }
+        }
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
         return;
       }
 
@@ -460,8 +475,9 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
         return;
       }
 
-      // ── Pending col reorder: any click on a <th> (not resize zone)
+      // ── Pending col reorder: click on a <th> (not resize zone) — prevent text selection
       if (cell.tagName === "TH") {
+        e.preventDefault();
         pendingDragRef.current = { type: "col", startX: e.clientX, startY: e.clientY, cell: cell as HTMLTableCellElement };
         return;
       }
