@@ -414,7 +414,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
               style={{
                 position: "absolute",
                 top: lastTodoPos.top,
-                left: lastTodoPos.left - 54,
+                left: lastTodoPos.left + 4,
                 transform: "translateY(-50%)",
                 display: "flex",
                 gap: 4,
