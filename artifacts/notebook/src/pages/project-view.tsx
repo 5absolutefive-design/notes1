@@ -213,14 +213,20 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     return () => container.removeEventListener("scroll", updateLastTodoPos);
   }, [updateLastTodoPos]);
 
-  // ── Append a single todo at the very end of the editor (for inline + button)
+  // ── Insert a new todo immediately after the last existing todo item (for inline + button)
   const appendTodoAtEnd = useCallback(() => {
     const editor = editorRef.current;
     if (!editor) return;
     const wrapper = document.createElement("div");
     wrapper.innerHTML = newTodoHTML();
     const todoEl = wrapper.firstChild as HTMLElement;
-    editor.appendChild(todoEl);
+    const todos = editor.querySelectorAll('[data-todo-item="1"]');
+    if (todos.length > 0) {
+      const lastTodo = todos[todos.length - 1] as HTMLElement;
+      lastTodo.insertAdjacentElement("afterend", todoEl);
+    } else {
+      editor.appendChild(todoEl);
+    }
     saveContent();
     setTimeout(updateLastTodoPos, 30);
   }, [saveContent, updateLastTodoPos]);
