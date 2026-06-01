@@ -627,12 +627,12 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 <div className="flex items-center justify-between gap-2 mb-2">
                   <button
                     onClick={() => setCtxMenu(m => m ? { ...m, todoCount: Math.max(1, m.todoCount - 1) } : null)}
-                    className="w-7 h-7 rounded-lg border border-stone-200 flex items-center justify-center text-stone-500 hover:bg-stone-100 transition-all font-bold text-base"
+                    className="w-5 h-5 rounded-lg border border-stone-200 bg-stone-50 flex items-center justify-center text-stone-500 hover:bg-stone-100 transition-all font-bold text-base"
                   >−</button>
                   <span className="text-xl font-bold text-stone-800 w-8 text-center">{ctxMenu.todoCount}</span>
                   <button
                     onClick={() => setCtxMenu(m => m ? { ...m, todoCount: Math.min(20, m.todoCount + 1) } : null)}
-                    className="w-7 h-7 rounded-lg border border-stone-200 flex items-center justify-center text-stone-500 hover:bg-stone-100 transition-all font-bold text-base"
+                    className="w-5 h-5 rounded-lg border border-stone-200 bg-stone-50 flex items-center justify-center text-stone-500 hover:bg-stone-100 transition-all font-bold text-base"
                   >+</button>
                 </div>
                 <button
@@ -648,12 +648,12 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 <div className="flex items-center justify-between gap-2 mb-2">
                   <button
                     onClick={() => setCtxMenu(m => m ? { ...m, todoRemoveCount: Math.max(1, m.todoRemoveCount - 1) } : null)}
-                    className="w-7 h-7 rounded-lg border border-stone-200 flex items-center justify-center text-stone-500 hover:bg-stone-100 transition-all font-bold text-base"
+                    className="w-5 h-5 rounded-lg border border-stone-200 bg-stone-50 flex items-center justify-center text-stone-500 hover:bg-stone-100 transition-all font-bold text-base"
                   >−</button>
                   <span className="text-xl font-bold text-stone-800 w-8 text-center">{ctxMenu.todoRemoveCount}</span>
                   <button
                     onClick={() => setCtxMenu(m => m ? { ...m, todoRemoveCount: Math.min(20, m.todoRemoveCount + 1) } : null)}
-                    className="w-7 h-7 rounded-lg border border-stone-200 flex items-center justify-center text-stone-500 hover:bg-stone-100 transition-all font-bold text-base"
+                    className="w-5 h-5 rounded-lg border border-stone-200 bg-stone-50 flex items-center justify-center text-stone-500 hover:bg-stone-100 transition-all font-bold text-base"
                   >+</button>
                 </div>
                 <button
