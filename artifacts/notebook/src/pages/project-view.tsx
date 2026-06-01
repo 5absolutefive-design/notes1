@@ -258,7 +258,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const insertTodo = () => insertHTML(
     `<p><br></p>` +
     `<div style="display:flex;align-items:flex-start;gap:8px;margin:6px 0;padding:4px 0">` +
-    `<span onclick="this.style.background=this.style.background?'':'#22c55e';this.style.borderColor=this.style.borderColor==='#22c55e'?'#9ca3af':'#22c55e';this.innerHTML=this.innerHTML?'':'✓';this.style.color='white'" ` +
+    `<span contenteditable="false" onclick="this.style.background=this.style.background?'':'#22c55e';this.style.borderColor=this.style.borderColor==='#22c55e'?'#9ca3af':'#22c55e';this.innerHTML=this.innerHTML?'':'✓';this.style.color='white'" ` +
     `style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border:2px solid #9ca3af;border-radius:4px;cursor:pointer;flex-shrink:0;margin-top:2px;font-size:11px;font-weight:700;user-select:none;transition:all 0.15s"></span>` +
     `<span contenteditable="true" style="outline:none;flex:1">Task item</span></div><br/>`
   );
