@@ -322,7 +322,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           </div>
 
           {/* Content editor */}
-          <div className="flex-1 overflow-y-auto px-12 py-4 min-h-0">
+          <div className="flex-1 overflow-y-auto min-h-0" style={{ display: "flex", flexDirection: "column" }}>
             <div
               ref={editorRef}
               contentEditable
@@ -330,8 +330,13 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
               onInput={debouncedSave}
               onKeyDown={handleEditorKeyDown}
               onContextMenu={handleContextMenu}
-              className="outline-none text-stone-800 text-[15px] leading-relaxed pb-40"
-              style={{ fontFamily: "Georgia, 'Times New Roman', serif", caretColor: "#6366f1", minHeight: "180px" }}
+              className="outline-none text-stone-800 text-[15px] leading-relaxed"
+              style={{
+                fontFamily: "Georgia, 'Times New Roman', serif",
+                caretColor: "#6366f1",
+                padding: "16px 48px 120px",
+                flexGrow: 1,
+              }}
               data-placeholder="Start writing your project notes…"
             />
           </div>
