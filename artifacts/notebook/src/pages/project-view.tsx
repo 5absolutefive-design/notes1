@@ -213,6 +213,18 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     return () => container.removeEventListener("scroll", updateLastTodoPos);
   }, [updateLastTodoPos]);
 
+  // ── Append a single todo at the very end of the editor (for inline + button)
+  const appendTodoAtEnd = useCallback(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = newTodoHTML();
+    const todoEl = wrapper.firstChild as HTMLElement;
+    editor.appendChild(todoEl);
+    saveContent();
+    setTimeout(updateLastTodoPos, 30);
+  }, [saveContent, updateLastTodoPos]);
+
   // ── Right-click handler
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -412,7 +424,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "#f3f4f6"; (e.currentTarget as HTMLButtonElement).style.color = "#374151"; }}
               >−</button>
               <button
-                onMouseDown={e => { e.preventDefault(); insertMultipleTodos(1); }}
+                onMouseDown={e => { e.preventDefault(); appendTodoAtEnd(); }}
                 title="Add new item"
                 style={{ width: 22, height: 22, borderRadius: 5, border: "1.5px solid #d1d5db", background: "#f3f4f6", color: "#374151", fontSize: 18, fontWeight: 700, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
                 onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#dcfce7"; (e.currentTarget as HTMLButtonElement).style.color = "#16a34a"; }}
