@@ -1001,43 +1001,47 @@ export default function Home() {
             const isClickable = item.active;
 
             return (
-              <button
-                key={item.id}
-                onClick={() => handleNavClick(item)}
-                title={!isClickable ? `${item.label} — coming soon` : item.label}
-                className={`w-full flex items-center gap-2.5 rounded-lg px-2 py-2.5 transition-all text-left
-                  ${sidebarCollapsed ? "justify-center" : ""}
-                  ${isSelected
-                    ? "bg-blue-50 text-blue-700 font-semibold"
-                    : isClickable
-                      ? "text-stone-600 hover:bg-stone-50 hover:text-stone-900 cursor-pointer"
-                      : "text-stone-300 cursor-not-allowed"
-                  }`}
-              >
-                <Icon className={`w-4 h-4 flex-shrink-0 ${isSelected ? "text-blue-600" : isClickable ? "text-stone-500" : "text-stone-300"}`} />
-                {!sidebarCollapsed && (
-                  <span className="text-sm truncate flex-1">{item.label}</span>
+              <div key={item.id} className="relative">
+                <button
+                  onClick={() => handleNavClick(item)}
+                  title={!isClickable ? `${item.label} — coming soon` : item.label}
+                  className={`w-full flex items-center gap-2.5 rounded-lg px-2 py-2.5 transition-all text-left
+                    ${sidebarCollapsed ? "justify-center" : ""}
+                    ${isSelected
+                      ? "bg-blue-50 text-blue-700 font-semibold"
+                      : isClickable
+                        ? "text-stone-600 hover:bg-stone-50 hover:text-stone-900 cursor-pointer"
+                        : "text-stone-300 cursor-not-allowed"
+                    }`}
+                >
+                  <Icon className={`w-4 h-4 flex-shrink-0 ${isSelected ? "text-blue-600" : isClickable ? "text-stone-500" : "text-stone-300"}`} />
+                  {!sidebarCollapsed && (
+                    <span className="text-sm truncate flex-1">{item.label}</span>
+                  )}
+                  {!sidebarCollapsed && !isClickable && (
+                    <span className="text-[9px] bg-stone-100 text-stone-400 rounded-full px-1.5 py-0.5 flex-shrink-0">Soon</span>
+                  )}
+                </button>
+                {/* + button on Project nav item when active */}
+                {!sidebarCollapsed && item.id === "project" && isSelected && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); setShowNewProjectModal(true); }}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-md flex items-center justify-center text-blue-500 hover:text-indigo-700 hover:bg-blue-100 transition-all"
+                    title="New project"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
                 )}
-                {!sidebarCollapsed && !isClickable && (
-                  <span className="text-[9px] bg-stone-100 text-stone-400 rounded-full px-1.5 py-0.5 flex-shrink-0">Soon</span>
-                )}
-              </button>
+              </div>
             );
           })}
 
           {/* Project list — shown when Project is active */}
           {activeView === "project" && (
-            <div className="mt-3">
+            <div className="mt-1">
               {!sidebarCollapsed && (
-                <div className="px-1 pb-1 flex items-center justify-between">
+                <div className="px-1 pb-1">
                   <span className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest">Projects</span>
-                  <button
-                    onClick={() => setShowNewProjectModal(true)}
-                    className="w-5 h-5 rounded-md flex items-center justify-center text-stone-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all"
-                    title="New project"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                  </button>
                 </div>
               )}
               <div className="flex flex-col gap-0.5">
