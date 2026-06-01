@@ -1,5 +1,11 @@
 import { Link, useLocation } from "wouter";
-import ProjectView from "@/pages/project-view";
+import ProjectView, {
+  type ProjectDoc,
+  loadProjects,
+  saveProjects,
+  nextProjectId,
+  DEFAULT_PROJECT_GRADIENT,
+} from "@/pages/project-view";
 import {
   Plus, Trash2, ImagePlus, X, Search, Download, Upload,
   BookOpen, FileText, Lock, LockOpen, Eye, EyeOff, User,
@@ -422,6 +428,55 @@ export default function Home() {
   const [editName, setEditName] = useState("");
   const [editUsername, setEditUsername] = useState("");
   const [editEmail, setEditEmail] = useState("");
+
+  // Project state
+  const [projects, setProjects] = useState<ProjectDoc[]>(() => loadProjects());
+  const [activeProjectId, setActiveProjectId] = useState<number | null>(() => {
+    const docs = loadProjects();
+    return docs.length > 0 ? docs[0].id : null;
+  });
+  const [showNewProjectModal, setShowNewProjectModal] = useState(false);
+  const [newProjectTitle, setNewProjectTitle] = useState("");
+  const [editingProjectId, setEditingProjectId] = useState<number | null>(null);
+  const [editProjectTitle, setEditProjectTitle] = useState("");
+  const [deleteProjectConfirmId, setDeleteProjectConfirmId] = useState<number | null>(null);
+
+  const handleCreateProject = () => {
+    if (!newProjectTitle.trim()) return;
+    const doc: ProjectDoc = {
+      id: nextProjectId(projects),
+      title: newProjectTitle.trim(),
+      content: "",
+      bannerColor: "#6366f1",
+      bannerGradient: DEFAULT_PROJECT_GRADIENT,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    const updated = [...projects, doc];
+    saveProjects(updated);
+    setProjects(updated);
+    setActiveProjectId(doc.id);
+    setNewProjectTitle("");
+    setShowNewProjectModal(false);
+  };
+
+  const handleDeleteProject = (id: number) => {
+    const updated = projects.filter(p => p.id !== id);
+    saveProjects(updated);
+    setProjects(updated);
+    setDeleteProjectConfirmId(null);
+    if (activeProjectId === id) setActiveProjectId(updated[0]?.id ?? null);
+  };
+
+  const handleRenameProject = (id: number) => {
+    if (!editProjectTitle.trim()) return;
+    const updated = projects.map(p =>
+      p.id === id ? { ...p, title: editProjectTitle.trim(), updatedAt: new Date().toISOString() } : p
+    );
+    saveProjects(updated);
+    setProjects(updated);
+    setEditingProjectId(null);
+  };
 
   // Short Notes state
   const [shortNotes, setShortNotes] = useState<ShortNote[]>(() => loadShortNotes());
@@ -969,6 +1024,86 @@ export default function Home() {
               </button>
             );
           })}
+
+          {/* Project list — shown when Project is active */}
+          {activeView === "project" && (
+            <div className="mt-3">
+              {!sidebarCollapsed && (
+                <div className="px-1 pb-1 flex items-center justify-between">
+                  <span className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest">Projects</span>
+                  <button
+                    onClick={() => setShowNewProjectModal(true)}
+                    className="w-5 h-5 rounded-md flex items-center justify-center text-stone-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all"
+                    title="New project"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
+              <div className="flex flex-col gap-0.5">
+                {projects.map((p) => (
+                  <div key={p.id} className="group relative">
+                    {editingProjectId === p.id ? (
+                      <div className="flex items-center gap-1 px-1 py-1">
+                        <input
+                          autoFocus
+                          value={editProjectTitle}
+                          onChange={e => setEditProjectTitle(e.target.value)}
+                          onKeyDown={e => { if (e.key === "Enter") handleRenameProject(p.id); if (e.key === "Escape") setEditingProjectId(null); }}
+                          className="flex-1 text-xs border border-indigo-300 rounded-md px-2 py-1 outline-none min-w-0"
+                        />
+                        <button onClick={() => handleRenameProject(p.id)} className="text-green-600 hover:text-green-700 flex-shrink-0">
+                          <Check className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setActiveProjectId(p.id)}
+                        className={`w-full flex items-center gap-2.5 rounded-lg px-2 py-1.5 transition-all text-left ${sidebarCollapsed ? "justify-center" : ""} ${
+                          activeProjectId === p.id ? "bg-indigo-50 text-indigo-700" : "text-stone-500 hover:bg-stone-50 hover:text-stone-900"
+                        }`}
+                        title={p.title}
+                      >
+                        <FileText className={`w-3.5 h-3.5 flex-shrink-0 ${activeProjectId === p.id ? "text-indigo-500" : "text-stone-400"}`} />
+                        {!sidebarCollapsed && <span className="text-xs truncate flex-1">{p.title}</span>}
+                      </button>
+                    )}
+                    {!sidebarCollapsed && editingProjectId !== p.id && (
+                      <div className="absolute right-1 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-0.5">
+                        <button
+                          onClick={(e) => { e.stopPropagation(); setEditingProjectId(p.id); setEditProjectTitle(p.title); }}
+                          className="w-5 h-5 rounded flex items-center justify-center text-stone-400 hover:text-indigo-600 hover:bg-indigo-50"
+                          title="Rename"
+                        >
+                          <Pencil className="w-3 h-3" />
+                        </button>
+                        {deleteProjectConfirmId === p.id ? (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleDeleteProject(p.id); }}
+                            className="w-5 h-5 rounded flex items-center justify-center text-white bg-red-500 hover:bg-red-600"
+                            title="Confirm delete"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        ) : (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); setDeleteProjectConfirmId(p.id); setTimeout(() => setDeleteProjectConfirmId(null), 3000); }}
+                            className="w-5 h-5 rounded flex items-center justify-center text-stone-400 hover:text-red-500 hover:bg-red-50"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {projects.length === 0 && !sidebarCollapsed && (
+                  <p className="text-xs text-stone-400 px-2 py-1">No projects yet</p>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Notebook list — only shown when My Notebook is active */}
           {activeView === "my-notebook" && (
@@ -2665,7 +2800,15 @@ export default function Home() {
         })()}
 
         {/* Project view */}
-        {activeView === "project" && <ProjectView />}
+        {activeView === "project" && (
+          <ProjectView
+            projects={projects}
+            setProjects={setProjects}
+            activeId={activeProjectId}
+            setActiveId={setActiveProjectId}
+            onNewProject={() => setShowNewProjectModal(true)}
+          />
+        )}
 
         {/* All other views — blank */}
         {activeView !== "my-notebook" && activeView !== "short-note" && activeView !== "task" && activeView !== "schedule" && activeView !== "project" && (
@@ -2673,6 +2816,28 @@ export default function Home() {
         )}
 
       </div>
+
+      {/* New Project Modal */}
+      {showNewProjectModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
+          <div className="bg-white rounded-2xl shadow-2xl w-80 p-6">
+            <h3 className="text-lg font-bold text-stone-800 mb-4">New Project</h3>
+            <input
+              autoFocus
+              type="text"
+              placeholder="Project title…"
+              value={newProjectTitle}
+              onChange={e => setNewProjectTitle(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") handleCreateProject(); if (e.key === "Escape") { setShowNewProjectModal(false); setNewProjectTitle(""); } }}
+              className="w-full border border-stone-300 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 mb-4"
+            />
+            <div className="flex gap-2">
+              <button onClick={() => { setShowNewProjectModal(false); setNewProjectTitle(""); }} className="flex-1 py-2 rounded-xl border border-stone-200 text-sm text-stone-600 hover:bg-stone-50 transition-all">Cancel</button>
+              <button onClick={handleCreateProject} disabled={!newProjectTitle.trim()} className="flex-1 py-2 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition-all disabled:opacity-40">Create</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
