@@ -198,26 +198,23 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     const sel = window.getSelection();
     if (sel && sel.rangeCount > 0) {
       const range = sel.getRangeAt(0);
-      // Ensure we're inserting inside the editor
       if (!editor.contains(range.commonAncestorContainer)) {
         range.selectNodeContents(editor);
         range.collapse(false);
       }
       range.deleteContents();
       const frag = range.createContextualFragment(html);
-      const lastChild = frag.lastChild;
       range.insertNode(frag);
-      // Move cursor after inserted content
-      if (lastChild) {
-        const newRange = document.createRange();
-        newRange.setStartAfter(lastChild);
-        newRange.collapse(true);
-        sel.removeAllRanges();
-        sel.addRange(newRange);
-      }
     } else {
       editor.innerHTML += html;
     }
+
+    // Always move cursor to end of editor so user can type after the inserted block
+    const newRange = document.createRange();
+    newRange.selectNodeContents(editor);
+    newRange.collapse(false);
+    sel?.removeAllRanges();
+    sel?.addRange(newRange);
 
     setCtxMenu(null);
     debouncedSave();
