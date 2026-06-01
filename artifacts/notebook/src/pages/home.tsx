@@ -435,17 +435,15 @@ export default function Home() {
     const docs = loadProjects();
     return docs.length > 0 ? docs[0].id : null;
   });
-  const [showNewProjectModal, setShowNewProjectModal] = useState(false);
-  const [newProjectTitle, setNewProjectTitle] = useState("");
+  const [focusTitleSignal, setFocusTitleSignal] = useState(0);
   const [editingProjectId, setEditingProjectId] = useState<number | null>(null);
   const [editProjectTitle, setEditProjectTitle] = useState("");
   const [deleteProjectConfirmId, setDeleteProjectConfirmId] = useState<number | null>(null);
 
   const handleCreateProject = () => {
-    if (!newProjectTitle.trim()) return;
     const doc: ProjectDoc = {
       id: nextProjectId(projects),
-      title: newProjectTitle.trim(),
+      title: "Untitled",
       content: "",
       bannerColor: "#6366f1",
       bannerGradient: DEFAULT_PROJECT_GRADIENT,
@@ -456,8 +454,7 @@ export default function Home() {
     saveProjects(updated);
     setProjects(updated);
     setActiveProjectId(doc.id);
-    setNewProjectTitle("");
-    setShowNewProjectModal(false);
+    setFocusTitleSignal(s => s + 1);
   };
 
   const handleDeleteProject = (id: number) => {
@@ -1027,7 +1024,7 @@ export default function Home() {
                 {/* + button on Project nav item when active */}
                 {!sidebarCollapsed && item.id === "project" && isSelected && (
                   <button
-                    onClick={(e) => { e.stopPropagation(); setShowNewProjectModal(true); }}
+                    onClick={(e) => { e.stopPropagation(); setActiveView("project"); handleCreateProject(); }}
                     className="absolute right-2 top-3.5 -translate-y-1/2 w-5 h-5 rounded-md flex items-center justify-center text-indigo-400 hover:text-indigo-700 hover:bg-indigo-50 transition-all"
                     title="New project"
                   >
@@ -2806,7 +2803,8 @@ export default function Home() {
             setProjects={setProjects}
             activeId={activeProjectId}
             setActiveId={setActiveProjectId}
-            onNewProject={() => setShowNewProjectModal(true)}
+            onNewProject={handleCreateProject}
+            focusTitleSignal={focusTitleSignal}
           />
         )}
 
@@ -2817,27 +2815,6 @@ export default function Home() {
 
       </div>
 
-      {/* New Project Modal */}
-      {showNewProjectModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl shadow-2xl w-80 p-6">
-            <h3 className="text-lg font-bold text-stone-800 mb-4">New Project</h3>
-            <input
-              autoFocus
-              type="text"
-              placeholder="Project title…"
-              value={newProjectTitle}
-              onChange={e => setNewProjectTitle(e.target.value)}
-              onKeyDown={e => { if (e.key === "Enter") handleCreateProject(); if (e.key === "Escape") { setShowNewProjectModal(false); setNewProjectTitle(""); } }}
-              className="w-full border border-stone-300 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-indigo-400 focus:ring-2 focus:ring-indigo-100 mb-4"
-            />
-            <div className="flex gap-2">
-              <button onClick={() => { setShowNewProjectModal(false); setNewProjectTitle(""); }} className="flex-1 py-2 rounded-xl border border-stone-200 text-sm text-stone-600 hover:bg-stone-50 transition-all">Cancel</button>
-              <button onClick={handleCreateProject} disabled={!newProjectTitle.trim()} className="flex-1 py-2 rounded-xl bg-indigo-600 text-white text-sm font-semibold hover:bg-indigo-700 transition-all disabled:opacity-40">Create</button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

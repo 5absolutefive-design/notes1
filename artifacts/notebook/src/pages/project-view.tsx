@@ -94,10 +94,11 @@ interface ProjectViewProps {
   activeId: number | null;
   setActiveId: (id: number | null) => void;
   onNewProject: () => void;
+  focusTitleSignal?: number;
 }
 
 // ── Main component ───────────────────────────────────────────────
-export default function ProjectView({ projects, setProjects, activeId, setActiveId, onNewProject }: ProjectViewProps) {
+export default function ProjectView({ projects, setProjects, activeId, setActiveId, onNewProject, focusTitleSignal }: ProjectViewProps) {
   const [showBannerPicker, setShowBannerPicker] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [ctxMenu, setCtxMenu] = useState<ContextMenuState | null>(null);
@@ -119,6 +120,18 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     if (titleRef.current)
       titleRef.current.textContent = activeProject?.title || "";
   }, [activeId]);
+
+  // ── Auto-focus title and select all when a new project is created
+  useEffect(() => {
+    if (!focusTitleSignal || !titleRef.current) return;
+    const el = titleRef.current;
+    el.focus();
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    const sel = window.getSelection();
+    sel?.removeAllRanges();
+    sel?.addRange(range);
+  }, [focusTitleSignal]);
 
   // ── Save content (debounced)
   const saveContent = useCallback(() => {
