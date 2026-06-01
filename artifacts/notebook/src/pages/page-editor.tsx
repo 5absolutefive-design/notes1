@@ -3146,18 +3146,20 @@ export default function PageEditor() {
                             <button
                               onClick={removeLastChecklistItem}
                               title="Remove last item"
-                              className="w-5 h-5 rounded border border-zinc-300 bg-white hover:bg-red-50 hover:border-red-400 text-zinc-500 hover:text-red-600 flex items-center justify-center font-bold transition-colors"
-                              style={{ fontSize: 16, lineHeight: 1 }}
+                              style={{ width: 22, height: 22, borderRadius: 5, border: "1.5px solid #d1d5db", background: "#f3f4f6", color: "#374151", fontSize: 18, fontWeight: 700, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}
+                              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#fee2e2"; (e.currentTarget as HTMLButtonElement).style.color = "#dc2626"; }}
+                              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "#f3f4f6"; (e.currentTarget as HTMLButtonElement).style.color = "#374151"; }}
                             >−</button>
                             <button
                               onClick={addChecklistItem}
                               title="Add new item"
-                              className="w-5 h-5 rounded border border-zinc-300 bg-white hover:bg-green-50 hover:border-green-400 text-zinc-500 hover:text-green-600 flex items-center justify-center font-bold transition-colors"
-                              style={{ fontSize: 16, lineHeight: 1 }}
+                              style={{ width: 22, height: 22, borderRadius: 5, border: "1.5px solid #d1d5db", background: "#f3f4f6", color: "#374151", fontSize: 18, fontWeight: 700, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", flexShrink: 0 }}
+                              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#dcfce7"; (e.currentTarget as HTMLButtonElement).style.color = "#16a34a"; }}
+                              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "#f3f4f6"; (e.currentTarget as HTMLButtonElement).style.color = "#374151"; }}
                             >+</button>
                           </div>
                         ) : (
-                          <div className="w-12 shrink-0" />
+                          <div style={{ width: 46, flexShrink: 0 }} />
                         )}
                         <button
                           onClick={() => toggleChecklistItem(item.id)}
