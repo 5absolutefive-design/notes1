@@ -659,53 +659,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           <div className="my-1 border-t border-stone-100" />
           <CtxSection label="Insert" />
           <CtxItem icon={<Table className="w-3.5 h-3.5"/>}        label="Table"         onClick={insertTable} />
-          {/* To-Do Item submenu */}
-          <div className="relative">
-            <CtxItem icon={<CheckSquare className="w-3.5 h-3.5"/>} label="To-Do Item" hasArrow
-              onClick={() => setCtxMenu(m => m ? { ...m, todoOpen: !m.todoOpen, highlightOpen: false, headingOpen: false } : null)} />
-            {ctxMenu.todoOpen && (
-              <div className="absolute left-full top-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 p-3 z-[10000] w-48">
-                {/* Add section */}
-                <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-2">Add items</p>
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <button
-                    onClick={() => setCtxMenu(m => m ? { ...m, todoCount: Math.max(1, m.todoCount - 1) } : null)}
-                    className="w-3 h-3 rounded border border-stone-200 bg-stone-50 flex items-center justify-center text-stone-500 hover:bg-stone-100 transition-all font-bold text-[10px]"
-                  >−</button>
-                  <span className="text-xl font-bold text-stone-800 w-8 text-center">{ctxMenu.todoCount}</span>
-                  <button
-                    onClick={() => setCtxMenu(m => m ? { ...m, todoCount: Math.min(20, m.todoCount + 1) } : null)}
-                    className="w-3 h-3 rounded border border-stone-200 bg-stone-50 flex items-center justify-center text-stone-500 hover:bg-stone-100 transition-all font-bold text-[10px]"
-                  >+</button>
-                </div>
-                <button
-                  onClick={() => insertMultipleTodos(ctxMenu.todoCount)}
-                  className="w-full py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 transition-all mb-3"
-                >Insert</button>
-
-                {/* Divider */}
-                <div className="border-t border-stone-100 mb-3" />
-
-                {/* Remove section */}
-                <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-2">Remove items</p>
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <button
-                    onClick={() => setCtxMenu(m => m ? { ...m, todoRemoveCount: Math.max(1, m.todoRemoveCount - 1) } : null)}
-                    className="w-3 h-3 rounded border border-stone-200 bg-stone-50 flex items-center justify-center text-stone-500 hover:bg-stone-100 transition-all font-bold text-[10px]"
-                  >−</button>
-                  <span className="text-xl font-bold text-stone-800 w-8 text-center">{ctxMenu.todoRemoveCount}</span>
-                  <button
-                    onClick={() => setCtxMenu(m => m ? { ...m, todoRemoveCount: Math.min(20, m.todoRemoveCount + 1) } : null)}
-                    className="w-3 h-3 rounded border border-stone-200 bg-stone-50 flex items-center justify-center text-stone-500 hover:bg-stone-100 transition-all font-bold text-[10px]"
-                  >+</button>
-                </div>
-                <button
-                  onClick={() => removeLastTodos(ctxMenu.todoRemoveCount)}
-                  className="w-full py-1.5 rounded-lg bg-red-500 text-white text-xs font-semibold hover:bg-red-600 transition-all"
-                >Remove</button>
-              </div>
-            )}
-          </div>
+          <CtxItem icon={<CheckSquare className="w-3.5 h-3.5"/>} label="To-Do Item" onClick={() => { insertTodo(); setCtxMenu(null); }} />
           <CtxItem icon={<List className="w-3.5 h-3.5"/>}         label="Bullet List"   onClick={() => execFmt("insertUnorderedList")} />
           <CtxItem icon={<ListOrdered className="w-3.5 h-3.5"/>}  label="Numbered List" onClick={() => execFmt("insertOrderedList")} />
           <CtxItem icon={<Minus className="w-3.5 h-3.5"/>}        label="Divider Line"  onClick={insertDivider} />
