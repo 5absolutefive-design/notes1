@@ -893,6 +893,57 @@ export default function PageEditor() {
   const imageFileInputRef = useRef<HTMLInputElement>(null);
   const draggingImgRef = useRef<{ id: string; startMouseX: number; startMouseY: number; origX: number; origY: number } | null>(null);
 
+  interface ChecklistItem { id: number; text: string; checked: boolean; }
+  const checklistKey = `nb_checklist_${pId}`;
+  const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>(() => {
+    try {
+      const raw = localStorage.getItem(`nb_checklist_${pId}`);
+      if (raw) return JSON.parse(raw);
+    } catch { /* ignore */ }
+    return [
+      { id: 1, text: "", checked: false },
+      { id: 2, text: "", checked: false },
+      { id: 3, text: "", checked: false },
+    ];
+  });
+  const checklistNextId = useRef(Math.max(0, ...checklistItems.map(i => i.id)) + 1);
+
+  useEffect(() => {
+    try { localStorage.setItem(checklistKey, JSON.stringify(checklistItems)); } catch { /* ignore */ }
+  }, [checklistItems, checklistKey]);
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(`nb_checklist_${pId}`);
+      if (raw) {
+        const items = JSON.parse(raw) as ChecklistItem[];
+        setChecklistItems(items);
+        checklistNextId.current = Math.max(0, ...items.map(i => i.id)) + 1;
+      } else {
+        const def = [{ id: 1, text: "", checked: false }, { id: 2, text: "", checked: false }, { id: 3, text: "", checked: false }];
+        setChecklistItems(def);
+        checklistNextId.current = 4;
+      }
+    } catch { /* ignore */ }
+  }, [pId]);
+
+  const addChecklistItem = () => {
+    const newId = checklistNextId.current++;
+    setChecklistItems(prev => [...prev, { id: newId, text: "", checked: false }]);
+  };
+
+  const removeLastChecklistItem = () => {
+    setChecklistItems(prev => prev.length > 1 ? prev.slice(0, -1) : prev);
+  };
+
+  const toggleChecklistItem = (id: number) => {
+    setChecklistItems(prev => prev.map(i => i.id === id ? { ...i, checked: !i.checked } : i));
+  };
+
+  const updateChecklistText = (id: number, text: string) => {
+    setChecklistItems(prev => prev.map(i => i.id === id ? { ...i, text } : i));
+  };
+
   const lineHeightPx = lineSpacing === "compact" ? 28 : lineSpacing === "relaxed" ? 44 : 36;
 
   const refresh = useCallback(() => {
@@ -3084,6 +3135,57 @@ export default function PageEditor() {
               </div>
             ) : (
               <div key="blank" style={{ zoom: zoom / 100, transformOrigin: "top left", position: "relative" }}>
+                {/* ── Checklist widget ── */}
+                <div className="px-6 pt-4 pb-3 flex flex-col gap-2.5 border-b border-zinc-100">
+                  {checklistItems.map((item, index) => {
+                    const isLast = index === checklistItems.length - 1;
+                    return (
+                      <div key={item.id} className="flex items-center gap-2">
+                        {isLast ? (
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              onClick={removeLastChecklistItem}
+                              title="Remove last item"
+                              className="w-5 h-5 rounded border border-zinc-300 bg-white hover:bg-red-50 hover:border-red-400 text-zinc-500 hover:text-red-600 flex items-center justify-center font-bold transition-colors"
+                              style={{ fontSize: 16, lineHeight: 1 }}
+                            >−</button>
+                            <button
+                              onClick={addChecklistItem}
+                              title="Add new item"
+                              className="w-5 h-5 rounded border border-zinc-300 bg-white hover:bg-green-50 hover:border-green-400 text-zinc-500 hover:text-green-600 flex items-center justify-center font-bold transition-colors"
+                              style={{ fontSize: 16, lineHeight: 1 }}
+                            >+</button>
+                          </div>
+                        ) : (
+                          <div className="w-12 shrink-0" />
+                        )}
+                        <button
+                          onClick={() => toggleChecklistItem(item.id)}
+                          className="w-[18px] h-[18px] rounded border-2 shrink-0 flex items-center justify-center transition-colors"
+                          style={{ borderColor: item.checked ? "#3b82f6" : "#9ca3af", backgroundColor: item.checked ? "#3b82f6" : "white" }}
+                        >
+                          {item.checked && (
+                            <svg viewBox="0 0 10 10" width="10" height="10" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                              <polyline points="1.5,5 4,7.5 8.5,2.5" />
+                            </svg>
+                          )}
+                        </button>
+                        <input
+                          value={item.text}
+                          onChange={e => updateChecklistText(item.id, e.target.value)}
+                          onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addChecklistItem(); } }}
+                          placeholder={`Item ${index + 1}`}
+                          className="flex-1 bg-transparent outline-none text-sm placeholder:text-zinc-300"
+                          style={{
+                            textDecoration: item.checked ? "line-through" : "none",
+                            color: item.checked ? "#9ca3af" : "#3f3f46",
+                            fontFamily: font,
+                          }}
+                        />
+                      </div>
+                    );
+                  })}
+                </div>
                 <div
                   ref={editorRef}
                   contentEditable
