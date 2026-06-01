@@ -330,8 +330,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
               onInput={debouncedSave}
               onKeyDown={handleEditorKeyDown}
               onContextMenu={handleContextMenu}
-              className="outline-none min-h-full text-stone-800 text-[15px] leading-relaxed"
-              style={{ fontFamily: "Georgia, 'Times New Roman', serif", caretColor: "#6366f1" }}
+              className="outline-none text-stone-800 text-[15px] leading-relaxed pb-40"
+              style={{ fontFamily: "Georgia, 'Times New Roman', serif", caretColor: "#6366f1", minHeight: "180px" }}
               data-placeholder="Start writing your project notes…"
             />
           </div>
