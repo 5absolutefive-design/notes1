@@ -12,12 +12,21 @@ export interface ProjectDoc {
   id: number;
   title: string;
   content: string;
+  emoji?: string;
   bannerImg?: string;
   bannerColor: string;
   bannerGradient?: string;
   createdAt: string;
   updatedAt: string;
 }
+
+const EMOJI_LIST = [
+  "📁","📂","📝","📌","📍","🗂️","🗃️","📋","📊","📈","📉","🗓️","📅","⭐","🌟",
+  "💡","🎯","🚀","✅","🔥","💼","🏆","🎨","🎵","📚","🔬","🌱","💎","🛠️","⚡",
+  "🎉","🌈","🦋","🌸","🍀","🦄","🐉","🏔️","🌊","🌙","☀️","🌺","🍁","🎸","🎹",
+];
+
+const DEFAULT_EMOJI = "📁";
 
 // ── Storage (exported for use in home.tsx) ───────────────────────
 const PROJECTS_KEY = "nb_projects";
@@ -90,11 +99,13 @@ interface ProjectViewProps {
 // ── Main component ───────────────────────────────────────────────
 export default function ProjectView({ projects, setProjects, activeId, setActiveId, onNewProject }: ProjectViewProps) {
   const [showBannerPicker, setShowBannerPicker] = useState(false);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [ctxMenu, setCtxMenu] = useState<ContextMenuState | null>(null);
 
   const editorRef = useRef<HTMLDivElement>(null);
   const ctxMenuRef = useRef<HTMLDivElement>(null);
   const bannerPickerRef = useRef<HTMLDivElement>(null);
+  const emojiPickerRef = useRef<HTMLDivElement>(null);
   const bannerUploadRef = useRef<HTMLInputElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -131,10 +142,23 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
         setCtxMenu(null);
       if (showBannerPicker && bannerPickerRef.current && !bannerPickerRef.current.contains(e.target as Node))
         setShowBannerPicker(false);
+      if (showEmojiPicker && emojiPickerRef.current && !emojiPickerRef.current.contains(e.target as Node))
+        setShowEmojiPicker(false);
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
-  }, [ctxMenu, showBannerPicker]);
+  }, [ctxMenu, showBannerPicker, showEmojiPicker]);
+
+  // ── Set emoji
+  const setEmoji = (emoji: string) => {
+    if (!activeId) return;
+    const updated = projects.map(p =>
+      p.id === activeId ? { ...p, emoji, updatedAt: new Date().toISOString() } : p
+    );
+    saveProjects(updated);
+    setProjects(updated);
+    setShowEmojiPicker(false);
+  };
 
   // ── Right-click handler
   const handleContextMenu = (e: React.MouseEvent) => {
@@ -258,50 +282,80 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
 
       {activeProject ? (
         <div className="flex-1 overflow-y-auto min-h-0">
-          {/* Banner */}
-          <div className="relative h-48 w-full group" style={bannerStyle}>
-            <div className="absolute inset-0 bg-black/10" />
-            <div className="absolute bottom-3 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-              <div className="relative" ref={bannerPickerRef}>
-                <button
-                  onClick={() => setShowBannerPicker(v => !v)}
-                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black/40 backdrop-blur-sm text-white text-xs font-semibold hover:bg-black/60 transition-all"
-                >
-                  <ImagePlus className="w-3.5 h-3.5" />
-                  Change Cover
-                </button>
-                {showBannerPicker && (
-                  <div className="absolute bottom-10 right-0 w-80 bg-white rounded-xl shadow-2xl border border-stone-200 p-4 z-50">
-                    <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-2">Gradients</p>
-                    <div className="grid grid-cols-5 gap-1.5 mb-3">
-                      {BANNER_GRADIENTS.map(g => (
-                        <button key={g.id} onClick={() => setBanner({ bannerGradient: g.value, bannerImg: undefined })}
-                          className="h-8 rounded-lg hover:scale-105 transition-transform border-2 border-transparent hover:border-stone-300"
-                          style={{ background: g.value }} title={g.label} />
-                      ))}
+          {/* Banner + emoji overlap wrapper */}
+          <div className="relative">
+            {/* Banner */}
+            <div className="relative h-44 w-full group" style={bannerStyle}>
+              <div className="absolute inset-0 bg-black/10" />
+              <div className="absolute bottom-3 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="relative" ref={bannerPickerRef}>
+                  <button
+                    onClick={() => setShowBannerPicker(v => !v)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-black/40 backdrop-blur-sm text-white text-xs font-semibold hover:bg-black/60 transition-all"
+                  >
+                    <ImagePlus className="w-3.5 h-3.5" />
+                    Change Cover
+                  </button>
+                  {showBannerPicker && (
+                    <div className="absolute bottom-10 right-0 w-80 bg-white rounded-xl shadow-2xl border border-stone-200 p-4 z-50">
+                      <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-2">Gradients</p>
+                      <div className="grid grid-cols-5 gap-1.5 mb-3">
+                        {BANNER_GRADIENTS.map(g => (
+                          <button key={g.id} onClick={() => setBanner({ bannerGradient: g.value, bannerImg: undefined })}
+                            className="h-8 rounded-lg hover:scale-105 transition-transform border-2 border-transparent hover:border-stone-300"
+                            style={{ background: g.value }} title={g.label} />
+                        ))}
+                      </div>
+                      <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-2">Photos</p>
+                      <div className="grid grid-cols-3 gap-1.5 mb-3">
+                        {BANNER_IMAGES.map(img => (
+                          <button key={img.id} onClick={() => setBanner({ bannerImg: img.url, bannerGradient: undefined })}
+                            className="h-12 rounded-lg overflow-hidden hover:scale-105 transition-transform border-2 border-transparent hover:border-indigo-400"
+                            style={{ backgroundImage: `url(${img.url})`, backgroundSize: "cover", backgroundPosition: "center" }}
+                            title={img.label} />
+                        ))}
+                      </div>
+                      <button onClick={() => bannerUploadRef.current?.click()}
+                        className="w-full flex items-center justify-center gap-2 py-2 rounded-lg border-2 border-dashed border-stone-300 text-xs text-stone-500 hover:border-indigo-400 hover:text-indigo-600 transition-all">
+                        <ImagePlus className="w-3.5 h-3.5" />Upload Image
+                      </button>
+                      <input ref={bannerUploadRef} type="file" accept="image/*" className="hidden" onChange={handleBannerUpload} />
                     </div>
-                    <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-2">Photos</p>
-                    <div className="grid grid-cols-3 gap-1.5 mb-3">
-                      {BANNER_IMAGES.map(img => (
-                        <button key={img.id} onClick={() => setBanner({ bannerImg: img.url, bannerGradient: undefined })}
-                          className="h-12 rounded-lg overflow-hidden hover:scale-105 transition-transform border-2 border-transparent hover:border-indigo-400"
-                          style={{ backgroundImage: `url(${img.url})`, backgroundSize: "cover", backgroundPosition: "center" }}
-                          title={img.label} />
-                      ))}
-                    </div>
-                    <button onClick={() => bannerUploadRef.current?.click()}
-                      className="w-full flex items-center justify-center gap-2 py-2 rounded-lg border-2 border-dashed border-stone-300 text-xs text-stone-500 hover:border-indigo-400 hover:text-indigo-600 transition-all">
-                      <ImagePlus className="w-3.5 h-3.5" />Upload Image
-                    </button>
-                    <input ref={bannerUploadRef} type="file" accept="image/*" className="hidden" onChange={handleBannerUpload} />
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
+            </div>
+
+            {/* Emoji card — overlaps banner bottom */}
+            <div className="absolute left-12 bottom-0 translate-y-1/2 z-10" ref={emojiPickerRef}>
+              <button
+                onClick={() => setShowEmojiPicker(v => !v)}
+                className="w-16 h-16 rounded-2xl bg-white shadow-lg border border-stone-100 flex items-center justify-center text-4xl hover:scale-105 transition-transform"
+                title="Change emoji"
+              >
+                {activeProject.emoji ?? DEFAULT_EMOJI}
+              </button>
+              {showEmojiPicker && (
+                <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-stone-200 p-3 z-50">
+                  <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest mb-2">Pick an emoji</p>
+                  <div className="grid grid-cols-9 gap-1">
+                    {EMOJI_LIST.map(e => (
+                      <button
+                        key={e}
+                        onClick={() => setEmoji(e)}
+                        className="text-xl w-7 h-7 flex items-center justify-center rounded-lg hover:bg-stone-100 transition-colors"
+                      >
+                        {e}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Editable title */}
-          <div className="px-12 pt-6 pb-2">
+          {/* Title — padded to clear emoji card */}
+          <div className="px-12 pt-12 pb-2">
             <div
               contentEditable
               suppressContentEditableWarning
