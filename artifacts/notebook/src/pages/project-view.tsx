@@ -425,16 +425,16 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
               <button
                 onMouseDown={e => { e.preventDefault(); removeLastTodos(1); }}
                 title="Remove last item"
-                style={{ width: 22, height: 22, borderRadius: 5, border: "1.5px solid #d1d5db", background: "#f3f4f6", color: "#374151", fontSize: 18, fontWeight: 700, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+                style={{ width: 12, height: 12, borderRadius: 3, border: "1px solid #e7e5e4", background: "#fafaf8", color: "#374151", fontSize: 10, fontWeight: 700, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
                 onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#fee2e2"; (e.currentTarget as HTMLButtonElement).style.color = "#dc2626"; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "#f3f4f6"; (e.currentTarget as HTMLButtonElement).style.color = "#374151"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "#fafaf8"; (e.currentTarget as HTMLButtonElement).style.color = "#374151"; }}
               >−</button>
               <button
                 onMouseDown={e => { e.preventDefault(); appendTodoAtEnd(); }}
                 title="Add new item"
-                style={{ width: 22, height: 22, borderRadius: 5, border: "1.5px solid #d1d5db", background: "#f3f4f6", color: "#374151", fontSize: 18, fontWeight: 700, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+                style={{ width: 12, height: 12, borderRadius: 3, border: "1px solid #e7e5e4", background: "#fafaf8", color: "#374151", fontSize: 10, fontWeight: 700, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
                 onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#dcfce7"; (e.currentTarget as HTMLButtonElement).style.color = "#16a34a"; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "#f3f4f6"; (e.currentTarget as HTMLButtonElement).style.color = "#374151"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "#fafaf8"; (e.currentTarget as HTMLButtonElement).style.color = "#374151"; }}
               >+</button>
             </div>
           )}
