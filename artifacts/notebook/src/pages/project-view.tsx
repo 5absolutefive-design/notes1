@@ -113,6 +113,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const bannerUploadRef = useRef<HTMLInputElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const [lastTodoPos, setLastTodoPos] = useState<{ top: number; left: number } | null>(null);
 
   const activeProject = projects.find(p => p.id === activeId) ?? null;
 
@@ -178,6 +180,38 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     setProjects(updated);
     setShowEmojiPicker(false);
   };
+
+  // ── Track position of last todo item for inline +/- buttons
+  const updateLastTodoPos = useCallback(() => {
+    const editor = editorRef.current;
+    const container = scrollContainerRef.current;
+    if (!editor || !container) { setLastTodoPos(null); return; }
+    const todos = editor.querySelectorAll('[data-todo-item="1"]');
+    if (todos.length === 0) { setLastTodoPos(null); return; }
+    const lastTodo = todos[todos.length - 1] as HTMLElement;
+    const todoRect = lastTodo.getBoundingClientRect();
+    const containerRect = container.getBoundingClientRect();
+    setLastTodoPos({
+      top: todoRect.top - containerRect.top + container.scrollTop + (todoRect.height / 2),
+      left: todoRect.left - containerRect.left,
+    });
+  }, []);
+
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    const observer = new MutationObserver(updateLastTodoPos);
+    observer.observe(editor, { childList: true, subtree: true, characterData: true });
+    updateLastTodoPos();
+    return () => observer.disconnect();
+  }, [updateLastTodoPos, activeId]);
+
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+    container.addEventListener("scroll", updateLastTodoPos);
+    return () => container.removeEventListener("scroll", updateLastTodoPos);
+  }, [updateLastTodoPos]);
 
   // ── Right-click handler
   const handleContextMenu = (e: React.MouseEvent) => {
@@ -354,7 +388,38 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     <div className="flex-1 flex flex-col min-h-0 bg-[#fafaf8]">
 
       {activeProject ? (
-        <div className="flex-1 overflow-y-auto min-h-0">
+        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto min-h-0" style={{ position: "relative" }}>
+
+          {/* Inline +/- buttons next to last todo item */}
+          {lastTodoPos && (
+            <div
+              style={{
+                position: "absolute",
+                top: lastTodoPos.top,
+                left: lastTodoPos.left - 54,
+                transform: "translateY(-50%)",
+                display: "flex",
+                gap: 4,
+                zIndex: 200,
+                pointerEvents: "auto",
+              }}
+            >
+              <button
+                onMouseDown={e => { e.preventDefault(); removeLastTodos(1); }}
+                title="Remove last item"
+                style={{ width: 22, height: 22, borderRadius: 5, border: "1.5px solid #d1d5db", background: "#f3f4f6", color: "#374151", fontSize: 18, fontWeight: 700, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#fee2e2"; (e.currentTarget as HTMLButtonElement).style.color = "#dc2626"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "#f3f4f6"; (e.currentTarget as HTMLButtonElement).style.color = "#374151"; }}
+              >−</button>
+              <button
+                onMouseDown={e => { e.preventDefault(); insertMultipleTodos(1); }}
+                title="Add new item"
+                style={{ width: 22, height: 22, borderRadius: 5, border: "1.5px solid #d1d5db", background: "#f3f4f6", color: "#374151", fontSize: 18, fontWeight: 700, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#dcfce7"; (e.currentTarget as HTMLButtonElement).style.color = "#16a34a"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "#f3f4f6"; (e.currentTarget as HTMLButtonElement).style.color = "#374151"; }}
+              >+</button>
+            </div>
+          )}
           {/* Banner + emoji overlap wrapper */}
           <div className="relative">
             {/* Banner */}
