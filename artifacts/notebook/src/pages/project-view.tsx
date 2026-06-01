@@ -258,10 +258,10 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   );
 
   const newTodoHTML = () =>
-    `<div data-todo-item="1" style="display:flex;align-items:center;gap:8px;margin:4px 0;padding:2px 0">` +
-    `<span contenteditable="false" onclick="this.style.background=this.style.background?'':'#22c55e';this.style.borderColor=this.style.borderColor==='#22c55e'?'#9ca3af':'#22c55e';this.innerHTML=this.innerHTML?'':'✓';this.style.color=this.style.color?'':'white'" ` +
+    `<div data-todo-item="1" contenteditable="false" style="display:flex;align-items:center;gap:8px;margin:4px 0;padding:2px 0">` +
+    `<span onclick="this.style.background=this.style.background?'':'#22c55e';this.style.borderColor=this.style.borderColor==='#22c55e'?'#9ca3af':'#22c55e';this.innerHTML=this.innerHTML?'':'✓';this.style.color=this.style.color?'':'white'" ` +
     `style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;flex-shrink:0;border:2px solid #9ca3af;border-radius:4px;cursor:pointer;font-size:11px;font-weight:700;user-select:none;transition:all 0.15s"></span>` +
-    `<span contenteditable="true" style="outline:none;flex:1"></span></div>`;
+    `<span contenteditable="true" style="outline:none;flex:1;min-width:20px"></span></div>`;
 
   const insertTodo = () => insertHTML(`<p><br></p>` + newTodoHTML() + `<br/>`);
 
