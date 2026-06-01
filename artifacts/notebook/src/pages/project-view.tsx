@@ -191,31 +191,59 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   };
 
   const insertHTML = (html: string) => {
-    editorRef.current?.focus();
-    document.execCommand("insertHTML", false, html);
+    const editor = editorRef.current;
+    if (!editor) return;
+    editor.focus();
+
+    const sel = window.getSelection();
+    if (sel && sel.rangeCount > 0) {
+      const range = sel.getRangeAt(0);
+      // Ensure we're inserting inside the editor
+      if (!editor.contains(range.commonAncestorContainer)) {
+        range.selectNodeContents(editor);
+        range.collapse(false);
+      }
+      range.deleteContents();
+      const frag = range.createContextualFragment(html);
+      const lastChild = frag.lastChild;
+      range.insertNode(frag);
+      // Move cursor after inserted content
+      if (lastChild) {
+        const newRange = document.createRange();
+        newRange.setStartAfter(lastChild);
+        newRange.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(newRange);
+      }
+    } else {
+      editor.innerHTML += html;
+    }
+
     setCtxMenu(null);
     debouncedSave();
   };
 
-  const insertTable = () => insertHTML(`
-    <br/>
-    <table style="border-collapse:collapse;width:100%;margin:8px 0">
-      <tr>
-        <th style="border:1px solid #d1d5db;padding:8px 12px;background:#f9fafb;font-weight:600;text-align:left">Header 1</th>
-        <th style="border:1px solid #d1d5db;padding:8px 12px;background:#f9fafb;font-weight:600;text-align:left">Header 2</th>
-        <th style="border:1px solid #d1d5db;padding:8px 12px;background:#f9fafb;font-weight:600;text-align:left">Header 3</th>
-      </tr>
-      <tr>
-        <td style="border:1px solid #d1d5db;padding:8px 12px">Cell</td>
-        <td style="border:1px solid #d1d5db;padding:8px 12px">Cell</td>
-        <td style="border:1px solid #d1d5db;padding:8px 12px">Cell</td>
-      </tr>
-      <tr>
-        <td style="border:1px solid #d1d5db;padding:8px 12px">Cell</td>
-        <td style="border:1px solid #d1d5db;padding:8px 12px">Cell</td>
-        <td style="border:1px solid #d1d5db;padding:8px 12px">Cell</td>
-      </tr>
-    </table><br/>`);
+  const insertTable = () => insertHTML(
+    `<p><br></p>` +
+    `<table style="border-collapse:collapse;width:100%;margin:8px 0">` +
+    `<thead><tr>` +
+    `<th style="border:1px solid #d1d5db;padding:8px 12px;background:#f9fafb;font-weight:600;text-align:left">Header 1</th>` +
+    `<th style="border:1px solid #d1d5db;padding:8px 12px;background:#f9fafb;font-weight:600;text-align:left">Header 2</th>` +
+    `<th style="border:1px solid #d1d5db;padding:8px 12px;background:#f9fafb;font-weight:600;text-align:left">Header 3</th>` +
+    `</tr></thead>` +
+    `<tbody>` +
+    `<tr>` +
+    `<td style="border:1px solid #d1d5db;padding:8px 12px">Cell</td>` +
+    `<td style="border:1px solid #d1d5db;padding:8px 12px">Cell</td>` +
+    `<td style="border:1px solid #d1d5db;padding:8px 12px">Cell</td>` +
+    `</tr>` +
+    `<tr>` +
+    `<td style="border:1px solid #d1d5db;padding:8px 12px">Cell</td>` +
+    `<td style="border:1px solid #d1d5db;padding:8px 12px">Cell</td>` +
+    `<td style="border:1px solid #d1d5db;padding:8px 12px">Cell</td>` +
+    `</tr>` +
+    `</tbody></table><p><br></p>`
+  );
 
   const insertTodo = () => insertHTML(
     `<div style="display:flex;align-items:flex-start;gap:8px;margin:6px 0;padding:4px 0">` +
