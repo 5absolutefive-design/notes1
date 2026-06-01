@@ -373,6 +373,9 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             />
           </div>
 
+          {/* Divider below title */}
+          <div className="mx-12 mt-3 mb-6 border-t border-stone-200" />
+
           {/* Content editor */}
           <div
             ref={editorRef}
