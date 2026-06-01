@@ -254,12 +254,12 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     : { background: activeProject?.bannerGradient ?? DEFAULT_PROJECT_GRADIENT };
 
   return (
-    <div className="flex-1 flex flex-col min-h-0 overflow-hidden bg-[#fafaf8]">
+    <div className="flex-1 flex flex-col min-h-0 bg-[#fafaf8]">
 
       {activeProject ? (
-        <>
+        <div className="flex-1 overflow-y-auto min-h-0">
           {/* Banner */}
-          <div className="relative flex-shrink-0 h-48 w-full group" style={bannerStyle}>
+          <div className="relative h-48 w-full group" style={bannerStyle}>
             <div className="absolute inset-0 bg-black/10" />
             <div className="absolute bottom-3 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
               <div className="relative" ref={bannerPickerRef}>
@@ -301,7 +301,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           </div>
 
           {/* Editable title */}
-          <div className="px-12 pt-6 pb-2 flex-shrink-0">
+          <div className="px-12 pt-6 pb-2">
             <div
               contentEditable
               suppressContentEditableWarning
@@ -315,32 +315,30 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           </div>
 
           {/* Hint */}
-          <div className="px-12 py-1 flex-shrink-0">
+          <div className="px-12 py-1">
             <p className="text-[11px] text-stone-400 select-none">
               Right-click for formatting · Ctrl+B Bold · Ctrl+I Italic · Ctrl+U Underline
             </p>
           </div>
 
           {/* Content editor */}
-          <div className="flex-1 overflow-y-auto min-h-0">
-            <div
-              ref={editorRef}
-              contentEditable
-              suppressContentEditableWarning
-              onInput={debouncedSave}
-              onKeyDown={handleEditorKeyDown}
-              onContextMenu={handleContextMenu}
-              className="outline-none text-stone-800 text-[15px] leading-relaxed"
-              style={{
-                fontFamily: "Georgia, 'Times New Roman', serif",
-                caretColor: "#6366f1",
-                padding: "16px 48px 80px",
-                minHeight: "2400px",
-              }}
-              data-placeholder="Start writing your project notes…"
-            />
-          </div>
-        </>
+          <div
+            ref={editorRef}
+            contentEditable
+            suppressContentEditableWarning
+            onInput={debouncedSave}
+            onKeyDown={handleEditorKeyDown}
+            onContextMenu={handleContextMenu}
+            className="outline-none text-stone-800 text-[15px] leading-relaxed"
+            style={{
+              fontFamily: "Georgia, 'Times New Roman', serif",
+              caretColor: "#6366f1",
+              padding: "16px 48px 80px",
+              minHeight: "600px",
+            }}
+            data-placeholder="Start writing your project notes…"
+          />
+        </div>
       ) : (
         <div className="flex-1 flex flex-col items-center justify-center gap-4 text-stone-400">
           <FolderKanban className="w-10 h-10 text-stone-300" />
