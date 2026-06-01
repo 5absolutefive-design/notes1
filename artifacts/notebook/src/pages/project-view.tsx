@@ -4,7 +4,7 @@ import {
   Bold, Italic, Underline, Strikethrough, Highlighter,
   Table, CheckSquare, Minus, Heading1, Heading2, Heading3,
   AlignLeft, AlignCenter, AlignRight, List, ListOrdered,
-  ChevronRight,
+  ChevronRight, Trash2,
 } from "lucide-react";
 
 // ── Types (exported for use in home.tsx) ─────────────────────────
@@ -245,6 +245,19 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     setProjects(updated);
   };
 
+  // ── Clear editor content
+  const clearContent = () => {
+    if (!activeId || !editorRef.current) return;
+    if (!window.confirm("Clear all content in this project?")) return;
+    editorRef.current.innerHTML = "";
+    const updated = projects.map(p =>
+      p.id === activeId ? { ...p, content: "", updatedAt: new Date().toISOString() } : p
+    );
+    saveProjects(updated);
+    setProjects(updated);
+    editorRef.current.focus();
+  };
+
   // ── Keyboard shortcuts
   const handleEditorKeyDown = (e: React.KeyboardEvent) => {
     if (e.ctrlKey || e.metaKey) {
@@ -374,7 +387,17 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           </div>
 
           {/* Divider below title */}
-          <div className="mx-12 mt-3 mb-6 border-t border-stone-200" />
+          <div className="mx-12 mt-3 mb-3 flex items-center gap-2">
+            <div className="flex-1 border-t border-stone-200" />
+            <button
+              onClick={clearContent}
+              title="Clear content"
+              className="text-stone-300 hover:text-red-400 transition-colors"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+            </button>
+          </div>
+          <div className="mb-3" />
 
           {/* Content editor */}
           <div
