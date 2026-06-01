@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
 import {
   Plus, ImagePlus, FolderKanban, X,
   Bold, Italic, Underline, Strikethrough, Highlighter,
@@ -166,10 +166,21 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   // ── Right-click handler
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
-    const x = Math.min(e.clientX, window.innerWidth - 228);
-    const y = Math.min(e.clientY, window.innerHeight - 380);
-    setCtxMenu({ x, y, highlightOpen: false, headingOpen: false });
+    setCtxMenu({ x: e.clientX, y: e.clientY, highlightOpen: false, headingOpen: false });
   };
+
+  // ── Clamp context menu inside viewport after it renders
+  useLayoutEffect(() => {
+    if (!ctxMenu || !ctxMenuRef.current) return;
+    const rect = ctxMenuRef.current.getBoundingClientRect();
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const newX = rect.right > vw ? Math.max(0, vw - rect.width - 8) : ctxMenu.x;
+    const newY = rect.bottom > vh ? Math.max(0, vh - rect.height - 8) : ctxMenu.y;
+    if (newX !== ctxMenu.x || newY !== ctxMenu.y) {
+      setCtxMenu(m => m ? { ...m, x: newX, y: newY } : null);
+    }
+  }, [ctxMenu?.x, ctxMenu?.y]);
 
   // ── Formatting commands
   const execFmt = (cmd: string, value?: string) => {
