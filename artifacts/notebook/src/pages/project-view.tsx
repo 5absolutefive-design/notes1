@@ -279,8 +279,17 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
   }, [debouncedSave]);
 
+  const findCellAt = (target: HTMLElement, clientX: number, clientY: number): HTMLTableCellElement | null => {
+    let cell = target.closest("td, th") as HTMLTableCellElement | null;
+    if (!cell) {
+      const els = document.elementsFromPoint(clientX, clientY);
+      cell = (els.find(el => el.matches("td, th")) as HTMLTableCellElement | null) ?? null;
+    }
+    return cell;
+  };
+
   const handleEditorMouseDown = (e: React.MouseEvent) => {
-    const cell = (e.target as HTMLElement).closest("td, th") as HTMLTableCellElement | null;
+    const cell = findCellAt(e.target as HTMLElement, e.clientX, e.clientY);
     if (!cell) return;
     const rect = cell.getBoundingClientRect();
     const nearRight = e.clientX >= rect.right - 6;
@@ -300,7 +309,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
 
   const handleEditorMouseMove = (e: React.MouseEvent) => {
     if (colResizeRef.current) return;
-    const cell = (e.target as HTMLElement).closest("td, th") as HTMLTableCellElement | null;
+    const cell = findCellAt(e.target as HTMLElement, e.clientX, e.clientY);
     if (!cell) { if (editorRef.current) editorRef.current.style.cursor = ""; return; }
     const rect = cell.getBoundingClientRect();
     const nearRight = e.clientX >= rect.right - 6;
