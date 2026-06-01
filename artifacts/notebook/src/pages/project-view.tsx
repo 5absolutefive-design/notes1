@@ -369,6 +369,28 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
 
   // ── Keyboard shortcuts
   const handleEditorKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter") {
+      const sel = window.getSelection();
+      if (sel && sel.rangeCount > 0) {
+        const node = sel.getRangeAt(0).startContainer;
+        const el = node.nodeType === Node.TEXT_NODE ? node.parentElement : node as Element;
+        const todoItem = el?.closest?.('[data-todo-item="1"]');
+        if (todoItem) {
+          e.preventDefault();
+          const newP = document.createElement("p");
+          newP.innerHTML = "<br>";
+          todoItem.parentNode?.insertBefore(newP, todoItem.nextSibling);
+          const range = document.createRange();
+          const newSel = window.getSelection();
+          range.setStart(newP, 0);
+          range.collapse(true);
+          newSel?.removeAllRanges();
+          newSel?.addRange(range);
+          debouncedSave();
+          return;
+        }
+      }
+    }
     if (e.ctrlKey || e.metaKey) {
       if (e.key === "b") { e.preventDefault(); execFmt("bold"); }
       else if (e.key === "i") { e.preventDefault(); execFmt("italic"); }
