@@ -1002,6 +1002,15 @@ export default function Home() {
 
             return (
               <div key={item.id} className="relative">
+                {/* Divider + label before Task */}
+                {item.id === "task" && (
+                  <div className={`mt-2 mb-1.5 ${sidebarCollapsed ? "px-1" : "px-1"}`}>
+                    <div className="border-t border-stone-100" />
+                    {!sidebarCollapsed && (
+                      <span className="block text-[9px] font-semibold text-stone-300 uppercase tracking-widest pt-1.5 px-1">Productivity</span>
+                    )}
+                  </div>
+                )}
                 <button
                   onClick={() => handleNavClick(item)}
                   title={!isClickable ? `${item.label} — coming soon` : item.label}
@@ -1026,7 +1035,7 @@ export default function Home() {
                 {!sidebarCollapsed && item.id === "project" && isSelected && (
                   <button
                     onClick={(e) => { e.stopPropagation(); setShowNewProjectModal(true); }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-md flex items-center justify-center text-blue-500 hover:text-indigo-700 hover:bg-blue-100 transition-all"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-5 h-5 rounded-md flex items-center justify-center text-indigo-400 hover:text-indigo-700 hover:bg-indigo-50 transition-all"
                     title="New project"
                   >
                     <Plus className="w-3.5 h-3.5" />
@@ -1038,13 +1047,20 @@ export default function Home() {
 
           {/* Project list — shown when Project is active */}
           {activeView === "project" && (
-            <div className="mt-1">
+            <div className="mt-1.5 mx-1 rounded-xl bg-indigo-50/60 border border-indigo-100 overflow-hidden">
               {!sidebarCollapsed && (
-                <div className="px-1 pb-1">
-                  <span className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest">Projects</span>
+                <div className="flex items-center justify-between px-2.5 pt-2 pb-1">
+                  <span className="text-[9px] font-bold text-indigo-400 uppercase tracking-widest">Projects</span>
+                  <button
+                    onClick={() => setShowNewProjectModal(true)}
+                    className="w-4 h-4 rounded flex items-center justify-center text-indigo-400 hover:text-indigo-700 hover:bg-indigo-100 transition-all"
+                    title="New project"
+                  >
+                    <Plus className="w-3 h-3" />
+                  </button>
                 </div>
               )}
-              <div className="flex flex-col gap-0.5">
+              <div className="flex flex-col gap-0.5 px-1 pb-1.5">
                 {projects.map((p) => (
                   <div key={p.id} className="group relative">
                     {editingProjectId === p.id ? (
@@ -1054,7 +1070,7 @@ export default function Home() {
                           value={editProjectTitle}
                           onChange={e => setEditProjectTitle(e.target.value)}
                           onKeyDown={e => { if (e.key === "Enter") handleRenameProject(p.id); if (e.key === "Escape") setEditingProjectId(null); }}
-                          className="flex-1 text-xs border border-indigo-300 rounded-md px-2 py-1 outline-none min-w-0"
+                          className="flex-1 text-xs border border-indigo-300 rounded-md px-2 py-1 outline-none bg-white min-w-0"
                         />
                         <button onClick={() => handleRenameProject(p.id)} className="text-green-600 hover:text-green-700 flex-shrink-0">
                           <Check className="w-3.5 h-3.5" />
@@ -1063,20 +1079,22 @@ export default function Home() {
                     ) : (
                       <button
                         onClick={() => setActiveProjectId(p.id)}
-                        className={`w-full flex items-center gap-2.5 rounded-lg px-2 py-1.5 transition-all text-left ${sidebarCollapsed ? "justify-center" : ""} ${
-                          activeProjectId === p.id ? "bg-indigo-50 text-indigo-700" : "text-stone-500 hover:bg-stone-50 hover:text-stone-900"
+                        className={`w-full flex items-center gap-2 rounded-lg px-2 py-1.5 transition-all text-left ${sidebarCollapsed ? "justify-center" : ""} ${
+                          activeProjectId === p.id
+                            ? "bg-white text-indigo-700 shadow-sm border border-indigo-100"
+                            : "text-indigo-500/80 hover:bg-white/70 hover:text-indigo-700"
                         }`}
                         title={p.title}
                       >
-                        <FileText className={`w-3.5 h-3.5 flex-shrink-0 ${activeProjectId === p.id ? "text-indigo-500" : "text-stone-400"}`} />
-                        {!sidebarCollapsed && <span className="text-xs truncate flex-1">{p.title}</span>}
+                        <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${activeProjectId === p.id ? "bg-indigo-500" : "bg-indigo-300"}`} />
+                        {!sidebarCollapsed && <span className="text-xs truncate flex-1 font-medium">{p.title}</span>}
                       </button>
                     )}
                     {!sidebarCollapsed && editingProjectId !== p.id && (
                       <div className="absolute right-1 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-0.5">
                         <button
                           onClick={(e) => { e.stopPropagation(); setEditingProjectId(p.id); setEditProjectTitle(p.title); }}
-                          className="w-5 h-5 rounded flex items-center justify-center text-stone-400 hover:text-indigo-600 hover:bg-indigo-50"
+                          className="w-5 h-5 rounded flex items-center justify-center text-indigo-300 hover:text-indigo-600 hover:bg-indigo-100"
                           title="Rename"
                         >
                           <Pencil className="w-3 h-3" />
@@ -1092,7 +1110,7 @@ export default function Home() {
                         ) : (
                           <button
                             onClick={(e) => { e.stopPropagation(); setDeleteProjectConfirmId(p.id); setTimeout(() => setDeleteProjectConfirmId(null), 3000); }}
-                            className="w-5 h-5 rounded flex items-center justify-center text-stone-400 hover:text-red-500 hover:bg-red-50"
+                            className="w-5 h-5 rounded flex items-center justify-center text-indigo-300 hover:text-red-500 hover:bg-red-50"
                             title="Delete"
                           >
                             <Trash2 className="w-3 h-3" />
@@ -1103,7 +1121,7 @@ export default function Home() {
                   </div>
                 ))}
                 {projects.length === 0 && !sidebarCollapsed && (
-                  <p className="text-xs text-stone-400 px-2 py-1">No projects yet</p>
+                  <p className="text-[11px] text-indigo-300 px-2 py-1 italic">No projects yet</p>
                 )}
               </div>
             </div>
