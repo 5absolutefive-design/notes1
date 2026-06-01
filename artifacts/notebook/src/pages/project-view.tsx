@@ -115,6 +115,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [lastTodoPos, setLastTodoPos] = useState<{ top: number; left: number } | null>(null);
+  const [showTodoButtons, setShowTodoButtons] = useState(false);
 
   const activeProject = projects.find(p => p.id === activeId) ?? null;
 
@@ -428,11 +429,28 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     <div className="flex-1 flex flex-col min-h-0 bg-[#fafaf8]">
 
       {activeProject ? (
-        <div ref={scrollContainerRef} className="flex-1 overflow-y-auto min-h-0" style={{ position: "relative" }}>
+        <div
+          ref={scrollContainerRef}
+          className="flex-1 overflow-y-auto min-h-0"
+          style={{ position: "relative" }}
+          onMouseMove={(e) => {
+            if (!lastTodoPos) return;
+            const rect = scrollContainerRef.current?.getBoundingClientRect();
+            if (!rect) return;
+            const mx = e.clientX - rect.left;
+            const my = e.clientY - rect.top + (scrollContainerRef.current?.scrollTop ?? 0);
+            const dx = mx - lastTodoPos.left;
+            const dy = my - lastTodoPos.top;
+            setShowTodoButtons(Math.abs(dx) < 80 && Math.abs(dy) < 40);
+          }}
+          onMouseLeave={() => setShowTodoButtons(false)}
+        >
 
           {/* Inline +/- buttons next to last todo item */}
           {lastTodoPos && (
             <div
+              onMouseEnter={() => setShowTodoButtons(true)}
+              onMouseLeave={() => setShowTodoButtons(false)}
               style={{
                 position: "absolute",
                 top: lastTodoPos.top,
@@ -443,6 +461,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 gap: 4,
                 zIndex: 200,
                 pointerEvents: "auto",
+                opacity: showTodoButtons ? 1 : 0,
+                transition: "opacity 0.15s ease",
               }}
             >
               <button
