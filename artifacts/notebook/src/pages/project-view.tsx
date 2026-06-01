@@ -330,7 +330,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             <div className="absolute left-12 bottom-0 translate-y-1/2 z-10" ref={emojiPickerRef}>
               <button
                 onClick={() => setShowEmojiPicker(v => !v)}
-                className="w-16 h-16 rounded-2xl bg-white shadow-lg border border-stone-100 flex items-center justify-center text-4xl hover:scale-105 transition-transform"
+                className="w-[100px] h-[80px] rounded-2xl bg-white shadow-lg border border-stone-100 flex items-center justify-center text-4xl hover:scale-105 transition-transform"
                 title="Change emoji"
               >
                 {activeProject.emoji ?? DEFAULT_EMOJI}
