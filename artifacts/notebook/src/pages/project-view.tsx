@@ -115,6 +115,9 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const colResizeRef = useRef<{ startX: number; startY: number; cell: HTMLTableCellElement; startW: number; startH: number; mode: "col" | "row" } | null>(null);
+  const rowReorderRef = useRef<{ table: HTMLTableElement; tbody: HTMLTableSectionElement; dragRow: HTMLTableRowElement; dragRowIdx: number; rows: HTMLTableRowElement[]; targetIdx: number } | null>(null);
+  const colReorderRef = useRef<{ table: HTMLTableElement; dragColIdx: number; targetColIdx: number } | null>(null);
+  const [reorderLine, setReorderLine] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
   const [lastTodoPos, setLastTodoPos] = useState<{ top: number; left: number } | null>(null);
   const [showTodoButtons, setShowTodoButtons] = useState(false);
 
@@ -252,28 +255,119 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     }
   }, [ctxMenu?.x, ctxMenu?.y]);
 
-  // ── Table column/row resize drag handlers
+  // ── Table column/row resize + reorder drag handlers
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
+      // ── Resize
       const r = colResizeRef.current;
-      if (!r) return;
-      if (r.mode === "col") {
-        const newW = Math.max(40, r.startW + (e.clientX - r.startX));
-        r.cell.style.width = `${newW}px`;
-        r.cell.style.minWidth = `${newW}px`;
-      } else {
-        const newH = Math.max(24, r.startH + (e.clientY - r.startY));
-        r.cell.style.height = `${newH}px`;
+      if (r) {
+        if (r.mode === "col") {
+          const newW = Math.max(40, r.startW + (e.clientX - r.startX));
+          r.cell.style.width = `${newW}px`;
+          r.cell.style.minWidth = `${newW}px`;
+        } else {
+          const newH = Math.max(24, r.startH + (e.clientY - r.startY));
+          r.cell.style.height = `${newH}px`;
+        }
+        return;
+      }
+
+      // ── Row reorder
+      const rr = rowReorderRef.current;
+      if (rr) {
+        const tableRect = rr.table.getBoundingClientRect();
+        let targetIdx = rr.rows.length;
+        for (let i = 0; i < rr.rows.length; i++) {
+          const mid = rr.rows[i].getBoundingClientRect().top + rr.rows[i].getBoundingClientRect().height / 2;
+          if (e.clientY < mid) { targetIdx = i; break; }
+        }
+        // Can't drop before the locked rows (first tbody row = index 0)
+        targetIdx = Math.max(1, targetIdx);
+        rr.targetIdx = targetIdx;
+        const lineY = targetIdx >= rr.rows.length
+          ? rr.rows[rr.rows.length - 1].getBoundingClientRect().bottom
+          : rr.rows[targetIdx].getBoundingClientRect().top;
+        setReorderLine({ x: tableRect.left, y: lineY - 1, w: tableRect.width, h: 2 });
+        return;
+      }
+
+      // ── Col reorder
+      const cr = colReorderRef.current;
+      if (cr) {
+        const tableRect = cr.table.getBoundingClientRect();
+        const headers = Array.from(cr.table.querySelectorAll("thead th")) as HTMLTableCellElement[];
+        let targetColIdx = headers.length;
+        for (let i = 0; i < headers.length; i++) {
+          const hr = headers[i].getBoundingClientRect();
+          if (e.clientX < hr.left + hr.width / 2) { targetColIdx = i; break; }
+        }
+        cr.targetColIdx = targetColIdx;
+        const lineX = targetColIdx >= headers.length
+          ? headers[headers.length - 1].getBoundingClientRect().right
+          : headers[targetColIdx].getBoundingClientRect().left;
+        setReorderLine({ x: lineX - 1, y: tableRect.top, w: 2, h: tableRect.height });
+        return;
       }
     };
+
     const onUp = () => {
+      // ── Resize cleanup
       if (colResizeRef.current) {
         colResizeRef.current = null;
         document.body.style.cursor = "";
         document.body.style.userSelect = "";
         debouncedSave();
+        return;
+      }
+
+      // ── Row reorder cleanup + apply
+      if (rowReorderRef.current) {
+        const rr = rowReorderRef.current;
+        const { tbody, dragRow, dragRowIdx, rows, targetIdx } = rr;
+        const safeTarget = Math.max(1, targetIdx);
+        if (safeTarget !== dragRowIdx && safeTarget !== dragRowIdx + 1) {
+          tbody.removeChild(dragRow);
+          const remaining = Array.from(tbody.rows);
+          const insertAt = safeTarget > dragRowIdx ? safeTarget - 1 : safeTarget;
+          if (insertAt >= remaining.length) tbody.appendChild(dragRow);
+          else tbody.insertBefore(dragRow, remaining[insertAt]);
+          debouncedSave();
+        }
+        dragRow.style.opacity = "";
+        dragRow.style.outline = "";
+        rowReorderRef.current = null;
+        setReorderLine(null);
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+        return;
+      }
+
+      // ── Col reorder cleanup + apply
+      if (colReorderRef.current) {
+        const cr = colReorderRef.current;
+        const { table, dragColIdx, targetColIdx } = cr;
+        if (targetColIdx !== dragColIdx && targetColIdx !== dragColIdx + 1) {
+          const allRows = Array.from(table.querySelectorAll("tr"));
+          for (const row of allRows) {
+            const cells = Array.from(row.children);
+            if (cells.length <= dragColIdx) continue;
+            const dragCell = cells[dragColIdx];
+            row.removeChild(dragCell);
+            const remaining = Array.from(row.children);
+            const insertAt = targetColIdx > dragColIdx ? targetColIdx - 1 : targetColIdx;
+            if (insertAt >= remaining.length) row.appendChild(dragCell);
+            else row.insertBefore(dragCell, remaining[insertAt]);
+          }
+          debouncedSave();
+        }
+        colReorderRef.current = null;
+        setReorderLine(null);
+        document.body.style.cursor = "";
+        document.body.style.userSelect = "";
+        return;
       }
     };
+
     window.addEventListener("mousemove", onMove);
     window.addEventListener("mouseup", onUp);
     return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); };
@@ -290,32 +384,92 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
 
   const handleEditorMouseDown = (e: React.MouseEvent) => {
     const cell = findCellAt(e.target as HTMLElement, e.clientX, e.clientY);
-    if (!cell) return;
-    const rect = cell.getBoundingClientRect();
-    const nearRight = e.clientX >= rect.right - 6;
-    const nearBottom = e.clientY >= rect.bottom - 6;
-    if (nearRight || nearBottom) {
-      e.preventDefault();
-      colResizeRef.current = {
-        startX: e.clientX, startY: e.clientY,
-        cell,
-        startW: cell.offsetWidth, startH: cell.offsetHeight,
-        mode: nearBottom && !nearRight ? "row" : "col",
-      };
-      document.body.style.cursor = nearBottom && !nearRight ? "row-resize" : "col-resize";
-      document.body.style.userSelect = "none";
+
+    if (cell) {
+      const rect = cell.getBoundingClientRect();
+      const nearRight = e.clientX >= rect.right - 6;
+      const nearBottom = e.clientY >= rect.bottom - 6;
+
+      // ── Resize
+      if (nearRight || nearBottom) {
+        e.preventDefault();
+        colResizeRef.current = {
+          startX: e.clientX, startY: e.clientY,
+          cell,
+          startW: cell.offsetWidth, startH: cell.offsetHeight,
+          mode: nearBottom && !nearRight ? "row" : "col",
+        };
+        document.body.style.cursor = nearBottom && !nearRight ? "row-resize" : "col-resize";
+        document.body.style.userSelect = "none";
+        return;
+      }
+
+      // ── Col reorder: drag from top 14px of a <th>
+      if (cell.tagName === "TH" && e.clientY < rect.top + 14) {
+        const thead = cell.closest("thead");
+        const table = thead?.closest("table") as HTMLTableElement | null;
+        if (table && thead) {
+          const headers = Array.from(thead.querySelectorAll("th"));
+          const colIdx = headers.indexOf(cell as HTMLTableCellElement);
+          if (colIdx >= 0) {
+            e.preventDefault();
+            colReorderRef.current = { table, dragColIdx: colIdx, targetColIdx: colIdx };
+            document.body.style.cursor = "grabbing";
+            document.body.style.userSelect = "none";
+            return;
+          }
+        }
+      }
+    }
+
+    // ── Row reorder: drag from left 20px of a non-locked <tr> in <tbody>
+    const rowEl = (e.target as HTMLElement).closest("tr") as HTMLTableRowElement | null;
+    if (rowEl) {
+      const tbody = rowEl.parentElement as HTMLTableSectionElement | null;
+      const table = tbody?.closest("table") as HTMLTableElement | null;
+      if (table && tbody && tbody.tagName === "TBODY") {
+        const rowIdx = Array.from(tbody.rows).indexOf(rowEl);
+        if (rowIdx > 0) { // index 0 is locked
+          const rowRect = rowEl.getBoundingClientRect();
+          if (e.clientX < rowRect.left + 22) {
+            e.preventDefault();
+            const rows = Array.from(tbody.rows);
+            rowReorderRef.current = { table, tbody, dragRow: rowEl, dragRowIdx: rowIdx, rows, targetIdx: rowIdx };
+            rowEl.style.opacity = "0.45";
+            rowEl.style.outline = "2px dashed #6366f1";
+            document.body.style.cursor = "grabbing";
+            document.body.style.userSelect = "none";
+            return;
+          }
+        }
+      }
     }
   };
 
   const handleEditorMouseMove = (e: React.MouseEvent) => {
-    if (colResizeRef.current) return;
+    if (colResizeRef.current || rowReorderRef.current || colReorderRef.current) return;
     const cell = findCellAt(e.target as HTMLElement, e.clientX, e.clientY);
     if (!cell) { if (editorRef.current) editorRef.current.style.cursor = ""; return; }
     const rect = cell.getBoundingClientRect();
     const nearRight = e.clientX >= rect.right - 6;
     const nearBottom = e.clientY >= rect.bottom - 6;
+
+    // Check row reorder grab zone (left 22px, non-locked tbody row)
+    const rowEl = cell.closest("tr") as HTMLTableRowElement | null;
+    const tbody = rowEl?.parentElement;
+    const inDraggableRow = rowEl && tbody?.tagName === "TBODY" &&
+      Array.from((tbody as HTMLTableSectionElement).rows).indexOf(rowEl) > 0 &&
+      e.clientX < rect.left + 22 && !nearRight && !nearBottom;
+
+    // Check col reorder grab zone (top 14px of th)
+    const inColGrab = cell.tagName === "TH" && e.clientY < rect.top + 14 && !nearRight && !nearBottom;
+
     if (editorRef.current) {
-      editorRef.current.style.cursor = nearRight ? "col-resize" : nearBottom ? "row-resize" : "";
+      editorRef.current.style.cursor = nearRight ? "col-resize"
+        : nearBottom ? "row-resize"
+        : inDraggableRow ? "grab"
+        : inColGrab ? "grab"
+        : "";
     }
   };
 
@@ -737,6 +891,22 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
         </div>
       )}
 
+      {/* Drag reorder indicator line */}
+      {reorderLine && (
+        <div style={{
+          position: "fixed",
+          left: reorderLine.x,
+          top: reorderLine.y,
+          width: reorderLine.w,
+          height: reorderLine.h,
+          background: "#6366f1",
+          zIndex: 9999,
+          pointerEvents: "none",
+          borderRadius: 2,
+          boxShadow: "0 0 0 1px #a5b4fc",
+        }} />
+      )}
+
       {/* Editor styles */}
       <style>{`
         [data-placeholder]:empty:before { content: attr(data-placeholder); color: #c0bdb8; pointer-events: none; }
@@ -748,6 +918,11 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
         [contenteditable] table { border-collapse: collapse; table-layout: fixed; }
         [contenteditable] td, [contenteditable] th { border: 1px solid #d1d5db; padding: 6px 10px; min-width: 40px; overflow: hidden; box-sizing: border-box; }
         [contenteditable] th { background: #f9fafb; font-weight: 600; }
+        [contenteditable] th { cursor: default; }
+        [contenteditable] th:hover::before { content: "⠿"; position: absolute; top: 1px; left: 50%; transform: translateX(-50%); font-size: 9px; color: #6366f1; opacity: 0.7; pointer-events: none; }
+        [contenteditable] th { position: relative; }
+        [contenteditable] tbody tr:not(:first-child) td:first-child { position: relative; }
+        [contenteditable] tbody tr:not(:first-child):hover td:first-child::before { content: "⋮⋮"; position: absolute; left: 2px; top: 50%; transform: translateY(-50%); font-size: 10px; color: #6366f1; opacity: 0.6; line-height: 1; pointer-events: none; letter-spacing: -2px; }
       `}</style>
     </div>
   );
