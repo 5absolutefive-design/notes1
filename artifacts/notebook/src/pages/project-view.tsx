@@ -322,7 +322,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           </div>
 
           {/* Content editor */}
-          <div className="flex-1 overflow-y-auto min-h-0" style={{ display: "flex", flexDirection: "column" }}>
+          <div className="flex-1 overflow-y-auto min-h-0">
             <div
               ref={editorRef}
               contentEditable
@@ -334,8 +334,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
               style={{
                 fontFamily: "Georgia, 'Times New Roman', serif",
                 caretColor: "#6366f1",
-                padding: "16px 48px 120px",
-                flexGrow: 1,
+                padding: "16px 48px 80px",
+                minHeight: "2400px",
               }}
               data-placeholder="Start writing your project notes…"
             />
