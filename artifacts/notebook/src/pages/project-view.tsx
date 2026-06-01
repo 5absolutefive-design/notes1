@@ -314,13 +314,6 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             </div>
           </div>
 
-          {/* Hint */}
-          <div className="px-12 py-1">
-            <p className="text-[11px] text-stone-400 select-none">
-              Right-click for formatting · Ctrl+B Bold · Ctrl+I Italic · Ctrl+U Underline
-            </p>
-          </div>
-
           {/* Content editor */}
           <div
             ref={editorRef}
