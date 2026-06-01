@@ -355,7 +355,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           </div>
 
           {/* Title — padded to clear emoji card */}
-          <div className="px-12 pt-[68px] pb-2">
+          <div className="px-12 pt-[88px] pb-2">
             <div
               contentEditable
               suppressContentEditableWarning
