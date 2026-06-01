@@ -417,6 +417,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 left: lastTodoPos.left - 30,
                 transform: "translateY(-50%)",
                 display: "flex",
+                flexDirection: "column",
                 gap: 4,
                 zIndex: 200,
                 pointerEvents: "auto",
