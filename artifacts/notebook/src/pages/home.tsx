@@ -1,4 +1,5 @@
 import { Link, useLocation } from "wouter";
+import ProjectView from "@/pages/project-view";
 import {
   Plus, Trash2, ImagePlus, X, Search, Download, Upload,
   BookOpen, FileText, Lock, LockOpen, Eye, EyeOff, User,
@@ -291,7 +292,7 @@ const NAV_ITEMS: { id: ActiveView; label: string; icon: React.ElementType; activ
   { id: "home",       label: "Home",        icon: HomeIcon,       active: false },
   { id: "short-note", label: "Short Note",  icon: StickyNote,     active: true  },
   { id: "my-notebook",label: "My Notebook", icon: BookMarked,     active: true  },
-  { id: "project",    label: "Project",     icon: FolderKanban,   active: false },
+  { id: "project",    label: "Project",     icon: FolderKanban,   active: true  },
   { id: "task",       label: "Task",        icon: CheckSquare,    active: true  },
   { id: "schedule",   label: "Schedule",    icon: CalendarDays,   active: true  },
 ];
@@ -2663,8 +2664,11 @@ export default function Home() {
           );
         })()}
 
+        {/* Project view */}
+        {activeView === "project" && <ProjectView />}
+
         {/* All other views — blank */}
-        {activeView !== "my-notebook" && activeView !== "short-note" && activeView !== "task" && activeView !== "schedule" && (
+        {activeView !== "my-notebook" && activeView !== "short-note" && activeView !== "task" && activeView !== "schedule" && activeView !== "project" && (
           <div className="flex-1" />
         )}
 
