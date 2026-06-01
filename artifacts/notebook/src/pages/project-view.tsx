@@ -255,13 +255,17 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     `</tbody></table><p><br></p>`
   );
 
-  const insertTodo = () => insertHTML(
-    `<p><br></p>` +
-    `<div style="display:flex;align-items:flex-start;gap:8px;margin:6px 0;padding:4px 0">` +
-    `<span contenteditable="false" onclick="this.style.background=this.style.background?'':'#22c55e';this.style.borderColor=this.style.borderColor==='#22c55e'?'#9ca3af':'#22c55e';this.innerHTML=this.innerHTML?'':'✓';this.style.color='white'" ` +
-    `style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border:2px solid #9ca3af;border-radius:4px;cursor:pointer;flex-shrink:0;margin-top:2px;font-size:11px;font-weight:700;user-select:none;transition:all 0.15s"></span>` +
-    `<span contenteditable="true" style="outline:none;flex:1">Task item</span></div><br/>`
-  );
+  const newTodoHTML = () =>
+    `<div data-todo-item="1" style="display:flex;align-items:flex-start;gap:8px;margin:6px 0;padding:4px 0">` +
+    `<div contenteditable="false" style="display:flex;flex-direction:column;gap:3px;align-items:center;flex-shrink:0;margin-top:2px">` +
+    `<span contenteditable="false" onclick="this.style.background=this.style.background?'':'#22c55e';this.style.borderColor=this.style.borderColor==='#22c55e'?'#9ca3af':'#22c55e';this.innerHTML=this.innerHTML?'':'✓';this.style.color=this.style.color?'':'white'" ` +
+    `style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border:2px solid #9ca3af;border-radius:4px;cursor:pointer;font-size:11px;font-weight:700;user-select:none;transition:all 0.15s"></span>` +
+    `<span contenteditable="false" data-add-todo="1" ` +
+    `style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border:2px dashed #d1d5db;border-radius:4px;cursor:pointer;font-size:15px;font-weight:500;color:#b0b7c3;user-select:none;transition:all 0.15s;line-height:1">+</span>` +
+    `</div>` +
+    `<span contenteditable="true" style="outline:none;flex:1">Task item</span></div>`;
+
+  const insertTodo = () => insertHTML(`<p><br></p>` + newTodoHTML() + `<br/>`);
 
   const insertDivider = () => insertHTML(`<br/><hr style="border:none;border-top:2px solid #e7e5e4;margin:12px 0"/><br/>`);
 
@@ -293,6 +297,27 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     const updated = projects.map(p => p.id === id ? { ...p, title } : p);
     saveProjects(updated);
     setProjects(updated);
+  };
+
+  // ── Handle + button click to add a new todo after the current one
+  const handleEditorClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+    if (!target.dataset.addTodo) return;
+    e.preventDefault();
+    const todoItem = target.closest('[data-todo-item]') as HTMLElement;
+    if (!todoItem) return;
+    todoItem.insertAdjacentHTML('afterend', newTodoHTML());
+    const newItem = todoItem.nextElementSibling as HTMLElement;
+    const textSpan = newItem?.querySelector<HTMLElement>('[contenteditable="true"]');
+    if (textSpan) {
+      textSpan.focus();
+      const range = document.createRange();
+      range.selectNodeContents(textSpan);
+      const sel = window.getSelection();
+      sel?.removeAllRanges();
+      sel?.addRange(range);
+    }
+    debouncedSave();
   };
 
   // ── Keyboard shortcuts
@@ -434,6 +459,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             onInput={debouncedSave}
             onKeyDown={handleEditorKeyDown}
             onContextMenu={handleContextMenu}
+            onClick={handleEditorClick}
             className="outline-none text-stone-800 text-[15px] leading-relaxed"
             style={{
               fontFamily: "Georgia, 'Times New Roman', serif",
