@@ -261,15 +261,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     `style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;flex-shrink:0;border:2px solid #9ca3af;border-radius:4px;cursor:pointer;font-size:11px;font-weight:700;user-select:none;transition:all 0.15s"></span>` +
     `<span contenteditable="true" style="outline:none;flex:1"></span></div>`;
 
-  const addTodoBtnHTML = () =>
-    `<div contenteditable="false" data-add-todo-btn="1" style="display:flex;align-items:center;gap:4px;margin:4px 0 2px 0">` +
-    `<span contenteditable="false" data-add-todo="1" ` +
-    `style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border:2px dashed #d1d5db;border-radius:4px;cursor:pointer;font-size:15px;font-weight:500;color:#b0b7c3;user-select:none;transition:all 0.15s;line-height:1">+</span>` +
-    `<span contenteditable="false" data-remove-todo="1" ` +
-    `style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border:2px dashed #d1d5db;border-radius:4px;cursor:pointer;font-size:15px;font-weight:500;color:#b0b7c3;user-select:none;transition:all 0.15s;line-height:1">−</span>` +
-    `</div>`;
-
-  const insertTodo = () => insertHTML(`<p><br></p>` + newTodoHTML() + addTodoBtnHTML() + `<br/>`);
+  const insertTodo = () => insertHTML(`<p><br></p>` + newTodoHTML() + `<br/>`);
 
   const insertDivider = () => insertHTML(`<br/><hr style="border:none;border-top:2px solid #e7e5e4;margin:12px 0"/><br/>`);
 
@@ -301,42 +293,6 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     const updated = projects.map(p => p.id === id ? { ...p, title } : p);
     saveProjects(updated);
     setProjects(updated);
-  };
-
-  // ── Handle + / − button clicks on the add-todo row
-  const handleEditorClick = (e: React.MouseEvent) => {
-    const target = e.target as HTMLElement;
-    e.preventDefault();
-
-    // + button — add new todo before the button row
-    if (target.dataset.addTodo) {
-      const addBtn = target.closest('[data-add-todo-btn]') as HTMLElement;
-      if (!addBtn) return;
-      addBtn.insertAdjacentHTML('beforebegin', newTodoHTML());
-      const newItem = addBtn.previousElementSibling as HTMLElement;
-      const textSpan = newItem?.querySelector<HTMLElement>('[contenteditable="true"]');
-      if (textSpan) {
-        textSpan.focus();
-        const range = document.createRange();
-        range.selectNodeContents(textSpan);
-        const sel = window.getSelection();
-        sel?.removeAllRanges();
-        sel?.addRange(range);
-      }
-      debouncedSave();
-      return;
-    }
-
-    // − button — remove the todo item directly above the button row
-    if (target.dataset.removeTodo) {
-      const addBtn = target.closest('[data-add-todo-btn]') as HTMLElement;
-      if (!addBtn) return;
-      const prev = addBtn.previousElementSibling as HTMLElement;
-      if (prev && prev.dataset.todoItem) {
-        prev.remove();
-        debouncedSave();
-      }
-    }
   };
 
   // ── Keyboard shortcuts
@@ -478,7 +434,6 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             onInput={debouncedSave}
             onKeyDown={handleEditorKeyDown}
             onContextMenu={handleContextMenu}
-            onClick={handleEditorClick}
             className="outline-none text-stone-800 text-[15px] leading-relaxed"
             style={{
               fontFamily: "Georgia, 'Times New Roman', serif",
