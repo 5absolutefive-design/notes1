@@ -117,6 +117,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const colResizeRef = useRef<{ startX: number; startY: number; cell: HTMLTableCellElement; startW: number; startH: number; mode: "col" | "row" } | null>(null);
   const rowReorderRef = useRef<{ table: HTMLTableElement; tbody: HTMLTableSectionElement; dragRow: HTMLTableRowElement; dragRowIdx: number; rows: HTMLTableRowElement[]; targetIdx: number } | null>(null);
   const colReorderRef = useRef<{ table: HTMLTableElement; dragColIdx: number; targetColIdx: number } | null>(null);
+  const pendingDragRef = useRef<{ type: "row" | "col"; startX: number; startY: number; cell?: HTMLTableCellElement; rowEl?: HTMLTableRowElement } | null>(null);
   const [reorderLine, setReorderLine] = useState<{ x: number; y: number; w: number; h: number } | null>(null);
   const [lastTodoPos, setLastTodoPos] = useState<{ top: number; left: number } | null>(null);
   const [showTodoButtons, setShowTodoButtons] = useState(false);
@@ -255,8 +256,42 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     }
   }, [ctxMenu?.x, ctxMenu?.y]);
 
-  // ── Table column/row resize + reorder drag handlers
+  // ── Table resize + reorder drag handlers
   useEffect(() => {
+    const DRAG_THRESHOLD = 5;
+
+    const activateRowReorder = (rowEl: HTMLTableRowElement) => {
+      const tbody = rowEl.parentElement as HTMLTableSectionElement;
+      const table = tbody?.closest("table") as HTMLTableElement | null;
+      if (!table) return;
+      const rowIdx = Array.from(tbody.rows).indexOf(rowEl);
+      if (rowIdx <= 0) return;
+      rowEl.style.opacity = "0.45";
+      rowEl.style.outline = "2px dashed #6366f1";
+      rowReorderRef.current = {
+        table, tbody, dragRow: rowEl,
+        dragRowIdx: rowIdx,
+        rows: Array.from(tbody.rows),
+        targetIdx: rowIdx,
+      };
+      document.body.style.cursor = "grabbing";
+      document.body.style.userSelect = "none";
+    };
+
+    const activateColReorder = (thEl: HTMLTableCellElement) => {
+      const thead = thEl.closest("thead");
+      const table = thead?.closest("table") as HTMLTableElement | null;
+      if (!table || !thead) return;
+      const headers = Array.from(thead.querySelectorAll("th")) as HTMLTableCellElement[];
+      const colIdx = headers.indexOf(thEl);
+      if (colIdx < 0) return;
+      thEl.style.opacity = "0.5";
+      thEl.style.outline = "2px dashed #6366f1";
+      colReorderRef.current = { table, dragColIdx: colIdx, targetColIdx: colIdx };
+      document.body.style.cursor = "grabbing";
+      document.body.style.userSelect = "none";
+    };
+
     const onMove = (e: MouseEvent) => {
       // ── Resize
       const r = colResizeRef.current;
@@ -272,16 +307,27 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
         return;
       }
 
-      // ── Row reorder
+      // ── Pending drag → activate once threshold crossed
+      const pd = pendingDragRef.current;
+      if (pd && !rowReorderRef.current && !colReorderRef.current) {
+        const dist = Math.sqrt((e.clientX - pd.startX) ** 2 + (e.clientY - pd.startY) ** 2);
+        if (dist >= DRAG_THRESHOLD) {
+          if (pd.type === "row" && pd.rowEl) activateRowReorder(pd.rowEl);
+          if (pd.type === "col" && pd.cell) activateColReorder(pd.cell);
+          pendingDragRef.current = null;
+        }
+        return;
+      }
+
+      // ── Row reorder move
       const rr = rowReorderRef.current;
       if (rr) {
         const tableRect = rr.table.getBoundingClientRect();
         let targetIdx = rr.rows.length;
         for (let i = 0; i < rr.rows.length; i++) {
-          const mid = rr.rows[i].getBoundingClientRect().top + rr.rows[i].getBoundingClientRect().height / 2;
-          if (e.clientY < mid) { targetIdx = i; break; }
+          const rRect = rr.rows[i].getBoundingClientRect();
+          if (e.clientY < rRect.top + rRect.height / 2) { targetIdx = i; break; }
         }
-        // Can't drop before the locked rows (first tbody row = index 0)
         targetIdx = Math.max(1, targetIdx);
         rr.targetIdx = targetIdx;
         const lineY = targetIdx >= rr.rows.length
@@ -291,7 +337,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
         return;
       }
 
-      // ── Col reorder
+      // ── Col reorder move
       const cr = colReorderRef.current;
       if (cr) {
         const tableRect = cr.table.getBoundingClientRect();
@@ -311,6 +357,12 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     };
 
     const onUp = () => {
+      // ── Cancel pending drag (was just a click)
+      if (pendingDragRef.current) {
+        pendingDragRef.current = null;
+        return;
+      }
+
       // ── Resize cleanup
       if (colResizeRef.current) {
         colResizeRef.current = null;
@@ -320,10 +372,10 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
         return;
       }
 
-      // ── Row reorder cleanup + apply
+      // ── Row reorder apply
       if (rowReorderRef.current) {
         const rr = rowReorderRef.current;
-        const { tbody, dragRow, dragRowIdx, rows, targetIdx } = rr;
+        const { tbody, dragRow, dragRowIdx, targetIdx } = rr;
         const safeTarget = Math.max(1, targetIdx);
         if (safeTarget !== dragRowIdx && safeTarget !== dragRowIdx + 1) {
           tbody.removeChild(dragRow);
@@ -342,10 +394,15 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
         return;
       }
 
-      // ── Col reorder cleanup + apply
+      // ── Col reorder apply
       if (colReorderRef.current) {
         const cr = colReorderRef.current;
         const { table, dragColIdx, targetColIdx } = cr;
+        // Clear visual
+        (table.querySelectorAll("thead th") as NodeListOf<HTMLTableCellElement>).forEach(th => {
+          th.style.opacity = "";
+          th.style.outline = "";
+        });
         if (targetColIdx !== dragColIdx && targetColIdx !== dragColIdx + 1) {
           const allRows = Array.from(table.querySelectorAll("tr"));
           for (const row of allRows) {
@@ -390,12 +447,11 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
       const nearRight = e.clientX >= rect.right - 6;
       const nearBottom = e.clientY >= rect.bottom - 6;
 
-      // ── Resize
+      // ── Resize (takes priority)
       if (nearRight || nearBottom) {
         e.preventDefault();
         colResizeRef.current = {
-          startX: e.clientX, startY: e.clientY,
-          cell,
+          startX: e.clientX, startY: e.clientY, cell,
           startW: cell.offsetWidth, startH: cell.offsetHeight,
           mode: nearBottom && !nearRight ? "row" : "col",
         };
@@ -404,42 +460,24 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
         return;
       }
 
-      // ── Col reorder: drag from top 14px of a <th>
-      if (cell.tagName === "TH" && e.clientY < rect.top + 14) {
-        const thead = cell.closest("thead");
-        const table = thead?.closest("table") as HTMLTableElement | null;
-        if (table && thead) {
-          const headers = Array.from(thead.querySelectorAll("th"));
-          const colIdx = headers.indexOf(cell as HTMLTableCellElement);
-          if (colIdx >= 0) {
-            e.preventDefault();
-            colReorderRef.current = { table, dragColIdx: colIdx, targetColIdx: colIdx };
-            document.body.style.cursor = "grabbing";
-            document.body.style.userSelect = "none";
-            return;
-          }
-        }
+      // ── Pending col reorder: any click on a <th> (not resize zone)
+      if (cell.tagName === "TH") {
+        pendingDragRef.current = { type: "col", startX: e.clientX, startY: e.clientY, cell: cell as HTMLTableCellElement };
+        return;
       }
     }
 
-    // ── Row reorder: drag from left 20px of a non-locked <tr> in <tbody>
-    const rowEl = (e.target as HTMLElement).closest("tr") as HTMLTableRowElement | null;
+    // ── Pending row reorder: left 28px of non-locked tbody row
+    const target = e.target as HTMLElement;
+    const rowEl = target.closest("tr") as HTMLTableRowElement | null;
     if (rowEl) {
       const tbody = rowEl.parentElement as HTMLTableSectionElement | null;
-      const table = tbody?.closest("table") as HTMLTableElement | null;
-      if (table && tbody && tbody.tagName === "TBODY") {
+      if (tbody?.tagName === "TBODY") {
         const rowIdx = Array.from(tbody.rows).indexOf(rowEl);
-        if (rowIdx > 0) { // index 0 is locked
+        if (rowIdx > 0) {
           const rowRect = rowEl.getBoundingClientRect();
-          if (e.clientX < rowRect.left + 22) {
-            e.preventDefault();
-            const rows = Array.from(tbody.rows);
-            rowReorderRef.current = { table, tbody, dragRow: rowEl, dragRowIdx: rowIdx, rows, targetIdx: rowIdx };
-            rowEl.style.opacity = "0.45";
-            rowEl.style.outline = "2px dashed #6366f1";
-            document.body.style.cursor = "grabbing";
-            document.body.style.userSelect = "none";
-            return;
+          if (e.clientX < rowRect.left + 28) {
+            pendingDragRef.current = { type: "row", startX: e.clientX, startY: e.clientY, rowEl };
           }
         }
       }
@@ -447,28 +485,25 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   };
 
   const handleEditorMouseMove = (e: React.MouseEvent) => {
-    if (colResizeRef.current || rowReorderRef.current || colReorderRef.current) return;
+    if (colResizeRef.current || rowReorderRef.current || colReorderRef.current || pendingDragRef.current) return;
     const cell = findCellAt(e.target as HTMLElement, e.clientX, e.clientY);
     if (!cell) { if (editorRef.current) editorRef.current.style.cursor = ""; return; }
     const rect = cell.getBoundingClientRect();
     const nearRight = e.clientX >= rect.right - 6;
     const nearBottom = e.clientY >= rect.bottom - 6;
 
-    // Check row reorder grab zone (left 22px, non-locked tbody row)
     const rowEl = cell.closest("tr") as HTMLTableRowElement | null;
     const tbody = rowEl?.parentElement;
-    const inDraggableRow = rowEl && tbody?.tagName === "TBODY" &&
-      Array.from((tbody as HTMLTableSectionElement).rows).indexOf(rowEl) > 0 &&
-      e.clientX < rect.left + 22 && !nearRight && !nearBottom;
-
-    // Check col reorder grab zone (top 14px of th)
-    const inColGrab = cell.tagName === "TH" && e.clientY < rect.top + 14 && !nearRight && !nearBottom;
+    const inRowGrab = rowEl && tbody?.tagName === "TBODY"
+      && Array.from((tbody as HTMLTableSectionElement).rows).indexOf(rowEl) > 0
+      && e.clientX < rect.left + 28 && !nearRight && !nearBottom;
+    const inColGrab = cell.tagName === "TH" && !nearRight && !nearBottom;
 
     if (editorRef.current) {
       editorRef.current.style.cursor = nearRight ? "col-resize"
         : nearBottom ? "row-resize"
-        : inDraggableRow ? "grab"
         : inColGrab ? "grab"
+        : inRowGrab ? "grab"
         : "";
     }
   };
