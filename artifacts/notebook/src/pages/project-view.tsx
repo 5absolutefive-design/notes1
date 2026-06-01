@@ -103,6 +103,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const [ctxMenu, setCtxMenu] = useState<ContextMenuState | null>(null);
 
   const editorRef = useRef<HTMLDivElement>(null);
+  const titleRef = useRef<HTMLDivElement>(null);
   const ctxMenuRef = useRef<HTMLDivElement>(null);
   const bannerPickerRef = useRef<HTMLDivElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
@@ -111,10 +112,12 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
 
   const activeProject = projects.find(p => p.id === activeId) ?? null;
 
-  // ── Load content into editor when switching projects
+  // ── Load content into editor + title when switching projects
   useEffect(() => {
-    if (!editorRef.current) return;
-    editorRef.current.innerHTML = activeProject?.content || "";
+    if (editorRef.current)
+      editorRef.current.innerHTML = activeProject?.content || "";
+    if (titleRef.current)
+      titleRef.current.textContent = activeProject?.title || "";
   }, [activeId]);
 
   // ── Save content (debounced)
@@ -355,18 +358,19 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           </div>
 
           {/* Title — padded to clear emoji card */}
-          <div className="px-12 pt-[98px] pb-2">
+          <div
+            className="px-12 pt-[98px] pb-2 cursor-text"
+            onClick={(e) => { if (e.target === e.currentTarget) titleRef.current?.focus(); }}
+          >
             <div
-              key={activeProject.id}
+              ref={titleRef}
               contentEditable
               suppressContentEditableWarning
               onBlur={(e) => updateDocTitle(activeProject.id, e.currentTarget.textContent?.trim() || "Untitled")}
               onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); editorRef.current?.focus(); } }}
               className="text-4xl font-bold text-stone-900 outline-none w-full"
               style={{ fontFamily: "Georgia, serif", lineHeight: 1.2 }}
-            >
-              {activeProject.title}
-            </div>
+            />
           </div>
 
           {/* Content editor */}
@@ -385,6 +389,12 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
               minHeight: "600px",
             }}
             data-placeholder="Start writing your project notes…"
+          />
+
+          {/* Click-to-focus spacer below editor */}
+          <div
+            className="flex-1 min-h-[100px] cursor-text"
+            onClick={() => { editorRef.current?.focus(); }}
           />
         </div>
       ) : (
