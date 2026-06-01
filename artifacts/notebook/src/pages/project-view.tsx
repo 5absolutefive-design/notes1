@@ -355,8 +355,9 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           </div>
 
           {/* Title — padded to clear emoji card */}
-          <div className="px-12 pt-[88px] pb-2">
+          <div className="px-12 pt-[98px] pb-2">
             <div
+              key={activeProject.id}
               contentEditable
               suppressContentEditableWarning
               onBlur={(e) => updateDocTitle(activeProject.id, e.currentTarget.textContent?.trim() || "Untitled")}
