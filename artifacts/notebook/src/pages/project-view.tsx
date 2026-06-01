@@ -85,6 +85,8 @@ interface ContextMenuState {
   y: number;
   highlightOpen: boolean;
   headingOpen: boolean;
+  todoOpen: boolean;
+  todoCount: number;
 }
 
 // ── Props ────────────────────────────────────────────────────────
@@ -179,7 +181,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   // ── Right-click handler
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
-    setCtxMenu({ x: e.clientX, y: e.clientY, highlightOpen: false, headingOpen: false });
+    setCtxMenu({ x: e.clientX, y: e.clientY, highlightOpen: false, headingOpen: false, todoOpen: false, todoCount: 1 });
   };
 
   // ── Clamp context menu inside viewport after it renders
@@ -262,6 +264,14 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     `<span contenteditable="true" style="outline:none;flex:1"></span></div>`;
 
   const insertTodo = () => insertHTML(`<p><br></p>` + newTodoHTML() + `<br/>`);
+
+  const insertMultipleTodos = (count: number) => {
+    let html = `<p><br></p>`;
+    for (let i = 0; i < count; i++) html += newTodoHTML();
+    html += `<br/>`;
+    insertHTML(html);
+    setCtxMenu(null);
+  };
 
   const insertDivider = () => insertHTML(`<br/><hr style="border:none;border-top:2px solid #e7e5e4;margin:12px 0"/><br/>`);
 
@@ -513,7 +523,31 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           <div className="my-1 border-t border-stone-100" />
           <CtxSection label="Insert" />
           <CtxItem icon={<Table className="w-3.5 h-3.5"/>}        label="Table"         onClick={insertTable} />
-          <CtxItem icon={<CheckSquare className="w-3.5 h-3.5"/>}  label="To-Do Item"    onClick={insertTodo} />
+          {/* To-Do Item submenu */}
+          <div className="relative">
+            <CtxItem icon={<CheckSquare className="w-3.5 h-3.5"/>} label="To-Do Item" hasArrow
+              onClick={() => setCtxMenu(m => m ? { ...m, todoOpen: !m.todoOpen, highlightOpen: false, headingOpen: false } : null)} />
+            {ctxMenu.todoOpen && (
+              <div className="absolute left-full top-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 p-3 z-[10000] w-44">
+                <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-2.5">How many items?</p>
+                <div className="flex items-center justify-between gap-2 mb-3">
+                  <button
+                    onClick={() => setCtxMenu(m => m ? { ...m, todoCount: Math.max(1, m.todoCount - 1) } : null)}
+                    className="w-7 h-7 rounded-lg border border-stone-200 flex items-center justify-center text-stone-500 hover:bg-stone-100 transition-all font-bold text-base"
+                  >−</button>
+                  <span className="text-xl font-bold text-stone-800 w-8 text-center">{ctxMenu.todoCount}</span>
+                  <button
+                    onClick={() => setCtxMenu(m => m ? { ...m, todoCount: Math.min(20, m.todoCount + 1) } : null)}
+                    className="w-7 h-7 rounded-lg border border-stone-200 flex items-center justify-center text-stone-500 hover:bg-stone-100 transition-all font-bold text-base"
+                  >+</button>
+                </div>
+                <button
+                  onClick={() => insertMultipleTodos(ctxMenu.todoCount)}
+                  className="w-full py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-semibold hover:bg-indigo-700 transition-all"
+                >Insert</button>
+              </div>
+            )}
+          </div>
           <CtxItem icon={<List className="w-3.5 h-3.5"/>}         label="Bullet List"   onClick={() => execFmt("insertUnorderedList")} />
           <CtxItem icon={<ListOrdered className="w-3.5 h-3.5"/>}  label="Numbered List" onClick={() => execFmt("insertOrderedList")} />
           <CtxItem icon={<Minus className="w-3.5 h-3.5"/>}        label="Divider Line"  onClick={insertDivider} />
