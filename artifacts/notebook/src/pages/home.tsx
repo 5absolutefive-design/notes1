@@ -1003,7 +1003,7 @@ export default function Home() {
             return (
               <div key={item.id} className="relative">
                 {/* Spacing before Task */}
-                {item.id === "task" && <div className="mt-3" />}
+                {item.id === "task" && <div className="mt-1" />}
                 <button
                   onClick={() => handleNavClick(item)}
                   title={!isClickable ? `${item.label} — coming soon` : item.label}
