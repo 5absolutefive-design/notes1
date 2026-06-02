@@ -1177,13 +1177,6 @@ export default function Home() {
                           )}
                           {!sidebarCollapsed && editingProjectId !== p.id && (
                             <div className="absolute right-1 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-0.5">
-                              <button
-                                onClick={(e) => { e.stopPropagation(); setEditingProjectId(p.id); setEditProjectTitle(p.title); }}
-                                className="w-5 h-5 rounded flex items-center justify-center text-stone-400 hover:text-indigo-600 hover:bg-indigo-50"
-                                title="Rename"
-                              >
-                                <Pencil className="w-3 h-3" />
-                              </button>
                               {deleteProjectConfirmId === p.id ? (
                                 <button onClick={(e) => { e.stopPropagation(); handleDeleteProject(p.id); }} className="w-5 h-5 rounded flex items-center justify-center text-white bg-red-500 hover:bg-red-600" title="Confirm delete">
                                   <Trash2 className="w-3 h-3" />
@@ -1253,13 +1246,6 @@ export default function Home() {
                                     title="Add sub-project"
                                   >
                                     <Plus className="w-3 h-3" />
-                                  </button>
-                                  <button
-                                    onClick={(e) => { e.stopPropagation(); setEditingProjectId(p.id); setEditProjectTitle(p.title); }}
-                                    className="w-5 h-5 rounded flex items-center justify-center text-stone-400 hover:text-indigo-600 hover:bg-indigo-50"
-                                    title="Rename"
-                                  >
-                                    <Pencil className="w-3 h-3" />
                                   </button>
                                   {deleteProjectConfirmId === p.id ? (
                                     <button onClick={(e) => { e.stopPropagation(); handleDeleteProject(p.id); }} className="w-5 h-5 rounded flex items-center justify-center text-white bg-red-500 hover:bg-red-600" title="Confirm delete">
