@@ -1150,6 +1150,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             const hoverRed = (e: React.MouseEvent<HTMLButtonElement>) => { const t = e.currentTarget; t.style.background = "#fee2e2"; t.style.color = "#dc2626"; };
             const hoverGreen = (e: React.MouseEvent<HTMLButtonElement>) => { const t = e.currentTarget; t.style.background = "#dcfce7"; t.style.color = "#16a34a"; };
             const hoverReset = (e: React.MouseEvent<HTMLButtonElement>) => { const t = e.currentTarget; t.style.background = "#fafaf8"; t.style.color = "#374151"; };
+            const hoverOrangePre = (e: React.MouseEvent<HTMLButtonElement>) => { const t = e.currentTarget; t.style.background = "#fee2e2"; t.style.color = "#dc2626"; };
             const rowBtns = (
               <div
                 onMouseEnter={() => setHoverTableBtns(true)}
@@ -1159,6 +1160,10 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                   left: isLined ? tableToolbar.left - 30 : tableToolbar.left + 4,
                   display: "flex", flexDirection: "column", gap: 4, zIndex: 200, pointerEvents: "auto",
                   opacity: showTableBtns || hoverTableBtns ? 1 : 0, padding: 12, margin: -12 }}>
+                {isLined && (
+                  <button onMouseDown={e => { e.preventDefault(); tableDeleteTable(); }} title="Delete lined table"
+                    style={{ ...btnStyle("red"), fontSize: 12 }} onMouseEnter={hoverOrangePre} onMouseLeave={hoverReset}>✕</button>
+                )}
                 <button onMouseDown={e => { e.preventDefault(); tableRemoveRow(); }} title="Remove last row"
                   style={btnStyle("red")} onMouseEnter={hoverRed} onMouseLeave={hoverReset}>−</button>
                 <button onMouseDown={e => { e.preventDefault(); tableAddRow(); }} title="Add row"
