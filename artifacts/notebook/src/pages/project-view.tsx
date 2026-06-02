@@ -84,6 +84,7 @@ interface ContextMenuState {
   x: number;
   y: number;
   formatOpen: boolean;
+  alignOpen: boolean;
   highlightOpen: boolean;
   headingOpen: boolean;
   todoOpen: boolean;
@@ -235,7 +236,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   // ── Right-click handler
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
-    setCtxMenu({ x: e.clientX, y: e.clientY, formatOpen: false, highlightOpen: false, headingOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1 });
+    setCtxMenu({ x: e.clientX, y: e.clientY, formatOpen: false, alignOpen: false, highlightOpen: false, headingOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1 });
   };
 
   // ── Clamp context menu inside viewport after it renders
@@ -635,10 +636,18 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           </div>
 
           <div className="my-1 border-t border-stone-100" />
-          <CtxSection label="Align" />
-          <CtxItem icon={<AlignLeft className="w-3.5 h-3.5"/>}   label="Align Left"   onClick={() => execFmt("justifyLeft")} />
-          <CtxItem icon={<AlignCenter className="w-3.5 h-3.5"/>} label="Align Center" onClick={() => execFmt("justifyCenter")} />
-          <CtxItem icon={<AlignRight className="w-3.5 h-3.5"/>}  label="Align Right"  onClick={() => execFmt("justifyRight")} />
+          {/* Align button → side sub-card */}
+          <div className="relative">
+            <CtxItem icon={<AlignLeft className="w-3.5 h-3.5"/>} label="Align" hasArrow
+              onClick={() => setCtxMenu(m => m ? { ...m, alignOpen: !m.alignOpen, formatOpen: false } : null)} />
+            {ctxMenu.alignOpen && (
+              <div className="absolute left-full top-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 py-1.5 z-[10000] min-w-[160px]">
+                <CtxItem icon={<AlignLeft className="w-3.5 h-3.5"/>}   label="Align Left"   onClick={() => execFmt("justifyLeft")} />
+                <CtxItem icon={<AlignCenter className="w-3.5 h-3.5"/>} label="Align Center" onClick={() => execFmt("justifyCenter")} />
+                <CtxItem icon={<AlignRight className="w-3.5 h-3.5"/>}  label="Align Right"  onClick={() => execFmt("justifyRight")} />
+              </div>
+            )}
+          </div>
 
           <div className="my-1 border-t border-stone-100" />
           <CtxSection label="Insert" />
