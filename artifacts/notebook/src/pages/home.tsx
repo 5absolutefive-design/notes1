@@ -458,11 +458,30 @@ export default function Home() {
   };
 
   const handleDeleteProject = (id: number) => {
-    const updated = projects.filter(p => p.id !== id);
+    const updated = projects.filter(p => p.id !== id && p.parentId !== id);
     saveProjects(updated);
     setProjects(updated);
     setDeleteProjectConfirmId(null);
-    if (activeProjectId === id) setActiveProjectId(updated[0]?.id ?? null);
+    if (activeProjectId === id) setActiveProjectId(updated.find(p => !p.parentId)?.id ?? null);
+  };
+
+  const handleCreateSubProject = (parentId: number) => {
+    const doc: ProjectDoc = {
+      id: nextProjectId(projects),
+      parentId,
+      title: "Untitled",
+      content: "",
+      bannerColor: "#6366f1",
+      bannerGradient: DEFAULT_PROJECT_GRADIENT,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    const updated = [...projects, doc];
+    saveProjects(updated);
+    setProjects(updated);
+    setActiveProjectId(doc.id);
+    setActiveView("project");
+    setFocusTitleSignal(s => s + 1);
   };
 
   const handleRenameProject = (id: number) => {
@@ -1034,65 +1053,86 @@ export default function Home() {
                 {/* Project list — inline right after Project button */}
                 {item.id === "project" && isSelected && (
                   <div className="mt-1 flex flex-col gap-0.5">
-                    {projects.map((p) => (
-                      <div key={p.id} className="group relative">
-                        {editingProjectId === p.id ? (
-                          <div className="flex items-center gap-1 pl-7 pr-1 py-1">
-                            <input
-                              autoFocus
-                              value={editProjectTitle}
-                              onChange={e => setEditProjectTitle(e.target.value)}
-                              onKeyDown={e => { if (e.key === "Enter") handleRenameProject(p.id); if (e.key === "Escape") setEditingProjectId(null); }}
-                              className="flex-1 text-xs border border-indigo-300 rounded-md px-2 py-1 outline-none bg-white min-w-0"
-                            />
-                            <button onClick={() => handleRenameProject(p.id)} className="text-green-600 hover:text-green-700 flex-shrink-0">
-                              <Check className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                        ) : (
-                          <button
-                            onClick={() => setActiveProjectId(p.id)}
-                            className={`w-full flex items-center gap-2 rounded-lg pl-7 pr-2 py-1.5 transition-all text-left ${sidebarCollapsed ? "justify-center pl-2" : ""} ${
-                              activeProjectId === p.id
-                                ? "bg-indigo-50 text-indigo-700 font-medium"
-                                : "text-stone-500 hover:bg-stone-50 hover:text-stone-800"
-                            }`}
-                            title={p.title}
-                          >
-                            <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${activeProjectId === p.id ? "bg-indigo-500" : "bg-stone-300"}`} />
-                            {!sidebarCollapsed && <span className="text-xs truncate flex-1">{p.title}</span>}
-                          </button>
-                        )}
-                        {!sidebarCollapsed && editingProjectId !== p.id && (
-                          <div className="absolute right-1 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-0.5">
+                    {(() => {
+                      const topLevel = projects.filter(p => !p.parentId);
+                      const renderProjectRow = (p: ProjectDoc, isChild = false) => (
+                        <div key={p.id} className="group relative">
+                          {editingProjectId === p.id ? (
+                            <div className={`flex items-center gap-1 pr-1 py-1 ${isChild ? "pl-10" : "pl-7"}`}>
+                              <input
+                                autoFocus
+                                value={editProjectTitle}
+                                onChange={e => setEditProjectTitle(e.target.value)}
+                                onKeyDown={e => { if (e.key === "Enter") handleRenameProject(p.id); if (e.key === "Escape") setEditingProjectId(null); }}
+                                className="flex-1 text-xs border border-indigo-300 rounded-md px-2 py-1 outline-none bg-white min-w-0"
+                              />
+                              <button onClick={() => handleRenameProject(p.id)} className="text-green-600 hover:text-green-700 flex-shrink-0">
+                                <Check className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          ) : (
                             <button
-                              onClick={(e) => { e.stopPropagation(); setEditingProjectId(p.id); setEditProjectTitle(p.title); }}
-                              className="w-5 h-5 rounded flex items-center justify-center text-stone-400 hover:text-indigo-600 hover:bg-indigo-50"
-                              title="Rename"
+                              onClick={() => { setActiveProjectId(p.id); setActiveView("project"); }}
+                              className={`w-full flex items-center gap-2 rounded-lg pr-2 py-1.5 transition-all text-left ${isChild ? "pl-10" : "pl-7"} ${sidebarCollapsed ? "justify-center pl-2" : ""} ${
+                                activeProjectId === p.id
+                                  ? "bg-indigo-50 text-indigo-700 font-medium"
+                                  : "text-stone-500 hover:bg-stone-50 hover:text-stone-800"
+                              }`}
+                              title={p.title}
                             >
-                              <Pencil className="w-3 h-3" />
+                              {isChild
+                                ? <div className="w-1 h-1 rounded-full flex-shrink-0 bg-stone-300" />
+                                : <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${activeProjectId === p.id ? "bg-indigo-500" : "bg-stone-300"}`} />
+                              }
+                              {!sidebarCollapsed && <span className="text-xs truncate flex-1">{p.title}</span>}
                             </button>
-                            {deleteProjectConfirmId === p.id ? (
+                          )}
+                          {!sidebarCollapsed && editingProjectId !== p.id && (
+                            <div className="absolute right-1 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-0.5">
+                              {!isChild && (
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleCreateSubProject(p.id); }}
+                                  className="w-5 h-5 rounded flex items-center justify-center text-stone-400 hover:text-indigo-600 hover:bg-indigo-50"
+                                  title="Add sub-project"
+                                >
+                                  <Plus className="w-3 h-3" />
+                                </button>
+                              )}
                               <button
-                                onClick={(e) => { e.stopPropagation(); handleDeleteProject(p.id); }}
-                                className="w-5 h-5 rounded flex items-center justify-center text-white bg-red-500 hover:bg-red-600"
-                                title="Confirm delete"
+                                onClick={(e) => { e.stopPropagation(); setEditingProjectId(p.id); setEditProjectTitle(p.title); }}
+                                className="w-5 h-5 rounded flex items-center justify-center text-stone-400 hover:text-indigo-600 hover:bg-indigo-50"
+                                title="Rename"
                               >
-                                <Trash2 className="w-3 h-3" />
+                                <Pencil className="w-3 h-3" />
                               </button>
-                            ) : (
-                              <button
-                                onClick={(e) => { e.stopPropagation(); setDeleteProjectConfirmId(p.id); setTimeout(() => setDeleteProjectConfirmId(null), 3000); }}
-                                className="w-5 h-5 rounded flex items-center justify-center text-stone-400 hover:text-red-500 hover:bg-red-50"
-                                title="Delete"
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </button>
-                            )}
-                          </div>
-                        )}
-                      </div>
-                    ))}
+                              {deleteProjectConfirmId === p.id ? (
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); handleDeleteProject(p.id); }}
+                                  className="w-5 h-5 rounded flex items-center justify-center text-white bg-red-500 hover:bg-red-600"
+                                  title="Confirm delete"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              ) : (
+                                <button
+                                  onClick={(e) => { e.stopPropagation(); setDeleteProjectConfirmId(p.id); setTimeout(() => setDeleteProjectConfirmId(null), 3000); }}
+                                  className="w-5 h-5 rounded flex items-center justify-center text-stone-400 hover:text-red-500 hover:bg-red-50"
+                                  title="Delete"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                      return topLevel.map(p => (
+                        <div key={p.id}>
+                          {renderProjectRow(p, false)}
+                          {projects.filter(c => c.parentId === p.id).map(child => renderProjectRow(child, true))}
+                        </div>
+                      ));
+                    })()}
                     {projects.length === 0 && !sidebarCollapsed && (
                       <p className="text-xs text-stone-400 pl-7 py-1">No projects yet</p>
                     )}

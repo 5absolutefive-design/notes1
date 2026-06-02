@@ -10,6 +10,7 @@ import {
 // ── Types (exported for use in home.tsx) ─────────────────────────
 export interface ProjectDoc {
   id: number;
+  parentId?: number;
   title: string;
   content: string;
   emoji?: string;
