@@ -854,20 +854,22 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                   style={{ display: "block", width: "100%", borderRadius: 6, pointerEvents: "none" }}
                 />
 
-                {/* × Delete button — top-left */}
-                <button
-                  data-img-btn="1"
-                  onClick={() => setImageBlocks(prev => prev.filter(b => b.id !== blk.id))}
-                  style={{
-                    position: "absolute", top: -10, left: -10,
-                    width: 22, height: 22, borderRadius: "50%",
-                    background: "#ef4444", border: "2px solid #fff",
-                    color: "#fff", fontSize: 13, fontWeight: 700,
-                    cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-                    boxShadow: "0 1px 4px rgba(0,0,0,0.18)", zIndex: 30, lineHeight: 1, padding: 0,
-                  }}
-                  title="Delete image"
-                >×</button>
+                {/* × Delete button — top-left (hidden when locked) */}
+                {!blk.locked && (
+                  <button
+                    data-img-btn="1"
+                    onClick={() => setImageBlocks(prev => prev.filter(b => b.id !== blk.id))}
+                    style={{
+                      position: "absolute", top: -10, left: -10,
+                      width: 22, height: 22, borderRadius: "50%",
+                      background: "#ef4444", border: "2px solid #fff",
+                      color: "#fff", fontSize: 13, fontWeight: 700,
+                      cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                      boxShadow: "0 1px 4px rgba(0,0,0,0.18)", zIndex: 30, lineHeight: 1, padding: 0,
+                    }}
+                    title="Delete image"
+                  >×</button>
+                )}
 
                 {/* Lock button — top-right */}
                 <button
