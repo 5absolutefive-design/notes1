@@ -396,6 +396,31 @@ function OrbitalClock24({ frozen = false }: { frozen?: boolean }) {
   );
 }
 
+function AnimatedChildren({ open, children }: { open: boolean; children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState(open ? "auto" : "0px");
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    if (open) {
+      const h = el.scrollHeight;
+      setHeight(`${h}px`);
+      const t = setTimeout(() => setHeight("auto"), 220);
+      return () => clearTimeout(t);
+    } else {
+      setHeight(`${el.scrollHeight}px`);
+      requestAnimationFrame(() => requestAnimationFrame(() => setHeight("0px")));
+    }
+  }, [open]);
+
+  return (
+    <div ref={ref} style={{ height, overflow: "hidden", transition: "height 220ms cubic-bezier(0.4,0,0.2,1)" }}>
+      {children}
+    </div>
+  );
+}
+
 export default function Home() {
   const [, navigate] = useLocation();
   const [activeView, setActiveView] = useState<ActiveView>("my-notebook");
@@ -439,6 +464,10 @@ export default function Home() {
   const [editingProjectId, setEditingProjectId] = useState<number | null>(null);
   const [editProjectTitle, setEditProjectTitle] = useState("");
   const [deleteProjectConfirmId, setDeleteProjectConfirmId] = useState<number | null>(null);
+  const [expandedProjects, setExpandedProjects] = useState<Record<number, boolean>>(() => {
+    const docs = loadProjects();
+    return Object.fromEntries(docs.filter(p => !p.parentId).map(p => [p.id, true]));
+  });
 
   const handleCreateProject = () => {
     const doc: ProjectDoc = {
@@ -1055,10 +1084,11 @@ export default function Home() {
                   <div className="mt-1 flex flex-col gap-0.5">
                     {(() => {
                       const topLevel = projects.filter(p => !p.parentId);
-                      const renderProjectRow = (p: ProjectDoc, isChild = false) => (
+
+                      const renderChildRow = (p: ProjectDoc) => (
                         <div key={p.id} className="group relative">
                           {editingProjectId === p.id ? (
-                            <div className={`flex items-center gap-1 pr-1 py-1 ${isChild ? "pl-10" : "pl-7"}`}>
+                            <div className="flex items-center gap-1 pr-1 py-1 pl-3">
                               <input
                                 autoFocus
                                 value={editProjectTitle}
@@ -1073,31 +1103,17 @@ export default function Home() {
                           ) : (
                             <button
                               onClick={() => { setActiveProjectId(p.id); setActiveView("project"); }}
-                              className={`w-full flex items-center gap-2 rounded-lg pr-2 py-1.5 transition-all text-left ${isChild ? "pl-10" : "pl-7"} ${sidebarCollapsed ? "justify-center pl-2" : ""} ${
-                                activeProjectId === p.id
-                                  ? "bg-indigo-50 text-indigo-700 font-medium"
-                                  : "text-stone-500 hover:bg-stone-50 hover:text-stone-800"
+                              className={`w-full flex items-center gap-2 rounded-lg pr-2 py-1.5 transition-all text-left pl-3 ${sidebarCollapsed ? "justify-center pl-2" : ""} ${
+                                activeProjectId === p.id ? "bg-indigo-50 text-indigo-600 font-medium" : "text-stone-500 hover:bg-stone-50 hover:text-stone-800"
                               }`}
                               title={p.title}
                             >
-                              {isChild
-                                ? <div className="w-1 h-1 rounded-full flex-shrink-0 bg-stone-300" />
-                                : <div className={`w-1.5 h-1.5 rounded-full flex-shrink-0 ${activeProjectId === p.id ? "bg-indigo-500" : "bg-stone-300"}`} />
-                              }
+                              <div className="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-stone-300" />
                               {!sidebarCollapsed && <span className="text-xs truncate flex-1">{p.title}</span>}
                             </button>
                           )}
                           {!sidebarCollapsed && editingProjectId !== p.id && (
                             <div className="absolute right-1 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-0.5">
-                              {!isChild && (
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); handleCreateSubProject(p.id); }}
-                                  className="w-5 h-5 rounded flex items-center justify-center text-stone-400 hover:text-indigo-600 hover:bg-indigo-50"
-                                  title="Add sub-project"
-                                >
-                                  <Plus className="w-3 h-3" />
-                                </button>
-                              )}
                               <button
                                 onClick={(e) => { e.stopPropagation(); setEditingProjectId(p.id); setEditProjectTitle(p.title); }}
                                 className="w-5 h-5 rounded flex items-center justify-center text-stone-400 hover:text-indigo-600 hover:bg-indigo-50"
@@ -1106,19 +1122,11 @@ export default function Home() {
                                 <Pencil className="w-3 h-3" />
                               </button>
                               {deleteProjectConfirmId === p.id ? (
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); handleDeleteProject(p.id); }}
-                                  className="w-5 h-5 rounded flex items-center justify-center text-white bg-red-500 hover:bg-red-600"
-                                  title="Confirm delete"
-                                >
+                                <button onClick={(e) => { e.stopPropagation(); handleDeleteProject(p.id); }} className="w-5 h-5 rounded flex items-center justify-center text-white bg-red-500 hover:bg-red-600" title="Confirm delete">
                                   <Trash2 className="w-3 h-3" />
                                 </button>
                               ) : (
-                                <button
-                                  onClick={(e) => { e.stopPropagation(); setDeleteProjectConfirmId(p.id); setTimeout(() => setDeleteProjectConfirmId(null), 3000); }}
-                                  className="w-5 h-5 rounded flex items-center justify-center text-stone-400 hover:text-red-500 hover:bg-red-50"
-                                  title="Delete"
-                                >
+                                <button onClick={(e) => { e.stopPropagation(); setDeleteProjectConfirmId(p.id); setTimeout(() => setDeleteProjectConfirmId(null), 3000); }} className="w-5 h-5 rounded flex items-center justify-center text-stone-400 hover:text-red-500 hover:bg-red-50" title="Delete">
                                   <Trash2 className="w-3 h-3" />
                                 </button>
                               )}
@@ -1126,12 +1134,94 @@ export default function Home() {
                           )}
                         </div>
                       );
-                      return topLevel.map(p => (
-                        <div key={p.id}>
-                          {renderProjectRow(p, false)}
-                          {projects.filter(c => c.parentId === p.id).map(child => renderProjectRow(child, true))}
-                        </div>
-                      ));
+
+                      return topLevel.map(p => {
+                        const children = projects.filter(c => c.parentId === p.id);
+                        const hasChildren = children.length > 0;
+                        const isExpanded = !!expandedProjects[p.id];
+
+                        return (
+                          <div key={p.id}>
+                            {/* Parent project row */}
+                            <div className="group relative">
+                              {editingProjectId === p.id ? (
+                                <div className="flex items-center gap-1 pr-1 py-1 pl-2">
+                                  <input
+                                    autoFocus
+                                    value={editProjectTitle}
+                                    onChange={e => setEditProjectTitle(e.target.value)}
+                                    onKeyDown={e => { if (e.key === "Enter") handleRenameProject(p.id); if (e.key === "Escape") setEditingProjectId(null); }}
+                                    className="flex-1 text-xs border border-indigo-300 rounded-md px-2 py-1 outline-none bg-white min-w-0"
+                                  />
+                                  <button onClick={() => handleRenameProject(p.id)} className="text-green-600 hover:text-green-700 flex-shrink-0">
+                                    <Check className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              ) : (
+                                <button
+                                  onClick={() => {
+                                    setActiveProjectId(p.id);
+                                    setActiveView("project");
+                                    if (hasChildren) setExpandedProjects(prev => ({ ...prev, [p.id]: !prev[p.id] }));
+                                  }}
+                                  className={`w-full flex items-center gap-2 rounded-lg pr-2 py-1.5 transition-all text-left pl-2 ${sidebarCollapsed ? "justify-center" : ""} ${
+                                    activeProjectId === p.id ? "bg-indigo-50 text-indigo-700 font-medium" : "text-stone-600 hover:bg-stone-50 hover:text-stone-900"
+                                  }`}
+                                  title={p.title}
+                                >
+                                  {hasChildren ? (
+                                    <span
+                                      className="text-stone-400 text-[10px] w-3 flex-shrink-0 inline-block"
+                                      style={{ transition: "transform 200ms cubic-bezier(0.4,0,0.2,1)", transform: isExpanded ? "rotate(0deg)" : "rotate(-90deg)" }}
+                                    >▼</span>
+                                  ) : (
+                                    <span className="w-3 flex-shrink-0 inline-flex items-center justify-center">
+                                      <span className={`w-1.5 h-1.5 rounded-full ${activeProjectId === p.id ? "bg-indigo-500" : "bg-stone-300"}`} />
+                                    </span>
+                                  )}
+                                  {!sidebarCollapsed && <span className="text-xs truncate flex-1">{p.title}</span>}
+                                </button>
+                              )}
+                              {!sidebarCollapsed && editingProjectId !== p.id && (
+                                <div className="absolute right-1 top-1/2 -translate-y-1/2 hidden group-hover:flex items-center gap-0.5">
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); handleCreateSubProject(p.id); }}
+                                    className="w-5 h-5 rounded flex items-center justify-center text-stone-400 hover:text-indigo-600 hover:bg-indigo-50"
+                                    title="Add sub-project"
+                                  >
+                                    <Plus className="w-3 h-3" />
+                                  </button>
+                                  <button
+                                    onClick={(e) => { e.stopPropagation(); setEditingProjectId(p.id); setEditProjectTitle(p.title); }}
+                                    className="w-5 h-5 rounded flex items-center justify-center text-stone-400 hover:text-indigo-600 hover:bg-indigo-50"
+                                    title="Rename"
+                                  >
+                                    <Pencil className="w-3 h-3" />
+                                  </button>
+                                  {deleteProjectConfirmId === p.id ? (
+                                    <button onClick={(e) => { e.stopPropagation(); handleDeleteProject(p.id); }} className="w-5 h-5 rounded flex items-center justify-center text-white bg-red-500 hover:bg-red-600" title="Confirm delete">
+                                      <Trash2 className="w-3 h-3" />
+                                    </button>
+                                  ) : (
+                                    <button onClick={(e) => { e.stopPropagation(); setDeleteProjectConfirmId(p.id); setTimeout(() => setDeleteProjectConfirmId(null), 3000); }} className="w-5 h-5 rounded flex items-center justify-center text-stone-400 hover:text-red-500 hover:bg-red-50" title="Delete">
+                                      <Trash2 className="w-3 h-3" />
+                                    </button>
+                                  )}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Animated children */}
+                            {hasChildren && !sidebarCollapsed && (
+                              <AnimatedChildren open={isExpanded}>
+                                <div className="ml-2 border-l-2 border-indigo-200 pl-1 mb-0.5">
+                                  {children.map(child => renderChildRow(child))}
+                                </div>
+                              </AnimatedChildren>
+                            )}
+                          </div>
+                        );
+                      });
                     })()}
                     {projects.length === 0 && !sidebarCollapsed && (
                       <p className="text-xs text-stone-400 pl-7 py-1">No projects yet</p>
