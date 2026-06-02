@@ -178,6 +178,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const [tableToolbar, setTableToolbar] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
   const [showTableBtns, setShowTableBtns] = useState(false);
   const activeTableRef = useRef<HTMLTableElement | null>(null);
+  const tableResizeObserverRef = useRef<ResizeObserver | null>(null);
   const [imageBlocks, setImageBlocks] = useState<ImageBlock[]>([]);
   const imgInputRef = useRef<HTMLInputElement>(null);
   const voiceInputRef = useRef<HTMLInputElement>(null);
@@ -413,6 +414,18 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
       width: tr.width,
       height: tr.height,
     });
+    // Attach ResizeObserver so buttons reposition on column/row resize
+    if (tableResizeObserverRef.current) tableResizeObserverRef.current.disconnect();
+    const obs = new ResizeObserver(() => {
+      const t = activeTableRef.current;
+      const c = scrollContainerRef.current;
+      if (!t || !c) return;
+      const tr2 = t.getBoundingClientRect();
+      const cr2 = c.getBoundingClientRect();
+      setTableToolbar({ top: tr2.top - cr2.top + c.scrollTop, left: tr2.left - cr2.left, width: tr2.width, height: tr2.height });
+    });
+    obs.observe(table);
+    tableResizeObserverRef.current = obs;
   }, []);
 
   // ── Table border drag-to-resize ──────────────────────────────────
@@ -1006,7 +1019,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             }
             setShowTableBtns(!!tbl);
           }}
-          onMouseLeave={() => { setShowTodoButtons(false); setEraserPos(null); setTableToolbar(null); activeTableRef.current = null; }}
+          onMouseLeave={() => { setShowTodoButtons(false); setEraserPos(null); setTableToolbar(null); activeTableRef.current = null; if (tableResizeObserverRef.current) { tableResizeObserverRef.current.disconnect(); tableResizeObserverRef.current = null; } }}
         >
 
           {/* Inline +/- buttons next to last todo item */}
