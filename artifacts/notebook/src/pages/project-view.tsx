@@ -4,7 +4,7 @@ import {
   Bold, Italic, Underline, Strikethrough, Highlighter,
   CheckSquare, Minus, Heading1, Heading2, Heading3,
   AlignLeft, AlignCenter, AlignRight, List, ListOrdered,
-  ChevronRight,
+  ChevronRight, Link,
 } from "lucide-react";
 
 // ── Types (exported for use in home.tsx) ─────────────────────────
@@ -89,6 +89,7 @@ interface ContextMenuState {
   highlightOpen: boolean;
   headingOpen: boolean;
   dividerOpen: boolean;
+  linkOpen: boolean;
   todoOpen: boolean;
   todoCount: number;
   todoRemoveCount: number;
@@ -238,7 +239,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   // ── Right-click handler
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
-    setCtxMenu({ x: e.clientX, y: e.clientY, formatOpen: false, alignOpen: false, bulletOpen: false, highlightOpen: false, headingOpen: false, dividerOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1 });
+    setCtxMenu({ x: e.clientX, y: e.clientY, formatOpen: false, alignOpen: false, bulletOpen: false, highlightOpen: false, headingOpen: false, dividerOpen: false, linkOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1 });
   };
 
   // ── Clamp context menu inside viewport after it renders
@@ -348,6 +349,30 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     `<div style="border-left:4px solid #6366f1;background:#f5f3ff;padding:12px 16px;border-radius:0 8px 8px 0;margin:8px 0">` +
     `<p style="margin:0;color:#4c1d95;font-style:italic">Type your note here…</p></div><br/>`
   );
+
+  const insertLinkBlock = (type: string) => {
+    const configs: Record<string, { color: string; bg: string; label: string; icon: string }> = {
+      website:  { color: "#2563eb", bg: "#eff6ff", label: "Website",  icon: "🌐" },
+      youtube:  { color: "#dc2626", bg: "#fef2f2", label: "YouTube",  icon: "▶" },
+      facebook: { color: "#1877f2", bg: "#eff6ff", label: "Facebook", icon: "f" },
+      linkedin: { color: "#0a66c2", bg: "#e8f4fd", label: "LinkedIn", icon: "in" },
+      unknown:  { color: "#6b7280", bg: "#f9fafb", label: "Link",     icon: "🔗" },
+    };
+    const cfg = configs[type] ?? configs.unknown;
+    insertHTML(
+      `<div contenteditable="false" data-link-block="1" ` +
+      `onclick="const u=this.querySelector('[data-link-url]').textContent.trim();if(u&&u!=='Paste link here…')window.open(u,'_blank')" ` +
+      `style="display:flex;align-items:center;gap:10px;border-left:4px solid ${cfg.color};background:${cfg.bg};padding:10px 14px;border-radius:0 8px 8px 0;margin:8px 0;cursor:pointer;user-select:none">` +
+      `<span style="font-size:15px;flex-shrink:0">${cfg.icon}</span>` +
+      `<div style="flex:1;min-width:0">` +
+      `<div style="font-size:10px;font-weight:700;color:${cfg.color};text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px">${cfg.label}</div>` +
+      `<span data-link-url="1" contenteditable="true" ` +
+      `onclick="event.stopPropagation()" ` +
+      `style="outline:none;color:${cfg.color};font-size:13px;text-decoration:underline;word-break:break-all;display:block;cursor:text">Paste link here…</span>` +
+      `</div></div><br/>`
+    );
+    setCtxMenu(null);
+  };
 
   // ── Set banner
   const setBanner = (partial: Partial<ProjectDoc>) => {
@@ -741,6 +766,29 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                     className="w-full flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-indigo-50 hover:text-indigo-700 text-stone-700 transition-colors text-left group">
                     <div className="flex items-center w-12">{preview}</div>
                     <span className="text-xs font-medium">{label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          {/* Links → side sub-card with link types */}
+          <div className="relative">
+            <CtxItem icon={<Link className="w-3.5 h-3.5"/>} label="Links" hasArrow
+              onClick={() => setCtxMenu(m => m ? { ...m, linkOpen: !m.linkOpen, dividerOpen: false, bulletOpen: false, formatOpen: false, alignOpen: false } : null)} />
+            {ctxMenu.linkOpen && (
+              <div className="absolute left-full top-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 py-2 px-2 z-[10000] min-w-[190px]">
+                <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide px-1 mb-1.5">Choose a link type</p>
+                {[
+                  { key: "website",  label: "Website",  icon: "🌐", color: "text-blue-600",   bg: "hover:bg-blue-50",   dot: "bg-blue-500" },
+                  { key: "youtube",  label: "YouTube",  icon: "▶",  color: "text-red-600",    bg: "hover:bg-red-50",    dot: "bg-red-500" },
+                  { key: "facebook", label: "Facebook", icon: "f",  color: "text-blue-700",   bg: "hover:bg-blue-50",   dot: "bg-blue-700" },
+                  { key: "linkedin", label: "LinkedIn", icon: "in", color: "text-sky-700",    bg: "hover:bg-sky-50",    dot: "bg-sky-700" },
+                  { key: "unknown",  label: "Other",    icon: "🔗", color: "text-stone-500",  bg: "hover:bg-stone-50",  dot: "bg-stone-400" },
+                ].map(({ key, label, icon, color, bg, dot }) => (
+                  <button key={key} onClick={() => insertLinkBlock(key)}
+                    className={`w-full flex items-center gap-2.5 px-2 py-2 rounded-lg ${bg} text-stone-700 transition-colors text-left`}>
+                    <span className={`w-5 h-5 rounded-full ${dot} flex items-center justify-center text-white text-[10px] font-bold flex-shrink-0`}>{icon}</span>
+                    <span className={`text-xs font-medium ${color}`}>{label}</span>
                   </button>
                 ))}
               </div>
