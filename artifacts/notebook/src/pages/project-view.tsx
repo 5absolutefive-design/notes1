@@ -4,7 +4,7 @@ import {
   Bold, Italic, Underline, Strikethrough, Highlighter,
   CheckSquare, Minus, Heading1, Heading2, Heading3,
   AlignLeft, AlignCenter, AlignRight, List, ListOrdered,
-  ChevronRight, Link, Mic, PenLine,
+  ChevronRight, Link, Mic, PenLine, Eraser,
 } from "lucide-react";
 
 // ── Types (exported for use in home.tsx) ─────────────────────────
@@ -94,6 +94,7 @@ interface ContextMenuState {
   todoOpen: boolean;
   todoCount: number;
   todoRemoveCount: number;
+  drawOpen: boolean;
 }
 
 interface ImageBlock {
@@ -105,12 +106,32 @@ interface ImageBlock {
   locked: boolean;
 }
 
+type DrawTool = "arrow" | "line" | "rect" | "circle" | "triangle" | "dashed" | "vline" | "arc" | "eraser";
+
 interface ArrowShape {
   id: string;
+  type?: DrawTool;
   x1: number; y1: number;
   x2: number; y2: number;
   color: string;
 }
+
+// ── Draw tool constants ───────────────────────────────────────────
+const DRAW_SHAPES = [
+  { key: "arrow",    icon: "→", label: "Arrow"    },
+  { key: "line",     icon: "—", label: "Line"     },
+  { key: "dashed",   icon: "╌", label: "Dashed"   },
+  { key: "vline",    icon: "|", label: "V-Line"   },
+  { key: "rect",     icon: "▭", label: "Box"      },
+  { key: "circle",   icon: "○", label: "Circle"   },
+  { key: "triangle", icon: "△", label: "Triangle" },
+  { key: "arc",      icon: "⌒", label: "Arc"      },
+];
+
+const DRAW_TOOL_LABELS: Record<string, string> = {
+  arrow: "Arrow", line: "Line", dashed: "Dashed", vline: "V-Line",
+  rect: "Box", circle: "Circle", triangle: "Triangle", arc: "Arc", eraser: "Eraser",
+};
 
 // ── Props ────────────────────────────────────────────────────────
 interface ProjectViewProps {
@@ -143,10 +164,11 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const dragRef = useRef<{ id: string; startMx: number; startMy: number; startBx: number; startBy: number } | null>(null);
   const resizeRef = useRef<{ id: string; startMx: number; startW: number; startBx: number; side: "br" | "bl" | "tr" | "tl" } | null>(null);
 
-  const [arrowMode, setArrowMode] = useState(false);
+  const [drawTool, setDrawTool] = useState<DrawTool | null>(null);
+  const drawToolRef = useRef<DrawTool | null>(null);
   const [arrows, setArrows] = useState<ArrowShape[]>([]);
   const [drawingArrow, setDrawingArrow] = useState<ArrowShape | null>(null);
-  const arrowDrawRef = useRef<{ startX: number; startY: number } | null>(null);
+  const arrowDrawRef = useRef<{ startX: number; startY: number; type: DrawTool } | null>(null);
 
   const activeProject = projects.find(p => p.id === activeId) ?? null;
 
@@ -164,14 +186,17 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     localStorage.setItem(`nb_project_imgs_${activeId}`, JSON.stringify(imageBlocks));
   }, [imageBlocks, activeId]);
 
+  // ── Sync drawToolRef
+  useEffect(() => { drawToolRef.current = drawTool; }, [drawTool]);
+
   // ── Load / save arrows per project
   useEffect(() => {
-    if (!activeId) { setArrows([]); setArrowMode(false); return; }
+    if (!activeId) { setArrows([]); setDrawTool(null); return; }
     try {
       const raw = localStorage.getItem(`nb_project_arrows_${activeId}`);
       setArrows(raw ? JSON.parse(raw) : []);
     } catch { setArrows([]); }
-    setArrowMode(false);
+    setDrawTool(null);
   }, [activeId]);
 
   useEffect(() => {
@@ -179,9 +204,9 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     localStorage.setItem(`nb_project_arrows_${activeId}`, JSON.stringify(arrows));
   }, [arrows, activeId]);
 
-  // ── Escape key exits arrow mode
+  // ── Escape key exits draw mode
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { setArrowMode(false); setDrawingArrow(null); arrowDrawRef.current = null; } };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { setDrawTool(null); setDrawingArrow(null); arrowDrawRef.current = null; } };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
@@ -230,11 +255,11 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           const rect = container.getBoundingClientRect();
           const x2 = e.clientX - rect.left;
           const y2 = e.clientY - rect.top + container.scrollTop;
-          const { startX, startY } = arrowDrawRef.current;
+          const { startX, startY, type } = arrowDrawRef.current;
           const dist = Math.sqrt((x2 - startX) ** 2 + (y2 - startY) ** 2);
-          if (dist > 10) {
-            const arrow: ArrowShape = { id: crypto.randomUUID(), x1: startX, y1: startY, x2, y2, color: "#ef4444" };
-            setArrows(prev => [...prev, arrow]);
+          if (dist > 8) {
+            const shape: ArrowShape = { id: crypto.randomUUID(), type, x1: startX, y1: startY, x2, y2, color: "#ef4444" };
+            setArrows(prev => [...prev, shape]);
           }
         }
         arrowDrawRef.current = null;
@@ -374,7 +399,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   // ── Right-click handler
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
-    setCtxMenu({ x: e.clientX, y: e.clientY, formatOpen: false, alignOpen: false, bulletOpen: false, highlightOpen: false, headingOpen: false, dividerOpen: false, linkOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1 });
+    setCtxMenu({ x: e.clientX, y: e.clientY, formatOpen: false, alignOpen: false, bulletOpen: false, highlightOpen: false, headingOpen: false, dividerOpen: false, linkOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1, drawOpen: false });
   };
 
   // ── Clamp context menu inside viewport after it renders
@@ -731,16 +756,16 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
         <div
           ref={scrollContainerRef}
           className="flex-1 overflow-y-auto min-h-0 hide-scrollbar"
-          style={{ position: "relative", cursor: arrowMode ? "crosshair" : undefined }}
+          style={{ position: "relative", cursor: drawTool === "eraser" ? "cell" : drawTool ? "crosshair" : undefined }}
           onMouseDown={(e) => {
-            if (!arrowMode) return;
+            if (!drawTool || drawTool === "eraser") return;
             const container = scrollContainerRef.current;
             if (!container) return;
             const rect = container.getBoundingClientRect();
             const x1 = e.clientX - rect.left;
             const y1 = e.clientY - rect.top + container.scrollTop;
-            arrowDrawRef.current = { startX: x1, startY: y1 };
-            setDrawingArrow({ id: "preview", x1, y1, x2: x1, y2: y1, color: "#ef4444" });
+            arrowDrawRef.current = { startX: x1, startY: y1, type: drawTool };
+            setDrawingArrow({ id: "preview", type: drawTool, x1, y1, x2: x1, y2: y1, color: "#ef4444" });
             e.preventDefault();
           }}
           onMouseMove={(e) => {
@@ -913,36 +938,22 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           {/* Hidden voice file input */}
           <input ref={voiceInputRef} type="file" accept="audio/*" className="hidden" onChange={handleVoiceFile} />
 
-          {/* Image blocks — absolutely positioned within the scroll container */}
-          {/* SVG arrow overlay */}
+          {/* SVG shape overlay */}
           {(arrows.length > 0 || drawingArrow) && (
-            <svg
-              style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 50, overflow: "visible" }}
-            >
+            <svg style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 50, overflow: "visible" }}>
               <defs>
                 <marker id="ah-red" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
                   <polygon points="0 0, 10 3.5, 0 7" fill="#ef4444" />
                 </marker>
               </defs>
               {arrows.map(a => (
-                <line
-                  key={a.id}
-                  x1={a.x1} y1={a.y1} x2={a.x2} y2={a.y2}
-                  stroke={a.color} strokeWidth={2.5}
-                  markerEnd="url(#ah-red)"
-                  style={{ cursor: "pointer", pointerEvents: "auto" }}
-                  onClick={() => setArrows(prev => prev.filter(x => x.id !== a.id))}
+                <DrawShapeEl
+                  key={a.id} shape={a} isPreview={false}
+                  eraserMode={drawTool === "eraser"}
+                  onRemove={() => setArrows(prev => prev.filter(x => x.id !== a.id))}
                 />
               ))}
-              {drawingArrow && (
-                <line
-                  x1={drawingArrow.x1} y1={drawingArrow.y1}
-                  x2={drawingArrow.x2} y2={drawingArrow.y2}
-                  stroke="#ef4444" strokeWidth={2.5} strokeDasharray="6 3"
-                  markerEnd="url(#ah-red)"
-                  style={{ pointerEvents: "none" }}
-                />
-              )}
+              {drawingArrow && <DrawShapeEl shape={drawingArrow} isPreview={true} eraserMode={false} />}
             </svg>
           )}
 
@@ -1232,12 +1243,49 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           </div>
           <CtxItem icon={<ImagePlus className="w-3.5 h-3.5"/>} label="Image" onClick={() => { setCtxMenu(null); imgInputRef.current?.click(); }} />
           <CtxItem icon={<Mic className="w-3.5 h-3.5"/>} label="Voice" onClick={() => { setCtxMenu(null); voiceInputRef.current?.click(); }} />
-          <CtxItem
-            icon={<PenLine className="w-3.5 h-3.5"/>}
-            label={arrowMode ? "Stop Drawing" : "Draw Arrow"}
-            onClick={() => { setCtxMenu(null); setArrowMode(v => !v); }}
-          />
-          <CtxItem icon={<ChevronRight className="w-3.5 h-3.5"/>} label="Quote Block"   onClick={insertBorderBlock} />
+          {/* Draw → sub-card */}
+          <div className="relative">
+            <CtxItem
+              icon={<PenLine className="w-3.5 h-3.5"/>}
+              label={drawTool ? `Drawing: ${DRAW_TOOL_LABELS[drawTool]}` : "Draw"}
+              hasArrow
+              onClick={() => setCtxMenu(m => m ? { ...m, drawOpen: !m.drawOpen } : null)}
+            />
+            {ctxMenu.drawOpen && (
+              <div className="absolute left-full top-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 py-2 px-2 z-[10000] min-w-[210px]">
+                <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide px-1 mb-1.5">Choose a tool</p>
+                <div className="grid grid-cols-4 gap-1 mb-2">
+                  {DRAW_SHAPES.map(({ key, icon, label }) => (
+                    <button key={key} title={label}
+                      onClick={() => { setDrawTool(key as DrawTool); setCtxMenu(null); }}
+                      className={`flex flex-col items-center justify-center gap-0.5 h-12 rounded-lg border transition-colors text-xs font-medium
+                        ${drawTool === key ? "bg-indigo-100 border-indigo-400 text-indigo-700" : "border-stone-100 hover:bg-indigo-50 hover:border-indigo-200 text-stone-600 hover:text-indigo-700"}`}>
+                      <span className="text-base leading-none">{icon}</span>
+                      <span className="text-[9px]">{label}</span>
+                    </button>
+                  ))}
+                </div>
+                <div className="border-t border-stone-100 pt-1.5">
+                  <button
+                    onClick={() => { setDrawTool("eraser"); setCtxMenu(null); }}
+                    className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg border transition-colors text-xs font-medium
+                      ${drawTool === "eraser" ? "bg-red-50 border-red-300 text-red-600" : "border-stone-100 hover:bg-red-50 hover:border-red-200 text-stone-600 hover:text-red-600"}`}>
+                    <Eraser className="w-3.5 h-3.5 flex-shrink-0" />
+                    <span>Eraser — click a shape to remove</span>
+                  </button>
+                  {drawTool && (
+                    <button
+                      onClick={() => { setDrawTool(null); setCtxMenu(null); }}
+                      className="w-full flex items-center gap-2 px-2 py-1.5 mt-1 rounded-lg border border-stone-100 hover:bg-stone-50 text-stone-500 hover:text-stone-700 text-xs font-medium transition-colors">
+                      <X className="w-3.5 h-3.5 flex-shrink-0" />
+                      <span>Stop Drawing</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+          <CtxItem icon={<ChevronRight className="w-3.5 h-3.5"/>} label="Quote Block" onClick={insertBorderBlock} />
         </div>
       )}
 
@@ -1256,6 +1304,58 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
       `}</style>
     </div>
   );
+}
+
+// ── DrawShapeEl: renders a single shape in the SVG overlay ────────
+function DrawShapeEl({ shape, isPreview, eraserMode, onRemove }: {
+  shape: ArrowShape; isPreview: boolean; eraserMode: boolean; onRemove?: () => void;
+}) {
+  const { x1, y1, x2, y2, color } = shape;
+  const type = shape.type ?? "arrow";
+  const stroke = color;
+  const sw = 2.5;
+  const canClick = !isPreview && eraserMode && onRemove;
+  const ptrEvents: React.CSSProperties["pointerEvents"] = canClick ? "auto" : "none";
+  const cursor = canClick ? "pointer" : "default";
+  const opacity = isPreview ? 0.55 : 1;
+  const previewDash = isPreview ? "6 3" : undefined;
+
+  const common = { stroke, strokeWidth: sw, fill: "none" as const, opacity, style: { pointerEvents: ptrEvents, cursor }, onClick: canClick ? onRemove : undefined } as const;
+
+  switch (type) {
+    case "arrow":
+      return <line {...common} x1={x1} y1={y1} x2={x2} y2={y2} strokeDasharray={previewDash} markerEnd="url(#ah-red)" />;
+    case "line":
+      return <line {...common} x1={x1} y1={y1} x2={x2} y2={y2} strokeDasharray={previewDash} />;
+    case "dashed":
+      return <line {...common} x1={x1} y1={y1} x2={x2} y2={y2} strokeDasharray={previewDash ?? "8 4"} />;
+    case "vline":
+      return <line {...common} x1={x1} y1={y1} x2={x1} y2={y2} strokeDasharray={previewDash} />;
+    case "rect": {
+      const rx = Math.min(x1, x2), ry = Math.min(y1, y2);
+      const rw = Math.abs(x2 - x1), rh = Math.abs(y2 - y1);
+      return <rect {...common} x={rx} y={ry} width={rw} height={rh} strokeDasharray={previewDash} />;
+    }
+    case "circle": {
+      const cx = (x1 + x2) / 2, cy = (y1 + y2) / 2;
+      const rx2 = Math.abs(x2 - x1) / 2, ry2 = Math.abs(y2 - y1) / 2;
+      return <ellipse {...common} cx={cx} cy={cy} rx={Math.max(rx2, 1)} ry={Math.max(ry2, 1)} strokeDasharray={previewDash} />;
+    }
+    case "triangle": {
+      const pts = `${(x1 + x2) / 2},${Math.min(y1, y2)} ${Math.max(x1, x2)},${Math.max(y1, y2)} ${Math.min(x1, x2)},${Math.max(y1, y2)}`;
+      return <polygon {...common} points={pts} strokeDasharray={previewDash} />;
+    }
+    case "arc": {
+      const lx = Math.min(x1, x2), rx3 = Math.max(x1, x2);
+      const ry2 = Math.abs(y2 - y1) / 2;
+      const rx2 = Math.abs(x2 - x1) / 2;
+      const maxY = Math.max(y1, y2);
+      const d = `M ${lx} ${maxY} A ${Math.max(rx2, 1)} ${Math.max(ry2, 1)} 0 0 1 ${rx3} ${maxY}`;
+      return <path {...common} d={d} strokeDasharray={previewDash} />;
+    }
+    default:
+      return null;
+  }
 }
 
 // ── Helper components ─────────────────────────────────────────────
