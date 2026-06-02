@@ -133,6 +133,23 @@ const DRAW_TOOL_LABELS: Record<string, string> = {
   rect: "Box", circle: "Circle", triangle: "Triangle", arc: "Arc", eraser: "Eraser",
 };
 
+// ── Eraser geometry helpers ───────────────────────────────────────
+function distToSegment(px: number, py: number, x1: number, y1: number, x2: number, y2: number): number {
+  const dx = x2 - x1, dy = y2 - y1;
+  if (dx === 0 && dy === 0) return Math.hypot(px - x1, py - y1);
+  const t = Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / (dx * dx + dy * dy)));
+  return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
+}
+
+function shapeIntersectsCircle(shape: ArrowShape, cx: number, cy: number, r: number): boolean {
+  const { x1, y1, x2, y2, type = "arrow" } = shape;
+  if (type === "vline") return distToSegment(cx, cy, x1, y1, x1, y2) <= r;
+  if (["arrow", "line", "dashed"].includes(type)) return distToSegment(cx, cy, x1, y1, x2, y2) <= r;
+  const minX = Math.min(x1, x2) - r, maxX = Math.max(x1, x2) + r;
+  const minY = Math.min(y1, y2) - r, maxY = Math.max(y1, y2) + r;
+  return cx >= minX && cx <= maxX && cy >= minY && cy <= maxY;
+}
+
 // ── Props ────────────────────────────────────────────────────────
 interface ProjectViewProps {
   projects: ProjectDoc[];
@@ -166,6 +183,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
 
   const [drawTool, setDrawTool] = useState<DrawTool | null>(null);
   const drawToolRef = useRef<DrawTool | null>(null);
+  const [eraserPos, setEraserPos] = useState<{ x: number; y: number } | null>(null);
+  const ERASER_RADIUS = 34;
   const [arrows, setArrows] = useState<ArrowShape[]>([]);
   const [drawingArrow, setDrawingArrow] = useState<ArrowShape | null>(null);
   const arrowDrawRef = useRef<{ startX: number; startY: number; type: DrawTool } | null>(null);
@@ -756,29 +775,37 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
         <div
           ref={scrollContainerRef}
           className="flex-1 overflow-y-auto min-h-0 hide-scrollbar"
-          style={{ position: "relative", cursor: drawTool === "eraser" ? `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24'><text y='20' font-size='20'>✐</text></svg>") 4 20, auto` : drawTool ? "crosshair" : undefined }}
+          style={{ position: "relative", cursor: drawTool === "eraser" ? `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24'><text y='20' font-size='20' fill='white' stroke='%23555' stroke-width='0.6' paint-order='stroke'>✐</text></svg>") 4 20, auto` : drawTool ? "crosshair" : undefined }}
           onMouseDown={(e) => {
-            if (!drawTool || drawTool === "eraser") return;
             const container = scrollContainerRef.current;
             if (!container) return;
             const rect = container.getBoundingClientRect();
-            const x1 = e.clientX - rect.left;
-            const y1 = e.clientY - rect.top + container.scrollTop;
-            arrowDrawRef.current = { startX: x1, startY: y1, type: drawTool };
-            setDrawingArrow({ id: "preview", type: drawTool, x1, y1, x2: x1, y2: y1, color: "#ef4444" });
+            const cx = e.clientX - rect.left;
+            const cy = e.clientY - rect.top + container.scrollTop;
+            if (drawTool === "eraser") {
+              setArrows(prev => prev.filter(s => !shapeIntersectsCircle(s, cx, cy, ERASER_RADIUS)));
+              e.preventDefault();
+              return;
+            }
+            if (!drawTool) return;
+            arrowDrawRef.current = { startX: cx, startY: cy, type: drawTool };
+            setDrawingArrow({ id: "preview", type: drawTool, x1: cx, y1: cy, x2: cx, y2: cy, color: "#ef4444" });
             e.preventDefault();
           }}
           onMouseMove={(e) => {
-            if (!lastTodoPos) return;
-            const rect = scrollContainerRef.current?.getBoundingClientRect();
-            if (!rect) return;
+            const container = scrollContainerRef.current;
+            const rect = container?.getBoundingClientRect();
+            if (!rect || !container) return;
             const mx = e.clientX - rect.left;
-            const my = e.clientY - rect.top + (scrollContainerRef.current?.scrollTop ?? 0);
-            const dx = mx - lastTodoPos.left;
-            const dy = my - lastTodoPos.top;
-            setShowTodoButtons(Math.abs(dx) < 80 && Math.abs(dy) < 40);
+            const my = e.clientY - rect.top + container.scrollTop;
+            if (drawTool === "eraser") setEraserPos({ x: mx, y: my });
+            if (lastTodoPos) {
+              const dx = mx - lastTodoPos.left;
+              const dy = my - lastTodoPos.top;
+              setShowTodoButtons(Math.abs(dx) < 80 && Math.abs(dy) < 40);
+            }
           }}
-          onMouseLeave={() => setShowTodoButtons(false)}
+          onMouseLeave={() => { setShowTodoButtons(false); setEraserPos(null); }}
         >
 
           {/* Inline +/- buttons next to last todo item */}
@@ -954,6 +981,20 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 />
               ))}
               {drawingArrow && <DrawShapeEl shape={drawingArrow} isPreview={true} eraserMode={false} />}
+              {drawTool === "eraser" && eraserPos && (
+                <circle
+                  cx={eraserPos.x} cy={eraserPos.y} r={ERASER_RADIUS}
+                  fill="rgba(239,68,68,0.07)" stroke="#ef4444" strokeWidth={1.5} strokeDasharray="5 3"
+                  style={{ pointerEvents: "none" }}
+                />
+              )}
+            </svg>
+          )}
+          {drawTool === "eraser" && eraserPos && arrows.length === 0 && (
+            <svg style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 50, overflow: "visible" }}>
+              <circle cx={eraserPos.x} cy={eraserPos.y} r={ERASER_RADIUS}
+                fill="rgba(239,68,68,0.07)" stroke="#ef4444" strokeWidth={1.5} strokeDasharray="5 3"
+                style={{ pointerEvents: "none" }} />
             </svg>
           )}
 
