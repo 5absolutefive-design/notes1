@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { FolderOpen, Plus } from "lucide-react";
 
 type Project = {
@@ -28,14 +28,55 @@ const PROJECTS: Project[] = [
   },
 ];
 
+function AnimatedChildren({ open, children }: { open: boolean; children: React.ReactNode }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState(open ? "auto" : "0px");
+  const [isAnimating, setIsAnimating] = useState(false);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+
+    if (open) {
+      const scrollH = el.scrollHeight;
+      setHeight(`${scrollH}px`);
+      setIsAnimating(true);
+      const t = setTimeout(() => { setHeight("auto"); setIsAnimating(false); }, 250);
+      return () => clearTimeout(t);
+    } else {
+      const scrollH = el.scrollHeight;
+      setHeight(`${scrollH}px`);
+      setIsAnimating(true);
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setHeight("0px");
+        });
+      });
+      const t = setTimeout(() => setIsAnimating(false), 250);
+      return () => clearTimeout(t);
+    }
+  }, [open]);
+
+  return (
+    <div
+      ref={ref}
+      style={{
+        height,
+        overflow: "hidden",
+        transition: "height 220ms cubic-bezier(0.4, 0, 0.2, 1)",
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
 export function MinimalClean() {
-  const [expanded, setExpanded] = useState<string[]>(["abc", "def"]);
+  const [expanded, setExpanded] = useState<Record<string, boolean>>({ abc: true, def: true });
   const [active, setActive] = useState("aaa1");
 
   const toggle = (id: string) =>
-    setExpanded((prev) =>
-      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
-    );
+    setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-start justify-center pt-10">
@@ -54,13 +95,17 @@ export function MinimalClean() {
         {/* List */}
         <div className="p-2">
           {PROJECTS.map((project) => {
-            const isOpen = expanded.includes(project.id);
             const hasChildren = (project.children?.length ?? 0) > 0;
+            const isOpen = !!expanded[project.id];
 
             return (
               <div key={project.id}>
+                {/* Parent row */}
                 <div
-                  onClick={() => hasChildren && toggle(project.id)}
+                  onClick={() => {
+                    setActive(project.id);
+                    if (hasChildren) toggle(project.id);
+                  }}
                   className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm cursor-pointer transition-colors ${
                     active === project.id
                       ? "bg-indigo-50 text-indigo-700 font-medium"
@@ -69,9 +114,8 @@ export function MinimalClean() {
                 >
                   {hasChildren ? (
                     <span
-                      className={`text-gray-400 text-[10px] w-3 inline-block transition-transform duration-200 ${
-                        isOpen ? "" : "-rotate-90"
-                      }`}
+                      style={{ transition: "transform 200ms cubic-bezier(0.4,0,0.2,1)" }}
+                      className={`text-gray-400 text-[10px] w-3 inline-block ${isOpen ? "" : "-rotate-90"}`}
                     >
                       ▼
                     </span>
@@ -80,37 +124,29 @@ export function MinimalClean() {
                       <span className="block w-1 h-1 rounded-full bg-gray-300 mx-auto" />
                     </span>
                   )}
-                  <span
-                    onClick={(e) => { e.stopPropagation(); setActive(project.id); }}
-                    className="flex-1"
-                  >
-                    {project.title}
-                  </span>
-                  {hasChildren && (
-                    <button className="opacity-0 group-hover:opacity-100 w-4 h-4 flex items-center justify-center text-gray-300 hover:text-indigo-400">
-                      <Plus className="w-3 h-3" />
-                    </button>
-                  )}
+                  <span className="flex-1">{project.title}</span>
                 </div>
 
-                {/* Children */}
-                {isOpen && project.children && project.children.length > 0 && (
-                  <div className="ml-4 border-l-2 border-indigo-200 pl-2 mb-0.5">
-                    {project.children.map((child) => (
-                      <div
-                        key={child.id}
-                        onClick={() => setActive(child.id)}
-                        className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs cursor-pointer transition-colors ${
-                          active === child.id
-                            ? "bg-indigo-50 text-indigo-600 font-medium"
-                            : "text-gray-500 hover:bg-gray-50"
-                        }`}
-                      >
-                        <span className="w-1.5 h-1.5 rounded-full bg-gray-300 flex-shrink-0" />
-                        {child.title}
-                      </div>
-                    ))}
-                  </div>
+                {/* Children — animated */}
+                {hasChildren && (
+                  <AnimatedChildren open={isOpen}>
+                    <div className="ml-4 border-l-2 border-indigo-200 pl-2 mb-0.5">
+                      {project.children!.map((child) => (
+                        <div
+                          key={child.id}
+                          onClick={(e) => { e.stopPropagation(); setActive(child.id); }}
+                          className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs cursor-pointer transition-colors ${
+                            active === child.id
+                              ? "bg-indigo-50 text-indigo-600 font-medium"
+                              : "text-gray-500 hover:bg-gray-50"
+                          }`}
+                        >
+                          <span className="w-1.5 h-1.5 rounded-full bg-gray-300 flex-shrink-0" />
+                          {child.title}
+                        </div>
+                      ))}
+                    </div>
+                  </AnimatedChildren>
                 )}
               </div>
             );
