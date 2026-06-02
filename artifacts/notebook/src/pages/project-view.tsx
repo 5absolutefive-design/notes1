@@ -4,7 +4,7 @@ import {
   Bold, Italic, Underline, Strikethrough, Highlighter,
   CheckSquare, Minus, Heading1, Heading2, Heading3,
   AlignLeft, AlignCenter, AlignRight, List, ListOrdered,
-  ChevronRight, Link,
+  ChevronRight, Link, Mic,
 } from "lucide-react";
 
 // ── Types (exported for use in home.tsx) ─────────────────────────
@@ -131,6 +131,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const [showTodoButtons, setShowTodoButtons] = useState(false);
   const [imageBlocks, setImageBlocks] = useState<ImageBlock[]>([]);
   const imgInputRef = useRef<HTMLInputElement>(null);
+  const voiceInputRef = useRef<HTMLInputElement>(null);
   const dragRef = useRef<{ id: string; startMx: number; startMy: number; startBx: number; startBy: number } | null>(null);
   const resizeRef = useRef<{ id: string; startMx: number; startW: number; startBx: number; side: "br" | "bl" | "tr" | "tl" } | null>(null);
 
@@ -453,6 +454,28 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     } catch { /* ignore */ }
   };
 
+  const handleVoiceFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const src = ev.target?.result as string;
+      const name = file.name;
+      insertHTML(
+        `<div contenteditable="false" data-voice-block="1" ` +
+        `style="position:relative;display:flex;align-items:center;gap:12px;border-left:4px solid #8b5cf6;background:#f5f3ff;padding:12px 40px 12px 16px;border-radius:0 10px 10px 0;margin:8px 0">` +
+        removeBtn() +
+        `<span style="font-size:20px;flex-shrink:0">🎙️</span>` +
+        `<div style="flex:1;min-width:0">` +
+        `<div style="font-size:10px;font-weight:700;color:#7c3aed;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${name}</div>` +
+        `<audio controls src="${src}" style="width:100%;height:32px;outline:none;border-radius:6px"></audio>` +
+        `</div></div><br/>`
+      );
+    };
+    reader.readAsDataURL(file);
+  };
+
   const removeBtn = () =>
     `<button data-remove-btn="1" contenteditable="false" ` +
     `style="position:absolute;top:5px;right:6px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.08);border:none;cursor:pointer;font-size:14px;color:#777;line-height:1;padding:0;display:inline-flex;align-items:center;justify-content:center;z-index:10;flex-shrink:0" ` +
@@ -466,7 +489,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     if (removeButton) {
       e.preventDefault();
       e.stopPropagation();
-      const block = removeButton.closest('[data-quote-block],[data-link-block]');
+      const block = removeButton.closest('[data-quote-block],[data-link-block],[data-voice-block]');
       if (block) { block.remove(); debouncedSave(); }
       return;
     }
@@ -814,6 +837,9 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           {/* Hidden image file input */}
           <input ref={imgInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageFile} />
 
+          {/* Hidden voice file input */}
+          <input ref={voiceInputRef} type="file" accept="audio/*" className="hidden" onChange={handleVoiceFile} />
+
           {/* Image blocks — absolutely positioned within the scroll container */}
           {imageBlocks.map(blk => (
             <div
@@ -1100,6 +1126,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             )}
           </div>
           <CtxItem icon={<ImagePlus className="w-3.5 h-3.5"/>} label="Image" onClick={() => { setCtxMenu(null); imgInputRef.current?.click(); }} />
+          <CtxItem icon={<Mic className="w-3.5 h-3.5"/>} label="Voice" onClick={() => { setCtxMenu(null); voiceInputRef.current?.click(); }} />
           <CtxItem icon={<ChevronRight className="w-3.5 h-3.5"/>} label="Quote Block"   onClick={insertBorderBlock} />
         </div>
       )}
