@@ -409,7 +409,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
       {activeProject ? (
         <div
           ref={scrollContainerRef}
-          className="flex-1 overflow-y-auto min-h-0"
+          className="flex-1 overflow-y-auto min-h-0 hide-scrollbar"
           style={{ position: "relative" }}
           onMouseMove={(e) => {
             if (!lastTodoPos) return;
@@ -646,6 +646,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
 
       {/* Editor styles */}
       <style>{`
+        .hide-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
         [data-placeholder]:empty:before { content: attr(data-placeholder); color: #c0bdb8; pointer-events: none; }
         [contenteditable] h1 { font-size: 2em; font-weight: 700; margin: 0.5em 0 0.25em; line-height: 1.2; }
         [contenteditable] h2 { font-size: 1.5em; font-weight: 700; margin: 0.5em 0 0.25em; line-height: 1.3; }
