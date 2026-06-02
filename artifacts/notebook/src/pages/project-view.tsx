@@ -631,8 +631,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   };
 
   const insertTable = () => {
-    const thStyle = `background:#f9fafb;padding:6px 10px;text-align:left;font-size:12px;font-weight:600;color:#374151;border:1px solid #e5e7eb;border-bottom:2px solid #111827;min-width:120px`;
-    const tdStyle = `padding:6px 10px;border:1px solid #e5e7eb;min-width:120px;font-size:13px;color:#1f2937`;
+    const thStyle = `background:#f9fafb;padding:6px 10px;text-align:left;font-size:12px;font-weight:600;color:#374151;border:1.5px solid #b0b7c3;border-bottom:2px solid #111827;min-width:120px`;
+    const tdStyle = `padding:6px 10px;border:1.5px solid #b0b7c3;min-width:120px;font-size:13px;color:#1f2937`;
     const headers = ["Column 1", "Column 2", "Column 3", "Column 4"];
     const ths = headers.map(h => `<th style="${thStyle}" contenteditable="true">${h}</th>`).join("");
     const tds = headers.map(() => `<td style="${tdStyle}" contenteditable="true"><br/></td>`).join("");
