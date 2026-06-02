@@ -34,6 +34,12 @@ const COL_TYPE_META: Record<ColType, { label: string; icon: React.ReactNode }> =
   date:     { label: "Date",     icon: <Calendar style={{ width: 12, height: 12 }} /> },
 };
 
+const mBtn: React.CSSProperties = {
+  width: "100%", display: "flex", alignItems: "center", gap: 8,
+  padding: "6px 12px", border: "none", background: "none",
+  cursor: "pointer", fontSize: 12, color: "#374151", textAlign: "left",
+};
+
 // ── Defaults ───────────────────────────────────────────────────────
 function makeDefaultData(): NTableData {
   return {
@@ -62,7 +68,7 @@ function parseData(content: string): NTableData {
   try {
     const d = JSON.parse(content);
     if (d.version === 2 && Array.isArray(d.columns) && Array.isArray(d.rows)) return d;
-  } catch { /* fallthrough */ }
+  } catch { /* ignore */ }
   return makeDefaultData();
 }
 
@@ -83,52 +89,41 @@ function SelectBadge({ label, color }: { label: string; color: keyof typeof SELE
   );
 }
 
-const mBtn: React.CSSProperties = {
-  width: "100%", display: "flex", alignItems: "center", gap: 8,
-  padding: "6px 12px", border: "none", background: "none",
-  cursor: "pointer", fontSize: 12, color: "#374151", textAlign: "left",
-};
-
-// ── Resize handle — right border (column) ──────────────────────────
-function ColResizeHandle({ onStart }: { onStart: (e: React.MouseEvent) => void }) {
-  const [hov, setHov] = useState(false);
+// ── Resize handle components — defined OUTSIDE main component ──────
+// Column resize handle (right edge of any cell)
+function ColHandle({ onStart }: { onStart: (e: React.MouseEvent) => void }) {
+  const [active, setActive] = useState(false);
   return (
     <div
-      onMouseDown={e => { e.preventDefault(); e.stopPropagation(); onStart(e); }}
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
+      onMouseEnter={() => setActive(true)}
+      onMouseLeave={() => setActive(false)}
+      onMouseDown={e => { e.preventDefault(); e.stopPropagation(); setActive(true); onStart(e); }}
       style={{
-        position: "absolute", right: -3, top: 0, height: "100%", width: 7,
-        cursor: "col-resize", zIndex: 20, userSelect: "none",
-        background: hov ? "rgba(59,130,246,0.25)" : "transparent",
-        transition: "background 0.1s",
+        position: "absolute", right: -4, top: 0, bottom: 0, width: 8,
+        cursor: "col-resize", zIndex: 50, userSelect: "none",
+        background: active ? "rgba(59,130,246,0.3)" : "transparent",
       }}
     >
-      {hov && (
-        <div style={{ position: "absolute", left: "50%", top: 0, bottom: 0, width: 2, background: "#3b82f6", transform: "translateX(-50%)" }} />
-      )}
+      {active && <div style={{ position: "absolute", left: "50%", top: 0, bottom: 0, width: 2, background: "#3b82f6", transform: "translateX(-50%)" }} />}
     </div>
   );
 }
 
-// ── Resize handle — bottom border (row) ────────────────────────────
-function RowResizeHandle({ onStart }: { onStart: (e: React.MouseEvent) => void }) {
-  const [hov, setHov] = useState(false);
+// Row resize handle (bottom edge of any cell)
+function RowHandle({ onStart }: { onStart: (e: React.MouseEvent) => void }) {
+  const [active, setActive] = useState(false);
   return (
     <div
-      onMouseDown={e => { e.preventDefault(); e.stopPropagation(); onStart(e); }}
-      onMouseEnter={() => setHov(true)}
-      onMouseLeave={() => setHov(false)}
+      onMouseEnter={() => setActive(true)}
+      onMouseLeave={() => setActive(false)}
+      onMouseDown={e => { e.preventDefault(); e.stopPropagation(); setActive(true); onStart(e); }}
       style={{
-        position: "absolute", bottom: -3, left: 0, width: "100%", height: 7,
-        cursor: "row-resize", zIndex: 19, userSelect: "none",
-        background: hov ? "rgba(59,130,246,0.18)" : "transparent",
-        transition: "background 0.1s",
+        position: "absolute", bottom: -4, left: 0, right: 0, height: 8,
+        cursor: "row-resize", zIndex: 49, userSelect: "none",
+        background: active ? "rgba(59,130,246,0.2)" : "transparent",
       }}
     >
-      {hov && (
-        <div style={{ position: "absolute", left: 0, right: 0, top: "50%", height: 2, background: "#3b82f6", transform: "translateY(-50%)" }} />
-      )}
+      {active && <div style={{ position: "absolute", top: "50%", left: 0, right: 0, height: 2, background: "#3b82f6", transform: "translateY(-50%)" }} />}
     </div>
   );
 }
@@ -144,107 +139,122 @@ export function NotionTable({ content, onChange }: { content: string; onChange: 
   const [selectMenu, setSelectMenu] = useState<{ rowId: string; colId: string; rect: DOMRect } | null>(null);
   const [selectSearch, setSelectSearch] = useState("");
   const [sortConfig, setSortConfig] = useState<{ colId: string; dir: "asc" | "desc" } | null>(null);
-  const [numberEditId, setNumberEditId] = useState<string | null>(null); // "rowId-colId"
+  const [numEditKey, setNumEditKey] = useState<string | null>(null);
 
-  // Resize state stored in refs to avoid stale closure issues
+  // Resize state — in refs so mousemove closure always has latest values
   const colResize = useRef<{ colId: string; startX: number; startW: number } | null>(null);
   const rowResize = useRef<{ rowId: string; startY: number; startH: number } | null>(null);
-  const isResizingRef = useRef(false);
+  const activeResize = useRef(false);
 
-  // Store current data in ref for use inside event listeners
+  const onChangeFn = useRef(onChange);
+  onChangeFn.current = onChange;
+
+  const update = useCallback((fn: (d: NTableData) => NTableData) => {
+    setData(prev => { const next = fn(prev); onChangeFn.current(JSON.stringify(next)); return next; });
+  }, []);
+
+  // ── Start resize helpers (stable refs) ─────────────────────────
   const dataRef = useRef(data);
   dataRef.current = data;
 
-  const update = useCallback((fn: (d: NTableData) => NTableData) => {
-    setData(prev => {
-      const next = fn(prev);
-      onChange(JSON.stringify(next));
-      return next;
-    });
-  }, [onChange]);
-
-  // ── Column resize start ─────────────────────────────────────────
   const startColResize = useCallback((colId: string, e: React.MouseEvent) => {
     const col = dataRef.current.columns.find(c => c.id === colId);
     if (!col) return;
     colResize.current = { colId, startX: e.clientX, startW: col.width };
     rowResize.current = null;
-    isResizingRef.current = true;
+    activeResize.current = true;
     document.body.style.userSelect = "none";
     document.body.style.cursor = "col-resize";
   }, []);
 
-  // ── Row resize start ────────────────────────────────────────────
   const startRowResize = useCallback((rowId: string, e: React.MouseEvent) => {
     const row = dataRef.current.rows.find(r => r.id === rowId);
     if (!row) return;
     rowResize.current = { rowId, startY: e.clientY, startH: row.height ?? 36 };
     colResize.current = null;
-    isResizingRef.current = true;
+    activeResize.current = true;
     document.body.style.userSelect = "none";
     document.body.style.cursor = "row-resize";
   }, []);
 
   // ── Global mouse events ─────────────────────────────────────────
   useEffect(() => {
-    let rafId = 0;
-
+    let raf = 0;
     const onMove = (e: MouseEvent) => {
       if (colResize.current) {
         const { colId, startX, startW } = colResize.current;
-        const newW = Math.max(60, Math.round(startW + e.clientX - startX));
-        cancelAnimationFrame(rafId);
-        rafId = requestAnimationFrame(() => {
-          setData(prev => {
-            if (prev.columns.find(c => c.id === colId)?.width === newW) return prev;
-            return { ...prev, columns: prev.columns.map(c => c.id === colId ? { ...c, width: newW } : c) };
-          });
+        const newW = Math.max(50, Math.round(startW + e.clientX - startX));
+        cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(() => {
+          setData(prev => ({ ...prev, columns: prev.columns.map(c => c.id === colId ? { ...c, width: newW } : c) }));
         });
       } else if (rowResize.current) {
         const { rowId, startY, startH } = rowResize.current;
         const newH = Math.max(28, Math.round(startH + e.clientY - startY));
-        cancelAnimationFrame(rafId);
-        rafId = requestAnimationFrame(() => {
-          setData(prev => {
-            if (prev.rows.find(r => r.id === rowId)?.height === newH) return prev;
-            return { ...prev, rows: prev.rows.map(r => r.id === rowId ? { ...r, height: newH } : r) };
-          });
+        cancelAnimationFrame(raf);
+        raf = requestAnimationFrame(() => {
+          setData(prev => ({ ...prev, rows: prev.rows.map(r => r.id === rowId ? { ...r, height: newH } : r) }));
         });
       }
     };
-
     const onUp = () => {
-      cancelAnimationFrame(rafId);
+      cancelAnimationFrame(raf);
       if (colResize.current || rowResize.current) {
-        setData(prev => { onChange(JSON.stringify(prev)); return prev; });
+        setData(prev => { onChangeFn.current(JSON.stringify(prev)); return prev; });
       }
       colResize.current = null;
       rowResize.current = null;
       document.body.style.userSelect = "";
       document.body.style.cursor = "";
-      setTimeout(() => { isResizingRef.current = false; }, 80);
+      setTimeout(() => { activeResize.current = false; }, 80);
     };
-
     window.addEventListener("mousemove", onMove, { passive: true });
     window.addEventListener("mouseup", onUp);
-    return () => {
-      window.removeEventListener("mousemove", onMove);
-      window.removeEventListener("mouseup", onUp);
-      cancelAnimationFrame(rafId);
-    };
-  }, [onChange]);
+    return () => { window.removeEventListener("mousemove", onMove); window.removeEventListener("mouseup", onUp); cancelAnimationFrame(raf); };
+  }, []);
 
   // ── Close menus on outside click ───────────────────────────────
   useEffect(() => {
-    const onDown = (e: MouseEvent) => {
+    const handler = (e: MouseEvent) => {
       if (!(e.target as Element).closest("[data-ntbl-menu]")) {
         setColMenu(null); setTypeMenu(null); setSelectMenu(null); setSelectSearch("");
-        if (editingColId) setEditingColId(null);
+        setEditingColId(null);
       }
     };
-    document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
-  }, [editingColId]);
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  // ── Column/Row actions ─────────────────────────────────────────
+  const addColumn = () => {
+    const id = `c${Date.now()}`;
+    update(d => ({ ...d, columns: [...d.columns, { id, name: "Column", type: "text" as ColType, width: 160 }] }));
+  };
+  const deleteColumn = (colId: string) => {
+    update(d => ({ ...d, columns: d.columns.filter(c => c.id !== colId), rows: d.rows.map(r => { const n = { ...r }; delete n[colId]; return n; }) }));
+    setColMenu(null);
+  };
+  const renameColumn = (colId: string, name: string) => {
+    if (name.trim()) update(d => ({ ...d, columns: d.columns.map(c => c.id === colId ? { ...c, name: name.trim() } : c) }));
+    setEditingColId(null);
+  };
+  const changeColType = (colId: string, type: ColType) => {
+    update(d => ({ ...d, columns: d.columns.map(c => c.id === colId ? { ...c, type } : c), rows: d.rows.map(r => ({ ...r, [colId]: type === "checkbox" ? false : undefined })) }));
+    setTypeMenu(null); setColMenu(null);
+  };
+  const addSelectOpt = (colId: string, label: string, color: keyof typeof SELECT_COLORS): string => {
+    const id = `opt_${Date.now()}`;
+    update(d => ({ ...d, columns: d.columns.map(c => c.id === colId ? { ...c, options: [...(c.options ?? []), { id, label, color }] } : c) }));
+    return id;
+  };
+  const addRow = () => {
+    const id = `r${Date.now()}`;
+    const row: RowData = { id };
+    data.columns.forEach(c => { if (c.type === "checkbox") row[c.id] = false; });
+    update(d => ({ ...d, rows: [...d.rows, row] }));
+  };
+  const deleteRow = (rowId: string) => update(d => ({ ...d, rows: d.rows.filter(r => r.id !== rowId) }));
+  const setCellVal = (rowId: string, colId: string, val: any) => update(d => ({ ...d, rows: d.rows.map(r => r.id === rowId ? { ...r, [colId]: val } : r) }));
 
   // ── Sorted rows ────────────────────────────────────────────────
   const displayRows = sortConfig
@@ -262,241 +272,82 @@ export function NotionTable({ content, onChange }: { content: string; onChange: 
     return { col, sum, avg: vals.length ? sum / vals.length : 0 };
   });
 
-  const setCellValue = (rowId: string, colId: string, val: any) => {
-    update(d => ({ ...d, rows: d.rows.map(r => r.id === rowId ? { ...r, [colId]: val } : r) }));
+  // ── Select menu state ──────────────────────────────────────────
+  const selCol = selectMenu ? data.columns.find(c => c.id === selectMenu.colId) : null;
+  const selVal = selectMenu ? data.rows.find(r => r.id === selectMenu.rowId)?.[selectMenu.colId] : null;
+  const filtOpts = selCol?.options?.filter(o => o.label.toLowerCase().includes(selectSearch.toLowerCase())) ?? [];
+  const nextColor = COLOR_NAMES[(selCol?.options?.length ?? 0) % COLOR_NAMES.length];
+
+  // Shared cell td base style
+  const tdBase = (col: Column, row: RowData): React.CSSProperties => ({
+    width: col.width, minWidth: col.width, maxWidth: col.width,
+    height: row.height ?? 36,
+    borderRight: "1px solid #e5e7eb", borderBottom: "1px solid #e5e7eb",
+    boxSizing: "border-box", padding: 0, position: "relative",
+    overflow: "visible", verticalAlign: "middle",
+  });
+
+  const inputBase: React.CSSProperties = {
+    width: "100%", height: "100%", border: "none", outline: "none",
+    background: "transparent", padding: "0 8px", fontSize: 13,
+    color: "#1f2937", fontFamily: "inherit", boxSizing: "border-box",
   };
-
-  // ── Column actions ─────────────────────────────────────────────
-  const addColumn = () => {
-    const id = `c${Date.now()}`;
-    update(d => ({ ...d, columns: [...d.columns, { id, name: "Column", type: "text" as ColType, width: 160 }] }));
-  };
-
-  const deleteColumn = (colId: string) => {
-    update(d => ({
-      ...d,
-      columns: d.columns.filter(c => c.id !== colId),
-      rows: d.rows.map(r => { const n = { ...r }; delete n[colId]; return n; }),
-    }));
-    setColMenu(null);
-  };
-
-  const renameColumn = (colId: string, name: string) => {
-    if (name.trim()) update(d => ({ ...d, columns: d.columns.map(c => c.id === colId ? { ...c, name: name.trim() } : c) }));
-    setEditingColId(null);
-  };
-
-  const changeColType = (colId: string, type: ColType) => {
-    update(d => ({
-      ...d,
-      columns: d.columns.map(c => c.id === colId ? { ...c, type } : c),
-      rows: d.rows.map(r => ({ ...r, [colId]: type === "checkbox" ? false : undefined })),
-    }));
-    setTypeMenu(null); setColMenu(null);
-  };
-
-  const addSelectOption = (colId: string, label: string, color: keyof typeof SELECT_COLORS): string => {
-    const id = `opt_${Date.now()}`;
-    update(d => ({ ...d, columns: d.columns.map(c => c.id === colId ? { ...c, options: [...(c.options ?? []), { id, label, color }] } : c) }));
-    return id;
-  };
-
-  // ── Row actions ────────────────────────────────────────────────
-  const addRow = () => {
-    const id = `r${Date.now()}`;
-    const row: RowData = { id };
-    data.columns.forEach(c => { if (c.type === "checkbox") row[c.id] = false; });
-    update(d => ({ ...d, rows: [...d.rows, row] }));
-  };
-
-  const deleteRow = (rowId: string) => {
-    update(d => ({ ...d, rows: d.rows.filter(r => r.id !== rowId) }));
-  };
-
-  // ── Shared td wrapper ─────────────────────────────────────────
-  const Td = ({
-    col, row, children, style, onClick, extraStyle,
-  }: {
-    col: Column; row: RowData; children?: React.ReactNode;
-    style?: React.CSSProperties; onClick?: (e: React.MouseEvent<HTMLTableCellElement>) => void;
-    extraStyle?: React.CSSProperties;
-  }) => {
-    const h = row.height ?? 36;
-    return (
-      <td onClick={onClick} style={{
-        width: col.width, minWidth: col.width, maxWidth: col.width, height: h,
-        borderRight: "1px solid #e5e7eb", borderBottom: "1px solid #e5e7eb",
-        overflow: "visible", boxSizing: "border-box", position: "relative",
-        padding: 0, verticalAlign: "middle",
-        ...extraStyle,
-      }}>
-        <div style={{ width: "100%", height: "100%", overflow: "hidden", position: "relative", ...style }}>
-          {children}
-        </div>
-        {/* Column resize (right border) */}
-        <ColResizeHandle onStart={e => startColResize(col.id, e)} />
-        {/* Row resize (bottom border) */}
-        <RowResizeHandle onStart={e => startRowResize(row.id, e)} />
-      </td>
-    );
-  };
-
-  // ── Cell content by type ───────────────────────────────────────
-  const renderCell = (row: RowData, col: Column) => {
-    const val = row[col.id];
-    const inputBase: React.CSSProperties = {
-      width: "100%", height: "100%", border: "none", outline: "none",
-      background: "transparent", padding: "0 8px", fontSize: 13,
-      color: "#1f2937", fontFamily: "inherit", boxSizing: "border-box",
-      display: "block",
-    };
-    const nid = `${row.id}-${col.id}`;
-
-    switch (col.type) {
-      case "text":
-        return (
-          <Td key={col.id} col={col} row={row}>
-            <input value={val ?? ""} onChange={e => setCellValue(row.id, col.id, e.target.value)}
-              style={inputBase} placeholder="…" />
-          </Td>
-        );
-
-      case "number":
-        return (
-          <Td key={col.id} col={col} row={row}>
-            {numberEditId === nid ? (
-              <input
-                type="number"
-                autoFocus
-                value={val ?? ""}
-                onChange={e => setCellValue(row.id, col.id, e.target.value)}
-                onBlur={() => setNumberEditId(null)}
-                style={{ ...inputBase, textAlign: "right" }}
-                placeholder="0"
-              />
-            ) : (
-              <div
-                onClick={() => { if (!isResizingRef.current) setNumberEditId(nid); }}
-                style={{ ...inputBase, display: "flex", alignItems: "center", justifyContent: "flex-end", cursor: "text", color: val != null && val !== "" ? "#1f2937" : "#d1d5db" }}>
-                {val != null && val !== "" ? fmtNumber(val, col.format) : "0"}
-              </div>
-            )}
-          </Td>
-        );
-
-      case "checkbox":
-        return (
-          <Td key={col.id} col={col} row={row} extraStyle={{ cursor: "pointer" }}
-            onClick={() => { if (!isResizingRef.current) setCellValue(row.id, col.id, !val); }}>
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: "100%" }}>
-              <div style={{ width: 16, height: 16, borderRadius: 3, border: val ? "2px solid #3b82f6" : "2px solid #d1d5db", background: val ? "#3b82f6" : "white", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, pointerEvents: "none" }}>
-                {val && <svg viewBox="0 0 10 10" width="10" height="10" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1.5,5 4,7.5 8.5,2.5" /></svg>}
-              </div>
-            </div>
-          </Td>
-        );
-
-      case "date":
-        return (
-          <Td key={col.id} col={col} row={row}>
-            <input type="date" value={val ?? ""} onChange={e => setCellValue(row.id, col.id, e.target.value)}
-              style={{ ...inputBase, color: val ? "#1f2937" : "#9ca3af" }} />
-          </Td>
-        );
-
-      case "select": {
-        const colData = data.columns.find(c => c.id === col.id)!;
-        const selected = colData.options?.find(o => o.id === val);
-        return (
-          <Td key={col.id} col={col} row={row} extraStyle={{ cursor: "pointer" }}
-            onClick={e => {
-              if (isResizingRef.current) return;
-              const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
-              setSelectMenu({ rowId: row.id, colId: col.id, rect });
-              setSelectSearch("");
-            }}>
-            <div style={{ padding: "0 8px", display: "flex", alignItems: "center", height: "100%" }}>
-              {selected ? <SelectBadge label={selected.label} color={selected.color} /> : <span style={{ fontSize: 12, color: "#d1d5db" }}>—</span>}
-            </div>
-          </Td>
-        );
-      }
-
-      default:
-        return <Td key={col.id} col={col} row={row} />;
-    }
-  };
-
-  // ── Select dropdown state ──────────────────────────────────────
-  const activeSelectCol = selectMenu ? data.columns.find(c => c.id === selectMenu.colId) : null;
-  const activeSelectVal = selectMenu ? data.rows.find(r => r.id === selectMenu.rowId)?.[selectMenu.colId] : null;
-  const filteredOpts = activeSelectCol?.options?.filter(o => o.label.toLowerCase().includes(selectSearch.toLowerCase())) ?? [];
-  const nextColor = COLOR_NAMES[(activeSelectCol?.options?.length ?? 0) % COLOR_NAMES.length];
 
   return (
     <div style={{ fontFamily: "Inter, -apple-system, sans-serif", fontSize: 13, height: "100%", display: "flex", flexDirection: "column", background: "white" }}>
 
-      {/* ── Toolbar ─────────────────────────────────────────────── */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 16px", borderBottom: "1px solid #e5e7eb", background: "#fafafa", flexShrink: 0, gap: 8 }}>
-        <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+      {/* Toolbar */}
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 16px", borderBottom: "1px solid #e5e7eb", background: "#fafafa", flexShrink: 0 }}>
+        <div>
           {sortConfig && (
             <button onClick={() => setSortConfig(null)} style={{ display: "flex", alignItems: "center", gap: 4, padding: "3px 8px", borderRadius: 6, border: "1px solid #3b82f6", background: "#eff6ff", color: "#3b82f6", fontSize: 11, fontWeight: 600, cursor: "pointer" }}>
-              {data.columns.find(c => c.id === sortConfig.colId)?.name} {sortConfig.dir === "asc" ? "↑" : "↓"}
-              <X style={{ width: 10, height: 10 }} />
+              {data.columns.find(c => c.id === sortConfig.colId)?.name} {sortConfig.dir === "asc" ? "↑" : "↓"} <X style={{ width: 10, height: 10 }} />
             </button>
           )}
         </div>
-        <button onClick={addRow} style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 6, border: "1px solid #d1d5db", background: "white", color: "#374151", fontSize: 12, fontWeight: 600, cursor: "pointer", boxShadow: "0 1px 2px rgba(0,0,0,0.05)" }}>
+        <button onClick={addRow} style={{ display: "flex", alignItems: "center", gap: 5, padding: "5px 12px", borderRadius: 6, border: "1px solid #d1d5db", background: "white", color: "#374151", fontSize: 12, fontWeight: 600, cursor: "pointer" }}>
           <Plus style={{ width: 12, height: 12 }} /> New Row
         </button>
       </div>
 
-      {/* ── Table ───────────────────────────────────────────────── */}
+      {/* Table */}
       <div style={{ flex: 1, overflow: "auto" }}>
         <table style={{ borderCollapse: "collapse", tableLayout: "fixed", borderTop: "2px solid #111827", borderLeft: "1px solid #e5e7eb" }}>
           <thead>
             <tr>
-              {/* Row action col */}
+              {/* Number col */}
               <th style={{ width: 36, minWidth: 36, borderRight: "1px solid #e5e7eb", borderBottom: "2px solid #111827", background: "#f9fafb", position: "sticky", top: 0, zIndex: 10 }} />
 
-              {data.columns.map(col => (
+              {data.columns.map((col) => (
                 <th key={col.id} style={{ width: col.width, minWidth: col.width, maxWidth: col.width, height: 36, borderRight: "1px solid #e5e7eb", borderBottom: "2px solid #111827", background: "#f9fafb", padding: 0, position: "sticky", top: 0, zIndex: 10, userSelect: "none", overflow: "visible" }}>
                   <div style={{ display: "flex", alignItems: "center", height: "100%", position: "relative" }}>
                     {editingColId === col.id ? (
-                      <input
-                        data-ntbl-menu="col"
-                        autoFocus
-                        value={editingColName}
+                      <input data-ntbl-menu="colinput" autoFocus value={editingColName}
                         onChange={e => setEditingColName(e.target.value)}
                         onKeyDown={e => { if (e.key === "Enter") renameColumn(col.id, editingColName); if (e.key === "Escape") setEditingColId(null); }}
                         onBlur={() => renameColumn(col.id, editingColName)}
                         style={{ flex: 1, height: "100%", border: "none", borderBottom: "2px solid #3b82f6", outline: "none", padding: "0 8px", fontSize: 12, fontWeight: 600, background: "#eff6ff", color: "#374151" }}
                       />
                     ) : (
-                      <button
-                        onClick={e => {
-                          if (isResizingRef.current) return;
-                          const th = (e.currentTarget as HTMLElement).closest("th")!;
-                          setColMenu({ colId: col.id, rect: th.getBoundingClientRect() });
-                        }}
-                        style={{ flex: 1, height: "100%", display: "flex", alignItems: "center", gap: 5, padding: "0 8px", background: "none", border: "none", cursor: "pointer", textAlign: "left", overflow: "hidden", color: "#374151", fontWeight: 600, fontSize: 12 }}>
-                        <span style={{ color: "#9ca3af", flexShrink: 0, display: "flex" }}>{COL_TYPE_META[col.type].icon}</span>
+                      <button onClick={e => { if (activeResize.current) return; const th = (e.currentTarget as HTMLElement).closest("th")!; setColMenu({ colId: col.id, rect: th.getBoundingClientRect() }); }}
+                        style={{ flex: 1, height: "100%", display: "flex", alignItems: "center", gap: 5, padding: "0 8px", background: "none", border: "none", cursor: "pointer", overflow: "hidden", color: "#374151", fontWeight: 600, fontSize: 12 }}>
+                        <span style={{ color: "#9ca3af", display: "flex", flexShrink: 0 }}>{COL_TYPE_META[col.type].icon}</span>
                         <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>{col.name}</span>
-                        {sortConfig?.colId === col.id && <span style={{ fontSize: 10, color: "#3b82f6", flexShrink: 0 }}>{sortConfig.dir === "asc" ? "↑" : "↓"}</span>}
+                        {sortConfig?.colId === col.id && <span style={{ fontSize: 10, color: "#3b82f6" }}>{sortConfig.dir === "asc" ? "↑" : "↓"}</span>}
                         <ChevronDown style={{ width: 10, height: 10, color: "#9ca3af", flexShrink: 0 }} />
                       </button>
                     )}
-                    {/* Column resize on header */}
-                    <ColResizeHandle onStart={e => startColResize(col.id, e)} />
+                    {/* Col resize — header only */}
+                    <ColHandle onStart={e => startColResize(col.id, e)} />
                   </div>
                 </th>
               ))}
 
+              {/* Add column */}
               <th style={{ width: 44, minWidth: 44, borderRight: "1px solid #e5e7eb", borderBottom: "2px solid #111827", background: "#f9fafb", position: "sticky", top: 0, zIndex: 10 }}>
-                <button onClick={addColumn} title="Add column"
-                  style={{ width: "100%", height: 36, display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: "pointer", color: "#9ca3af" }}
-                  onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "#f3f4f6"; (e.currentTarget as HTMLElement).style.color = "#374151"; }}
-                  onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "none"; (e.currentTarget as HTMLElement).style.color = "#9ca3af"; }}>
+                <button onClick={addColumn} style={{ width: "100%", height: 36, display: "flex", alignItems: "center", justifyContent: "center", background: "none", border: "none", cursor: "pointer", color: "#9ca3af" }}
+                  onMouseEnter={e => { const t = e.currentTarget as HTMLElement; t.style.background = "#f3f4f6"; t.style.color = "#374151"; }}
+                  onMouseLeave={e => { const t = e.currentTarget as HTMLElement; t.style.background = "none"; t.style.color = "#9ca3af"; }}>
                   <Plus style={{ width: 14, height: 14 }} />
                 </button>
               </th>
@@ -504,31 +355,115 @@ export function NotionTable({ content, onChange }: { content: string; onChange: 
           </thead>
 
           <tbody>
-            {displayRows.map(row => {
+            {displayRows.map((row) => {
               const h = row.height ?? 36;
               return (
                 <tr key={row.id} onMouseEnter={() => setHoverRow(row.id)} onMouseLeave={() => setHoverRow(null)}>
-                  {/* Row action cell */}
-                  <td style={{ width: 36, minWidth: 36, borderRight: "1px solid #e5e7eb", borderBottom: "1px solid #e5e7eb", height: h, padding: 0, position: "relative", background: hoverRow === row.id ? "#fafafa" : "white", verticalAlign: "middle", overflow: "visible" }}>
-                    {hoverRow === row.id && !isResizingRef.current && (
+
+                  {/* Action cell */}
+                  <td style={{ width: 36, minWidth: 36, height: h, borderRight: "1px solid #e5e7eb", borderBottom: "1px solid #e5e7eb", padding: 0, position: "relative", background: hoverRow === row.id ? "#fafafa" : "white", overflow: "visible", verticalAlign: "middle" }}>
+                    {hoverRow === row.id && !activeResize.current && (
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "center", height: h }}>
                         <button onClick={() => deleteRow(row.id)} title="Delete row"
                           style={{ width: 22, height: 22, border: "none", background: "none", cursor: "pointer", borderRadius: 4, color: "#9ca3af", display: "flex", alignItems: "center", justifyContent: "center" }}
-                          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "#fee2e2"; (e.currentTarget as HTMLElement).style.color = "#dc2626"; }}
-                          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "none"; (e.currentTarget as HTMLElement).style.color = "#9ca3af"; }}>
+                          onMouseEnter={e => { const t = e.currentTarget as HTMLElement; t.style.background = "#fee2e2"; t.style.color = "#dc2626"; }}
+                          onMouseLeave={e => { const t = e.currentTarget as HTMLElement; t.style.background = "none"; t.style.color = "#9ca3af"; }}>
                           <Trash2 style={{ width: 11, height: 11 }} />
                         </button>
                       </div>
                     )}
                     {/* Row resize on action cell */}
-                    <RowResizeHandle onStart={e => startRowResize(row.id, e)} />
+                    <RowHandle onStart={e => startRowResize(row.id, e)} />
                   </td>
 
-                  {/* Data cells — each has col + row resize handles */}
-                  {data.columns.map(col => renderCell(row, col))}
+                  {/* Data cells — inline, no Td wrapper */}
+                  {data.columns.map((col) => {
+                    const val = row[col.id];
 
+                    if (col.type === "text") {
+                      return (
+                        <td key={col.id} style={tdBase(col, row)}>
+                          <input value={val ?? ""} onChange={e => setCellVal(row.id, col.id, e.target.value)}
+                            style={{ ...inputBase, display: "block" }} placeholder="…" />
+                          <ColHandle onStart={e => startColResize(col.id, e)} />
+                          <RowHandle onStart={e => startRowResize(row.id, e)} />
+                        </td>
+                      );
+                    }
+
+                    if (col.type === "number") {
+                      const nid = `${row.id}__${col.id}`;
+                      return (
+                        <td key={col.id} style={tdBase(col, row)}>
+                          {numEditKey === nid ? (
+                            <input type="number" autoFocus value={val ?? ""}
+                              onChange={e => setCellVal(row.id, col.id, e.target.value)}
+                              onBlur={() => setNumEditKey(null)}
+                              style={{ ...inputBase, textAlign: "right", display: "block" }} placeholder="0" />
+                          ) : (
+                            <div onClick={() => { if (!activeResize.current) setNumEditKey(nid); }}
+                              style={{ ...inputBase, display: "flex", alignItems: "center", justifyContent: "flex-end", cursor: "text", height: h, color: (val != null && val !== "") ? "#1f2937" : "#d1d5db" }}>
+                              {(val != null && val !== "") ? fmtNumber(val, col.format) : "0"}
+                            </div>
+                          )}
+                          <ColHandle onStart={e => startColResize(col.id, e)} />
+                          <RowHandle onStart={e => startRowResize(row.id, e)} />
+                        </td>
+                      );
+                    }
+
+                    if (col.type === "checkbox") {
+                      return (
+                        <td key={col.id} style={{ ...tdBase(col, row), cursor: "pointer" }}
+                          onClick={() => { if (!activeResize.current) setCellVal(row.id, col.id, !val); }}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%", height: h }}>
+                            <div style={{ width: 16, height: 16, borderRadius: 3, border: val ? "2px solid #3b82f6" : "2px solid #d1d5db", background: val ? "#3b82f6" : "white", display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+                              {val && <svg viewBox="0 0 10 10" width="10" height="10" fill="none" stroke="white" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><polyline points="1.5,5 4,7.5 8.5,2.5" /></svg>}
+                            </div>
+                          </div>
+                          <ColHandle onStart={e => startColResize(col.id, e)} />
+                          <RowHandle onStart={e => startRowResize(row.id, e)} />
+                        </td>
+                      );
+                    }
+
+                    if (col.type === "date") {
+                      return (
+                        <td key={col.id} style={tdBase(col, row)}>
+                          <input type="date" value={val ?? ""} onChange={e => setCellVal(row.id, col.id, e.target.value)}
+                            style={{ ...inputBase, color: val ? "#1f2937" : "#9ca3af", display: "block" }} />
+                          <ColHandle onStart={e => startColResize(col.id, e)} />
+                          <RowHandle onStart={e => startRowResize(row.id, e)} />
+                        </td>
+                      );
+                    }
+
+                    if (col.type === "select") {
+                      const colData = data.columns.find(c => c.id === col.id)!;
+                      const selected = colData.options?.find(o => o.id === val);
+                      return (
+                        <td key={col.id} style={{ ...tdBase(col, row), cursor: "pointer" }}
+                          onClick={e => { if (activeResize.current) return; const rect = (e.currentTarget as HTMLElement).getBoundingClientRect(); setSelectMenu({ rowId: row.id, colId: col.id, rect }); setSelectSearch(""); }}>
+                          <div style={{ padding: "0 8px", display: "flex", alignItems: "center", height: h }}>
+                            {selected ? <SelectBadge label={selected.label} color={selected.color} /> : <span style={{ fontSize: 12, color: "#d1d5db" }}>—</span>}
+                          </div>
+                          <ColHandle onStart={e => startColResize(col.id, e)} />
+                          <RowHandle onStart={e => startRowResize(row.id, e)} />
+                        </td>
+                      );
+                    }
+
+                    return (
+                      <td key={col.id} style={tdBase(col, row)}>
+                        <ColHandle onStart={e => startColResize(col.id, e)} />
+                        <RowHandle onStart={e => startRowResize(row.id, e)} />
+                      </td>
+                    );
+                  })}
+
+                  {/* Spacer under +col header */}
                   <td style={{ width: 44, minWidth: 44, borderRight: "1px solid #e5e7eb", borderBottom: "1px solid #e5e7eb", height: h, overflow: "visible", position: "relative" }}>
-                    <RowResizeHandle onStart={e => startRowResize(row.id, e)} />
+                    <RowHandle onStart={e => startRowResize(row.id, e)} />
                   </td>
                 </tr>
               );
@@ -536,22 +471,20 @@ export function NotionTable({ content, onChange }: { content: string; onChange: 
           </tbody>
         </table>
 
-        {/* Add row button */}
+        {/* Add row */}
         <button onClick={addRow}
           style={{ display: "flex", alignItems: "center", gap: 6, padding: "8px 12px 8px 52px", color: "#9ca3af", fontSize: 12, fontWeight: 500, background: "none", border: "none", cursor: "pointer", width: "100%", textAlign: "left", borderBottom: "1px solid #f3f4f6" }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "#fafafa"; (e.currentTarget as HTMLElement).style.color = "#6b7280"; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "none"; (e.currentTarget as HTMLElement).style.color = "#9ca3af"; }}>
+          onMouseEnter={e => { const t = e.currentTarget as HTMLElement; t.style.background = "#fafafa"; t.style.color = "#6b7280"; }}
+          onMouseLeave={e => { const t = e.currentTarget as HTMLElement; t.style.background = "none"; t.style.color = "#9ca3af"; }}>
           <Plus style={{ width: 13, height: 13 }} /> Add a row
         </button>
       </div>
 
-      {/* ── Footer ──────────────────────────────────────────────── */}
+      {/* Footer */}
       <div style={{ borderTop: "1px solid #e5e7eb", padding: "5px 16px", background: "#f9fafb", display: "flex", gap: 16, alignItems: "center", flexShrink: 0, flexWrap: "wrap" }}>
-        <span style={{ fontSize: 11, color: "#6b7280", fontWeight: 600 }}>
-          COUNT <span style={{ color: "#111827", marginLeft: 2 }}>{data.rows.length}</span>
-        </span>
+        <span style={{ fontSize: 11, color: "#6b7280", fontWeight: 600 }}>COUNT <span style={{ color: "#111827" }}>{data.rows.length}</span></span>
         {numStats.map(({ col, sum, avg }) => (
-          <span key={col.id} style={{ fontSize: 11, color: "#6b7280", fontWeight: 600, display: "flex", gap: 6, alignItems: "center" }}>
+          <span key={col.id} style={{ fontSize: 11, color: "#6b7280", fontWeight: 600, display: "flex", gap: 6 }}>
             <span style={{ color: "#9ca3af" }}>{col.name}</span>
             SUM <span style={{ color: "#111827" }}>{fmtNumber(sum, col.format)}</span>
             <span style={{ color: "#d1d5db" }}>·</span>
@@ -562,50 +495,37 @@ export function NotionTable({ content, onChange }: { content: string; onChange: 
 
       {/* ── Portals ─────────────────────────────────────────────── */}
 
-      {/* Column header menu */}
+      {/* Column menu */}
       {colMenu && createPortal(
-        <div data-ntbl-menu="col" style={{ position: "fixed", top: colMenu.rect.bottom + 2, left: colMenu.rect.left, zIndex: 9999, background: "white", borderRadius: 10, boxShadow: "0 8px 30px rgba(0,0,0,0.15)", border: "1px solid #e5e7eb", minWidth: 200, padding: "4px 0" }}>
+        <div data-ntbl-menu="colmenu" style={{ position: "fixed", top: colMenu.rect.bottom + 2, left: colMenu.rect.left, zIndex: 9999, background: "white", borderRadius: 10, boxShadow: "0 8px 30px rgba(0,0,0,0.15)", border: "1px solid #e5e7eb", minWidth: 200, padding: "4px 0" }}>
           <button onMouseDown={e => { e.preventDefault(); const col = data.columns.find(c => c.id === colMenu.colId); setEditingColId(colMenu.colId); setEditingColName(col?.name ?? ""); setColMenu(null); }}
-            style={mBtn} onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")} onMouseLeave={e => (e.currentTarget.style.background = "none")}>
-            ✏️ Rename
-          </button>
-          <button onClick={e => { const rect = (e.currentTarget as HTMLElement).getBoundingClientRect(); setTypeMenu({ colId: colMenu.colId, rect }); }}
+            style={mBtn} onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")} onMouseLeave={e => (e.currentTarget.style.background = "none")}>✏️ Rename</button>
+          <button onClick={e => { setTypeMenu({ colId: colMenu.colId, rect: (e.currentTarget as HTMLElement).getBoundingClientRect() }); }}
             style={mBtn} onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")} onMouseLeave={e => (e.currentTarget.style.background = "none")}>
             <span style={{ color: "#6b7280", display: "flex" }}>{COL_TYPE_META[data.columns.find(c => c.id === colMenu.colId)?.type ?? "text"].icon}</span>
-            Change type
-            <ChevronDown style={{ width: 10, height: 10, marginLeft: "auto", transform: "rotate(-90deg)", color: "#9ca3af" }} />
+            Change type <ChevronDown style={{ width: 10, height: 10, marginLeft: "auto", transform: "rotate(-90deg)", color: "#9ca3af" }} />
           </button>
           <div style={{ borderTop: "1px solid #f3f4f6", margin: "3px 0" }} />
-          <button onClick={() => { setSortConfig({ colId: colMenu.colId, dir: "asc" }); setColMenu(null); }}
-            style={mBtn} onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")} onMouseLeave={e => (e.currentTarget.style.background = "none")}>
-            <ArrowUp style={{ width: 12, height: 12, color: "#6b7280" }} /> Sort A → Z
-          </button>
-          <button onClick={() => { setSortConfig({ colId: colMenu.colId, dir: "desc" }); setColMenu(null); }}
-            style={mBtn} onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")} onMouseLeave={e => (e.currentTarget.style.background = "none")}>
-            <ArrowDown style={{ width: 12, height: 12, color: "#6b7280" }} /> Sort Z → A
-          </button>
+          <button onClick={() => { setSortConfig({ colId: colMenu.colId, dir: "asc" }); setColMenu(null); }} style={mBtn} onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")} onMouseLeave={e => (e.currentTarget.style.background = "none")}><ArrowUp style={{ width: 12, height: 12, color: "#6b7280" }} /> Sort A → Z</button>
+          <button onClick={() => { setSortConfig({ colId: colMenu.colId, dir: "desc" }); setColMenu(null); }} style={mBtn} onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")} onMouseLeave={e => (e.currentTarget.style.background = "none")}><ArrowDown style={{ width: 12, height: 12, color: "#6b7280" }} /> Sort Z → A</button>
           <div style={{ borderTop: "1px solid #f3f4f6", margin: "3px 0" }} />
-          <button onClick={() => deleteColumn(colMenu.colId)}
-            style={{ ...mBtn, color: "#dc2626" }} onMouseEnter={e => (e.currentTarget.style.background = "#fef2f2")} onMouseLeave={e => (e.currentTarget.style.background = "none")}>
-            <Trash2 style={{ width: 12, height: 12 }} /> Delete column
-          </button>
+          <button onClick={() => deleteColumn(colMenu.colId)} style={{ ...mBtn, color: "#dc2626" }} onMouseEnter={e => (e.currentTarget.style.background = "#fef2f2")} onMouseLeave={e => (e.currentTarget.style.background = "none")}><Trash2 style={{ width: 12, height: 12 }} /> Delete column</button>
         </div>,
         document.body
       )}
 
       {/* Type picker */}
       {typeMenu && createPortal(
-        <div data-ntbl-menu="type" style={{ position: "fixed", top: typeMenu.rect.top, left: typeMenu.rect.right + 6, zIndex: 10000, background: "white", borderRadius: 10, boxShadow: "0 8px 30px rgba(0,0,0,0.15)", border: "1px solid #e5e7eb", minWidth: 160, padding: "4px 0" }}>
+        <div data-ntbl-menu="typemenu" style={{ position: "fixed", top: typeMenu.rect.top, left: typeMenu.rect.right + 6, zIndex: 10000, background: "white", borderRadius: 10, boxShadow: "0 8px 30px rgba(0,0,0,0.15)", border: "1px solid #e5e7eb", minWidth: 160, padding: "4px 0" }}>
           {(Object.entries(COL_TYPE_META) as Array<[ColType, { label: string; icon: React.ReactNode }]>).map(([type, meta]) => {
-            const isCurrent = data.columns.find(c => c.id === typeMenu.colId)?.type === type;
+            const cur = data.columns.find(c => c.id === typeMenu.colId)?.type === type;
             return (
-              <button key={type} onClick={() => changeColType(typeMenu.colId, type)}
-                style={{ ...mBtn, background: isCurrent ? "#f0f9ff" : "none" }}
-                onMouseEnter={e => (e.currentTarget.style.background = isCurrent ? "#e0f2fe" : "#f3f4f6")}
-                onMouseLeave={e => (e.currentTarget.style.background = isCurrent ? "#f0f9ff" : "none")}>
+              <button key={type} onClick={() => changeColType(typeMenu.colId, type)} style={{ ...mBtn, background: cur ? "#f0f9ff" : "none" }}
+                onMouseEnter={e => (e.currentTarget.style.background = cur ? "#e0f2fe" : "#f3f4f6")}
+                onMouseLeave={e => (e.currentTarget.style.background = cur ? "#f0f9ff" : "none")}>
                 <span style={{ color: "#6b7280", display: "flex" }}>{meta.icon}</span>
                 {meta.label}
-                {isCurrent && <Check style={{ width: 11, height: 11, marginLeft: "auto", color: "#3b82f6" }} />}
+                {cur && <Check style={{ width: 11, height: 11, marginLeft: "auto", color: "#3b82f6" }} />}
               </button>
             );
           })}
@@ -614,72 +534,65 @@ export function NotionTable({ content, onChange }: { content: string; onChange: 
       )}
 
       {/* Select dropdown */}
-      {selectMenu && activeSelectCol && createPortal(
-        <div data-ntbl-menu="select" style={{ position: "fixed", top: selectMenu.rect.bottom + 4, left: selectMenu.rect.left, zIndex: 9999, background: "white", borderRadius: 10, boxShadow: "0 8px 30px rgba(0,0,0,0.15)", border: "1px solid #e5e7eb", minWidth: 220, padding: "8px 0 4px", maxHeight: 320, display: "flex", flexDirection: "column" }}>
+      {selectMenu && selCol && createPortal(
+        <div data-ntbl-menu="selmenu" style={{ position: "fixed", top: selectMenu.rect.bottom + 4, left: selectMenu.rect.left, zIndex: 9999, background: "white", borderRadius: 10, boxShadow: "0 8px 30px rgba(0,0,0,0.15)", border: "1px solid #e5e7eb", minWidth: 220, padding: "8px 0 4px", maxHeight: 320, display: "flex", flexDirection: "column" }}>
           <div style={{ padding: "0 8px 6px" }}>
-            <input autoFocus value={selectSearch} onChange={e => setSelectSearch(e.target.value)}
-              placeholder="Search or create option..."
+            <input autoFocus value={selectSearch} onChange={e => setSelectSearch(e.target.value)} placeholder="Search or create option..."
               style={{ width: "100%", padding: "5px 8px", border: "1px solid #e5e7eb", borderRadius: 6, fontSize: 12, outline: "none", boxSizing: "border-box" }}
               onKeyDown={e => {
                 if (e.key === "Enter" && selectSearch.trim()) {
-                  const ex = activeSelectCol.options?.find(o => o.label.toLowerCase() === selectSearch.toLowerCase());
-                  if (ex) { setCellValue(selectMenu.rowId, selectMenu.colId, ex.id); }
-                  else { const id = addSelectOption(selectMenu.colId, selectSearch.trim(), nextColor); setTimeout(() => setCellValue(selectMenu.rowId, selectMenu.colId, id), 10); }
+                  const ex = selCol.options?.find(o => o.label.toLowerCase() === selectSearch.toLowerCase());
+                  if (ex) setCellVal(selectMenu.rowId, selectMenu.colId, ex.id);
+                  else { const id = addSelectOpt(selectMenu.colId, selectSearch.trim(), nextColor); setTimeout(() => setCellVal(selectMenu.rowId, selectMenu.colId, id), 10); }
                   setSelectMenu(null); setSelectSearch("");
                 }
                 if (e.key === "Escape") { setSelectMenu(null); setSelectSearch(""); }
-              }}
-            />
+              }} />
           </div>
-          {activeSelectVal && (
-            <button onClick={() => { setCellValue(selectMenu.rowId, selectMenu.colId, undefined); setSelectMenu(null); }}
-              style={{ ...mBtn, color: "#6b7280", fontSize: 11 }}
-              onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")} onMouseLeave={e => (e.currentTarget.style.background = "none")}>
+          {selVal && (
+            <button onClick={() => { setCellVal(selectMenu.rowId, selectMenu.colId, undefined); setSelectMenu(null); }}
+              style={{ ...mBtn, color: "#6b7280", fontSize: 11 }} onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")} onMouseLeave={e => (e.currentTarget.style.background = "none")}>
               <X style={{ width: 10, height: 10 }} /> Clear
             </button>
           )}
           <div style={{ overflowY: "auto", flex: 1, padding: "0 8px 4px" }}>
-            {filteredOpts.map(opt => {
+            {filtOpts.map(opt => {
               const c = SELECT_COLORS[opt.color] ?? SELECT_COLORS.gray;
-              const isSel = activeSelectVal === opt.id;
+              const isSel = selVal === opt.id;
               return (
-                <button key={opt.id} onClick={() => { setCellValue(selectMenu.rowId, selectMenu.colId, isSel ? undefined : opt.id); setSelectMenu(null); }}
+                <button key={opt.id} onClick={() => { setCellVal(selectMenu.rowId, selectMenu.colId, isSel ? undefined : opt.id); setSelectMenu(null); }}
                   style={{ width: "100%", textAlign: "left", padding: "4px 6px", borderRadius: 6, border: "none", background: isSel ? "#f0f9ff" : "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 6, marginBottom: 2 }}
                   onMouseEnter={e => (e.currentTarget.style.background = isSel ? "#e0f2fe" : "#f9fafb")}
                   onMouseLeave={e => (e.currentTarget.style.background = isSel ? "#f0f9ff" : "none")}>
                   <span style={{ display: "inline-flex", padding: "1px 8px", borderRadius: 12, background: c.bg, color: c.text, border: `1px solid ${c.border}`, fontSize: 11, fontWeight: 500 }}>{opt.label}</span>
-                  {isSel && <Check style={{ width: 12, height: 12, marginLeft: "auto", color: "#3b82f6", flexShrink: 0 }} />}
+                  {isSel && <Check style={{ width: 12, height: 12, marginLeft: "auto", color: "#3b82f6" }} />}
                 </button>
               );
             })}
             {selectSearch.trim() && (
               <button onClick={() => {
-                const ex = activeSelectCol.options?.find(o => o.label.toLowerCase() === selectSearch.toLowerCase());
-                if (ex) { setCellValue(selectMenu.rowId, selectMenu.colId, ex.id); }
-                else { const id = addSelectOption(selectMenu.colId, selectSearch.trim(), nextColor); setTimeout(() => setCellValue(selectMenu.rowId, selectMenu.colId, id), 10); }
+                const ex = selCol.options?.find(o => o.label.toLowerCase() === selectSearch.toLowerCase());
+                if (ex) setCellVal(selectMenu.rowId, selectMenu.colId, ex.id);
+                else { const id = addSelectOpt(selectMenu.colId, selectSearch.trim(), nextColor); setTimeout(() => setCellVal(selectMenu.rowId, selectMenu.colId, id), 10); }
                 setSelectMenu(null); setSelectSearch("");
               }}
                 style={{ width: "100%", textAlign: "left", padding: "5px 8px", borderRadius: 6, border: "none", background: "none", cursor: "pointer", fontSize: 12, color: "#374151", display: "flex", alignItems: "center", gap: 6 }}
                 onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")} onMouseLeave={e => (e.currentTarget.style.background = "none")}>
                 <Plus style={{ width: 12, height: 12, color: "#6b7280" }} />
-                {filteredOpts.length === 0 ? `Create "${selectSearch}"` : `Create: "${selectSearch}"`}
+                {filtOpts.length === 0 ? `Create "${selectSearch}"` : `Create: "${selectSearch}"`}
               </button>
             )}
-            {filteredOpts.length === 0 && !selectSearch.trim() && (
-              <div style={{ padding: "8px 4px", fontSize: 12, color: "#9ca3af", textAlign: "center" }}>No options yet. Type to create.</div>
+            {filtOpts.length === 0 && !selectSearch.trim() && (
+              <div style={{ padding: "8px 4px", fontSize: 12, color: "#9ca3af", textAlign: "center" }}>No options. Type to create.</div>
             )}
           </div>
-          <div style={{ padding: "6px 8px 4px", borderTop: "1px solid #f3f4f6", display: "flex", gap: 4, flexWrap: "wrap", alignItems: "center" }}>
+          <div style={{ padding: "6px 8px 4px", borderTop: "1px solid #f3f4f6", display: "flex", gap: 4, alignItems: "center", flexWrap: "wrap" }}>
             <span style={{ fontSize: 10, color: "#9ca3af", marginRight: 2 }}>Colors:</span>
             {COLOR_NAMES.map(cn => {
               const c = SELECT_COLORS[cn];
               return (
                 <button key={cn} title={cn} onClick={() => {
-                  if (selectSearch.trim()) {
-                    const id = addSelectOption(selectMenu.colId, selectSearch.trim(), cn);
-                    setTimeout(() => setCellValue(selectMenu.rowId, selectMenu.colId, id), 10);
-                    setSelectMenu(null); setSelectSearch("");
-                  }
+                  if (selectSearch.trim()) { const id = addSelectOpt(selectMenu.colId, selectSearch.trim(), cn); setTimeout(() => setCellVal(selectMenu.rowId, selectMenu.colId, id), 10); setSelectMenu(null); setSelectSearch(""); }
                 }}
                   style={{ width: 18, height: 18, borderRadius: "50%", background: c.bg, border: `2px solid ${c.border}`, cursor: "pointer", flexShrink: 0 }} />
               );
