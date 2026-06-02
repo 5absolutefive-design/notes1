@@ -397,6 +397,113 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     return () => container.removeEventListener("scroll", updateLastTodoPos);
   }, [updateLastTodoPos]);
 
+  // ── Table border drag-to-resize ──────────────────────────────────
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+
+    const THRESHOLD = 6; // px from border edge to trigger resize
+
+    type ColState = { table: HTMLTableElement; colIdx: number; startX: number; startWidths: number[] };
+    type RowState = { row: HTMLTableRowElement; startY: number; startH: number };
+    let colState: ColState | null = null;
+    let rowState: RowState | null = null;
+
+    function getCellAt(e: MouseEvent): HTMLTableCellElement | null {
+      let el = e.target as Element | null;
+      while (el && el !== editor) {
+        if (el.tagName === "TD" || el.tagName === "TH") return el as HTMLTableCellElement;
+        el = el.parentElement;
+      }
+      return null;
+    }
+
+    function getResizeEdge(e: MouseEvent, cell: HTMLTableCellElement): "col" | "row" | null {
+      const r = cell.getBoundingClientRect();
+      const nearRight  = Math.abs(e.clientX - r.right)  <= THRESHOLD;
+      const nearBottom = Math.abs(e.clientY - r.bottom) <= THRESHOLD;
+      if (nearRight)  return "col";
+      if (nearBottom) return "row";
+      return null;
+    }
+
+    function onMouseMove(e: MouseEvent) {
+      // During active resize
+      if (colState) {
+        const dx = e.clientX - colState.startX;
+        const table = colState.table;
+        for (let i = 0; i < table.rows.length; i++) {
+          const cell = table.rows[i].cells[colState.colIdx];
+          if (cell) cell.style.width = Math.max(40, colState.startWidths[i] + dx) + "px";
+        }
+        return;
+      }
+      if (rowState) {
+        const dy = e.clientY - rowState.startY;
+        const newH = Math.max(24, rowState.startH + dy);
+        rowState.row.style.height = newH + "px";
+        Array.from(rowState.row.cells).forEach(c => { c.style.height = newH + "px"; });
+        return;
+      }
+      // Hover: change cursor
+      const cell = getCellAt(e);
+      if (!cell) { editor.style.cursor = ""; return; }
+      const edge = getResizeEdge(e, cell);
+      editor.style.cursor = edge === "col" ? "col-resize" : edge === "row" ? "row-resize" : "";
+    }
+
+    function onMouseDown(e: MouseEvent) {
+      const cell = getCellAt(e);
+      if (!cell) return;
+      const edge = getResizeEdge(e, cell);
+      if (!edge) return;
+      e.preventDefault();
+      e.stopPropagation();
+      document.body.style.userSelect = "none";
+
+      if (edge === "col") {
+        const table = cell.closest("table") as HTMLTableElement;
+        const cells = Array.from(cell.parentElement!.children) as HTMLTableCellElement[];
+        const colIdx = cells.indexOf(cell);
+        const startWidths: number[] = [];
+        for (let i = 0; i < table.rows.length; i++) {
+          const c = table.rows[i].cells[colIdx];
+          startWidths.push(c ? c.getBoundingClientRect().width : 120);
+        }
+        colState = { table, colIdx, startX: e.clientX, startWidths };
+        document.body.style.cursor = "col-resize";
+      } else {
+        const row = cell.parentElement as HTMLTableRowElement;
+        rowState = { row, startY: e.clientY, startH: row.getBoundingClientRect().height };
+        document.body.style.cursor = "row-resize";
+      }
+    }
+
+    function onMouseUp() {
+      if (colState || rowState) {
+        colState = null;
+        rowState = null;
+        document.body.style.userSelect = "";
+        document.body.style.cursor = "";
+        editor.style.cursor = "";
+        // Trigger save after resize
+        if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+        saveTimerRef.current = setTimeout(saveContent, 400);
+      }
+    }
+
+    editor.addEventListener("mousemove", onMouseMove);
+    editor.addEventListener("mousedown", onMouseDown);
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+    return () => {
+      editor.removeEventListener("mousemove", onMouseMove);
+      editor.removeEventListener("mousedown", onMouseDown);
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+  }, [activeId, saveContent]);
+
   // ── Insert a new todo immediately after the last existing todo item (for inline + button)
   const appendTodoAtEnd = useCallback(() => {
     const editor = editorRef.current;
