@@ -378,6 +378,53 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
       const urlEl = linkBlock.querySelector('[data-link-url]');
       const url = urlEl?.textContent?.trim() ?? "";
       if (url && url !== "Paste link here…") window.open(url, "_blank");
+      return;
+    }
+
+    // Clicking on empty editor space (below content) → add paragraphs to reach click position
+    if (target === editorRef.current) {
+      const editor = editorRef.current;
+      if (!editor) return;
+      editor.focus();
+
+      // Measure how far the click is below the last content node
+      const editorRect = editor.getBoundingClientRect();
+      const clickY = e.clientY;
+
+      // Find the bottom of the last child element (or top of editor if empty)
+      let lastBottom = editorRect.top;
+      const children = Array.from(editor.childNodes);
+      for (const child of children) {
+        if (child.nodeType === Node.ELEMENT_NODE) {
+          const rect = (child as Element).getBoundingClientRect();
+          if (rect.bottom > lastBottom) lastBottom = rect.bottom;
+        }
+      }
+
+      // Compute how many empty lines to insert based on click position vs last content bottom
+      const lineHeight = 26; // approx line height in px
+      const gap = clickY - lastBottom;
+      if (gap > lineHeight / 2) {
+        const linesToAdd = Math.max(1, Math.round(gap / lineHeight));
+        let html = "";
+        for (let i = 0; i < linesToAdd; i++) html += "<p><br></p>";
+        // Insert at end
+        const range = document.createRange();
+        range.selectNodeContents(editor);
+        range.collapse(false);
+        const sel = window.getSelection();
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+        document.execCommand("insertHTML", false, html);
+        debouncedSave();
+      } else {
+        // Click is close to content — just place cursor at end
+        const range = document.createRange();
+        range.selectNodeContents(editor);
+        range.collapse(false);
+        window.getSelection()?.removeAllRanges();
+        window.getSelection()?.addRange(range);
+      }
     }
   };
 
