@@ -132,7 +132,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const [imageBlocks, setImageBlocks] = useState<ImageBlock[]>([]);
   const imgInputRef = useRef<HTMLInputElement>(null);
   const dragRef = useRef<{ id: string; startMx: number; startMy: number; startBx: number; startBy: number } | null>(null);
-  const resizeRef = useRef<{ id: string; startMx: number; startW: number; side: "br" | "bl" | "tr" | "tl" } | null>(null);
+  const resizeRef = useRef<{ id: string; startMx: number; startW: number; startBx: number; side: "br" | "bl" | "tr" | "tl" } | null>(null);
 
   const activeProject = projects.find(p => p.id === activeId) ?? null;
 
@@ -160,10 +160,21 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           : b));
       }
       if (resizeRef.current) {
-        const { id, startMx, startW, side } = resizeRef.current;
-        const delta = side === "br" || side === "tr" ? e.clientX - startMx : startMx - e.clientX;
-        const newW = Math.max(80, startW + delta);
-        setImageBlocks(prev => prev.map(b => b.id === id ? { ...b, width: newW } : b));
+        const { id, startMx, startW, startBx, side } = resizeRef.current;
+        if (side === "bl" || side === "tl") {
+          // Left handle: right edge stays fixed, left edge + x moves
+          const delta = startMx - e.clientX; // drag left = positive = grow
+          const newW = Math.max(80, startW + delta);
+          const safeBx = isNaN(startBx) ? 0 : startBx;
+          const rightEdge = safeBx + startW;
+          const newX = rightEdge - newW;
+          setImageBlocks(prev => prev.map(b => b.id === id ? { ...b, width: newW, x: newX } : b));
+        } else {
+          // Right handle: left edge stays fixed, right edge moves
+          const delta = e.clientX - startMx; // drag right = positive = grow
+          const newW = Math.max(80, startW + delta);
+          setImageBlocks(prev => prev.map(b => b.id === id ? { ...b, width: newW } : b));
+        }
       }
     };
     const onUp = () => { dragRef.current = null; resizeRef.current = null; };
@@ -899,7 +910,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                     onMouseDown={e => {
                       e.preventDefault();
                       e.stopPropagation();
-                      resizeRef.current = { id: blk.id, startMx: e.clientX, startW: blk.width, side };
+                      resizeRef.current = { id: blk.id, startMx: e.clientX, startW: blk.width, startBx: blk.x, side };
                     }}
                     style={{
                       position: "absolute",
