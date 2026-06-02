@@ -176,7 +176,6 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const [lastTodoPos, setLastTodoPos] = useState<{ top: number; left: number } | null>(null);
   const [showTodoButtons, setShowTodoButtons] = useState(false);
   const [tableToolbar, setTableToolbar] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
-  const [showTableBtns, setShowTableBtns] = useState(false);
   const activeTableRef = useRef<HTMLTableElement | null>(null);
   const [imageBlocks, setImageBlocks] = useState<ImageBlock[]>([]);
   const imgInputRef = useRef<HTMLInputElement>(null);
@@ -1002,11 +1001,11 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             const tbl = (e.target as Element).closest("table") as HTMLTableElement | null;
             if (tbl !== activeTableRef.current) {
               activeTableRef.current = tbl;
-              if (tbl) { updateTableToolbar(); setShowTableBtns(true); }
-              else setShowTableBtns(false);
+              if (tbl) { updateTableToolbar(); }
+              else setTableToolbar(null);
             }
           }}
-          onMouseLeave={() => { setShowTodoButtons(false); setEraserPos(null); setShowTableBtns(false); }}
+          onMouseLeave={() => { setShowTodoButtons(false); setEraserPos(null); setTableToolbar(null); activeTableRef.current = null; }}
         >
 
           {/* Inline +/- buttons next to last todo item */}
@@ -1045,41 +1044,39 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             </div>
           )}
           {/* Table +/- row & column buttons */}
-          {tableToolbar && showTableBtns && (
+          {tableToolbar && (
             <>
               {/* Row buttons — below the table */}
               <div
-                onMouseEnter={() => setShowTableBtns(true)}
-                onMouseLeave={() => setShowTableBtns(false)}
-                style={{ position: "absolute", top: tableToolbar.top + tableToolbar.height + 6, left: tableToolbar.left + 4, display: "flex", flexDirection: "column", gap: 3, zIndex: 200, pointerEvents: "auto" }}>
+                onMouseEnter={() => { activeTableRef.current = activeTableRef.current; }}
+                style={{ position: "absolute", top: tableToolbar.top + tableToolbar.height + 2, left: tableToolbar.left + 4, display: "flex", flexDirection: "column", gap: 4, zIndex: 200, pointerEvents: "auto" }}>
                 <button
                   onMouseDown={e => { e.preventDefault(); tableRemoveRow(); }}
                   title="Remove last row"
-                  style={{ width: 20, height: 20, borderRadius: 4, border: "1px solid #e7e5e4", background: "#fafaf8", color: "#374151", fontSize: 13, fontWeight: 700, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+                  style={{ width: 24, height: 24, borderRadius: 8, border: "1px solid #e7e5e4", background: "#fafaf8", color: "#374151", fontSize: 14, fontWeight: 700, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
                   onMouseEnter={e => { const t = e.currentTarget; t.style.background = "#fee2e2"; t.style.color = "#dc2626"; }}
                   onMouseLeave={e => { const t = e.currentTarget; t.style.background = "#fafaf8"; t.style.color = "#374151"; }}>−</button>
                 <button
                   onMouseDown={e => { e.preventDefault(); tableAddRow(); }}
                   title="Add row"
-                  style={{ width: 20, height: 20, borderRadius: 4, border: "1px solid #e7e5e4", background: "#fafaf8", color: "#374151", fontSize: 13, fontWeight: 700, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+                  style={{ width: 24, height: 24, borderRadius: 8, border: "1px solid #e7e5e4", background: "#fafaf8", color: "#374151", fontSize: 14, fontWeight: 700, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
                   onMouseEnter={e => { const t = e.currentTarget; t.style.background = "#dcfce7"; t.style.color = "#16a34a"; }}
                   onMouseLeave={e => { const t = e.currentTarget; t.style.background = "#fafaf8"; t.style.color = "#374151"; }}>+</button>
               </div>
               {/* Column buttons — right of the table */}
               <div
-                onMouseEnter={() => setShowTableBtns(true)}
-                onMouseLeave={() => setShowTableBtns(false)}
-                style={{ position: "absolute", top: tableToolbar.top + 4, left: tableToolbar.left + tableToolbar.width + 6, display: "flex", flexDirection: "column", gap: 3, zIndex: 200, pointerEvents: "auto" }}>
+                onMouseEnter={() => { activeTableRef.current = activeTableRef.current; }}
+                style={{ position: "absolute", top: tableToolbar.top + 4, left: tableToolbar.left + tableToolbar.width + 2, display: "flex", flexDirection: "column", gap: 4, zIndex: 200, pointerEvents: "auto" }}>
                 <button
                   onMouseDown={e => { e.preventDefault(); tableRemoveCol(); }}
                   title="Remove last column"
-                  style={{ width: 20, height: 20, borderRadius: 4, border: "1px solid #e7e5e4", background: "#fafaf8", color: "#374151", fontSize: 13, fontWeight: 700, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+                  style={{ width: 24, height: 24, borderRadius: 8, border: "1px solid #e7e5e4", background: "#fafaf8", color: "#374151", fontSize: 14, fontWeight: 700, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
                   onMouseEnter={e => { const t = e.currentTarget; t.style.background = "#fee2e2"; t.style.color = "#dc2626"; }}
                   onMouseLeave={e => { const t = e.currentTarget; t.style.background = "#fafaf8"; t.style.color = "#374151"; }}>−</button>
                 <button
                   onMouseDown={e => { e.preventDefault(); tableAddCol(); }}
                   title="Add column"
-                  style={{ width: 20, height: 20, borderRadius: 4, border: "1px solid #e7e5e4", background: "#fafaf8", color: "#374151", fontSize: 13, fontWeight: 700, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+                  style={{ width: 24, height: 24, borderRadius: 8, border: "1px solid #e7e5e4", background: "#fafaf8", color: "#374151", fontSize: 14, fontWeight: 700, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
                   onMouseEnter={e => { const t = e.currentTarget; t.style.background = "#dcfce7"; t.style.color = "#16a34a"; }}
                   onMouseLeave={e => { const t = e.currentTarget; t.style.background = "#fafaf8"; t.style.color = "#374151"; }}>+</button>
               </div>
