@@ -125,8 +125,17 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
 
   // ── Load content into editor + title when switching projects
   useEffect(() => {
-    if (editorRef.current)
-      editorRef.current.innerHTML = activeProject?.content || "";
+    if (editorRef.current) {
+      // Strip any legacy inline onclick from old remove buttons (now handled by event delegation)
+      const sanitized = (activeProject?.content || "")
+        .replace(/ onclick="[^"]*this\.closest[^"]*"/g, "");
+      editorRef.current.innerHTML = sanitized;
+      // Ensure all remove buttons have the data attr so event delegation catches them
+      editorRef.current.querySelectorAll('[data-quote-block] button,[data-link-block] button').forEach(btn => {
+        btn.setAttribute("data-remove-btn", "1");
+        (btn as HTMLElement).removeAttribute("onclick");
+      });
+    }
     if (titleRef.current)
       titleRef.current.textContent = activeProject?.title || "";
   }, [activeId]);
@@ -345,15 +354,36 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     setCtxMenu(null);
   };
 
-  const removeBtn = (attr: string) =>
-    `<button contenteditable="false" onclick="event.stopPropagation();this.closest(String.fromCharCode(91)+&quot;${attr}&quot;+String.fromCharCode(93)).remove()" ` +
-    `onmouseover="this.style.background='rgba(0,0,0,0.18)'" onmouseout="this.style.background='rgba(0,0,0,0.08)'" ` +
+  const removeBtn = () =>
+    `<button data-remove-btn="1" contenteditable="false" ` +
     `style="position:absolute;top:5px;right:6px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.08);border:none;cursor:pointer;font-size:14px;color:#777;line-height:1;padding:0;display:inline-flex;align-items:center;justify-content:center;z-index:10;flex-shrink:0" ` +
     `title="Remove">&#215;</button>`;
 
+  const handleEditorClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+
+    // Remove button clicked → delete the parent block
+    const removeButton = target.closest('[data-remove-btn]');
+    if (removeButton) {
+      e.preventDefault();
+      e.stopPropagation();
+      const block = removeButton.closest('[data-quote-block],[data-link-block]');
+      if (block) { block.remove(); debouncedSave(); }
+      return;
+    }
+
+    // Link block clicked (not on the URL span) → open the URL
+    const linkBlock = target.closest('[data-link-block]') as HTMLElement | null;
+    if (linkBlock && !target.closest('[data-link-url]') && !target.closest('[data-remove-btn]')) {
+      const urlEl = linkBlock.querySelector('[data-link-url]');
+      const url = urlEl?.textContent?.trim() ?? "";
+      if (url && url !== "Paste link here…") window.open(url, "_blank");
+    }
+  };
+
   const insertBorderBlock = () => insertHTML(
     `<div contenteditable="false" data-quote-block="1" style="position:relative;border-left:4px solid #6366f1;background:#f5f3ff;padding:10px 36px 10px 16px;border-radius:0 8px 8px 0;margin:8px 0">` +
-    removeBtn("data-quote-block") +
+    removeBtn() +
     `<p contenteditable="true" style="margin:0;color:#4c1d95;font-style:italic;outline:none">Type your note here…</p></div><br/>`
   );
 
@@ -368,9 +398,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     const cfg = configs[type] ?? configs.unknown;
     insertHTML(
       `<div contenteditable="false" data-link-block="1" ` +
-      `onclick="const u=this.querySelector('[data-link-url]').textContent.trim();if(u&&u!=='Paste link here…')window.open(u,'_blank')" ` +
       `style="position:relative;display:flex;align-items:center;gap:10px;border-left:4px solid ${cfg.color};background:${cfg.bg};padding:10px 36px 10px 14px;border-radius:0 8px 8px 0;margin:8px 0;cursor:pointer;user-select:none">` +
-      removeBtn("data-link-block") +
+      removeBtn() +
       `<span style="font-size:15px;flex-shrink:0">${cfg.icon}</span>` +
       `<div style="flex:1;min-width:0">` +
       `<div style="font-size:10px;font-weight:700;color:${cfg.color};text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px">${cfg.label}</div>` +
@@ -619,6 +648,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             onInput={debouncedSave}
             onKeyDown={handleEditorKeyDown}
             onContextMenu={handleContextMenu}
+            onClick={handleEditorClick}
             className="outline-none text-stone-800 text-[15px] leading-relaxed"
             style={{
               fontFamily: "Georgia, 'Times New Roman', serif",
