@@ -95,7 +95,7 @@ export function MinimalClean() {
 
                 {/* Children */}
                 {isOpen && project.children && project.children.length > 0 && (
-                  <div className="ml-4 border-l border-gray-100 pl-2 mb-0.5">
+                  <div className="ml-4 border-l-2 border-indigo-200 pl-2 mb-0.5">
                     {project.children.map((child) => (
                       <div
                         key={child.id}
