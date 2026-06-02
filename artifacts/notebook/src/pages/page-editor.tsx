@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight, Trash2, ArchiveRestore, X, RotateCcw } from 
 import { useState, useEffect, useRef, useCallback, type MutableRefObject } from "react";
 import { createPortal } from "react-dom";
 import { store, type Book, type Page, type PageType, type FloatingImage } from "@/lib/store";
+import { NotionTable } from "@/components/notion-table";
 
 function PortalPopup({ anchorRef, open, children, align = "left" }: {
   anchorRef: { current: HTMLElement | null };
@@ -3027,52 +3028,17 @@ export default function PageEditor() {
                 )}
               </div>
             ) : pageType === "table" ? (
-              <div key="table" className="w-full h-full bg-white overflow-auto">
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minWidth: "100%", minHeight: "100%", padding: "24px", boxSizing: "border-box" }}>
-                <div style={{ transform: `scale(${zoom / 100})`, transformOrigin: "center center" }}>
+              <div key="table" className="w-full h-full flex flex-col overflow-hidden bg-white">
                 {contentReadyForPid === pId && (
-                  <SpreadsheetEditor
+                  <NotionTable
                     key={pId}
-                    tableMode
                     content={content}
-                    mergeRef={spreadsheetMergeRef}
-                    clearRef={spreadsheetClearRef}
-                    cutRef={spreadsheetCutRef}
-                    cutAllRef={spreadsheetCutAllRef}
-                    insertRowRef={spreadsheetInsertRowRef}
-                    insertColRef={spreadsheetInsertColRef}
-                    colWidthIncRef={spreadsheetCWIncRef}
-                    colWidthDecRef={spreadsheetCWDecRef}
-                    rowHeightIncRef={spreadsheetCTIncRef}
-                    rowHeightDecRef={spreadsheetCTDecRef}
-                    resizeTableRef={tableResizeRef}
-                    addRowRef={tableAddRowRef}
-                    removeRowRef={tableRemoveRowRef}
-                    addColRef={tableAddColRef}
-                    removeColRef={tableRemoveColRef}
-                    onActiveSizeChange={setActiveSheetSizes}
-                    onMergeStateChange={(isMerged, hasSelection) => setMergeState({ isMerged, hasSelection })}
-                    cellBorderRef={spreadsheetCellBorderRef}
-                    cellAlignRef={spreadsheetSetAlignRef}
-                    onActiveCellAlignChange={setAlign}
-                    cellValignRef={spreadsheetSetValignRef}
-                    onActiveCellValignChange={setValign}
-                    cellFormatRef={spreadsheetSetFormatRef}
-                    onActiveCellFormatChange={(fmt) => {
-                      setActiveFormats({ bold: !!fmt.bold, italic: !!fmt.italic, underline: !!fmt.underline, strikeThrough: !!fmt.strikeThrough, overline: !!fmt.overline });
-                      if (fmt.fontColor) setFontColor(fmt.fontColor);
-                      if (fmt.highlightColor) setHighlightColor(fmt.highlightColor);
-                      if (fmt.fontSize) setFontSize(fmt.fontSize);
-                      if (fmt.fontFamily) setFont(fmt.fontFamily);
-                    }}
                     onChange={(v) => {
                       setContent(v);
                       setSaveStatus("saving");
                     }}
                   />
                 )}
-                </div>
-                </div>
               </div>
             ) : pageType === "lined" ? (
               <div key="lined" className="flex w-full" style={{ minHeight: 500 * lineHeightPx, backgroundColor: "#ffffff", zoom: zoom / 100, transformOrigin: "top left" }}>

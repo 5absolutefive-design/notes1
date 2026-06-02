@@ -4,7 +4,7 @@ import {
   Bold, Italic, Underline, Strikethrough, Highlighter,
   CheckSquare, Minus, Heading1, Heading2, Heading3,
   AlignLeft, AlignCenter, AlignRight, List, ListOrdered,
-  ChevronRight, Link, Mic, PenLine, Eraser,
+  ChevronRight, Link, Mic, PenLine, Eraser, Table,
 } from "lucide-react";
 
 // ── Types (exported for use in home.tsx) ─────────────────────────
@@ -508,6 +508,18 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     const toRemove = Array.from(items).slice(-count);
     toRemove.forEach(el => el.remove());
     saveContent();
+    setCtxMenu(null);
+  };
+
+  const insertTable = () => {
+    const thStyle = `background:#f9fafb;padding:6px 10px;text-align:left;font-size:12px;font-weight:600;color:#374151;border:1px solid #e5e7eb;border-bottom:2px solid #111827;min-width:120px`;
+    const tdStyle = `padding:6px 10px;border:1px solid #e5e7eb;min-width:120px;font-size:13px;color:#1f2937`;
+    const headers = ["Column 1", "Column 2", "Column 3", "Column 4"];
+    const ths = headers.map(h => `<th style="${thStyle}" contenteditable="true">${h}</th>`).join("");
+    const tds = headers.map(() => `<td style="${tdStyle}" contenteditable="true"><br/></td>`).join("");
+    const rows = [tds, tds, tds].map(r => `<tr>${r}</tr>`).join("");
+    const tableHtml = `<br/><table style="border-collapse:collapse;width:100%;margin:8px 0;border-top:2px solid #111827;border-left:1px solid #e5e7eb"><thead><tr>${ths}</tr></thead><tbody>${rows}</tbody></table><br/>`;
+    insertHTML(tableHtml);
     setCtxMenu(null);
   };
 
@@ -1192,6 +1204,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           <div className="my-1 border-t border-stone-100" />
           <CtxSection label="Insert" />
           <CtxItem icon={<CheckSquare className="w-3.5 h-3.5"/>} label="To-Do Item" onClick={() => { insertTodo(); setCtxMenu(null); }} />
+          <CtxItem icon={<Table className="w-3.5 h-3.5"/>} label="Table" onClick={() => { insertTable(); setCtxMenu(null); }} />
           {/* Bullet List → side sub-card with many styles */}
           <div className="relative">
             <CtxItem icon={<List className="w-3.5 h-3.5"/>} label="Bullet List" hasArrow
