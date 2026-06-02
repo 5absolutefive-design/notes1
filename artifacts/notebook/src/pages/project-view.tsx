@@ -818,6 +818,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           {imageBlocks.map(blk => (
             <div
               key={blk.id}
+              className={blk.locked ? "img-blk-locked" : ""}
               style={{
                 position: "absolute",
                 left: blk.x,
@@ -874,6 +875,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 {/* Lock button — top-right */}
                 <button
                   data-img-btn="1"
+                  className="img-lock-btn"
                   onClick={() => setImageBlocks(prev => prev.map(b => b.id === blk.id ? { ...b, locked: !b.locked } : b))}
                   style={{
                     position: "absolute", top: -10, right: -10,
@@ -882,6 +884,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                     border: "2px solid #fff",
                     cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
                     boxShadow: "0 1px 4px rgba(0,0,0,0.18)", zIndex: 30, padding: 0,
+                    transition: "opacity 0.2s",
                   }}
                   title={blk.locked ? "Unlock" : "Lock position"}
                 >
@@ -1111,6 +1114,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
         [contenteditable] h3 { font-size: 1.2em; font-weight: 600; margin: 0.4em 0 0.2em; line-height: 1.4; }
         [contenteditable] ul { list-style-type: disc; padding-left: 1.5em; margin: 4px 0; }
         [contenteditable] ol { list-style-type: decimal; padding-left: 1.5em; margin: 4px 0; }
+        .img-blk-locked .img-lock-btn { opacity: 0; }
+        .img-blk-locked:hover .img-lock-btn { opacity: 1; }
       `}</style>
     </div>
   );
