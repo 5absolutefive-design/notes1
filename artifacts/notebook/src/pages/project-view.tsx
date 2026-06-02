@@ -175,6 +175,9 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [lastTodoPos, setLastTodoPos] = useState<{ top: number; left: number } | null>(null);
   const [showTodoButtons, setShowTodoButtons] = useState(false);
+  const [tableToolbar, setTableToolbar] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
+  const [showTableBtns, setShowTableBtns] = useState(false);
+  const activeTableRef = useRef<HTMLTableElement | null>(null);
   const [imageBlocks, setImageBlocks] = useState<ImageBlock[]>([]);
   const imgInputRef = useRef<HTMLInputElement>(null);
   const voiceInputRef = useRef<HTMLInputElement>(null);
@@ -396,6 +399,21 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     container.addEventListener("scroll", updateLastTodoPos);
     return () => container.removeEventListener("scroll", updateLastTodoPos);
   }, [updateLastTodoPos]);
+
+  // ── Table toolbar position tracker ───────────────────────────────
+  const updateTableToolbar = useCallback(() => {
+    const table = activeTableRef.current;
+    const container = scrollContainerRef.current;
+    if (!table || !container) { setTableToolbar(null); return; }
+    const tr = table.getBoundingClientRect();
+    const cr = container.getBoundingClientRect();
+    setTableToolbar({
+      top: tr.top - cr.top + container.scrollTop,
+      left: tr.left - cr.left,
+      width: tr.width,
+      height: tr.height,
+    });
+  }, []);
 
   // ── Table border drag-to-resize ──────────────────────────────────
   useEffect(() => {
@@ -640,6 +658,51 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     const tableHtml = `<br/><table style="border-collapse:collapse;width:100%;margin:8px 0;border-left:1.5px solid #b0b7c3"><thead><tr>${ths}</tr></thead><tbody>${rows}</tbody></table><br/>`;
     insertHTML(tableHtml);
     setCtxMenu(null);
+  };
+
+  const TH_STYLE = `background:#f9fafb;padding:6px 10px;text-align:left;font-size:12px;font-weight:600;color:#374151;border:1.5px solid #b0b7c3;border-top:none;border-bottom:3px double #b0b7c3;min-width:120px`;
+  const TD_STYLE = `padding:6px 10px;border:1.5px solid #b0b7c3;min-width:120px;font-size:13px;color:#1f2937`;
+
+  const tableAddRow = () => {
+    const table = activeTableRef.current; if (!table) return;
+    const tbody = table.querySelector("tbody"); if (!tbody) return;
+    const colCount = table.rows[0]?.cells.length ?? 4;
+    const tr = document.createElement("tr");
+    for (let i = 0; i < colCount; i++) {
+      const td = document.createElement("td");
+      td.setAttribute("style", TD_STYLE); td.setAttribute("contenteditable", "true"); td.innerHTML = "<br/>";
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr); saveContent(); updateTableToolbar();
+  };
+
+  const tableRemoveRow = () => {
+    const table = activeTableRef.current; if (!table) return;
+    const tbody = table.querySelector("tbody"); if (!tbody || tbody.rows.length === 0) return;
+    tbody.removeChild(tbody.rows[tbody.rows.length - 1]); saveContent(); updateTableToolbar();
+  };
+
+  const tableAddCol = () => {
+    const table = activeTableRef.current; if (!table) return;
+    for (let i = 0; i < table.rows.length; i++) {
+      const row = table.rows[i];
+      const isHead = row.parentElement?.tagName === "THEAD";
+      const cell = document.createElement(isHead ? "th" : "td");
+      cell.setAttribute("style", isHead ? TH_STYLE : TD_STYLE);
+      cell.setAttribute("contenteditable", "true");
+      cell.innerHTML = isHead ? `Column ${row.cells.length + 1}` : "<br/>";
+      row.appendChild(cell);
+    }
+    saveContent(); updateTableToolbar();
+  };
+
+  const tableRemoveCol = () => {
+    const table = activeTableRef.current; if (!table) return;
+    for (let i = 0; i < table.rows.length; i++) {
+      const row = table.rows[i];
+      if (row.cells.length > 1) row.removeChild(row.cells[row.cells.length - 1]);
+    }
+    saveContent(); updateTableToolbar();
   };
 
   const insertDividerStyle = (style: string) => {
@@ -935,8 +998,15 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
               const dy = my - lastTodoPos.top;
               setShowTodoButtons(Math.abs(dx) < 80 && Math.abs(dy) < 40);
             }
+            // Track active table for +/- toolbar
+            const tbl = (e.target as Element).closest("table") as HTMLTableElement | null;
+            if (tbl !== activeTableRef.current) {
+              activeTableRef.current = tbl;
+              if (tbl) { updateTableToolbar(); setShowTableBtns(true); }
+              else setShowTableBtns(false);
+            }
           }}
-          onMouseLeave={() => { setShowTodoButtons(false); setEraserPos(null); }}
+          onMouseLeave={() => { setShowTodoButtons(false); setEraserPos(null); setShowTableBtns(false); }}
         >
 
           {/* Inline +/- buttons next to last todo item */}
@@ -974,6 +1044,48 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
               >+</button>
             </div>
           )}
+          {/* Table +/- row & column buttons */}
+          {tableToolbar && showTableBtns && (
+            <>
+              {/* Row buttons — below the table */}
+              <div
+                onMouseEnter={() => setShowTableBtns(true)}
+                onMouseLeave={() => setShowTableBtns(false)}
+                style={{ position: "absolute", top: tableToolbar.top + tableToolbar.height + 6, left: tableToolbar.left + 4, display: "flex", flexDirection: "column", gap: 3, zIndex: 200, pointerEvents: "auto" }}>
+                <button
+                  onMouseDown={e => { e.preventDefault(); tableRemoveRow(); }}
+                  title="Remove last row"
+                  style={{ width: 20, height: 20, borderRadius: 4, border: "1px solid #e7e5e4", background: "#fafaf8", color: "#374151", fontSize: 13, fontWeight: 700, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+                  onMouseEnter={e => { const t = e.currentTarget; t.style.background = "#fee2e2"; t.style.color = "#dc2626"; }}
+                  onMouseLeave={e => { const t = e.currentTarget; t.style.background = "#fafaf8"; t.style.color = "#374151"; }}>−</button>
+                <button
+                  onMouseDown={e => { e.preventDefault(); tableAddRow(); }}
+                  title="Add row"
+                  style={{ width: 20, height: 20, borderRadius: 4, border: "1px solid #e7e5e4", background: "#fafaf8", color: "#374151", fontSize: 13, fontWeight: 700, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+                  onMouseEnter={e => { const t = e.currentTarget; t.style.background = "#dcfce7"; t.style.color = "#16a34a"; }}
+                  onMouseLeave={e => { const t = e.currentTarget; t.style.background = "#fafaf8"; t.style.color = "#374151"; }}>+</button>
+              </div>
+              {/* Column buttons — right of the table */}
+              <div
+                onMouseEnter={() => setShowTableBtns(true)}
+                onMouseLeave={() => setShowTableBtns(false)}
+                style={{ position: "absolute", top: tableToolbar.top + 4, left: tableToolbar.left + tableToolbar.width + 6, display: "flex", flexDirection: "column", gap: 3, zIndex: 200, pointerEvents: "auto" }}>
+                <button
+                  onMouseDown={e => { e.preventDefault(); tableRemoveCol(); }}
+                  title="Remove last column"
+                  style={{ width: 20, height: 20, borderRadius: 4, border: "1px solid #e7e5e4", background: "#fafaf8", color: "#374151", fontSize: 13, fontWeight: 700, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+                  onMouseEnter={e => { const t = e.currentTarget; t.style.background = "#fee2e2"; t.style.color = "#dc2626"; }}
+                  onMouseLeave={e => { const t = e.currentTarget; t.style.background = "#fafaf8"; t.style.color = "#374151"; }}>−</button>
+                <button
+                  onMouseDown={e => { e.preventDefault(); tableAddCol(); }}
+                  title="Add column"
+                  style={{ width: 20, height: 20, borderRadius: 4, border: "1px solid #e7e5e4", background: "#fafaf8", color: "#374151", fontSize: 13, fontWeight: 700, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+                  onMouseEnter={e => { const t = e.currentTarget; t.style.background = "#dcfce7"; t.style.color = "#16a34a"; }}
+                  onMouseLeave={e => { const t = e.currentTarget; t.style.background = "#fafaf8"; t.style.color = "#374151"; }}>+</button>
+              </div>
+            </>
+          )}
+
           {/* Banner + emoji overlap wrapper */}
           <div className="relative">
             {/* Banner */}
