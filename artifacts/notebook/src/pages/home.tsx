@@ -1145,12 +1145,42 @@ export default function Home() {
                 {item.id === "project" && isSelected && (
                   <div className="mt-1 flex flex-col gap-0.5">
                     {(() => {
-                      const query = projectSearchQuery.toLowerCase();
-                      const topLevel = projects.filter(p => !p.parentId).filter(p => {
-                        if (!query) return true;
-                        if (p.title.toLowerCase().includes(query)) return true;
-                        return projects.some(c => c.parentId === p.id && c.title.toLowerCase().includes(query));
-                      });
+                      const query = projectSearchQuery.toLowerCase().trim();
+
+                      // ── SEARCH MODE: flat list of all matches ──────────
+                      if (query) {
+                        const matches = projects.filter(p => p.title.toLowerCase().includes(query));
+                        if (matches.length === 0) return (
+                          <p className="text-xs text-stone-400 pl-3 py-1.5">No results for "{projectSearchQuery}"</p>
+                        );
+                        return matches.map(p => {
+                          const parent = p.parentId ? projects.find(pp => pp.id === p.parentId) : null;
+                          return (
+                            <div key={p.id} className="group relative">
+                              <button
+                                onClick={() => { setActiveProjectId(p.id); setActiveView("project"); setProjectSearchActive(false); setProjectSearchQuery(""); }}
+                                className={`w-full flex items-center gap-2 rounded-lg pr-2 py-1.5 transition-all text-left pl-2 ${
+                                  activeProjectId === p.id ? "bg-indigo-50 text-indigo-700 font-medium" : "text-stone-600 hover:bg-stone-50 hover:text-stone-900"
+                                }`}
+                                title={p.title}
+                              >
+                                <span className="w-3 flex-shrink-0 inline-flex items-center justify-center">
+                                  <span className={`w-1.5 h-1.5 rounded-full ${activeProjectId === p.id ? "bg-indigo-500" : "bg-stone-300"}`} />
+                                </span>
+                                {!sidebarCollapsed && (
+                                  <span className="flex flex-col min-w-0 flex-1">
+                                    <span className="text-xs truncate">{p.title}</span>
+                                    {parent && <span className="text-[9px] text-stone-400 truncate">{parent.title}</span>}
+                                  </span>
+                                )}
+                              </button>
+                            </div>
+                          );
+                        });
+                      }
+
+                      // ── NORMAL MODE: tree structure ────────────────────
+                      const topLevel = projects.filter(p => !p.parentId);
 
                       const renderChildRow = (p: ProjectDoc) => (
                         <div key={p.id} className="group relative">
@@ -1197,11 +1227,8 @@ export default function Home() {
 
                       return topLevel.map(p => {
                         const allChildren = projects.filter(c => c.parentId === p.id);
-                        const children = query
-                          ? allChildren.filter(c => c.title.toLowerCase().includes(query))
-                          : allChildren;
                         const hasChildren = allChildren.length > 0;
-                        const isExpanded = query ? children.length > 0 : !!expandedProjects[p.id];
+                        const isExpanded = !!expandedProjects[p.id];
 
                         return (
                           <div key={p.id}>
@@ -1271,7 +1298,7 @@ export default function Home() {
                             {hasChildren && !sidebarCollapsed && (
                               <AnimatedChildren open={isExpanded}>
                                 <div className="ml-2 border-l-2 border-indigo-200 pl-1 mb-0.5">
-                                  {children.map(child => renderChildRow(child))}
+                                  {allChildren.map(child => renderChildRow(child))}
                                 </div>
                               </AnimatedChildren>
                             )}
