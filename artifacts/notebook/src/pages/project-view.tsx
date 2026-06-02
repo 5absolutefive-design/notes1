@@ -177,6 +177,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const [showTodoButtons, setShowTodoButtons] = useState(false);
   const [tableToolbar, setTableToolbar] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
   const [showTableBtns, setShowTableBtns] = useState(false);
+  const [hoverTableBtns, setHoverTableBtns] = useState(false);
   const activeTableRef = useRef<HTMLTableElement | null>(null);
   const tableResizeObserverRef = useRef<ResizeObserver | null>(null);
   const [imageBlocks, setImageBlocks] = useState<ImageBlock[]>([]);
@@ -1062,9 +1063,9 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             <>
               {/* Row buttons — below the table */}
               <div
-                onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.opacity = "1"; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.opacity = showTableBtns ? "1" : "0"; }}
-                style={{ position: "absolute", top: tableToolbar.top + tableToolbar.height + 2, left: tableToolbar.left + 4, display: "flex", flexDirection: "column", gap: 4, zIndex: 200, pointerEvents: "auto", opacity: showTableBtns ? 1 : 0 }}>
+                onMouseEnter={() => setHoverTableBtns(true)}
+                onMouseLeave={() => setHoverTableBtns(false)}
+                style={{ position: "absolute", top: tableToolbar.top + tableToolbar.height + 2, left: tableToolbar.left + 4, display: "flex", flexDirection: "column", gap: 4, zIndex: 200, pointerEvents: "auto", opacity: showTableBtns || hoverTableBtns ? 1 : 0, padding: 12, margin: -12 }}>
                 <button
                   onMouseDown={e => { e.preventDefault(); tableRemoveRow(); }}
                   title="Remove last row"
@@ -1080,9 +1081,9 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
               </div>
               {/* Column buttons — right of the table */}
               <div
-                onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.opacity = "1"; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.opacity = showTableBtns ? "1" : "0"; }}
-                style={{ position: "absolute", top: tableToolbar.top + 4, left: tableToolbar.left + tableToolbar.width + 2, display: "flex", flexDirection: "column", gap: 4, zIndex: 200, pointerEvents: "auto", opacity: showTableBtns ? 1 : 0 }}>
+                onMouseEnter={() => setHoverTableBtns(true)}
+                onMouseLeave={() => setHoverTableBtns(false)}
+                style={{ position: "absolute", top: tableToolbar.top + 4, left: tableToolbar.left + tableToolbar.width + 2, display: "flex", flexDirection: "column", gap: 4, zIndex: 200, pointerEvents: "auto", opacity: showTableBtns || hoverTableBtns ? 1 : 0, padding: 12, margin: -12 }}>
                 <button
                   onMouseDown={e => { e.preventDefault(); tableRemoveCol(); }}
                   title="Remove last column"
