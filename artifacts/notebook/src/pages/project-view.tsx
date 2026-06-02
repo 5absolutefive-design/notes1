@@ -756,7 +756,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
         <div
           ref={scrollContainerRef}
           className="flex-1 overflow-y-auto min-h-0 hide-scrollbar"
-          style={{ position: "relative", cursor: drawTool === "eraser" ? "cell" : drawTool ? "crosshair" : undefined }}
+          style={{ position: "relative", cursor: drawTool === "eraser" ? `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='24' height='24'><text y='20' font-size='20'>✐</text></svg>") 4 20, auto` : drawTool ? "crosshair" : undefined }}
           onMouseDown={(e) => {
             if (!drawTool || drawTool === "eraser") return;
             const container = scrollContainerRef.current;
@@ -1267,7 +1267,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 </div>
                 <div className="border-t border-stone-100 pt-1.5">
                   <button
-                    onClick={() => { setDrawTool("eraser"); setCtxMenu(null); }}
+                    onClick={() => { setDrawTool(drawTool === "eraser" ? null : "eraser"); setCtxMenu(null); }}
                     className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg border transition-colors text-xs font-medium
                       ${drawTool === "eraser" ? "bg-red-50 border-red-300 text-red-600" : "border-stone-100 hover:bg-red-50 hover:border-red-200 text-stone-600 hover:text-red-600"}`}>
                     <Eraser className="w-3.5 h-3.5 flex-shrink-0" />
