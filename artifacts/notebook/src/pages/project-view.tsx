@@ -465,6 +465,18 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
         const table = cell.closest("table") as HTMLTableElement;
         const cells = Array.from(cell.parentElement!.children) as HTMLTableCellElement[];
         const colIdx = cells.indexOf(cell);
+
+        // Freeze all column widths explicitly, then free the table from 100% width
+        // so every column (including the last) can be freely resized
+        const totalCols = cells.length;
+        for (let i = 0; i < table.rows.length; i++) {
+          for (let j = 0; j < totalCols; j++) {
+            const c = table.rows[i].cells[j];
+            if (c) c.style.width = c.getBoundingClientRect().width + "px";
+          }
+        }
+        table.style.width = "auto";
+
         const startWidths: number[] = [];
         for (let i = 0; i < table.rows.length; i++) {
           const c = table.rows[i].cells[colIdx];
