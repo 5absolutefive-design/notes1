@@ -631,13 +631,13 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   };
 
   const insertTable = () => {
-    const thStyle = `background:#f9fafb;padding:6px 10px;text-align:left;font-size:12px;font-weight:600;color:#374151;border:1.5px solid #b0b7c3;border-bottom:2px solid #111827;min-width:120px`;
+    const thStyle = `background:#f9fafb;padding:6px 10px;text-align:left;font-size:12px;font-weight:600;color:#374151;border:1.5px solid #b0b7c3;border-top:none;border-bottom:3px double #b0b7c3;min-width:120px`;
     const tdStyle = `padding:6px 10px;border:1.5px solid #b0b7c3;min-width:120px;font-size:13px;color:#1f2937`;
     const headers = ["Column 1", "Column 2", "Column 3", "Column 4"];
     const ths = headers.map(h => `<th style="${thStyle}" contenteditable="true">${h}</th>`).join("");
     const tds = headers.map(() => `<td style="${tdStyle}" contenteditable="true"><br/></td>`).join("");
     const rows = [tds, tds, tds].map(r => `<tr>${r}</tr>`).join("");
-    const tableHtml = `<br/><table style="border-collapse:collapse;width:100%;margin:8px 0;border-top:2px solid #111827;border-left:1px solid #e5e7eb"><thead><tr>${ths}</tr></thead><tbody>${rows}</tbody></table><br/>`;
+    const tableHtml = `<br/><table style="border-collapse:collapse;width:100%;margin:8px 0;border-left:1.5px solid #b0b7c3"><thead><tr>${ths}</tr></thead><tbody>${rows}</tbody></table><br/>`;
     insertHTML(tableHtml);
     setCtxMenu(null);
   };
