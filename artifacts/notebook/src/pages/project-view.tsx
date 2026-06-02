@@ -184,7 +184,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const [drawTool, setDrawTool] = useState<DrawTool | null>(null);
   const drawToolRef = useRef<DrawTool | null>(null);
   const [eraserPos, setEraserPos] = useState<{ x: number; y: number } | null>(null);
-  const ERASER_RADIUS = 34;
+  const ERASER_RADIUS = 17;
   const [arrows, setArrows] = useState<ArrowShape[]>([]);
   const [drawingArrow, setDrawingArrow] = useState<ArrowShape | null>(null);
   const arrowDrawRef = useRef<{ startX: number; startY: number; type: DrawTool } | null>(null);
