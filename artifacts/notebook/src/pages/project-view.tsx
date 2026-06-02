@@ -917,7 +917,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           {/* SVG arrow overlay */}
           {(arrows.length > 0 || drawingArrow) && (
             <svg
-              style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: arrowMode ? "none" : "auto", zIndex: 50, overflow: "visible" }}
+              style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 50, overflow: "visible" }}
             >
               <defs>
                 <marker id="ah-red" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
@@ -930,7 +930,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                   x1={a.x1} y1={a.y1} x2={a.x2} y2={a.y2}
                   stroke={a.color} strokeWidth={2.5}
                   markerEnd="url(#ah-red)"
-                  style={{ cursor: "pointer" }}
+                  style={{ cursor: "pointer", pointerEvents: "auto" }}
                   onClick={() => setArrows(prev => prev.filter(x => x.id !== a.id))}
                 />
               ))}
