@@ -1000,11 +1000,11 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             }
             // Track active table for +/- toolbar
             const tbl = (e.target as Element).closest("table") as HTMLTableElement | null;
-            if (tbl !== activeTableRef.current) {
+            if (tbl && tbl !== activeTableRef.current) {
               activeTableRef.current = tbl;
-              if (tbl) { updateTableToolbar(); setShowTableBtns(true); }
-              else setShowTableBtns(false);
+              updateTableToolbar();
             }
+            setShowTableBtns(!!tbl);
           }}
           onMouseLeave={() => { setShowTodoButtons(false); setEraserPos(null); setTableToolbar(null); activeTableRef.current = null; }}
         >
