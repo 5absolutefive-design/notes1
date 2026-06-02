@@ -178,6 +178,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const [tableToolbar, setTableToolbar] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
   const [showTableBtns, setShowTableBtns] = useState(false);
   const [hoverTableBtns, setHoverTableBtns] = useState(false);
+  const [tableLinesHidden, setTableLinesHidden] = useState(false);
   const activeTableRef = useRef<HTMLTableElement | null>(null);
   const tableResizeObserverRef = useRef<ResizeObserver | null>(null);
   const [imageBlocks, setImageBlocks] = useState<ImageBlock[]>([]);
@@ -729,6 +730,41 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     saveContent(); updateTableToolbar();
   };
 
+  const tableToggleLines = () => {
+    const table = activeTableRef.current; if (!table) return;
+    const hidden = table.dataset.linesHidden === "true";
+    if (hidden) {
+      Array.from(table.querySelectorAll("th, td")).forEach(cell => {
+        (cell as HTMLElement).style.borderColor = "";
+      });
+      table.style.borderColor = "";
+      table.dataset.linesHidden = "false";
+      setTableLinesHidden(false);
+    } else {
+      Array.from(table.querySelectorAll("th, td")).forEach(cell => {
+        (cell as HTMLElement).style.borderColor = "transparent";
+      });
+      table.style.borderColor = "transparent";
+      table.dataset.linesHidden = "true";
+      setTableLinesHidden(true);
+    }
+    saveContent();
+  };
+
+  const tableDeleteTable = () => {
+    const table = activeTableRef.current; if (!table) return;
+    const parent = table.parentElement;
+    if (parent) {
+      const br = document.createElement("br");
+      parent.replaceChild(br, table);
+    }
+    activeTableRef.current = null;
+    setTableToolbar(null);
+    setTableLinesHidden(false);
+    if (tableResizeObserverRef.current) { tableResizeObserverRef.current.disconnect(); tableResizeObserverRef.current = null; }
+    saveContent();
+  };
+
   const insertDividerStyle = (style: string) => {
     const styles: Record<string, string> = {
       single:  `border:none;border-top:1.5px solid #d6d3d1;margin:12px 0`,
@@ -1025,7 +1061,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             // Track active table for +/- toolbar
             const tbl = (e.target as Element).closest("table") as HTMLTableElement | null;
             if (tbl) {
-              if (tbl !== activeTableRef.current) { activeTableRef.current = tbl; updateTableToolbar(); }
+              if (tbl !== activeTableRef.current) { activeTableRef.current = tbl; updateTableToolbar(); setTableLinesHidden(tbl.dataset.linesHidden === "true"); }
               setShowTableBtns(true);
             } else {
               // Check if cursor is in the button zone of any table in the editor
@@ -1040,7 +1076,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 return inRowZone || inColZone;
               }) as HTMLTableElement | undefined : undefined;
               if (nearTable) {
-                if (nearTable !== activeTableRef.current) { activeTableRef.current = nearTable; updateTableToolbar(); }
+                if (nearTable !== activeTableRef.current) { activeTableRef.current = nearTable; updateTableToolbar(); setTableLinesHidden(nearTable.dataset.linesHidden === "true"); }
                 setShowTableBtns(true);
               } else {
                 setShowTableBtns(false);
@@ -1111,6 +1147,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                   style={btnStyle("green")} onMouseEnter={hoverGreen} onMouseLeave={hoverReset}>+</button>
               </div>
             );
+            const hoverBlue  = (e: React.MouseEvent<HTMLButtonElement>) => { const t = e.currentTarget; t.style.background = "#dbeafe"; t.style.color = "#2563eb"; };
+            const hoverOrange = (e: React.MouseEvent<HTMLButtonElement>) => { const t = e.currentTarget; t.style.background = "#fee2e2"; t.style.color = "#dc2626"; };
             const colBtns = !isLined && (
               <div
                 onMouseEnter={() => setHoverTableBtns(true)}
@@ -1122,6 +1160,18 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                   style={btnStyle("red")} onMouseEnter={hoverRed} onMouseLeave={hoverReset}>−</button>
                 <button onMouseDown={e => { e.preventDefault(); tableAddCol(); }} title="Add column"
                   style={btnStyle("green")} onMouseEnter={hoverGreen} onMouseLeave={hoverReset}>+</button>
+                <button
+                  onMouseDown={e => { e.preventDefault(); tableToggleLines(); }}
+                  title={tableLinesHidden ? "Show table lines" : "Hide table lines"}
+                  style={{ ...btnStyle("green"), background: tableLinesHidden ? "#dbeafe" : "#fafaf8", color: tableLinesHidden ? "#2563eb" : "#374151", fontSize: 13 }}
+                  onMouseEnter={hoverBlue} onMouseLeave={e => { const t = e.currentTarget; t.style.background = tableLinesHidden ? "#dbeafe" : "#fafaf8"; t.style.color = tableLinesHidden ? "#2563eb" : "#374151"; }}>
+                  {tableLinesHidden ? "👁" : "👁"}
+                </button>
+                <button
+                  onMouseDown={e => { e.preventDefault(); tableDeleteTable(); }}
+                  title="Delete table"
+                  style={{ ...btnStyle("red"), fontSize: 12 }}
+                  onMouseEnter={hoverOrange} onMouseLeave={hoverReset}>✕</button>
               </div>
             );
             return <>{rowBtns}{colBtns}</>;
