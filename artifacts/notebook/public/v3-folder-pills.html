@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Variant 3 — Folder Pills</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { margin: 0; background: #f1f5f9; display: flex; align-items: flex-start; justify-content: center; padding-top: 32px; font-family: system-ui, sans-serif; }
+  .sidebar { background: white; border-radius: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.10); width: 240px; overflow: hidden; }
+  .header { background: linear-gradient(135deg, #1e293b, #334155); display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; }
+  .header-left { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; color: white; letter-spacing: 0.02em; }
+  .plus-btn { width: 22px; height: 22px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #94a3b8; cursor: pointer; background: rgba(255,255,255,0.08); border: none; font-size: 16px; line-height: 1; }
+  .plus-btn:hover { background: rgba(255,255,255,0.15); color: white; }
+  .list { padding: 8px; display: flex; flex-direction: column; gap: 4px; }
+
+  .parent-pill { display: flex; align-items: center; gap: 8px; padding: 8px 10px; border-radius: 12px; cursor: pointer; border: 1px solid transparent; transition: all 0.15s; }
+  .parent-pill:hover { background: #f8fafc; border-color: #e2e8f0; }
+  .parent-pill.active-abc { background: #eef2ff; border-color: #c7d2fe; }
+  .parent-pill.active-def { background: #e0f2fe; border-color: #bae6fd; }
+  .parent-pill.active-ijk { background: #d1fae5; border-color: #a7f3d0; }
+
+  .folder-icon-wrap { width: 26px; height: 26px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .folder-icon-wrap.abc { background: #e0e7ff; }
+  .folder-icon-wrap.def { background: #dbeafe; }
+  .folder-icon-wrap.ijk { background: #d1fae5; }
+
+  .folder-icon { width: 14px; height: 14px; }
+  .folder-icon.abc { color: #6366f1; }
+  .folder-icon.def { color: #0ea5e9; }
+  .folder-icon.ijk { color: #10b981; }
+
+  .parent-name { font-size: 12px; font-weight: 600; color: #1e293b; flex: 1; }
+  .active-abc .parent-name { color: #6366f1; }
+  .active-def .parent-name { color: #0ea5e9; }
+  .active-ijk .parent-name { color: #10b981; }
+
+  .badge { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 99px; flex-shrink: 0; }
+  .badge.abc { background: #e0e7ff; color: #6366f1; }
+  .badge.def { background: #dbeafe; color: #0ea5e9; }
+
+  .chevron { font-size: 9px; color: #94a3b8; flex-shrink: 0; margin-right: 2px; }
+
+  .children { padding-left: 10px; display: flex; flex-direction: column; gap: 2px; }
+  .child-row { display: flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 8px; cursor: pointer; }
+  .child-row:hover { background: #f8fafc; }
+  .vbar { width: 1px; height: 16px; background: #e2e8f0; flex-shrink: 0; }
+  .file-icon { width: 12px; height: 12px; color: #cbd5e1; flex-shrink: 0; }
+  .child-name { font-size: 11px; color: #94a3b8; }
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="header">
+    <div class="header-left">
+      <svg style="width:14px;height:14px" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+      Project
+    </div>
+    <button class="plus-btn">+</button>
+  </div>
+  <div class="list">
+
+    <!-- ABC -->
+    <div>
+      <div class="parent-pill active-abc">
+        <span class="chevron">▼</span>
+        <div class="folder-icon-wrap abc">
+          <svg class="folder-icon abc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+        </div>
+        <span class="parent-name">ABC</span>
+        <span class="badge abc">3</span>
+      </div>
+      <div class="children">
+        <div class="child-row">
+          <div class="vbar"></div>
+          <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+          <span class="child-name">AAA</span>
+        </div>
+        <div class="child-row">
+          <div class="vbar"></div>
+          <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+          <span class="child-name">BBB</span>
+        </div>
+        <div class="child-row">
+          <div class="vbar"></div>
+          <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+          <span class="child-name">CCC</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- DEF -->
+    <div>
+      <div class="parent-pill active-def">
+        <span class="chevron">▼</span>
+        <div class="folder-icon-wrap def">
+          <svg class="folder-icon def" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+        </div>
+        <span class="parent-name">DEF</span>
+        <span class="badge def">1</span>
+      </div>
+      <div class="children">
+        <div class="child-row">
+          <div class="vbar"></div>
+          <svg class="file-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+          <span class="child-name">AAA</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- IJKLM -->
+    <div class="parent-pill active-ijk">
+      <span class="chevron" style="opacity:0">▶</span>
+      <div class="folder-icon-wrap ijk">
+        <svg class="folder-icon ijk" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+      </div>
+      <span class="parent-name">IJKLM</span>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

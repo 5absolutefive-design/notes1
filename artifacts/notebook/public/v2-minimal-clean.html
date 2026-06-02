@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Variant 2 — Minimal Clean</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { margin: 0; background: #f8f9fa; display: flex; align-items: flex-start; justify-content: center; padding-top: 32px; font-family: system-ui, sans-serif; }
+  .sidebar { background: white; border-radius: 16px; box-shadow: 0 1px 8px rgba(0,0,0,0.08); border: 1px solid #e5e7eb; width: 240px; overflow: hidden; }
+  .header { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border-bottom: 1px solid #f3f4f6; }
+  .header-left { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 13px; color: #374151; }
+  .folder-icon { width: 16px; height: 16px; color: #6366f1; }
+  .plus-btn { width: 22px; height: 22px; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #9ca3af; cursor: pointer; background: none; border: none; font-size: 16px; line-height: 1; }
+  .plus-btn:hover { background: #f0f0ff; color: #6366f1; }
+  .list { padding: 8px; }
+  .parent-row { display: flex; align-items: center; gap: 6px; padding: 6px 8px; border-radius: 8px; cursor: pointer; margin-bottom: 1px; }
+  .parent-row:hover { background: #f9fafb; }
+  .parent-row.active { background: #eef2ff; color: #4338ca; }
+  .chevron { font-size: 10px; color: #9ca3af; width: 14px; flex-shrink: 0; }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: #d1d5db; flex-shrink: 0; }
+  .dot.active { background: #818cf8; }
+  .parent-label { font-size: 12px; font-weight: 500; color: #374151; flex: 1; }
+  .parent-row.active .parent-label { font-weight: 600; color: #4338ca; }
+  .child-row { display: flex; align-items: center; gap: 6px; padding: 5px 8px 5px 28px; border-radius: 8px; cursor: pointer; margin-bottom: 1px; }
+  .child-row:hover { background: #f9fafb; }
+  .child-row.active { background: #eef2ff; }
+  .child-dot { width: 4px; height: 4px; border-radius: 50%; background: #d1d5db; flex-shrink: 0; }
+  .child-dot.active { background: #818cf8; }
+  .child-label { font-size: 11px; color: #9ca3af; }
+  .child-row.active .child-label { color: #6366f1; }
+</style>
+</head>
+<body>
+<div class="sidebar">
+  <div class="header">
+    <div class="header-left">
+      <svg class="folder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+      Project
+    </div>
+    <button class="plus-btn">+</button>
+  </div>
+  <div class="list">
+
+    <!-- ABC active -->
+    <div class="parent-row active">
+      <span class="chevron">▼</span>
+      <span class="parent-label">ABC</span>
+      <span style="font-size:10px;color:#9ca3af;opacity:0.6">+</span>
+    </div>
+    <div class="child-row active">
+      <div class="child-dot active"></div>
+      <span class="child-label" style="color:#6366f1">AAA</span>
+    </div>
+    <div class="child-row">
+      <div class="child-dot"></div>
+      <span class="child-label">BBB</span>
+    </div>
+    <div class="child-row">
+      <div class="child-dot"></div>
+      <span class="child-label">CCC</span>
+    </div>
+
+    <!-- DEF -->
+    <div class="parent-row" style="margin-top:4px">
+      <span class="chevron">▼</span>
+      <span class="parent-label">DEF</span>
+      <span style="font-size:10px;color:#9ca3af;opacity:0.6">+</span>
+    </div>
+    <div class="child-row">
+      <div class="child-dot"></div>
+      <span class="child-label">AAA</span>
+    </div>
+
+    <!-- IJKLM -->
+    <div class="parent-row" style="margin-top:4px">
+      <div class="dot"></div>
+      <span class="parent-label">IJKLM</span>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
