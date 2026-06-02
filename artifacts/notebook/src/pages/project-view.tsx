@@ -563,7 +563,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
               fontFamily: "Georgia, 'Times New Roman', serif",
               caretColor: "#6366f1",
               padding: "16px 48px 80px",
-              minHeight: "600px",
+              minHeight: "6100px",
             }}
             data-placeholder="Start writing your project notes…"
           />
