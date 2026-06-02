@@ -1144,9 +1144,12 @@ export default function Home() {
                 {item.id === "project" && isSelected && (
                   <div className="mt-1 flex flex-col gap-0.5">
                     {(() => {
-                      const topLevel = projects.filter(p => !p.parentId).filter(p =>
-                        !projectSearchQuery || p.title.toLowerCase().includes(projectSearchQuery.toLowerCase())
-                      );
+                      const query = projectSearchQuery.toLowerCase();
+                      const topLevel = projects.filter(p => !p.parentId).filter(p => {
+                        if (!query) return true;
+                        if (p.title.toLowerCase().includes(query)) return true;
+                        return projects.some(c => c.parentId === p.id && c.title.toLowerCase().includes(query));
+                      });
 
                       const renderChildRow = (p: ProjectDoc) => (
                         <div key={p.id} className="group relative">
@@ -1192,9 +1195,12 @@ export default function Home() {
                       );
 
                       return topLevel.map(p => {
-                        const children = projects.filter(c => c.parentId === p.id);
-                        const hasChildren = children.length > 0;
-                        const isExpanded = !!expandedProjects[p.id];
+                        const allChildren = projects.filter(c => c.parentId === p.id);
+                        const children = query
+                          ? allChildren.filter(c => c.title.toLowerCase().includes(query))
+                          : allChildren;
+                        const hasChildren = allChildren.length > 0;
+                        const isExpanded = query ? children.length > 0 : !!expandedProjects[p.id];
 
                         return (
                           <div key={p.id}>
