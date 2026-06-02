@@ -105,10 +105,13 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const [showBannerPicker, setShowBannerPicker] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [ctxMenu, setCtxMenu] = useState<ContextMenuState | null>(null);
+  const [showFormatBar, setShowFormatBar] = useState(false);
+  const [showHighlightPicker, setShowHighlightPicker] = useState(false);
 
   const editorRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLDivElement>(null);
   const ctxMenuRef = useRef<HTMLDivElement>(null);
+  const formatBarRef = useRef<HTMLDivElement>(null);
   const bannerPickerRef = useRef<HTMLDivElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const bannerUploadRef = useRef<HTMLInputElement>(null);
@@ -166,10 +169,14 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
         setShowBannerPicker(false);
       if (showEmojiPicker && emojiPickerRef.current && !emojiPickerRef.current.contains(e.target as Node))
         setShowEmojiPicker(false);
+      if (showFormatBar && formatBarRef.current && !formatBarRef.current.contains(e.target as Node)) {
+        setShowFormatBar(false);
+        setShowHighlightPicker(false);
+      }
     };
     document.addEventListener("mousedown", handler);
     return () => document.removeEventListener("mousedown", handler);
-  }, [ctxMenu, showBannerPicker, showEmojiPicker]);
+  }, [ctxMenu, showBannerPicker, showEmojiPicker, showFormatBar]);
 
   // ── Set emoji
   const setEmoji = (emoji: string) => {
@@ -405,6 +412,65 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
 
   return (
     <div className="flex-1 flex flex-col min-h-0 bg-[#fafaf8]">
+
+      {/* ── Format toolbar ── */}
+      {activeProject && (
+        <div className="flex items-center gap-2 px-4 py-1.5 border-b border-stone-200 bg-white/80 backdrop-blur-sm z-20">
+          <div className="relative" ref={formatBarRef}>
+            <button
+              onMouseDown={e => { e.preventDefault(); setShowFormatBar(v => !v); setShowHighlightPicker(false); }}
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-semibold transition-all border ${showFormatBar ? "bg-indigo-50 text-indigo-700 border-indigo-200" : "text-stone-600 border-stone-200 hover:bg-stone-100"}`}
+            >
+              <Bold className="w-3.5 h-3.5" />
+              Format
+            </button>
+            {showFormatBar && (
+              <div className="absolute top-full left-0 mt-1.5 bg-white rounded-xl shadow-xl border border-stone-200 p-2 z-[9999] flex flex-col gap-0.5 min-w-[160px]">
+                <button onMouseDown={e => { e.preventDefault(); execFmt("bold"); }}
+                  className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-indigo-50 hover:text-indigo-700 text-stone-700 text-xs font-medium transition-colors">
+                  <Bold className="w-3.5 h-3.5 text-stone-400" /> Bold
+                  <span className="ml-auto text-[10px] text-stone-400">Ctrl+B</span>
+                </button>
+                <button onMouseDown={e => { e.preventDefault(); execFmt("italic"); }}
+                  className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-indigo-50 hover:text-indigo-700 text-stone-700 text-xs font-medium transition-colors">
+                  <Italic className="w-3.5 h-3.5 text-stone-400" /> Italic
+                  <span className="ml-auto text-[10px] text-stone-400">Ctrl+I</span>
+                </button>
+                <button onMouseDown={e => { e.preventDefault(); execFmt("underline"); }}
+                  className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-indigo-50 hover:text-indigo-700 text-stone-700 text-xs font-medium transition-colors">
+                  <Underline className="w-3.5 h-3.5 text-stone-400" /> Underline
+                  <span className="ml-auto text-[10px] text-stone-400">Ctrl+U</span>
+                </button>
+                <button onMouseDown={e => { e.preventDefault(); execFmt("strikeThrough"); }}
+                  className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-indigo-50 hover:text-indigo-700 text-stone-700 text-xs font-medium transition-colors">
+                  <Strikethrough className="w-3.5 h-3.5 text-stone-400" /> Strikethrough
+                </button>
+                {/* Highlight row */}
+                <button onMouseDown={e => { e.preventDefault(); setShowHighlightPicker(v => !v); }}
+                  className="flex items-center gap-2 px-2.5 py-1.5 rounded-lg hover:bg-indigo-50 hover:text-indigo-700 text-stone-700 text-xs font-medium transition-colors">
+                  <Highlighter className="w-3.5 h-3.5 text-stone-400" /> Highlight
+                  <ChevronRight className="w-3 h-3 text-stone-400 ml-auto" />
+                </button>
+                {showHighlightPicker && (
+                  <div className="flex gap-1.5 px-2.5 py-1.5 flex-wrap">
+                    {HIGHLIGHT_COLORS.map(hc => (
+                      <button key={hc.color} title={hc.label}
+                        onMouseDown={e => { e.preventDefault(); execFmt("hiliteColor", hc.color); }}
+                        className="w-5 h-5 rounded-full border-2 border-white shadow hover:scale-110 transition-transform"
+                        style={{ backgroundColor: hc.color }} />
+                    ))}
+                    <button title="Remove"
+                      onMouseDown={e => { e.preventDefault(); execFmt("hiliteColor", "transparent"); }}
+                      className="w-5 h-5 rounded-full border-2 border-stone-300 flex items-center justify-center hover:scale-110 transition-transform">
+                      <X className="w-2.5 h-2.5 text-stone-400" />
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {activeProject ? (
         <div
