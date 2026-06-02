@@ -735,16 +735,30 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     const hidden = table.dataset.linesHidden === "true";
     if (hidden) {
       Array.from(table.querySelectorAll("th, td")).forEach(cell => {
-        (cell as HTMLElement).style.borderColor = "";
+        const el = cell as HTMLElement;
+        el.style.removeProperty("border-top");
+        el.style.removeProperty("border-bottom");
+        el.style.removeProperty("border-left");
+        el.style.removeProperty("border-right");
+        el.style.removeProperty("border-color");
+        el.style.removeProperty("background-color");
       });
-      table.style.borderColor = "";
+      table.style.removeProperty("border-color");
+      table.style.removeProperty("border-left");
       table.dataset.linesHidden = "false";
       setTableLinesHidden(false);
     } else {
       Array.from(table.querySelectorAll("th, td")).forEach(cell => {
-        (cell as HTMLElement).style.borderColor = "transparent";
+        const el = cell as HTMLElement;
+        el.style.setProperty("border-top", "1px solid transparent", "important");
+        el.style.setProperty("border-bottom", "1px solid transparent", "important");
+        el.style.setProperty("border-left", "1px solid transparent", "important");
+        el.style.setProperty("border-right", "1px solid transparent", "important");
+        el.style.setProperty("border-color", "transparent", "important");
+        if (el.tagName === "TH") el.style.setProperty("background-color", "white", "important");
       });
-      table.style.borderColor = "transparent";
+      table.style.setProperty("border-color", "transparent", "important");
+      table.style.setProperty("border-left", "1px solid transparent", "important");
       table.dataset.linesHidden = "true";
       setTableLinesHidden(true);
     }
