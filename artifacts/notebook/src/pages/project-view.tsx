@@ -712,58 +712,23 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
 
   const tableAddCol = () => {
     const table = activeTableRef.current; if (!table) return;
-    const isLinedTable = table.dataset.lined === "true";
-    const linedThMulti = `background:#f5f5f3;padding:8px 12px;text-align:left;font-size:13px;font-weight:600;color:#374151;border:none;border-bottom:2px solid #b0b7c3;border-left:1px solid #e2e0db`;
-    const linedTdMulti = `padding:7px 12px;border:none;border-bottom:1px solid #e2e0db;font-size:13px;color:#1f2937;min-height:32px;border-left:1px solid #e2e0db`;
-    if (isLinedTable) {
-      const currentCols = table.rows[0]?.cells.length ?? 1;
-      if (currentCols === 1) {
-        Array.from(table.querySelectorAll("th")).forEach(el => {
-          const h = el as HTMLElement;
-          h.style.removeProperty("width"); h.style.removeProperty("display");
-        });
-        Array.from(table.querySelectorAll("td")).forEach(el => {
-          const d = el as HTMLElement;
-          d.style.removeProperty("width"); d.style.removeProperty("display");
-        });
-      }
-      for (let i = 0; i < table.rows.length; i++) {
-        const row = table.rows[i];
-        const isHead = row.parentElement?.tagName === "THEAD";
-        const cell = document.createElement(isHead ? "th" : "td");
-        cell.setAttribute("style", isHead ? linedThMulti : linedTdMulti);
-        cell.setAttribute("contenteditable", "true");
-        cell.innerHTML = isHead ? `Column ${row.cells.length + 1}` : "<br/>";
-        row.appendChild(cell);
-      }
-    } else {
-      for (let i = 0; i < table.rows.length; i++) {
-        const row = table.rows[i];
-        const isHead = row.parentElement?.tagName === "THEAD";
-        const cell = document.createElement(isHead ? "th" : "td");
-        cell.setAttribute("style", isHead ? TH_STYLE : TD_STYLE);
-        cell.setAttribute("contenteditable", "true");
-        cell.innerHTML = isHead ? `Column ${row.cells.length + 1}` : "<br/>";
-        row.appendChild(cell);
-      }
+    for (let i = 0; i < table.rows.length; i++) {
+      const row = table.rows[i];
+      const isHead = row.parentElement?.tagName === "THEAD";
+      const cell = document.createElement(isHead ? "th" : "td");
+      cell.setAttribute("style", isHead ? TH_STYLE : TD_STYLE);
+      cell.setAttribute("contenteditable", "true");
+      cell.innerHTML = isHead ? `Column ${row.cells.length + 1}` : "<br/>";
+      row.appendChild(cell);
     }
     saveContent(); updateTableToolbar();
   };
 
   const tableRemoveCol = () => {
     const table = activeTableRef.current; if (!table) return;
-    const isLinedTable = table.dataset.lined === "true";
     for (let i = 0; i < table.rows.length; i++) {
       const row = table.rows[i];
       if (row.cells.length > 1) row.removeChild(row.cells[row.cells.length - 1]);
-    }
-    if (isLinedTable && (table.rows[0]?.cells.length ?? 0) === 1) {
-      Array.from(table.querySelectorAll("th")).forEach(el => {
-        const h = el as HTMLElement; h.style.width = "100%"; h.style.display = "block";
-      });
-      Array.from(table.querySelectorAll("td")).forEach(el => {
-        const d = el as HTMLElement; d.style.width = "100%"; d.style.display = "block";
-      });
     }
     saveContent(); updateTableToolbar();
   };
@@ -1210,7 +1175,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             );
             const hoverBlue  = (e: React.MouseEvent<HTMLButtonElement>) => { const t = e.currentTarget; t.style.background = "#dbeafe"; t.style.color = "#2563eb"; };
             const hoverOrange = (e: React.MouseEvent<HTMLButtonElement>) => { const t = e.currentTarget; t.style.background = "#fee2e2"; t.style.color = "#dc2626"; };
-            const colBtns = (
+            const colBtns = !isLined && (
               <div
                 onMouseEnter={() => setHoverTableBtns(true)}
                 onMouseLeave={() => setHoverTableBtns(false)}
