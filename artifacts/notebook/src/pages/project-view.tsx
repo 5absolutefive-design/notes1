@@ -345,9 +345,16 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     setCtxMenu(null);
   };
 
+  const removeBtn = (selector: string) =>
+    `<button contenteditable="false" onclick="event.stopPropagation();this.closest('${selector}').remove()" ` +
+    `onmouseover="this.style.background='rgba(0,0,0,0.18)'" onmouseout="this.style.background='rgba(0,0,0,0.08)'" ` +
+    `style="position:absolute;top:5px;right:6px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.08);border:none;cursor:pointer;font-size:14px;color:#777;line-height:1;padding:0;display:inline-flex;align-items:center;justify-content:center;z-index:10;flex-shrink:0" ` +
+    `title="Remove">×</button>`;
+
   const insertBorderBlock = () => insertHTML(
-    `<div style="border-left:4px solid #6366f1;background:#f5f3ff;padding:12px 16px;border-radius:0 8px 8px 0;margin:8px 0">` +
-    `<p style="margin:0;color:#4c1d95;font-style:italic">Type your note here…</p></div><br/>`
+    `<div contenteditable="false" data-quote-block="1" style="position:relative;border-left:4px solid #6366f1;background:#f5f3ff;padding:10px 36px 10px 16px;border-radius:0 8px 8px 0;margin:8px 0">` +
+    removeBtn("[data-quote-block='1']") +
+    `<p contenteditable="true" style="margin:0;color:#4c1d95;font-style:italic;outline:none">Type your note here…</p></div><br/>`
   );
 
   const insertLinkBlock = (type: string) => {
@@ -362,7 +369,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     insertHTML(
       `<div contenteditable="false" data-link-block="1" ` +
       `onclick="const u=this.querySelector('[data-link-url]').textContent.trim();if(u&&u!=='Paste link here…')window.open(u,'_blank')" ` +
-      `style="display:flex;align-items:center;gap:10px;border-left:4px solid ${cfg.color};background:${cfg.bg};padding:10px 14px;border-radius:0 8px 8px 0;margin:8px 0;cursor:pointer;user-select:none">` +
+      `style="position:relative;display:flex;align-items:center;gap:10px;border-left:4px solid ${cfg.color};background:${cfg.bg};padding:10px 36px 10px 14px;border-radius:0 8px 8px 0;margin:8px 0;cursor:pointer;user-select:none">` +
+      removeBtn("[data-link-block='1']") +
       `<span style="font-size:15px;flex-shrink:0">${cfg.icon}</span>` +
       `<div style="flex:1;min-width:0">` +
       `<div style="font-size:10px;font-weight:700;color:${cfg.color};text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px">${cfg.label}</div>` +
