@@ -95,6 +95,15 @@ interface ContextMenuState {
   todoRemoveCount: number;
 }
 
+interface ImageBlock {
+  id: string;
+  src: string;
+  x: number;
+  y: number;
+  width: number;
+  locked: boolean;
+}
+
 // ── Props ────────────────────────────────────────────────────────
 interface ProjectViewProps {
   projects: ProjectDoc[];
@@ -120,8 +129,51 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [lastTodoPos, setLastTodoPos] = useState<{ top: number; left: number } | null>(null);
   const [showTodoButtons, setShowTodoButtons] = useState(false);
+  const [imageBlocks, setImageBlocks] = useState<ImageBlock[]>([]);
+  const imgInputRef = useRef<HTMLInputElement>(null);
+  const dragRef = useRef<{ id: string; startMx: number; startMy: number; startBx: number; startBy: number } | null>(null);
+  const resizeRef = useRef<{ id: string; startMx: number; startW: number; side: "br" | "bl" | "tr" | "tl" } | null>(null);
 
   const activeProject = projects.find(p => p.id === activeId) ?? null;
+
+  // ── Load / save image blocks per project
+  useEffect(() => {
+    if (!activeId) { setImageBlocks([]); return; }
+    try {
+      const raw = localStorage.getItem(`nb_project_imgs_${activeId}`);
+      setImageBlocks(raw ? JSON.parse(raw) : []);
+    } catch { setImageBlocks([]); }
+  }, [activeId]);
+
+  useEffect(() => {
+    if (!activeId) return;
+    localStorage.setItem(`nb_project_imgs_${activeId}`, JSON.stringify(imageBlocks));
+  }, [imageBlocks, activeId]);
+
+  // ── Document-level drag and resize handlers for image blocks
+  useEffect(() => {
+    const onMove = (e: MouseEvent) => {
+      if (dragRef.current) {
+        const { id, startMx, startMy, startBx, startBy } = dragRef.current;
+        setImageBlocks(prev => prev.map(b => b.id === id
+          ? { ...b, x: startBx + e.clientX - startMx, y: startBy + e.clientY - startMy }
+          : b));
+      }
+      if (resizeRef.current) {
+        const { id, startMx, startW, side } = resizeRef.current;
+        const delta = side === "br" || side === "tr" ? e.clientX - startMx : startMx - e.clientX;
+        const newW = Math.max(80, startW + delta);
+        setImageBlocks(prev => prev.map(b => b.id === id ? { ...b, width: newW } : b));
+      }
+    };
+    const onUp = () => { dragRef.current = null; resizeRef.current = null; };
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+    return () => {
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+  }, []);
 
   // ── Load content into editor + title when switching projects
   useEffect(() => {
@@ -352,6 +404,42 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     };
     insertHTML(`<br/><hr style="${styles[style] ?? styles.single}"/><br/>`);
     setCtxMenu(null);
+  };
+
+  // ── Image block helpers
+  const compressImage = (file: File, maxWidth = 900): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        const scale = Math.min(1, maxWidth / img.width);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url);
+        resolve(canvas.toDataURL("image/jpeg", 0.85));
+      };
+      img.onerror = reject;
+      img.src = url;
+    });
+
+  const handleImageFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    try {
+      const src = await compressImage(file);
+      const scrollTop = scrollContainerRef.current?.scrollTop ?? 0;
+      const containerW = scrollContainerRef.current?.clientWidth ?? 700;
+      const blockW = Math.min(375, containerW - 96);
+      const id = `img_${Date.now()}`;
+      setImageBlocks(prev => [...prev, {
+        id, src, locked: false, width: blockW,
+        x: (containerW - blockW) / 2,
+        y: scrollTop + 120,
+      }]);
+    } catch { /* ignore */ }
   };
 
   const removeBtn = () =>
@@ -711,6 +799,124 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             className="flex-1 min-h-[100px] cursor-text"
             onClick={() => { editorRef.current?.focus(); }}
           />
+
+          {/* Hidden image file input */}
+          <input ref={imgInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageFile} />
+
+          {/* Image blocks — absolutely positioned within the scroll container */}
+          {imageBlocks.map(blk => (
+            <div
+              key={blk.id}
+              style={{
+                position: "absolute",
+                left: blk.x,
+                top: blk.y,
+                width: blk.width,
+                userSelect: "none",
+                zIndex: 20,
+              }}
+            >
+              {/* Drag area (the whole block, minus handles/buttons) */}
+              <div
+                style={{
+                  position: "relative",
+                  cursor: blk.locked ? "default" : "grab",
+                  border: "2px solid #e2e8f0",
+                  borderRadius: 8,
+                  overflow: "visible",
+                  background: "#fff",
+                  boxShadow: "0 2px 12px rgba(0,0,0,0.10)",
+                }}
+                onMouseDown={e => {
+                  if (blk.locked) return;
+                  const tgt = e.target as HTMLElement;
+                  if (tgt.closest("[data-img-btn]") || tgt.closest("[data-resize-handle]")) return;
+                  e.preventDefault();
+                  dragRef.current = { id: blk.id, startMx: e.clientX, startMy: e.clientY, startBx: blk.x, startBy: blk.y };
+                }}
+              >
+                {/* Image */}
+                <img
+                  src={blk.src}
+                  alt=""
+                  draggable={false}
+                  style={{ display: "block", width: "100%", borderRadius: 6, pointerEvents: "none" }}
+                />
+
+                {/* × Delete button — top-left */}
+                <button
+                  data-img-btn="1"
+                  onClick={() => setImageBlocks(prev => prev.filter(b => b.id !== blk.id))}
+                  style={{
+                    position: "absolute", top: -10, left: -10,
+                    width: 22, height: 22, borderRadius: "50%",
+                    background: "#ef4444", border: "2px solid #fff",
+                    color: "#fff", fontSize: 13, fontWeight: 700,
+                    cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.18)", zIndex: 30, lineHeight: 1, padding: 0,
+                  }}
+                  title="Delete image"
+                >×</button>
+
+                {/* Lock button — top-right */}
+                <button
+                  data-img-btn="1"
+                  onClick={() => setImageBlocks(prev => prev.map(b => b.id === blk.id ? { ...b, locked: !b.locked } : b))}
+                  style={{
+                    position: "absolute", top: -10, right: -10,
+                    width: 22, height: 22, borderRadius: "50%",
+                    background: blk.locked ? "#6366f1" : "#94a3b8",
+                    border: "2px solid #fff",
+                    cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
+                    boxShadow: "0 1px 4px rgba(0,0,0,0.18)", zIndex: 30, padding: 0,
+                  }}
+                  title={blk.locked ? "Unlock" : "Lock position"}
+                >
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="white">
+                    {blk.locked
+                      ? <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                      : <path d="M12 1C9.24 1 7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2h-1V6c0-2.76-2.24-5-5-5zm0 2c1.66 0 3 1.34 3 3v2H9V6c0-1.66 1.34-3 3-3zm0 11c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z" opacity=".4"/>
+                    }
+                  </svg>
+                </button>
+
+                {/* Width label — bottom-left */}
+                <div style={{
+                  position: "absolute", bottom: -20, left: 0,
+                  fontSize: 10, color: "#94a3b8", fontFamily: "monospace", pointerEvents: "none",
+                }}>
+                  {Math.round(blk.width)}px
+                </div>
+
+                {/* Resize handles — corners */}
+                {!blk.locked && [
+                  { side: "tl" as const, style: { top: -5, left: -5, cursor: "nw-resize" } },
+                  { side: "tr" as const, style: { top: -5, right: -5, cursor: "ne-resize" } },
+                  { side: "bl" as const, style: { bottom: -5, left: -5, cursor: "sw-resize" } },
+                  { side: "br" as const, style: { bottom: -5, right: -5, cursor: "se-resize" } },
+                ].map(({ side, style }) => (
+                  <div
+                    key={side}
+                    data-resize-handle="1"
+                    onMouseDown={e => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      resizeRef.current = { id: blk.id, startMx: e.clientX, startW: blk.width, side };
+                    }}
+                    style={{
+                      position: "absolute",
+                      width: 10, height: 10,
+                      background: "#ef4444",
+                      border: "2px solid #fff",
+                      borderRadius: 2,
+                      zIndex: 30,
+                      ...style,
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
         </div>
       ) : (
         <div className="flex-1 flex flex-col items-center justify-center gap-4 text-stone-400">
@@ -879,6 +1085,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
               </div>
             )}
           </div>
+          <CtxItem icon={<ImagePlus className="w-3.5 h-3.5"/>} label="Image" onClick={() => { setCtxMenu(null); imgInputRef.current?.click(); }} />
           <CtxItem icon={<ChevronRight className="w-3.5 h-3.5"/>} label="Quote Block"   onClick={insertBorderBlock} />
         </div>
       )}
