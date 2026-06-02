@@ -734,22 +734,26 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     const table = activeTableRef.current; if (!table) return;
     const hidden = table.dataset.linesHidden === "true";
     if (hidden) {
+      const origTable = table.dataset.originalStyle;
+      if (origTable !== undefined) table.setAttribute("style", origTable);
+      delete table.dataset.originalStyle;
       Array.from(table.querySelectorAll("th, td")).forEach(cell => {
         const el = cell as HTMLElement;
-        el.style.removeProperty("border-top");
-        el.style.removeProperty("border-bottom");
-        el.style.removeProperty("border-left");
-        el.style.removeProperty("border-right");
-        el.style.removeProperty("border-color");
-        el.style.removeProperty("background-color");
+        const orig = el.dataset.originalStyle;
+        if (orig !== undefined) {
+          el.setAttribute("style", orig);
+          delete el.dataset.originalStyle;
+        } else {
+          el.setAttribute("style", el.tagName === "TH" ? TH_STYLE : TD_STYLE);
+        }
       });
-      table.style.removeProperty("border-color");
-      table.style.removeProperty("border-left");
       table.dataset.linesHidden = "false";
       setTableLinesHidden(false);
     } else {
+      table.dataset.originalStyle = table.getAttribute("style") || "";
       Array.from(table.querySelectorAll("th, td")).forEach(cell => {
         const el = cell as HTMLElement;
+        el.dataset.originalStyle = el.getAttribute("style") || "";
         el.style.setProperty("border-top", "1px solid transparent", "important");
         el.style.setProperty("border-bottom", "1px solid transparent", "important");
         el.style.setProperty("border-left", "1px solid transparent", "important");
