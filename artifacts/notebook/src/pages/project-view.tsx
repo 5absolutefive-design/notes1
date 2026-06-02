@@ -674,6 +674,16 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     setCtxMenu(null);
   };
 
+  const insertLined = () => {
+    const thStyle = `background:#f5f5f3;padding:8px 12px;text-align:left;font-size:13px;font-weight:600;color:#374151;border:none;border-bottom:2px solid #b0b7c3;width:100%;display:block`;
+    const tdStyle = `padding:7px 12px;border:none;border-bottom:1px solid #e2e0db;width:100%;display:block;font-size:13px;color:#1f2937;min-height:32px`;
+    const th = `<th style="${thStyle}" contenteditable="true">Header</th>`;
+    const tds = [1,2,3].map(() => `<tr><td style="${tdStyle}" contenteditable="true"><br/></td></tr>`).join("");
+    const html = `<br/><table data-lined="true" style="border-collapse:collapse;width:100%;margin:8px 0;border:1.5px solid #b0b7c3;border-radius:6px;overflow:hidden"><thead><tr>${th}</tr></thead><tbody>${tds}</tbody></table><br/>`;
+    insertHTML(html);
+    setCtxMenu(null);
+  };
+
   const TH_STYLE = `background:#f9fafb;padding:6px 10px;text-align:left;font-size:12px;font-weight:600;color:#374151;border:1.5px solid #b0b7c3;border-top:none;border-bottom:3px double #b0b7c3;min-width:120px`;
   const TD_STYLE = `padding:6px 10px;border:1.5px solid #b0b7c3;min-width:120px;font-size:13px;color:#1f2937`;
 
@@ -1076,46 +1086,46 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             </div>
           )}
           {/* Table +/- row & column buttons */}
-          {tableToolbar && (
-            <>
-              {/* Row buttons — below the table */}
+          {tableToolbar && (() => {
+            const isLined = activeTableRef.current?.dataset.lined === "true";
+            const btnStyle = (variant: "red"|"green"): React.CSSProperties => ({
+              width: 24, height: 24, borderRadius: 8, border: "1px solid #e7e5e4",
+              background: "#fafaf8", color: "#374151", fontSize: 14, fontWeight: 700,
+              lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer"
+            });
+            const hoverRed = (e: React.MouseEvent<HTMLButtonElement>) => { const t = e.currentTarget; t.style.background = "#fee2e2"; t.style.color = "#dc2626"; };
+            const hoverGreen = (e: React.MouseEvent<HTMLButtonElement>) => { const t = e.currentTarget; t.style.background = "#dcfce7"; t.style.color = "#16a34a"; };
+            const hoverReset = (e: React.MouseEvent<HTMLButtonElement>) => { const t = e.currentTarget; t.style.background = "#fafaf8"; t.style.color = "#374151"; };
+            const rowBtns = (
               <div
                 onMouseEnter={() => setHoverTableBtns(true)}
                 onMouseLeave={() => setHoverTableBtns(false)}
-                style={{ position: "absolute", top: tableToolbar.top + tableToolbar.height + 2, left: tableToolbar.left + 4, display: "flex", flexDirection: "column", gap: 4, zIndex: 200, pointerEvents: "auto", opacity: showTableBtns || hoverTableBtns ? 1 : 0, padding: 12, margin: -12 }}>
-                <button
-                  onMouseDown={e => { e.preventDefault(); tableRemoveRow(); }}
-                  title="Remove last row"
-                  style={{ width: 24, height: 24, borderRadius: 8, border: "1px solid #e7e5e4", background: "#fafaf8", color: "#374151", fontSize: 14, fontWeight: 700, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
-                  onMouseEnter={e => { const t = e.currentTarget; t.style.background = "#fee2e2"; t.style.color = "#dc2626"; }}
-                  onMouseLeave={e => { const t = e.currentTarget; t.style.background = "#fafaf8"; t.style.color = "#374151"; }}>−</button>
-                <button
-                  onMouseDown={e => { e.preventDefault(); tableAddRow(); }}
-                  title="Add row"
-                  style={{ width: 24, height: 24, borderRadius: 8, border: "1px solid #e7e5e4", background: "#fafaf8", color: "#374151", fontSize: 14, fontWeight: 700, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
-                  onMouseEnter={e => { const t = e.currentTarget; t.style.background = "#dcfce7"; t.style.color = "#16a34a"; }}
-                  onMouseLeave={e => { const t = e.currentTarget; t.style.background = "#fafaf8"; t.style.color = "#374151"; }}>+</button>
+                style={{ position: "absolute",
+                  top: isLined ? tableToolbar.top + tableToolbar.height + 2 : tableToolbar.top + tableToolbar.height + 2,
+                  left: isLined ? tableToolbar.left - 30 : tableToolbar.left + 4,
+                  display: "flex", flexDirection: "column", gap: 4, zIndex: 200, pointerEvents: "auto",
+                  opacity: showTableBtns || hoverTableBtns ? 1 : 0, padding: 12, margin: -12 }}>
+                <button onMouseDown={e => { e.preventDefault(); tableRemoveRow(); }} title="Remove last row"
+                  style={btnStyle("red")} onMouseEnter={hoverRed} onMouseLeave={hoverReset}>−</button>
+                <button onMouseDown={e => { e.preventDefault(); tableAddRow(); }} title="Add row"
+                  style={btnStyle("green")} onMouseEnter={hoverGreen} onMouseLeave={hoverReset}>+</button>
               </div>
-              {/* Column buttons — right of the table */}
+            );
+            const colBtns = !isLined && (
               <div
                 onMouseEnter={() => setHoverTableBtns(true)}
                 onMouseLeave={() => setHoverTableBtns(false)}
-                style={{ position: "absolute", top: tableToolbar.top + 4, left: tableToolbar.left + tableToolbar.width + 2, display: "flex", flexDirection: "column", gap: 4, zIndex: 200, pointerEvents: "auto", opacity: showTableBtns || hoverTableBtns ? 1 : 0, padding: 12, margin: -12 }}>
-                <button
-                  onMouseDown={e => { e.preventDefault(); tableRemoveCol(); }}
-                  title="Remove last column"
-                  style={{ width: 24, height: 24, borderRadius: 8, border: "1px solid #e7e5e4", background: "#fafaf8", color: "#374151", fontSize: 14, fontWeight: 700, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
-                  onMouseEnter={e => { const t = e.currentTarget; t.style.background = "#fee2e2"; t.style.color = "#dc2626"; }}
-                  onMouseLeave={e => { const t = e.currentTarget; t.style.background = "#fafaf8"; t.style.color = "#374151"; }}>−</button>
-                <button
-                  onMouseDown={e => { e.preventDefault(); tableAddCol(); }}
-                  title="Add column"
-                  style={{ width: 24, height: 24, borderRadius: 8, border: "1px solid #e7e5e4", background: "#fafaf8", color: "#374151", fontSize: 14, fontWeight: 700, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
-                  onMouseEnter={e => { const t = e.currentTarget; t.style.background = "#dcfce7"; t.style.color = "#16a34a"; }}
-                  onMouseLeave={e => { const t = e.currentTarget; t.style.background = "#fafaf8"; t.style.color = "#374151"; }}>+</button>
+                style={{ position: "absolute", top: tableToolbar.top + 4, left: tableToolbar.left + tableToolbar.width + 2,
+                  display: "flex", flexDirection: "column", gap: 4, zIndex: 200, pointerEvents: "auto",
+                  opacity: showTableBtns || hoverTableBtns ? 1 : 0, padding: 12, margin: -12 }}>
+                <button onMouseDown={e => { e.preventDefault(); tableRemoveCol(); }} title="Remove last column"
+                  style={btnStyle("red")} onMouseEnter={hoverRed} onMouseLeave={hoverReset}>−</button>
+                <button onMouseDown={e => { e.preventDefault(); tableAddCol(); }} title="Add column"
+                  style={btnStyle("green")} onMouseEnter={hoverGreen} onMouseLeave={hoverReset}>+</button>
               </div>
-            </>
-          )}
+            );
+            return <>{rowBtns}{colBtns}</>;
+          })()}
 
           {/* Banner + emoji overlap wrapper */}
           <div className="relative">
@@ -1467,6 +1477,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           <CtxSection label="Insert" />
           <CtxItem icon={<CheckSquare className="w-3.5 h-3.5"/>} label="To-Do Item" onClick={() => { insertTodo(); setCtxMenu(null); }} />
           <CtxItem icon={<Table className="w-3.5 h-3.5"/>} label="Table" onClick={() => { insertTable(); setCtxMenu(null); }} />
+          <CtxItem icon={<Table className="w-3.5 h-3.5"/>} label="Lined" onClick={() => { insertLined(); setCtxMenu(null); }} />
           {/* Bullet List → side sub-card with many styles */}
           <div className="relative">
             <CtxItem icon={<List className="w-3.5 h-3.5"/>} label="Bullet List" hasArrow
