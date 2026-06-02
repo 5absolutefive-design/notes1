@@ -513,6 +513,7 @@ export default function Home() {
     setProjects(updated);
     setActiveProjectId(doc.id);
     setActiveView("project");
+    setExpandedProjects(prev => ({ ...prev, [parentId]: true }));
     setFocusTitleSignal(s => s + 1);
   };
 
