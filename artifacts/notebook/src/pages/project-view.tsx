@@ -1048,8 +1048,9 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             <>
               {/* Row buttons — below the table */}
               <div
-                onMouseEnter={() => { activeTableRef.current = activeTableRef.current; }}
-                style={{ position: "absolute", top: tableToolbar.top + tableToolbar.height + 2, left: tableToolbar.left + 4, display: "flex", flexDirection: "column", gap: 4, zIndex: 200, pointerEvents: "auto" }}>
+                onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.opacity = "1"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.opacity = "0.45"; }}
+                style={{ position: "absolute", top: tableToolbar.top + tableToolbar.height + 2, left: tableToolbar.left + 4, display: "flex", flexDirection: "column", gap: 4, zIndex: 200, pointerEvents: "auto", opacity: 0.45, transition: "opacity 0.15s ease" }}>
                 <button
                   onMouseDown={e => { e.preventDefault(); tableRemoveRow(); }}
                   title="Remove last row"
@@ -1065,8 +1066,9 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
               </div>
               {/* Column buttons — right of the table */}
               <div
-                onMouseEnter={() => { activeTableRef.current = activeTableRef.current; }}
-                style={{ position: "absolute", top: tableToolbar.top + 4, left: tableToolbar.left + tableToolbar.width + 2, display: "flex", flexDirection: "column", gap: 4, zIndex: 200, pointerEvents: "auto" }}>
+                onMouseEnter={e => { (e.currentTarget as HTMLDivElement).style.opacity = "1"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLDivElement).style.opacity = "0.45"; }}
+                style={{ position: "absolute", top: tableToolbar.top + 4, left: tableToolbar.left + tableToolbar.width + 2, display: "flex", flexDirection: "column", gap: 4, zIndex: 200, pointerEvents: "auto", opacity: 0.45, transition: "opacity 0.15s ease" }}>
                 <button
                   onMouseDown={e => { e.preventDefault(); tableRemoveCol(); }}
                   title="Remove last column"
