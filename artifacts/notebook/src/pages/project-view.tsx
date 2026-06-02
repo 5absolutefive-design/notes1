@@ -1014,11 +1014,28 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             }
             // Track active table for +/- toolbar
             const tbl = (e.target as Element).closest("table") as HTMLTableElement | null;
-            if (tbl && tbl !== activeTableRef.current) {
-              activeTableRef.current = tbl;
-              updateTableToolbar();
+            if (tbl) {
+              if (tbl !== activeTableRef.current) { activeTableRef.current = tbl; updateTableToolbar(); }
+              setShowTableBtns(true);
+            } else {
+              // Check if cursor is in the button zone of any table in the editor
+              const editor = editorRef.current;
+              const nearTable = editor ? Array.from(editor.querySelectorAll("table")).find(t => {
+                const tr = t.getBoundingClientRect();
+                const cr = rect;
+                const tx = tr.left - cr.left;
+                const ty = tr.top - cr.top + container.scrollTop;
+                const inRowZone = mx >= tx - 12 && mx <= tx + 60 && my >= ty + tr.height - 12 && my <= ty + tr.height + 60;
+                const inColZone = mx >= tx + tr.width - 12 && mx <= tx + tr.width + 60 && my >= ty - 12 && my <= ty + 60;
+                return inRowZone || inColZone;
+              }) as HTMLTableElement | undefined : undefined;
+              if (nearTable) {
+                if (nearTable !== activeTableRef.current) { activeTableRef.current = nearTable; updateTableToolbar(); }
+                setShowTableBtns(true);
+              } else {
+                setShowTableBtns(false);
+              }
             }
-            setShowTableBtns(!!tbl);
           }}
           onMouseLeave={() => { setShowTodoButtons(false); setEraserPos(null); setTableToolbar(null); activeTableRef.current = null; if (tableResizeObserverRef.current) { tableResizeObserverRef.current.disconnect(); tableResizeObserverRef.current = null; } }}
         >
