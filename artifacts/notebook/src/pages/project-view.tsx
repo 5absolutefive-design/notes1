@@ -888,10 +888,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                   {Math.round(blk.width)}px
                 </div>
 
-                {/* Resize handles — corners */}
+                {/* Resize handles — bottom corners only */}
                 {!blk.locked && [
-                  { side: "tl" as const, style: { top: -5, left: -5, cursor: "nw-resize" } },
-                  { side: "tr" as const, style: { top: -5, right: -5, cursor: "ne-resize" } },
                   { side: "bl" as const, style: { bottom: -5, left: -5, cursor: "sw-resize" } },
                   { side: "br" as const, style: { bottom: -5, right: -5, cursor: "se-resize" } },
                 ].map(({ side, style }) => (
