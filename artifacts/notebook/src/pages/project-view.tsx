@@ -85,6 +85,7 @@ interface ContextMenuState {
   y: number;
   formatOpen: boolean;
   alignOpen: boolean;
+  bulletOpen: boolean;
   highlightOpen: boolean;
   headingOpen: boolean;
   todoOpen: boolean;
@@ -236,7 +237,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   // ── Right-click handler
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
-    setCtxMenu({ x: e.clientX, y: e.clientY, formatOpen: false, alignOpen: false, highlightOpen: false, headingOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1 });
+    setCtxMenu({ x: e.clientX, y: e.clientY, formatOpen: false, alignOpen: false, bulletOpen: false, highlightOpen: false, headingOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1 });
   };
 
   // ── Clamp context menu inside viewport after it renders
@@ -256,6 +257,20 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const execFmt = (cmd: string, value?: string) => {
     editorRef.current?.focus();
     document.execCommand(cmd, false, value);
+    setCtxMenu(null);
+    debouncedSave();
+  };
+
+  const insertCustomBullet = (type: string) => {
+    editorRef.current?.focus();
+    if (type === "ordered") {
+      document.execCommand("insertOrderedList");
+    } else if (type === "disc") {
+      document.execCommand("insertUnorderedList");
+    } else {
+      document.execCommand("insertHTML", false,
+        `<ul style="list-style-type: '${type} '; padding-left: 1.5em; margin: 4px 0"><li><br></li></ul>`);
+    }
     setCtxMenu(null);
     debouncedSave();
   };
@@ -652,8 +667,49 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           <div className="my-1 border-t border-stone-100" />
           <CtxSection label="Insert" />
           <CtxItem icon={<CheckSquare className="w-3.5 h-3.5"/>} label="To-Do Item" onClick={() => { insertTodo(); setCtxMenu(null); }} />
-          <CtxItem icon={<List className="w-3.5 h-3.5"/>}         label="Bullet List"   onClick={() => execFmt("insertUnorderedList")} />
-          <CtxItem icon={<ListOrdered className="w-3.5 h-3.5"/>}  label="Numbered List" onClick={() => execFmt("insertOrderedList")} />
+          {/* Bullet List → side sub-card with many styles */}
+          <div className="relative">
+            <CtxItem icon={<List className="w-3.5 h-3.5"/>} label="Bullet List" hasArrow
+              onClick={() => setCtxMenu(m => m ? { ...m, bulletOpen: !m.bulletOpen, formatOpen: false, alignOpen: false } : null)} />
+            {ctxMenu.bulletOpen && (
+              <div className="absolute left-full top-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 py-2 px-2 z-[10000] min-w-[220px]">
+                <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide px-1 mb-1.5">Choose a list style</p>
+                {/* Number list row */}
+                <button onClick={() => insertCustomBullet("ordered")}
+                  className="w-full flex items-center gap-2.5 px-2 py-1.5 rounded-lg hover:bg-indigo-50 hover:text-indigo-700 text-stone-700 text-xs font-medium transition-colors text-left">
+                  <span className="text-sm font-semibold text-stone-500 w-6 text-center">1.</span>
+                  <span>Number List</span>
+                </button>
+                {/* Bullet grid */}
+                <div className="grid grid-cols-4 gap-1 mt-1">
+                  {[
+                    { char: "●", label: "Disc" },
+                    { char: "◎", label: "Ring" },
+                    { char: "◉", label: "Bullseye" },
+                    { char: "◈", label: "Diamond" },
+                    { char: "☑", label: "Check Box" },
+                    { char: "✔", label: "Tick" },
+                    { char: "➤", label: "Arrow" },
+                    { char: "➜", label: "Round Arrow" },
+                    { char: "◘", label: "Square" },
+                    { char: "♫", label: "Music" },
+                    { char: "★", label: "Star" },
+                    { char: "📞", label: "Phone" },
+                    { char: "$", label: "Dollar" },
+                    { char: "£", label: "Pound" },
+                    { char: "»", label: "Guillemet" },
+                    { char: "disc", label: "Default" },
+                  ].map(({ char, label }) => (
+                    <button key={char} title={label}
+                      onClick={() => insertCustomBullet(char === "disc" ? "disc" : char)}
+                      className="flex items-center justify-center h-8 w-full rounded-lg hover:bg-indigo-50 hover:text-indigo-700 text-stone-700 text-base transition-colors border border-stone-100 hover:border-indigo-200">
+                      {char === "disc" ? "•" : char}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
           <CtxItem icon={<Minus className="w-3.5 h-3.5"/>}        label="Divider Line"  onClick={insertDivider} />
           <CtxItem icon={<ChevronRight className="w-3.5 h-3.5"/>} label="Quote Block"   onClick={insertBorderBlock} />
         </div>
