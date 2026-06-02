@@ -1315,42 +1315,6 @@ export default function Home() {
             );
           })}
 
-          {/* Notebook list — only shown when My Notebook is active */}
-          {activeView === "my-notebook" && (
-            <div className="mt-3">
-              <div className="flex flex-col gap-0.5">
-                {books.map((book) => (
-                  <Link
-                    key={book.id}
-                    href={`/books/${book.id}`}
-                    onClick={(e) => handleBookClick(e, book)}
-                    className={`flex items-center gap-2.5 rounded-lg px-2 py-1.5 text-stone-500 hover:bg-stone-50 hover:text-stone-900 transition-all group ${sidebarCollapsed ? "justify-center" : ""}`}
-                    title={book.title}
-                  >
-                    <div
-                      className="w-4 h-4 rounded flex-shrink-0 relative overflow-hidden"
-                      style={coverStyle((book as any).pattern ?? "solid", book.color || "#1e293b", (book as any).coverImg)}
-                    >
-                      {book.password && (
-                        <div className="absolute inset-0 flex items-center justify-center bg-black/30">
-                          <Lock className="w-2 h-2 text-white" />
-                        </div>
-                      )}
-                    </div>
-                    {!sidebarCollapsed && (
-                      <>
-                        <span className="text-xs truncate flex-1">{book.title}</span>
-                        <span className="text-[10px] text-stone-400 flex-shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">{book.pageCount}</span>
-                      </>
-                    )}
-                  </Link>
-                ))}
-                {books.length === 0 && !sidebarCollapsed && (
-                  <p className="text-xs text-stone-400 px-2 py-1">No notebooks yet</p>
-                )}
-              </div>
-            </div>
-          )}
         </nav>
 
         {/* Bottom stats */}
