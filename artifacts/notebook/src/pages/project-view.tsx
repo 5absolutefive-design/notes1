@@ -4,7 +4,7 @@ import {
   Bold, Italic, Underline, Strikethrough, Highlighter,
   CheckSquare, Minus, Heading1, Heading2, Heading3,
   AlignLeft, AlignCenter, AlignRight, List, ListOrdered,
-  ChevronRight, Link, Mic,
+  ChevronRight, Link, Mic, PenLine,
 } from "lucide-react";
 
 // ── Types (exported for use in home.tsx) ─────────────────────────
@@ -105,6 +105,13 @@ interface ImageBlock {
   locked: boolean;
 }
 
+interface ArrowShape {
+  id: string;
+  x1: number; y1: number;
+  x2: number; y2: number;
+  color: string;
+}
+
 // ── Props ────────────────────────────────────────────────────────
 interface ProjectViewProps {
   projects: ProjectDoc[];
@@ -136,6 +143,11 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const dragRef = useRef<{ id: string; startMx: number; startMy: number; startBx: number; startBy: number } | null>(null);
   const resizeRef = useRef<{ id: string; startMx: number; startW: number; startBx: number; side: "br" | "bl" | "tr" | "tl" } | null>(null);
 
+  const [arrowMode, setArrowMode] = useState(false);
+  const [arrows, setArrows] = useState<ArrowShape[]>([]);
+  const [drawingArrow, setDrawingArrow] = useState<ArrowShape | null>(null);
+  const arrowDrawRef = useRef<{ startX: number; startY: number } | null>(null);
+
   const activeProject = projects.find(p => p.id === activeId) ?? null;
 
   // ── Load / save image blocks per project
@@ -151,6 +163,28 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     if (!activeId) return;
     localStorage.setItem(`nb_project_imgs_${activeId}`, JSON.stringify(imageBlocks));
   }, [imageBlocks, activeId]);
+
+  // ── Load / save arrows per project
+  useEffect(() => {
+    if (!activeId) { setArrows([]); setArrowMode(false); return; }
+    try {
+      const raw = localStorage.getItem(`nb_project_arrows_${activeId}`);
+      setArrows(raw ? JSON.parse(raw) : []);
+    } catch { setArrows([]); }
+    setArrowMode(false);
+  }, [activeId]);
+
+  useEffect(() => {
+    if (!activeId) return;
+    localStorage.setItem(`nb_project_arrows_${activeId}`, JSON.stringify(arrows));
+  }, [arrows, activeId]);
+
+  // ── Escape key exits arrow mode
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") { setArrowMode(false); setDrawingArrow(null); arrowDrawRef.current = null; } };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   // ── Document-level drag and resize handlers for image blocks
   useEffect(() => {
@@ -178,8 +212,35 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           setImageBlocks(prev => prev.map(b => b.id === id ? { ...b, width: newW } : b));
         }
       }
+      if (arrowDrawRef.current) {
+        const container = scrollContainerRef.current;
+        if (!container) return;
+        const rect = container.getBoundingClientRect();
+        const x2 = e.clientX - rect.left;
+        const y2 = e.clientY - rect.top + container.scrollTop;
+        setDrawingArrow(prev => prev ? { ...prev, x2, y2 } : null);
+      }
     };
-    const onUp = () => { dragRef.current = null; resizeRef.current = null; };
+    const onUp = (e: MouseEvent) => {
+      dragRef.current = null;
+      resizeRef.current = null;
+      if (arrowDrawRef.current) {
+        const container = scrollContainerRef.current;
+        if (container) {
+          const rect = container.getBoundingClientRect();
+          const x2 = e.clientX - rect.left;
+          const y2 = e.clientY - rect.top + container.scrollTop;
+          const { startX, startY } = arrowDrawRef.current;
+          const dist = Math.sqrt((x2 - startX) ** 2 + (y2 - startY) ** 2);
+          if (dist > 10) {
+            const arrow: ArrowShape = { id: crypto.randomUUID(), x1: startX, y1: startY, x2, y2, color: "#ef4444" };
+            setArrows(prev => [...prev, arrow]);
+          }
+        }
+        arrowDrawRef.current = null;
+        setDrawingArrow(null);
+      }
+    };
     document.addEventListener("mousemove", onMove);
     document.addEventListener("mouseup", onUp);
     return () => {
@@ -670,7 +731,18 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
         <div
           ref={scrollContainerRef}
           className="flex-1 overflow-y-auto min-h-0 hide-scrollbar"
-          style={{ position: "relative" }}
+          style={{ position: "relative", cursor: arrowMode ? "crosshair" : undefined }}
+          onMouseDown={(e) => {
+            if (!arrowMode) return;
+            const container = scrollContainerRef.current;
+            if (!container) return;
+            const rect = container.getBoundingClientRect();
+            const x1 = e.clientX - rect.left;
+            const y1 = e.clientY - rect.top + container.scrollTop;
+            arrowDrawRef.current = { startX: x1, startY: y1 };
+            setDrawingArrow({ id: "preview", x1, y1, x2: x1, y2: y1, color: "#ef4444" });
+            e.preventDefault();
+          }}
           onMouseMove={(e) => {
             if (!lastTodoPos) return;
             const rect = scrollContainerRef.current?.getBoundingClientRect();
@@ -842,6 +914,38 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           <input ref={voiceInputRef} type="file" accept="audio/*" className="hidden" onChange={handleVoiceFile} />
 
           {/* Image blocks — absolutely positioned within the scroll container */}
+          {/* SVG arrow overlay */}
+          {(arrows.length > 0 || drawingArrow) && (
+            <svg
+              style={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%", pointerEvents: arrowMode ? "none" : "auto", zIndex: 50, overflow: "visible" }}
+            >
+              <defs>
+                <marker id="ah-red" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                  <polygon points="0 0, 10 3.5, 0 7" fill="#ef4444" />
+                </marker>
+              </defs>
+              {arrows.map(a => (
+                <line
+                  key={a.id}
+                  x1={a.x1} y1={a.y1} x2={a.x2} y2={a.y2}
+                  stroke={a.color} strokeWidth={2.5}
+                  markerEnd="url(#ah-red)"
+                  style={{ cursor: "pointer" }}
+                  onClick={() => setArrows(prev => prev.filter(x => x.id !== a.id))}
+                />
+              ))}
+              {drawingArrow && (
+                <line
+                  x1={drawingArrow.x1} y1={drawingArrow.y1}
+                  x2={drawingArrow.x2} y2={drawingArrow.y2}
+                  stroke="#ef4444" strokeWidth={2.5} strokeDasharray="6 3"
+                  markerEnd="url(#ah-red)"
+                  style={{ pointerEvents: "none" }}
+                />
+              )}
+            </svg>
+          )}
+
           {imageBlocks.map(blk => (
             <div
               key={blk.id}
@@ -1128,6 +1232,11 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           </div>
           <CtxItem icon={<ImagePlus className="w-3.5 h-3.5"/>} label="Image" onClick={() => { setCtxMenu(null); imgInputRef.current?.click(); }} />
           <CtxItem icon={<Mic className="w-3.5 h-3.5"/>} label="Voice" onClick={() => { setCtxMenu(null); voiceInputRef.current?.click(); }} />
+          <CtxItem
+            icon={<PenLine className="w-3.5 h-3.5"/>}
+            label={arrowMode ? "Stop Drawing" : "Draw Arrow"}
+            onClick={() => { setCtxMenu(null); setArrowMode(v => !v); }}
+          />
           <CtxItem icon={<ChevronRight className="w-3.5 h-3.5"/>} label="Quote Block"   onClick={insertBorderBlock} />
         </div>
       )}
