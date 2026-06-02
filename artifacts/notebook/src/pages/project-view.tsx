@@ -88,6 +88,7 @@ interface ContextMenuState {
   bulletOpen: boolean;
   highlightOpen: boolean;
   headingOpen: boolean;
+  dividerOpen: boolean;
   todoOpen: boolean;
   todoCount: number;
   todoRemoveCount: number;
@@ -237,7 +238,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   // ── Right-click handler
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
-    setCtxMenu({ x: e.clientX, y: e.clientY, formatOpen: false, alignOpen: false, bulletOpen: false, highlightOpen: false, headingOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1 });
+    setCtxMenu({ x: e.clientX, y: e.clientY, formatOpen: false, alignOpen: false, bulletOpen: false, highlightOpen: false, headingOpen: false, dividerOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1 });
   };
 
   // ── Clamp context menu inside viewport after it renders
@@ -330,7 +331,18 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     setCtxMenu(null);
   };
 
-  const insertDivider = () => insertHTML(`<br/><hr style="border:none;border-top:2px solid #e7e5e4;margin:12px 0"/><br/>`);
+  const insertDividerStyle = (style: string) => {
+    const styles: Record<string, string> = {
+      single:  `border:none;border-top:1.5px solid #d6d3d1;margin:12px 0`,
+      bold:    `border:none;border-top:4px solid #78716c;margin:12px 0`,
+      thin:    `border:none;border-top:0.5px solid #e7e5e4;margin:12px 0`,
+      double:  `border:none;border-top:3px double #a8a29e;margin:12px 0`,
+      dashed:  `border:none;border-top:2px dashed #a8a29e;margin:12px 0`,
+      dotted:  `border:none;border-top:2px dotted #a8a29e;margin:12px 0`,
+    };
+    insertHTML(`<br/><hr style="${styles[style] ?? styles.single}"/><br/>`);
+    setCtxMenu(null);
+  };
 
   const insertBorderBlock = () => insertHTML(
     `<div style="border-left:4px solid #6366f1;background:#f5f3ff;padding:12px 16px;border-radius:0 8px 8px 0;margin:8px 0">` +
@@ -710,7 +722,30 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
               </div>
             )}
           </div>
-          <CtxItem icon={<Minus className="w-3.5 h-3.5"/>}        label="Divider Line"  onClick={insertDivider} />
+          {/* Divider Line → side sub-card with styles */}
+          <div className="relative">
+            <CtxItem icon={<Minus className="w-3.5 h-3.5"/>} label="Divider Line" hasArrow
+              onClick={() => setCtxMenu(m => m ? { ...m, dividerOpen: !m.dividerOpen, bulletOpen: false, formatOpen: false, alignOpen: false } : null)} />
+            {ctxMenu.dividerOpen && (
+              <div className="absolute left-full top-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 py-2 px-3 z-[10000] min-w-[200px]">
+                <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide mb-2">Choose a divider style</p>
+                {[
+                  { key: "single", label: "Single Line",  preview: <div className="flex-1 border-t-2 border-stone-300" /> },
+                  { key: "bold",   label: "Bold Line",    preview: <div className="flex-1 border-t-4 border-stone-500" /> },
+                  { key: "thin",   label: "Thin Line",    preview: <div className="flex-1 border-t border-stone-300" /> },
+                  { key: "double", label: "Double Line",  preview: <div className="flex-1" style={{ borderTop: "3px double #a8a29e" }} /> },
+                  { key: "dashed", label: "Dashed Line",  preview: <div className="flex-1 border-t-2 border-dashed border-stone-400" /> },
+                  { key: "dotted", label: "Dot Line",     preview: <div className="flex-1 border-t-2 border-dotted border-stone-400" /> },
+                ].map(({ key, label, preview }) => (
+                  <button key={key} onClick={() => insertDividerStyle(key)}
+                    className="w-full flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-indigo-50 hover:text-indigo-700 text-stone-700 transition-colors text-left group">
+                    <div className="flex items-center w-12">{preview}</div>
+                    <span className="text-xs font-medium">{label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
           <CtxItem icon={<ChevronRight className="w-3.5 h-3.5"/>} label="Quote Block"   onClick={insertBorderBlock} />
         </div>
       )}
