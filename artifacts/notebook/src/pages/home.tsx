@@ -1318,18 +1318,6 @@ export default function Home() {
           {/* Notebook list — only shown when My Notebook is active */}
           {activeView === "my-notebook" && (
             <div className="mt-3">
-              {!sidebarCollapsed && (
-                <div className="px-1 pb-1 flex items-center justify-between">
-                  <span className="text-[10px] font-semibold text-stone-400 uppercase tracking-widest">Notebooks</span>
-                  <button
-                    onClick={() => setShowCreate(true)}
-                    className="w-5 h-5 rounded-md flex items-center justify-center text-stone-400 hover:text-stone-700 hover:bg-stone-100 transition-all"
-                    title="New notebook"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                  </button>
-                </div>
-              )}
               <div className="flex flex-col gap-0.5">
                 {books.map((book) => (
                   <Link
