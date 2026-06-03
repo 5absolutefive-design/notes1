@@ -12,7 +12,7 @@ import {
   Camera, Pencil, Home as HomeIcon, ChevronLeft, ChevronRight,
   Check, BookMarked, Clock, StickyNote, FolderKanban,
   CheckSquare, CalendarDays, UserRound, AlertTriangle,
-  Smile, Image as ImageIcon, Type, List, Mic, Square, Play, Pause,
+  Smile, Image as ImageIcon, Type, List, Mic, Square, Play, Pause, ListTodo,
 } from "lucide-react";
 import { useState, useEffect, useCallback, useRef } from "react";
 import ReactDOM from "react-dom";
@@ -291,7 +291,7 @@ function MiniCalendar({ year, month, selectedDate, onSelectDate, markedDates }: 
 }
 // ─────────────────────────────────────────────────────────────
 
-type ActiveView = "author" | "home" | "my-notebook" | "short-note" | "project" | "task" | "schedule";
+type ActiveView = "author" | "home" | "my-notebook" | "short-note" | "project" | "task" | "schedule" | "to-do";
 
 const NAV_ITEMS: { id: ActiveView; label: string; icon: React.ElementType; active: boolean }[] = [
   { id: "author",     label: "Author",      icon: UserRound,      active: false },
@@ -301,6 +301,7 @@ const NAV_ITEMS: { id: ActiveView; label: string; icon: React.ElementType; activ
   { id: "project",    label: "Project",     icon: FolderKanban,   active: true  },
   { id: "task",       label: "Task",        icon: CheckSquare,    active: true  },
   { id: "schedule",   label: "Schedule",    icon: CalendarDays,   active: true  },
+  { id: "to-do",      label: "To Do",       icon: ListTodo,       active: true  },
 ];
 
 function OrbitalClock24({ frozen = false }: { frozen?: boolean }) {
@@ -417,6 +418,126 @@ function AnimatedChildren({ open, children }: { open: boolean; children: React.R
   return (
     <div ref={ref} style={{ height, overflow: "hidden", transition: "height 220ms cubic-bezier(0.4,0,0.2,1)" }}>
       {children}
+    </div>
+  );
+}
+
+// ── localStorage helpers for To Do ────────────────────────────
+const TODO_KEY = "nb_todos";
+type TodoItem = { id: string; text: string; done: boolean; createdAt: number };
+function loadTodos(): TodoItem[] {
+  try { return JSON.parse(localStorage.getItem(TODO_KEY) || "[]"); } catch { return []; }
+}
+function saveTodosStore(items: TodoItem[]) {
+  localStorage.setItem(TODO_KEY, JSON.stringify(items));
+}
+
+function TodoView() {
+  const [todos, setTodos] = useState<TodoItem[]>(() => loadTodos());
+  const [input, setInput] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const sync = (updated: TodoItem[]) => { setTodos(updated); saveTodosStore(updated); };
+
+  const addTodo = () => {
+    const text = input.trim();
+    if (!text) return;
+    sync([...todos, { id: crypto.randomUUID(), text, done: false, createdAt: Date.now() }]);
+    setInput("");
+    inputRef.current?.focus();
+  };
+
+  const toggleTodo = (id: string) =>
+    sync(todos.map(t => t.id === id ? { ...t, done: !t.done } : t));
+
+  const deleteTodo = (id: string) =>
+    sync(todos.filter(t => t.id !== id));
+
+  const pending = todos.filter(t => !t.done);
+  const done = todos.filter(t => t.done);
+
+  return (
+    <div className="flex-1 overflow-y-auto p-6 md:p-10 max-w-3xl mx-auto w-full">
+      {/* Header */}
+      <div className="mb-8 rounded-2xl border border-stone-200 bg-white shadow-sm px-8 py-4 flex items-center justify-between gap-4">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-serif font-bold text-stone-800 leading-tight">To Do</h1>
+          <p className="text-xs text-stone-400">{pending.length} remaining · {done.length} completed</p>
+        </div>
+        <ListTodo className="w-7 h-7 text-stone-300" />
+      </div>
+
+      {/* Add input */}
+      <div className="flex items-center gap-2 mb-6">
+        <input
+          ref={inputRef}
+          value={input}
+          onChange={e => setInput(e.target.value)}
+          onKeyDown={e => { if (e.key === "Enter") addTodo(); }}
+          placeholder="Add a new to-do…"
+          className="flex-1 border border-stone-200 rounded-xl px-4 py-2.5 text-sm text-stone-800 placeholder:text-stone-400 outline-none focus:border-stone-400 focus:ring-2 focus:ring-stone-100 bg-white shadow-sm transition-all"
+        />
+        <button
+          onClick={addTodo}
+          className="flex items-center gap-1.5 bg-stone-800 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-stone-700 transition-colors shadow-sm"
+        >
+          <Plus className="w-4 h-4" />
+          Add
+        </button>
+      </div>
+
+      {/* Pending items */}
+      {pending.length > 0 && (
+        <div className="flex flex-col gap-2 mb-6">
+          {pending.map(todo => (
+            <div key={todo.id} className="group flex items-center gap-3 bg-white border border-stone-200 rounded-xl px-4 py-3 shadow-sm hover:border-stone-300 transition-all">
+              <button
+                onClick={() => toggleTodo(todo.id)}
+                className="w-5 h-5 rounded-full border-2 border-stone-300 flex-shrink-0 hover:border-stone-500 transition-colors"
+              />
+              <span className="flex-1 text-sm text-stone-700">{todo.text}</span>
+              <button
+                onClick={() => deleteTodo(todo.id)}
+                className="opacity-0 group-hover:opacity-100 text-stone-400 hover:text-red-500 transition-all"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Empty state */}
+      {todos.length === 0 && (
+        <div className="flex flex-col items-center justify-center py-20 text-stone-300 gap-3">
+          <ListTodo className="w-10 h-10" />
+          <p className="text-sm text-stone-400">No to-dos yet. Add one above!</p>
+        </div>
+      )}
+
+      {/* Done items */}
+      {done.length > 0 && (
+        <div className="flex flex-col gap-2">
+          <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide px-1 mb-1">Completed</p>
+          {done.map(todo => (
+            <div key={todo.id} className="group flex items-center gap-3 bg-stone-50 border border-stone-100 rounded-xl px-4 py-3 transition-all">
+              <button
+                onClick={() => toggleTodo(todo.id)}
+                className="w-5 h-5 rounded-full bg-stone-300 flex-shrink-0 flex items-center justify-center hover:bg-stone-400 transition-colors"
+              >
+                <Check className="w-3 h-3 text-white" />
+              </button>
+              <span className="flex-1 text-sm text-stone-400 line-through">{todo.text}</span>
+              <button
+                onClick={() => deleteTodo(todo.id)}
+                className="opacity-0 group-hover:opacity-100 text-stone-400 hover:text-red-500 transition-all"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
@@ -2973,8 +3094,13 @@ export default function Home() {
           />
         )}
 
+        {/* To Do view */}
+        {activeView === "to-do" && (
+          <TodoView />
+        )}
+
         {/* All other views — blank */}
-        {activeView !== "my-notebook" && activeView !== "short-note" && activeView !== "task" && activeView !== "schedule" && activeView !== "project" && (
+        {activeView !== "my-notebook" && activeView !== "short-note" && activeView !== "task" && activeView !== "schedule" && activeView !== "project" && activeView !== "to-do" && (
           <div className="flex-1" />
         )}
 
