@@ -659,18 +659,18 @@ function TodoView() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setWeekOffset(v => v - 1)}
-              className="w-10 h-10 flex items-center justify-center border border-stone-300 hover:border-stone-500 text-stone-500 transition-colors"
+              className="w-7 h-7 flex items-center justify-center border border-stone-300 hover:border-stone-500 text-stone-500 transition-colors"
               style={{ borderRadius: "2px" }}
             >
-              <ChevronLeft className="w-6 h-6" />
+              <ChevronLeft className="w-4 h-4" />
             </button>
             <span className="text-xs text-stone-400 min-w-[140px] text-center">{weekLabel}</span>
             <button
               onClick={() => setWeekOffset(v => v + 1)}
-              className="w-10 h-10 flex items-center justify-center border border-stone-300 hover:border-stone-500 text-stone-500 transition-colors"
+              className="w-7 h-7 flex items-center justify-center border border-stone-300 hover:border-stone-500 text-stone-500 transition-colors"
               style={{ borderRadius: "2px" }}
             >
-              <ChevronRight className="w-6 h-6" />
+              <ChevronRight className="w-4 h-4" />
             </button>
             {weekOffset !== 0 && (
               <button
