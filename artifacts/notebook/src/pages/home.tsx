@@ -461,13 +461,14 @@ function formatDisplayDate(d: Date): string {
 const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
 function DayCard({
-  dayName, dateKey, displayDate, allTodos, onChange,
+  dayName, dateKey, displayDate, allTodos, onChange, compact = false,
 }: {
   dayName: string;
   dateKey: string;
   displayDate: string;
   allTodos: DailyTodoStore;
   onChange: (store: DailyTodoStore) => void;
+  compact?: boolean;
 }) {
   const tasks: DailyTodoItem[] = allTodos[dateKey] ?? [];
   const [menuOpen, setMenuOpen] = useState(false);
@@ -505,6 +506,61 @@ function DayCard({
 
   const updateText = (id: string, text: string) =>
     update(tasks.map(t => t.id === id ? { ...t, text } : t));
+
+  if (compact) {
+    return (
+      <div className="flex flex-col min-h-[160px]">
+        <div className="flex items-baseline justify-between mb-0.5 gap-1">
+          <span className="text-[11px] font-bold text-stone-700 font-serif truncate">{dayName.slice(0, 3)}</span>
+          <span className="text-[10px] text-stone-400 flex-shrink-0">{displayDate}</span>
+        </div>
+        <div className="border-b border-stone-200 mb-2" />
+        <div className="flex flex-col gap-1 flex-1">
+          {tasks.map(task => (
+            <div key={task.id} className="group flex items-center gap-1">
+              <button
+                onClick={() => toggle(task.id)}
+                className={`w-3 h-3 border flex-shrink-0 flex items-center justify-center transition-colors ${task.done ? "bg-stone-700 border-stone-700" : "border-stone-400 hover:border-stone-600"}`}
+                style={{ borderRadius: "1px" }}
+              >
+                {task.done && <Check className="w-2 h-2 text-white" />}
+              </button>
+              <input
+                value={task.text}
+                onChange={e => updateText(task.id, e.target.value)}
+                onKeyDown={e => { if (e.key === "Enter") addTask(); }}
+                className={`flex-1 text-[11px] bg-transparent outline-none min-w-0 placeholder:opacity-40 ${task.done ? "line-through text-stone-400" : "text-stone-600"}`}
+                placeholder="Task…"
+              />
+              <button onClick={() => remove(task.id)} className="opacity-0 group-hover:opacity-100 text-stone-300 hover:text-red-400 transition-all flex-shrink-0">
+                <X className="w-2.5 h-2.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+        <div className="mt-2 relative self-start" ref={menuRef}>
+          <button
+            onClick={() => setMenuOpen(v => !v)}
+            className={`border text-[10px] px-1.5 py-0.5 transition-colors ${menuOpen ? "border-stone-500 text-stone-700 bg-stone-50" : "border-stone-200 text-stone-400 hover:border-stone-400 hover:text-stone-600"}`}
+            style={{ borderRadius: "2px" }}
+          >
+            Task ±
+          </button>
+          {menuOpen && (
+            <div className="absolute bottom-full mb-1 left-0 bg-white border border-stone-200 shadow-md flex flex-col overflow-hidden z-50" style={{ borderRadius: "3px", minWidth: "80px" }}>
+              <button onClick={() => { update([...tasks, { id: crypto.randomUUID(), text: "", done: false }]); }} className="flex items-center gap-1 px-2 py-1.5 text-[10px] text-stone-600 hover:bg-stone-50 hover:text-stone-900 transition-colors text-left">
+                <Plus className="w-2.5 h-2.5 text-stone-400" /> Task +
+              </button>
+              <div className="border-t border-stone-100" />
+              <button onClick={() => { if (tasks.length === 0) return; update(tasks.slice(0, -1)); }} className={`flex items-center gap-1 px-2 py-1.5 text-[10px] transition-colors text-left ${tasks.length === 0 ? "text-stone-300 cursor-not-allowed" : "text-stone-600 hover:bg-red-50 hover:text-red-600"}`}>
+                <span className="w-2.5 h-2.5 flex items-center justify-center text-stone-400 font-bold leading-none">−</span> Task −
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col min-h-[306px]">
@@ -605,40 +661,64 @@ function make5BlankTasks(): DailyTodoItem[] {
   return Array.from({ length: 5 }, () => ({ id: crypto.randomUUID(), text: "", done: false }));
 }
 
+type TodoViewMode = "1D" | "7D" | "30D";
+
 function TodoView() {
   const [allTodos, setAllTodos] = useState<DailyTodoStore>(() => loadDailyTodos());
-  const [weekOffset, setWeekOffset] = useState(0); // 0 = this week, -1 = last week, +1 = next week
+  const [viewMode, setViewMode] = useState<TodoViewMode>("7D");
+  const [offset, setOffset] = useState(0);
 
   const handleChange = (updated: DailyTodoStore) => {
     setAllTodos(updated);
     saveDailyTodos(updated);
   };
 
-  // Build Mon–Sun for the selected week
-  const weekDays = (() => {
-    const today = new Date();
-    const monday = getMondayOfWeek(today);
-    monday.setDate(monday.getDate() + weekOffset * 7);
-    return DAY_NAMES.map((name, i) => {
-      const d = new Date(monday);
-      d.setDate(monday.getDate() + i);
-      return { name, dateKey: formatDateKey(d), displayDate: formatDisplayDate(d), date: d };
-    });
-  })();
+  const switchMode = (mode: TodoViewMode) => {
+    setViewMode(mode);
+    setOffset(0);
+  };
 
   const todayKey = formatDateKey(new Date());
-  const weekLabel = (() => {
-    const first = weekDays[0];
-    const last = weekDays[6];
-    return `${first.displayDate} – ${last.displayDate}`;
+
+  // Build days list based on mode
+  const days = (() => {
+    const today = new Date();
+    if (viewMode === "1D") {
+      const d = new Date(today);
+      d.setDate(today.getDate() + offset);
+      const name = DAY_NAMES[(d.getDay() + 6) % 7];
+      return [{ name, dateKey: formatDateKey(d), displayDate: formatDisplayDate(d) }];
+    } else if (viewMode === "7D") {
+      const monday = getMondayOfWeek(today);
+      monday.setDate(monday.getDate() + offset * 7);
+      return DAY_NAMES.map((name, i) => {
+        const d = new Date(monday);
+        d.setDate(monday.getDate() + i);
+        return { name, dateKey: formatDateKey(d), displayDate: formatDisplayDate(d) };
+      });
+    } else {
+      // 30D: start from 1st of current month + offset*30 days
+      const start = new Date(today.getFullYear(), today.getMonth(), 1);
+      start.setDate(start.getDate() + offset * 30);
+      return Array.from({ length: 30 }, (_, i) => {
+        const d = new Date(start);
+        d.setDate(start.getDate() + i);
+        const name = DAY_NAMES[(d.getDay() + 6) % 7];
+        return { name, dateKey: formatDateKey(d), displayDate: formatDisplayDate(d) };
+      });
+    }
   })();
 
-  // Initialize days without tasks with 5 blank tasks
+  const rangeLabel = days.length === 1
+    ? `${days[0].displayDate} (${days[0].name})`
+    : `${days[0].displayDate} – ${days[days.length - 1].displayDate}`;
+
+  // Initialize new days with 5 blank tasks
   useEffect(() => {
     const current = loadDailyTodos();
     let changed = false;
     const next = { ...current };
-    weekDays.forEach(day => {
+    days.forEach(day => {
       if (!next[day.dateKey]) {
         next[day.dateKey] = make5BlankTasks();
         changed = true;
@@ -648,33 +728,50 @@ function TodoView() {
       saveDailyTodos(next);
       setAllTodos(next);
     }
-  }, [weekOffset]);
+  }, [viewMode, offset]);
 
   return (
     <div className="flex-1 overflow-y-auto flex flex-col px-6 md:px-10">
-      {/* Header — anchored near top */}
+      {/* Header */}
       <div className="pt-14 md:pt-16">
         <div className="flex items-center justify-between mb-1">
           <h1 className="text-xl font-bold text-stone-800">Daily To Do Lists :</h1>
           <div className="flex items-center gap-2">
+            {/* Mode toggle buttons */}
+            {(["1D", "7D", "30D"] as TodoViewMode[]).map(mode => (
+              <button
+                key={mode}
+                onClick={() => switchMode(mode)}
+                className={`text-xs px-2 py-1 border transition-colors font-medium ${
+                  viewMode === mode
+                    ? "border-stone-700 bg-stone-800 text-white"
+                    : "border-stone-300 text-stone-500 hover:border-stone-500 hover:text-stone-700"
+                }`}
+                style={{ borderRadius: "2px", minWidth: "32px" }}
+              >
+                {mode}
+              </button>
+            ))}
+            <div className="w-px h-4 bg-stone-200 mx-0.5" />
+            {/* Navigation */}
             <button
-              onClick={() => setWeekOffset(v => v - 1)}
+              onClick={() => setOffset(v => v - 1)}
               className="w-7 h-7 flex items-center justify-center border border-stone-300 hover:border-stone-500 text-stone-500 transition-colors"
               style={{ borderRadius: "2px" }}
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
-            <span className="text-xs text-stone-400 min-w-[140px] text-center">{weekLabel}</span>
+            <span className="text-xs text-stone-400 min-w-[140px] text-center">{rangeLabel}</span>
             <button
-              onClick={() => setWeekOffset(v => v + 1)}
+              onClick={() => setOffset(v => v + 1)}
               className="w-7 h-7 flex items-center justify-center border border-stone-300 hover:border-stone-500 text-stone-500 transition-colors"
               style={{ borderRadius: "2px" }}
             >
               <ChevronRight className="w-4 h-4" />
             </button>
-            {weekOffset !== 0 && (
+            {offset !== 0 && (
               <button
-                onClick={() => setWeekOffset(0)}
+                onClick={() => setOffset(0)}
                 className="text-xs border border-stone-300 px-2 py-1 text-stone-500 hover:border-stone-500 hover:text-stone-700 transition-colors"
                 style={{ borderRadius: "2px" }}
               >
@@ -686,34 +783,46 @@ function TodoView() {
         <div className="border-b border-stone-300" />
       </div>
 
-      {/* Grid — centered in remaining space */}
+      {/* Grid */}
       <div className="flex-1 flex flex-col justify-center py-6">
-        <div className="grid grid-cols-4 gap-8 mb-10">
-          {weekDays.slice(0, 4).map(day => (
-            <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-2 -m-2" : ""}>
-              <DayCard
-                dayName={day.name}
-                dateKey={day.dateKey}
-                displayDate={day.displayDate}
-                allTodos={allTodos}
-                onChange={handleChange}
-              />
+        {viewMode === "1D" && (
+          <div className="max-w-sm">
+            <DayCard
+              dayName={days[0].name}
+              dateKey={days[0].dateKey}
+              displayDate={days[0].displayDate}
+              allTodos={allTodos}
+              onChange={handleChange}
+            />
+          </div>
+        )}
+        {viewMode === "7D" && (
+          <>
+            <div className="grid grid-cols-4 gap-8 mb-10">
+              {days.slice(0, 4).map(day => (
+                <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-2 -m-2" : ""}>
+                  <DayCard dayName={day.name} dateKey={day.dateKey} displayDate={day.displayDate} allTodos={allTodos} onChange={handleChange} />
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
-        <div className="grid grid-cols-4 gap-8">
-          {weekDays.slice(4).map(day => (
-            <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-2 -m-2" : ""}>
-              <DayCard
-                dayName={day.name}
-                dateKey={day.dateKey}
-                displayDate={day.displayDate}
-                allTodos={allTodos}
-                onChange={handleChange}
-              />
+            <div className="grid grid-cols-4 gap-8">
+              {days.slice(4).map(day => (
+                <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-2 -m-2" : ""}>
+                  <DayCard dayName={day.name} dateKey={day.dateKey} displayDate={day.displayDate} allTodos={allTodos} onChange={handleChange} />
+                </div>
+              ))}
             </div>
-          ))}
-        </div>
+          </>
+        )}
+        {viewMode === "30D" && (
+          <div className="grid grid-cols-6 gap-3">
+            {days.map(day => (
+              <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-1 -m-1" : ""}>
+                <DayCard dayName={day.name} dateKey={day.dateKey} displayDate={day.displayDate} allTodos={allTodos} onChange={handleChange} compact />
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
