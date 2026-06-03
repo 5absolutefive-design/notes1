@@ -13,6 +13,7 @@ import {
   Check, BookMarked, Clock, StickyNote, FolderKanban,
   CheckSquare, CalendarDays, UserRound, AlertTriangle,
   Smile, Image as ImageIcon, Type, List, Mic, Square, Play, Pause, ListTodo, Brain,
+  Copy, Clipboard,
 } from "lucide-react";
 import { useState, useEffect, useCallback, useRef } from "react";
 import ReactDOM from "react-dom";
@@ -474,6 +475,7 @@ const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Satu
 
 function DayCard({
   dayName, dateKey, displayDate, allTodos, onChange, compact = false,
+  onCopy, onPaste, canPaste,
 }: {
   dayName: string;
   dateKey: string;
@@ -481,6 +483,9 @@ function DayCard({
   allTodos: DailyTodoStore;
   onChange: (store: DailyTodoStore) => void;
   compact?: boolean;
+  onCopy?: () => void;
+  onPaste?: () => void;
+  canPaste?: boolean;
 }) {
   const tasks: DailyTodoItem[] = allTodos[dateKey] ?? [];
   const [menuOpen, setMenuOpen] = useState(false);
@@ -557,7 +562,24 @@ function DayCard({
       <div className="flex flex-col min-h-[160px]">
         <div className="flex items-baseline justify-between mb-0.5 gap-1">
           <span className="text-[11px] font-bold text-stone-700 font-serif truncate">{dayName.slice(0, 3)}</span>
-          <span className="text-[10px] text-stone-400 flex-shrink-0">{displayDate}</span>
+          <div className="flex items-center gap-0.5 flex-shrink-0">
+            <button
+              onClick={onCopy}
+              title="Copy tasks"
+              className="text-stone-300 hover:text-stone-600 transition-colors"
+            >
+              <Copy className="w-2.5 h-2.5" />
+            </button>
+            <button
+              onClick={onPaste}
+              title="Paste tasks"
+              disabled={!canPaste}
+              className={`transition-colors ${canPaste ? "text-stone-400 hover:text-stone-700" : "text-stone-200 cursor-not-allowed"}`}
+            >
+              <Clipboard className="w-2.5 h-2.5" />
+            </button>
+            <span className="text-[10px] text-stone-400 ml-0.5">{displayDate}</span>
+          </div>
         </div>
         <div className="border-b border-stone-200 mb-2" />
         <div className="flex flex-col gap-1 flex-1">
@@ -645,7 +667,24 @@ function DayCard({
       {/* Day + Date header */}
       <div className="flex items-baseline justify-between mb-1 gap-2">
         <span className="text-lg font-bold text-stone-800 font-serif">{dayName}</span>
-        <span className="text-xs text-stone-400 flex-shrink-0">{displayDate}</span>
+        <div className="flex items-center gap-1 flex-shrink-0">
+          <button
+            onClick={onCopy}
+            title="Copy all tasks"
+            className="text-stone-300 hover:text-stone-600 transition-colors"
+          >
+            <Copy className="w-3.5 h-3.5" />
+          </button>
+          <button
+            onClick={onPaste}
+            title="Paste tasks"
+            disabled={!canPaste}
+            className={`transition-colors ${canPaste ? "text-stone-400 hover:text-stone-700" : "text-stone-200 cursor-not-allowed"}`}
+          >
+            <Clipboard className="w-3.5 h-3.5" />
+          </button>
+          <span className="text-xs text-stone-400 ml-1">{displayDate}</span>
+        </div>
       </div>
       <div className="border-b border-stone-300 mb-3" />
 
@@ -795,6 +834,7 @@ function TodoView() {
   const [allTodos, setAllTodos] = useState<DailyTodoStore>(() => loadDailyTodos());
   const [viewMode, setViewMode] = useState<TodoViewMode>("W");
   const [offset, setOffset] = useState(0);
+  const [clipboard, setClipboard] = useState<DailyTodoItem[] | null>(null);
 
   const handleChange = (updated: DailyTodoStore) => {
     setAllTodos(updated);
@@ -921,6 +961,13 @@ function TodoView() {
                 displayDate={days[0].displayDate}
                 allTodos={allTodos}
                 onChange={handleChange}
+                onCopy={() => setClipboard(allTodos[days[0].dateKey] ?? [])}
+                onPaste={() => {
+                  if (!clipboard) return;
+                  const next = { ...allTodos, [days[0].dateKey]: clipboard.map(t => ({ ...t, id: crypto.randomUUID() })) };
+                  handleChange(next);
+                }}
+                canPaste={!!clipboard}
               />
             </div>
           </div>
@@ -930,14 +977,22 @@ function TodoView() {
             <div className="grid grid-cols-4 gap-8 mb-10">
               {days.slice(0, 4).map(day => (
                 <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-2 -m-2" : ""}>
-                  <DayCard dayName={day.name} dateKey={day.dateKey} displayDate={day.displayDate} allTodos={allTodos} onChange={handleChange} />
+                  <DayCard dayName={day.name} dateKey={day.dateKey} displayDate={day.displayDate} allTodos={allTodos} onChange={handleChange}
+                    onCopy={() => setClipboard(allTodos[day.dateKey] ?? [])}
+                    onPaste={() => { if (!clipboard) return; handleChange({ ...allTodos, [day.dateKey]: clipboard.map(t => ({ ...t, id: crypto.randomUUID() })) }); }}
+                    canPaste={!!clipboard}
+                  />
                 </div>
               ))}
             </div>
             <div className="grid grid-cols-4 gap-8">
               {days.slice(4).map(day => (
                 <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-2 -m-2" : ""}>
-                  <DayCard dayName={day.name} dateKey={day.dateKey} displayDate={day.displayDate} allTodos={allTodos} onChange={handleChange} />
+                  <DayCard dayName={day.name} dateKey={day.dateKey} displayDate={day.displayDate} allTodos={allTodos} onChange={handleChange}
+                    onCopy={() => setClipboard(allTodos[day.dateKey] ?? [])}
+                    onPaste={() => { if (!clipboard) return; handleChange({ ...allTodos, [day.dateKey]: clipboard.map(t => ({ ...t, id: crypto.randomUUID() })) }); }}
+                    canPaste={!!clipboard}
+                  />
                 </div>
               ))}
             </div>
@@ -947,7 +1002,11 @@ function TodoView() {
           <div className="grid grid-cols-6 gap-3">
             {days.map(day => (
               <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-1 -m-1" : ""}>
-                <DayCard dayName={day.name} dateKey={day.dateKey} displayDate={day.displayDate} allTodos={allTodos} onChange={handleChange} compact />
+                <DayCard dayName={day.name} dateKey={day.dateKey} displayDate={day.displayDate} allTodos={allTodos} onChange={handleChange} compact
+                  onCopy={() => setClipboard(allTodos[day.dateKey] ?? [])}
+                  onPaste={() => { if (!clipboard) return; handleChange({ ...allTodos, [day.dateKey]: clipboard.map(t => ({ ...t, id: crypto.randomUUID() })) }); }}
+                  canPaste={!!clipboard}
+                />
               </div>
             ))}
           </div>
