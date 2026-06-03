@@ -973,7 +973,7 @@ function MemoryCard({ dateKey, dayName, displayDate, allMemories, onChange, comp
   };
 
   return (
-    <div className={`flex flex-col ${compact ? "gap-1" : "gap-2"} ${compact ? "" : "min-h-[306px]"}`}>
+    <div className={`flex flex-col min-h-[306px] ${compact ? "gap-1" : "gap-2"}`}>
       {/* Card header */}
       <div className="flex items-baseline justify-between">
         <span className={`font-bold text-stone-800 ${compact ? "text-[10px]" : "text-sm"}`}>{dayName}</span>
