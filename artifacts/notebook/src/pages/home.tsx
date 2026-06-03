@@ -474,9 +474,21 @@ function DayCard({
   const tasks: DailyTodoItem[] = allTodos[dateKey] ?? [];
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const priorityRef = useRef<HTMLDivElement>(null);
   const [newText, setNewText] = useState("");
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [priorityTaskId, setPriorityTaskId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!priorityTaskId) return;
+    const handler = (e: MouseEvent) => {
+      if (priorityRef.current && !priorityRef.current.contains(e.target as Node)) {
+        setPriorityTaskId(null);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [priorityTaskId]);
 
   const setTaskPriority = (id: string, priority: TodoPriority | undefined) => {
     update(tasks.map(t => t.id === id ? { ...t, priority } : t));
@@ -486,7 +498,7 @@ function DayCard({
   const priorityTextColor = (p?: TodoPriority) => {
     if (p === "medium") return "text-blue-600";
     if (p === "important") return "text-orange-500";
-    if (p === "urgent") return "text-red-600 font-bold";
+    if (p === "urgent") return "text-red-600";
     return "text-stone-700";
   };
 
@@ -672,7 +684,7 @@ function DayCard({
                   onInput={e => { const t = e.currentTarget; t.style.height = "auto"; t.style.height = t.scrollHeight + "px"; }}
                 />
                 <div className="flex items-center gap-0.5 flex-shrink-0 mt-0.5">
-                  <div className="relative">
+                  <div className="relative" ref={priorityTaskId === task.id ? priorityRef : undefined}>
                     <button
                       onClick={() => setPriorityTaskId(priorityTaskId === task.id ? null : task.id)}
                       className={`opacity-0 group-hover:opacity-100 transition-all text-[12px] leading-none flex items-center justify-center ${priorityIconColor(task.priority)}`}
