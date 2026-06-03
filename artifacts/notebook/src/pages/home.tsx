@@ -474,6 +474,7 @@ function DayCard({
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const [newText, setNewText] = useState("");
+  const [confirmId, setConfirmId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -517,24 +518,34 @@ function DayCard({
         <div className="border-b border-stone-200 mb-2" />
         <div className="flex flex-col gap-1 flex-1">
           {tasks.map(task => (
-            <div key={task.id} className="group flex items-center gap-1">
-              <button
-                onClick={() => toggle(task.id)}
-                className={`w-3 h-3 border flex-shrink-0 flex items-center justify-center transition-colors ${task.done ? "bg-stone-700 border-stone-700" : "border-stone-400 hover:border-stone-600"}`}
-                style={{ borderRadius: "1px" }}
-              >
-                {task.done && <Check className="w-2 h-2 text-white" />}
-              </button>
-              <input
-                value={task.text}
-                onChange={e => updateText(task.id, e.target.value)}
-                onKeyDown={e => { if (e.key === "Enter") addTask(); }}
-                className={`flex-1 text-[11px] bg-transparent outline-none min-w-0 placeholder:opacity-40 ${task.done ? "line-through text-stone-400" : "text-stone-600"}`}
-                placeholder="Task…"
-              />
-              <button onClick={() => remove(task.id)} className="opacity-0 group-hover:opacity-100 text-stone-300 hover:text-red-400 transition-all flex-shrink-0">
-                <X className="w-2.5 h-2.5" />
-              </button>
+            <div key={task.id} className="group flex items-center gap-1 min-h-[16px]">
+              {confirmId === task.id ? (
+                <>
+                  <span className="text-[10px] text-stone-500 flex-1">Delete?</span>
+                  <button onClick={() => { remove(task.id); setConfirmId(null); }} className="text-[10px] px-1 py-0.5 border border-red-400 text-red-500 hover:bg-red-50 transition-colors" style={{ borderRadius: "2px" }}>Yes</button>
+                  <button onClick={() => setConfirmId(null)} className="text-[10px] px-1 py-0.5 border border-stone-300 text-stone-400 hover:bg-stone-50 transition-colors" style={{ borderRadius: "2px" }}>No</button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => toggle(task.id)}
+                    className={`w-3 h-3 border flex-shrink-0 flex items-center justify-center transition-colors ${task.done ? "bg-stone-700 border-stone-700" : "border-stone-400 hover:border-stone-600"}`}
+                    style={{ borderRadius: "1px" }}
+                  >
+                    {task.done && <Check className="w-2 h-2 text-white" />}
+                  </button>
+                  <input
+                    value={task.text}
+                    onChange={e => updateText(task.id, e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter") addTask(); }}
+                    className={`flex-1 text-[11px] bg-transparent outline-none min-w-0 placeholder:opacity-40 ${task.done ? "line-through text-stone-400" : "text-stone-600"}`}
+                    placeholder="Task…"
+                  />
+                  <button onClick={() => setConfirmId(task.id)} className="opacity-0 group-hover:opacity-100 text-stone-400 hover:text-red-500 transition-all flex-shrink-0">
+                    <X className="w-2.5 h-2.5" />
+                  </button>
+                </>
+              )}
             </div>
           ))}
         </div>
@@ -574,33 +585,53 @@ function DayCard({
       {/* Task rows */}
       <div className="flex flex-col gap-1.5">
         {tasks.map(task => (
-          <div key={task.id} className="group flex items-center gap-2">
-            <button
-              onClick={() => toggle(task.id)}
-              className={`w-4 h-4 border flex-shrink-0 flex items-center justify-center transition-colors ${
-                task.done
-                  ? "bg-stone-800 border-stone-800"
-                  : "border-stone-400 hover:border-stone-600"
-              }`}
-              style={{ borderRadius: "2px" }}
-            >
-              {task.done && <Check className="w-2.5 h-2.5 text-white" />}
-            </button>
-            <input
-              value={task.text}
-              onChange={e => updateText(task.id, e.target.value)}
-              onKeyDown={e => { if (e.key === "Enter") addTask(); }}
-              className={`flex-1 text-sm bg-transparent outline-none min-w-0 placeholder:opacity-50 ${
-                task.done ? "line-through text-stone-400" : "text-stone-700"
-              }`}
-              placeholder="Task…"
-            />
-            <button
-              onClick={() => remove(task.id)}
-              className="opacity-0 group-hover:opacity-100 text-stone-500 hover:text-red-500 transition-all flex-shrink-0"
-            >
-              <X className="w-3 h-3" />
-            </button>
+          <div key={task.id} className="group flex items-center gap-2 min-h-[22px]">
+            {confirmId === task.id ? (
+              <>
+                <span className="text-xs text-stone-500 flex-1">Delete?</span>
+                <button
+                  onClick={() => { remove(task.id); setConfirmId(null); }}
+                  className="text-[11px] px-2 py-0.5 border border-red-400 text-red-500 hover:bg-red-50 transition-colors"
+                  style={{ borderRadius: "2px" }}
+                >
+                  Yes
+                </button>
+                <button
+                  onClick={() => setConfirmId(null)}
+                  className="text-[11px] px-2 py-0.5 border border-stone-300 text-stone-500 hover:bg-stone-50 transition-colors"
+                  style={{ borderRadius: "2px" }}
+                >
+                  No
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  onClick={() => toggle(task.id)}
+                  className={`w-4 h-4 border flex-shrink-0 flex items-center justify-center transition-colors ${
+                    task.done ? "bg-stone-800 border-stone-800" : "border-stone-400 hover:border-stone-600"
+                  }`}
+                  style={{ borderRadius: "2px" }}
+                >
+                  {task.done && <Check className="w-2.5 h-2.5 text-white" />}
+                </button>
+                <input
+                  value={task.text}
+                  onChange={e => updateText(task.id, e.target.value)}
+                  onKeyDown={e => { if (e.key === "Enter") addTask(); }}
+                  className={`flex-1 text-sm bg-transparent outline-none min-w-0 placeholder:opacity-50 ${
+                    task.done ? "line-through text-stone-400" : "text-stone-700"
+                  }`}
+                  placeholder="Task…"
+                />
+                <button
+                  onClick={() => setConfirmId(task.id)}
+                  className="opacity-0 group-hover:opacity-100 text-stone-500 hover:text-red-500 transition-all flex-shrink-0"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </>
+            )}
           </div>
         ))}
 
