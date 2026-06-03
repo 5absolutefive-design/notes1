@@ -534,7 +534,7 @@ function DayCard({
               value={task.text}
               onChange={e => updateText(task.id, e.target.value)}
               onKeyDown={e => { if (e.key === "Enter") addTask(); }}
-              className={`flex-1 text-sm bg-transparent outline-none min-w-0 ${
+              className={`flex-1 text-sm bg-transparent outline-none min-w-0 placeholder:opacity-50 ${
                 task.done ? "line-through text-stone-400" : "text-stone-700"
               }`}
               placeholder="Task…"
