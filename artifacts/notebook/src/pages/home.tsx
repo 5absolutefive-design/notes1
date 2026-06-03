@@ -486,7 +486,7 @@ function DayCard({
   const priorityTextColor = (p?: TodoPriority) => {
     if (p === "medium") return "text-blue-600";
     if (p === "important") return "text-orange-500";
-    if (p === "urgent") return "text-red-500";
+    if (p === "urgent") return "text-red-600 font-bold";
     return "text-stone-700";
   };
 
@@ -629,7 +629,7 @@ function DayCard({
       {/* Task rows */}
       <div className="flex flex-col gap-1.5">
         {tasks.map(task => (
-          <div key={task.id} className="group flex items-center gap-2 min-h-[22px]">
+          <div key={task.id} className="group flex items-start gap-2 min-h-[22px]">
             {confirmId === task.id ? (
               <>
                 <span className="text-xs text-stone-500 flex-1">Delete?</span>
@@ -652,23 +652,26 @@ function DayCard({
               <>
                 <button
                   onClick={() => toggle(task.id)}
-                  className={`w-4 h-4 border flex-shrink-0 flex items-center justify-center transition-colors ${
+                  className={`w-4 h-4 border flex-shrink-0 flex items-center justify-center transition-colors mt-0.5 ${
                     task.done ? "bg-stone-800 border-stone-800" : "border-stone-400 hover:border-stone-600"
                   }`}
                   style={{ borderRadius: "2px" }}
                 >
                   {task.done && <Check className="w-2.5 h-2.5 text-white" />}
                 </button>
-                <input
+                <textarea
                   value={task.text}
                   onChange={e => updateText(task.id, e.target.value)}
-                  onKeyDown={e => { if (e.key === "Enter") addTask(); }}
-                  className={`flex-1 text-sm bg-transparent outline-none min-w-0 placeholder:opacity-50 ${
+                  onKeyDown={e => { if (e.key === "Enter") { e.preventDefault(); addTask(); } }}
+                  rows={1}
+                  className={`flex-1 text-sm bg-transparent outline-none min-w-0 placeholder:opacity-50 resize-none overflow-hidden leading-snug ${
                     task.done ? "line-through text-stone-400" : priorityTextColor(task.priority)
                   }`}
                   placeholder="Task…"
+                  style={{ height: "auto" }}
+                  onInput={e => { const t = e.currentTarget; t.style.height = "auto"; t.style.height = t.scrollHeight + "px"; }}
                 />
-                <div className="flex items-center gap-0.5 flex-shrink-0">
+                <div className="flex items-center gap-0.5 flex-shrink-0 mt-0.5">
                   <div className="relative">
                     <button
                       onClick={() => setPriorityTaskId(priorityTaskId === task.id ? null : task.id)}
