@@ -926,25 +926,16 @@ function TodoView() {
           </div>
         )}
         {viewMode === "W" && (
-          <>
-            <div className="grid grid-cols-4 gap-8 mb-10">
-              {days.slice(0, 4).map(day => (
-                <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-2 -m-2" : ""}>
-                  <DayCard dayName={day.name} dateKey={day.dateKey} displayDate={day.displayDate} allTodos={allTodos} onChange={handleChange} />
-                </div>
-              ))}
-            </div>
-            <div className="grid grid-cols-4 gap-8">
-              {days.slice(4).map(day => (
-                <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-2 -m-2" : ""}>
-                  <DayCard dayName={day.name} dateKey={day.dateKey} displayDate={day.displayDate} allTodos={allTodos} onChange={handleChange} />
-                </div>
-              ))}
-            </div>
-          </>
+          <div className="grid grid-cols-7 gap-4">
+            {days.map(day => (
+              <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-2 -m-2" : ""}>
+                <DayCard dayName={day.name} dateKey={day.dateKey} displayDate={day.displayDate} allTodos={allTodos} onChange={handleChange} />
+              </div>
+            ))}
+          </div>
         )}
         {viewMode === "M" && (
-          <div className="grid grid-cols-6 gap-3">
+          <div className="grid grid-cols-7 gap-2">
             {days.map(day => (
               <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-1 -m-1" : ""}>
                 <DayCard dayName={day.name} dateKey={day.dateKey} displayDate={day.displayDate} allTodos={allTodos} onChange={handleChange} compact />
@@ -1100,25 +1091,16 @@ function MemoryView() {
           </div>
         )}
         {viewMode === "W" && (
-          <>
-            <div className="grid grid-cols-4 gap-8 mb-10">
-              {days.slice(0, 4).map(day => (
-                <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-2 -m-2" : ""}>
-                  <MemoryCard dayName={day.name} dateKey={day.dateKey} displayDate={day.displayDate} allMemories={allMemories} onChange={handleChange} />
-                </div>
-              ))}
-            </div>
-            <div className="grid grid-cols-4 gap-8">
-              {days.slice(4).map(day => (
-                <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-2 -m-2" : ""}>
-                  <MemoryCard dayName={day.name} dateKey={day.dateKey} displayDate={day.displayDate} allMemories={allMemories} onChange={handleChange} />
-                </div>
-              ))}
-            </div>
-          </>
+          <div className="grid grid-cols-7 gap-4">
+            {days.map(day => (
+              <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-2 -m-2" : ""}>
+                <MemoryCard dayName={day.name} dateKey={day.dateKey} displayDate={day.displayDate} allMemories={allMemories} onChange={handleChange} />
+              </div>
+            ))}
+          </div>
         )}
         {viewMode === "M" && (
-          <div className="grid grid-cols-6 gap-3">
+          <div className="grid grid-cols-7 gap-2">
             {days.map(day => (
               <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-1 -m-1" : ""}>
                 <MemoryCard dayName={day.name} dateKey={day.dateKey} displayDate={day.displayDate} allMemories={allMemories} onChange={handleChange} compact />
