@@ -672,8 +672,9 @@ function DayCard({
                   <div className="relative">
                     <button
                       onClick={() => setPriorityTaskId(priorityTaskId === task.id ? null : task.id)}
-                      className={`opacity-0 group-hover:opacity-100 transition-all text-[9px] leading-none ${priorityIconColor(task.priority)}`}
+                      className={`opacity-0 group-hover:opacity-100 transition-all text-[12px] leading-none flex items-center justify-center ${priorityIconColor(task.priority)}`}
                       title="Set priority"
+                      style={{ lineHeight: 1 }}
                     >
                       ⦿
                     </button>
