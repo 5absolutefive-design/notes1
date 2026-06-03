@@ -470,7 +470,20 @@ function DayCard({
   onChange: (store: DailyTodoStore) => void;
 }) {
   const tasks: DailyTodoItem[] = allTodos[dateKey] ?? [];
+  const [menuOpen, setMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
   const [newText, setNewText] = useState("");
+
+  useEffect(() => {
+    if (!menuOpen) return;
+    const handler = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [menuOpen]);
 
   const update = (updated: DailyTodoItem[]) => {
     const next = { ...allTodos, [dateKey]: updated };
@@ -537,14 +550,55 @@ function DayCard({
 
         </div>
 
-      {/* New Task button */}
-      <button
-        onClick={() => update([...tasks, { id: crypto.randomUUID(), text: "", done: false }])}
-        className="mt-3 self-start border border-stone-300 text-stone-500 text-[11px] px-2 py-0.5 hover:border-stone-500 hover:text-stone-700 transition-colors"
-        style={{ borderRadius: "2px" }}
-      >
-        New Task
-      </button>
+      {/* Task +- button with mini popup */}
+      <div className="mt-3 relative self-start" ref={menuRef}>
+        <button
+          onClick={() => setMenuOpen(v => !v)}
+          className={`border text-[11px] px-2 py-0.5 transition-colors flex items-center gap-1 ${
+            menuOpen
+              ? "border-stone-500 text-stone-700 bg-stone-50"
+              : "border-stone-300 text-stone-500 hover:border-stone-500 hover:text-stone-700"
+          }`}
+          style={{ borderRadius: "2px" }}
+        >
+          Task <span className="font-bold tracking-tighter">+-</span>
+        </button>
+
+        {/* Mini popup card */}
+        {menuOpen && (
+          <div
+            className="absolute bottom-full mb-1.5 left-0 bg-white border border-stone-200 shadow-md flex flex-col overflow-hidden z-50"
+            style={{ borderRadius: "3px", minWidth: "90px" }}
+          >
+            <button
+              onClick={() => {
+                update([...tasks, { id: crypto.randomUUID(), text: "", done: false }]);
+                setMenuOpen(false);
+              }}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] text-stone-600 hover:bg-stone-50 hover:text-stone-900 transition-colors text-left"
+            >
+              <Plus className="w-3 h-3 text-stone-400" />
+              Task +
+            </button>
+            <div className="border-t border-stone-100" />
+            <button
+              onClick={() => {
+                if (tasks.length === 0) { setMenuOpen(false); return; }
+                update(tasks.slice(0, -1));
+                setMenuOpen(false);
+              }}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-[11px] transition-colors text-left ${
+                tasks.length === 0
+                  ? "text-stone-300 cursor-not-allowed"
+                  : "text-stone-600 hover:bg-red-50 hover:text-red-600"
+              }`}
+            >
+              <span className="w-3 h-3 flex items-center justify-center text-stone-400 font-bold text-base leading-none">−</span>
+              Task −
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
