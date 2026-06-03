@@ -785,14 +785,16 @@ function TodoView() {
       {/* Grid */}
       <div className="flex-1 flex flex-col justify-center py-6">
         {viewMode === "D" && (
-          <div className="max-w-sm">
-            <DayCard
-              dayName={days[0].name}
-              dateKey={days[0].dateKey}
-              displayDate={days[0].displayDate}
-              allTodos={allTodos}
-              onChange={handleChange}
-            />
+          <div className="flex justify-center">
+            <div className="w-full max-w-sm">
+              <DayCard
+                dayName={days[0].name}
+                dateKey={days[0].dateKey}
+                displayDate={days[0].displayDate}
+                allTodos={allTodos}
+                onChange={handleChange}
+              />
+            </div>
           </div>
         )}
         {viewMode === "W" && (
