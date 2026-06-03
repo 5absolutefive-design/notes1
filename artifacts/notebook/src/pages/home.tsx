@@ -668,36 +668,38 @@ function DayCard({
                   }`}
                   placeholder="Task…"
                 />
-                <div className="relative flex-shrink-0">
+                <div className="flex items-center gap-0.5 flex-shrink-0">
+                  <div className="relative">
+                    <button
+                      onClick={() => setPriorityTaskId(priorityTaskId === task.id ? null : task.id)}
+                      className={`opacity-0 group-hover:opacity-100 transition-all text-[9px] leading-none ${priorityIconColor(task.priority)}`}
+                      title="Set priority"
+                    >
+                      ⦿
+                    </button>
+                    {priorityTaskId === task.id && (
+                      <div className="absolute bottom-full mb-1 right-0 bg-white border border-stone-200 shadow-md z-50 flex flex-col overflow-hidden" style={{ borderRadius: "3px", minWidth: "100px" }}>
+                        <button onClick={() => setTaskPriority(task.id, "medium")} className="px-3 py-1.5 text-[11px] text-blue-600 hover:bg-blue-50 text-left font-medium">Medium</button>
+                        <div className="border-t border-stone-100" />
+                        <button onClick={() => setTaskPriority(task.id, "important")} className="px-3 py-1.5 text-[11px] text-orange-500 hover:bg-orange-50 text-left font-medium">Important</button>
+                        <div className="border-t border-stone-100" />
+                        <button onClick={() => setTaskPriority(task.id, "urgent")} className="px-3 py-1.5 text-[11px] text-red-500 hover:bg-red-50 text-left font-medium">Urgent</button>
+                        {task.priority && (
+                          <>
+                            <div className="border-t border-stone-100" />
+                            <button onClick={() => setTaskPriority(task.id, undefined)} className="px-3 py-1.5 text-[11px] text-stone-400 hover:bg-stone-50 text-left">Clear</button>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
                   <button
-                    onClick={() => setPriorityTaskId(priorityTaskId === task.id ? null : task.id)}
-                    className={`opacity-0 group-hover:opacity-100 transition-all text-lg leading-none ${priorityIconColor(task.priority)}`}
-                    title="Set priority"
+                    onClick={() => setConfirmId(task.id)}
+                    className="opacity-0 group-hover:opacity-100 text-stone-500 hover:text-red-500 transition-all"
                   >
-                    ⦿
+                    <X className="w-3 h-3" />
                   </button>
-                  {priorityTaskId === task.id && (
-                    <div className="absolute bottom-full mb-1 right-0 bg-white border border-stone-200 shadow-md z-50 flex flex-col overflow-hidden" style={{ borderRadius: "3px", minWidth: "100px" }}>
-                      <button onClick={() => setTaskPriority(task.id, "medium")} className="px-3 py-1.5 text-[11px] text-blue-600 hover:bg-blue-50 text-left font-medium">Medium</button>
-                      <div className="border-t border-stone-100" />
-                      <button onClick={() => setTaskPriority(task.id, "important")} className="px-3 py-1.5 text-[11px] text-orange-500 hover:bg-orange-50 text-left font-medium">Important</button>
-                      <div className="border-t border-stone-100" />
-                      <button onClick={() => setTaskPriority(task.id, "urgent")} className="px-3 py-1.5 text-[11px] text-red-500 hover:bg-red-50 text-left font-medium">Urgent</button>
-                      {task.priority && (
-                        <>
-                          <div className="border-t border-stone-100" />
-                          <button onClick={() => setTaskPriority(task.id, undefined)} className="px-3 py-1.5 text-[11px] text-stone-400 hover:bg-stone-50 text-left">Clear</button>
-                        </>
-                      )}
-                    </div>
-                  )}
                 </div>
-                <button
-                  onClick={() => setConfirmId(task.id)}
-                  className="opacity-0 group-hover:opacity-100 text-stone-500 hover:text-red-500 transition-all flex-shrink-0"
-                >
-                  <X className="w-3 h-3" />
-                </button>
               </>
             )}
           </div>
