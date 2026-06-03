@@ -597,7 +597,7 @@ function DayCard({
             />
             <button
               onClick={() => remove(task.id)}
-              className="opacity-0 group-hover:opacity-100 text-stone-300 hover:text-red-400 transition-all flex-shrink-0"
+              className="opacity-0 group-hover:opacity-100 text-stone-500 hover:text-red-500 transition-all flex-shrink-0"
             >
               <X className="w-3 h-3" />
             </button>
