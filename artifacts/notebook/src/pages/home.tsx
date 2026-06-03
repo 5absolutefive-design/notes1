@@ -661,11 +661,11 @@ function make5BlankTasks(): DailyTodoItem[] {
   return Array.from({ length: 5 }, () => ({ id: crypto.randomUUID(), text: "", done: false }));
 }
 
-type TodoViewMode = "1D" | "7D" | "30D";
+type TodoViewMode = "D" | "W" | "M";
 
 function TodoView() {
   const [allTodos, setAllTodos] = useState<DailyTodoStore>(() => loadDailyTodos());
-  const [viewMode, setViewMode] = useState<TodoViewMode>("7D");
+  const [viewMode, setViewMode] = useState<TodoViewMode>("W");
   const [offset, setOffset] = useState(0);
 
   const handleChange = (updated: DailyTodoStore) => {
@@ -683,12 +683,12 @@ function TodoView() {
   // Build days list based on mode
   const days = (() => {
     const today = new Date();
-    if (viewMode === "1D") {
+    if (viewMode === "D") {
       const d = new Date(today);
       d.setDate(today.getDate() + offset);
       const name = DAY_NAMES[(d.getDay() + 6) % 7];
       return [{ name, dateKey: formatDateKey(d), displayDate: formatDisplayDate(d) }];
-    } else if (viewMode === "7D") {
+    } else if (viewMode === "W") {
       const monday = getMondayOfWeek(today);
       monday.setDate(monday.getDate() + offset * 7);
       return DAY_NAMES.map((name, i) => {
@@ -697,12 +697,11 @@ function TodoView() {
         return { name, dateKey: formatDateKey(d), displayDate: formatDisplayDate(d) };
       });
     } else {
-      // 30D: start from 1st of current month + offset*30 days
-      const start = new Date(today.getFullYear(), today.getMonth(), 1);
-      start.setDate(start.getDate() + offset * 30);
-      return Array.from({ length: 30 }, (_, i) => {
-        const d = new Date(start);
-        d.setDate(start.getDate() + i);
+      // M: actual days in the navigated month
+      const start = new Date(today.getFullYear(), today.getMonth() + offset, 1);
+      const daysInMonth = new Date(start.getFullYear(), start.getMonth() + 1, 0).getDate();
+      return Array.from({ length: daysInMonth }, (_, i) => {
+        const d = new Date(start.getFullYear(), start.getMonth(), i + 1);
         const name = DAY_NAMES[(d.getDay() + 6) % 7];
         return { name, dateKey: formatDateKey(d), displayDate: formatDisplayDate(d) };
       });
@@ -738,7 +737,7 @@ function TodoView() {
           <h1 className="text-xl font-bold text-stone-800">Daily To Do Lists :</h1>
           <div className="flex items-center gap-2">
             {/* Mode toggle buttons */}
-            {(["1D", "7D", "30D"] as TodoViewMode[]).map(mode => (
+            {(["D", "W", "M"] as TodoViewMode[]).map(mode => (
               <button
                 key={mode}
                 onClick={() => switchMode(mode)}
@@ -785,7 +784,7 @@ function TodoView() {
 
       {/* Grid */}
       <div className="flex-1 flex flex-col justify-center py-6">
-        {viewMode === "1D" && (
+        {viewMode === "D" && (
           <div className="max-w-sm">
             <DayCard
               dayName={days[0].name}
@@ -796,7 +795,7 @@ function TodoView() {
             />
           </div>
         )}
-        {viewMode === "7D" && (
+        {viewMode === "W" && (
           <>
             <div className="grid grid-cols-4 gap-8 mb-10">
               {days.slice(0, 4).map(day => (
@@ -814,7 +813,7 @@ function TodoView() {
             </div>
           </>
         )}
-        {viewMode === "30D" && (
+        {viewMode === "M" && (
           <div className="grid grid-cols-6 gap-3">
             {days.map(day => (
               <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-1 -m-1" : ""}>
