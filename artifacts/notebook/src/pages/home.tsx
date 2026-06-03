@@ -651,65 +651,69 @@ function TodoView() {
   }, [weekOffset]);
 
   return (
-    <div className="flex-1 overflow-y-auto flex flex-col justify-center px-6 md:px-10 py-6 md:py-10">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-1">
-        <h1 className="text-xl font-bold text-stone-800">Daily To Do Lists :</h1>
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setWeekOffset(v => v - 1)}
-            className="w-7 h-7 flex items-center justify-center border border-stone-300 hover:border-stone-500 text-stone-500 transition-colors"
-            style={{ borderRadius: "2px" }}
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </button>
-          <span className="text-xs text-stone-400 min-w-[140px] text-center">{weekLabel}</span>
-          <button
-            onClick={() => setWeekOffset(v => v + 1)}
-            className="w-7 h-7 flex items-center justify-center border border-stone-300 hover:border-stone-500 text-stone-500 transition-colors"
-            style={{ borderRadius: "2px" }}
-          >
-            <ChevronRight className="w-4 h-4" />
-          </button>
-          {weekOffset !== 0 && (
+    <div className="flex-1 overflow-y-auto flex flex-col px-6 md:px-10">
+      {/* Header — anchored near top */}
+      <div className="pt-6 md:pt-8">
+        <div className="flex items-center justify-between mb-1">
+          <h1 className="text-xl font-bold text-stone-800">Daily To Do Lists :</h1>
+          <div className="flex items-center gap-2">
             <button
-              onClick={() => setWeekOffset(0)}
-              className="text-xs border border-stone-300 px-2 py-1 text-stone-500 hover:border-stone-500 hover:text-stone-700 transition-colors"
+              onClick={() => setWeekOffset(v => v - 1)}
+              className="w-7 h-7 flex items-center justify-center border border-stone-300 hover:border-stone-500 text-stone-500 transition-colors"
               style={{ borderRadius: "2px" }}
             >
-              Today
+              <ChevronLeft className="w-4 h-4" />
             </button>
-          )}
+            <span className="text-xs text-stone-400 min-w-[140px] text-center">{weekLabel}</span>
+            <button
+              onClick={() => setWeekOffset(v => v + 1)}
+              className="w-7 h-7 flex items-center justify-center border border-stone-300 hover:border-stone-500 text-stone-500 transition-colors"
+              style={{ borderRadius: "2px" }}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+            {weekOffset !== 0 && (
+              <button
+                onClick={() => setWeekOffset(0)}
+                className="text-xs border border-stone-300 px-2 py-1 text-stone-500 hover:border-stone-500 hover:text-stone-700 transition-colors"
+                style={{ borderRadius: "2px" }}
+              >
+                Today
+              </button>
+            )}
+          </div>
         </div>
+        <div className="border-b border-stone-300" />
       </div>
-      <div className="border-b border-stone-300 mb-8" />
 
-      {/* 4-column grid top row (Mon–Thu), then 3-column bottom row (Fri–Sun) */}
-      <div className="grid grid-cols-4 gap-8 mb-10">
-        {weekDays.slice(0, 4).map(day => (
-          <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-2 -m-2" : ""}>
-            <DayCard
-              dayName={day.name}
-              dateKey={day.dateKey}
-              displayDate={day.displayDate}
-              allTodos={allTodos}
-              onChange={handleChange}
-            />
-          </div>
-        ))}
-      </div>
-      <div className="grid grid-cols-4 gap-8">
-        {weekDays.slice(4).map(day => (
-          <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-2 -m-2" : ""}>
-            <DayCard
-              dayName={day.name}
-              dateKey={day.dateKey}
-              displayDate={day.displayDate}
-              allTodos={allTodos}
-              onChange={handleChange}
-            />
-          </div>
-        ))}
+      {/* Grid — centered in remaining space */}
+      <div className="flex-1 flex flex-col justify-center py-6">
+        <div className="grid grid-cols-4 gap-8 mb-10">
+          {weekDays.slice(0, 4).map(day => (
+            <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-2 -m-2" : ""}>
+              <DayCard
+                dayName={day.name}
+                dateKey={day.dateKey}
+                displayDate={day.displayDate}
+                allTodos={allTodos}
+                onChange={handleChange}
+              />
+            </div>
+          ))}
+        </div>
+        <div className="grid grid-cols-4 gap-8">
+          {weekDays.slice(4).map(day => (
+            <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-2 -m-2" : ""}>
+              <DayCard
+                dayName={day.name}
+                dateKey={day.dateKey}
+                displayDate={day.displayDate}
+                allTodos={allTodos}
+                onChange={handleChange}
+              />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
