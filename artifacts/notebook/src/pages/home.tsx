@@ -651,7 +651,7 @@ function TodoView() {
   }, [weekOffset]);
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 md:p-10">
+    <div className="flex-1 overflow-y-auto flex flex-col justify-center px-6 md:px-10 py-6 md:py-10">
       {/* Header */}
       <div className="flex items-center justify-between mb-1">
         <h1 className="text-xl font-bold text-stone-800">Daily To Do Lists :</h1>
