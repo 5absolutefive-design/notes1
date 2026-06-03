@@ -653,7 +653,7 @@ function TodoView() {
   return (
     <div className="flex-1 overflow-y-auto flex flex-col px-6 md:px-10">
       {/* Header — anchored near top */}
-      <div className="pt-6 md:pt-8">
+      <div className="pt-14 md:pt-16">
         <div className="flex items-center justify-between mb-1">
           <h1 className="text-xl font-bold text-stone-800">Daily To Do Lists :</h1>
           <div className="flex items-center gap-2">
