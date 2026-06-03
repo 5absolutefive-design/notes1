@@ -507,7 +507,7 @@ function DayCard({
     update(tasks.map(t => t.id === id ? { ...t, text } : t));
 
   return (
-    <div className="flex flex-col min-h-[220px]">
+    <div className="flex flex-col min-h-[306px]">
       {/* Day + Date header */}
       <div className="flex items-baseline justify-between mb-1 gap-2">
         <span className="text-lg font-bold text-stone-800 font-serif">{dayName}</span>
@@ -601,6 +601,10 @@ function DayCard({
   );
 }
 
+function make5BlankTasks(): DailyTodoItem[] {
+  return Array.from({ length: 5 }, () => ({ id: crypto.randomUUID(), text: "", done: false }));
+}
+
 function TodoView() {
   const [allTodos, setAllTodos] = useState<DailyTodoStore>(() => loadDailyTodos());
   const [weekOffset, setWeekOffset] = useState(0); // 0 = this week, -1 = last week, +1 = next week
@@ -628,6 +632,23 @@ function TodoView() {
     const last = weekDays[6];
     return `${first.displayDate} – ${last.displayDate}`;
   })();
+
+  // Initialize days without tasks with 5 blank tasks
+  useEffect(() => {
+    const current = loadDailyTodos();
+    let changed = false;
+    const next = { ...current };
+    weekDays.forEach(day => {
+      if (!next[day.dateKey]) {
+        next[day.dateKey] = make5BlankTasks();
+        changed = true;
+      }
+    });
+    if (changed) {
+      saveDailyTodos(next);
+      setAllTodos(next);
+    }
+  }, [weekOffset]);
 
   return (
     <div className="flex-1 overflow-y-auto p-6 md:p-10">
