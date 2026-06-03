@@ -423,121 +423,221 @@ function AnimatedChildren({ open, children }: { open: boolean; children: React.R
 }
 
 // ── localStorage helpers for To Do ────────────────────────────
-const TODO_KEY = "nb_todos";
-type TodoItem = { id: string; text: string; done: boolean; createdAt: number };
-function loadTodos(): TodoItem[] {
-  try { return JSON.parse(localStorage.getItem(TODO_KEY) || "[]"); } catch { return []; }
+const TODO_KEY = "nb_daily_todos";
+type DailyTodoItem = { id: string; text: string; done: boolean };
+type DailyTodoStore = Record<string, DailyTodoItem[]>; // key = "YYYY-MM-DD"
+
+function loadDailyTodos(): DailyTodoStore {
+  try { return JSON.parse(localStorage.getItem(TODO_KEY) || "{}"); } catch { return {}; }
 }
-function saveTodosStore(items: TodoItem[]) {
-  localStorage.setItem(TODO_KEY, JSON.stringify(items));
+function saveDailyTodos(store: DailyTodoStore) {
+  localStorage.setItem(TODO_KEY, JSON.stringify(store));
+}
+
+// Returns Monday of the week containing `date`
+function getMondayOfWeek(date: Date): Date {
+  const d = new Date(date);
+  const day = d.getDay(); // 0=Sun,1=Mon,...,6=Sat
+  const diff = day === 0 ? -6 : 1 - day; // shift to Monday
+  d.setDate(d.getDate() + diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function formatDateKey(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function formatDisplayDate(d: Date): string {
+  const dd = String(d.getDate()).padStart(2, "0");
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const yy = String(d.getFullYear()).slice(2);
+  return `${dd}.${mm}.${yy}`;
+}
+
+const DAY_NAMES = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+
+function DayCard({
+  dayName, dateKey, displayDate, allTodos, onChange,
+}: {
+  dayName: string;
+  dateKey: string;
+  displayDate: string;
+  allTodos: DailyTodoStore;
+  onChange: (store: DailyTodoStore) => void;
+}) {
+  const tasks: DailyTodoItem[] = allTodos[dateKey] ?? [];
+  const [newText, setNewText] = useState("");
+
+  const update = (updated: DailyTodoItem[]) => {
+    const next = { ...allTodos, [dateKey]: updated };
+    onChange(next);
+  };
+
+  const addTask = () => {
+    const text = newText.trim();
+    if (!text) return;
+    update([...tasks, { id: crypto.randomUUID(), text, done: false }]);
+    setNewText("");
+  };
+
+  const toggle = (id: string) =>
+    update(tasks.map(t => t.id === id ? { ...t, done: !t.done } : t));
+
+  const remove = (id: string) =>
+    update(tasks.filter(t => t.id !== id));
+
+  const updateText = (id: string, text: string) =>
+    update(tasks.map(t => t.id === id ? { ...t, text } : t));
+
+  return (
+    <div className="flex flex-col min-h-[220px]">
+      {/* Day + Date header */}
+      <div className="flex items-baseline justify-between mb-1 gap-2">
+        <span className="text-lg font-bold text-stone-800 font-serif">{dayName}</span>
+        <span className="text-xs text-stone-400 flex-shrink-0">{displayDate}</span>
+      </div>
+      <div className="border-b border-stone-300 mb-3" />
+
+      {/* Task rows */}
+      <div className="flex flex-col gap-1.5 flex-1">
+        {tasks.map(task => (
+          <div key={task.id} className="group flex items-center gap-2">
+            <button
+              onClick={() => toggle(task.id)}
+              className={`w-4 h-4 border flex-shrink-0 flex items-center justify-center transition-colors ${
+                task.done
+                  ? "bg-stone-800 border-stone-800"
+                  : "border-stone-400 hover:border-stone-600"
+              }`}
+              style={{ borderRadius: "2px" }}
+            >
+              {task.done && <Check className="w-2.5 h-2.5 text-white" />}
+            </button>
+            <input
+              value={task.text}
+              onChange={e => updateText(task.id, e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") addTask(); }}
+              className={`flex-1 text-sm bg-transparent outline-none min-w-0 ${
+                task.done ? "line-through text-stone-400" : "text-stone-700"
+              }`}
+              placeholder="Task…"
+            />
+            <button
+              onClick={() => remove(task.id)}
+              className="opacity-0 group-hover:opacity-100 text-stone-300 hover:text-red-400 transition-all flex-shrink-0"
+            >
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+        ))}
+
+        </div>
+
+      {/* New Task button */}
+      <button
+        onClick={() => update([...tasks, { id: crypto.randomUUID(), text: "", done: false }])}
+        className="mt-3 self-start border border-stone-300 text-stone-500 text-[11px] px-2 py-0.5 hover:border-stone-500 hover:text-stone-700 transition-colors"
+        style={{ borderRadius: "2px" }}
+      >
+        New Task
+      </button>
+    </div>
+  );
 }
 
 function TodoView() {
-  const [todos, setTodos] = useState<TodoItem[]>(() => loadTodos());
-  const [input, setInput] = useState("");
-  const inputRef = useRef<HTMLInputElement>(null);
+  const [allTodos, setAllTodos] = useState<DailyTodoStore>(() => loadDailyTodos());
+  const [weekOffset, setWeekOffset] = useState(0); // 0 = this week, -1 = last week, +1 = next week
 
-  const sync = (updated: TodoItem[]) => { setTodos(updated); saveTodosStore(updated); };
-
-  const addTodo = () => {
-    const text = input.trim();
-    if (!text) return;
-    sync([...todos, { id: crypto.randomUUID(), text, done: false, createdAt: Date.now() }]);
-    setInput("");
-    inputRef.current?.focus();
+  const handleChange = (updated: DailyTodoStore) => {
+    setAllTodos(updated);
+    saveDailyTodos(updated);
   };
 
-  const toggleTodo = (id: string) =>
-    sync(todos.map(t => t.id === id ? { ...t, done: !t.done } : t));
+  // Build Mon–Sun for the selected week
+  const weekDays = (() => {
+    const today = new Date();
+    const monday = getMondayOfWeek(today);
+    monday.setDate(monday.getDate() + weekOffset * 7);
+    return DAY_NAMES.map((name, i) => {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i);
+      return { name, dateKey: formatDateKey(d), displayDate: formatDisplayDate(d), date: d };
+    });
+  })();
 
-  const deleteTodo = (id: string) =>
-    sync(todos.filter(t => t.id !== id));
-
-  const pending = todos.filter(t => !t.done);
-  const done = todos.filter(t => t.done);
+  const todayKey = formatDateKey(new Date());
+  const weekLabel = (() => {
+    const first = weekDays[0];
+    const last = weekDays[6];
+    return `${first.displayDate} – ${last.displayDate}`;
+  })();
 
   return (
-    <div className="flex-1 overflow-y-auto p-6 md:p-10 max-w-3xl mx-auto w-full">
+    <div className="flex-1 overflow-y-auto p-6 md:p-10">
       {/* Header */}
-      <div className="mb-8 rounded-2xl border border-stone-200 bg-white shadow-sm px-8 py-4 flex items-center justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-serif font-bold text-stone-800 leading-tight">To Do</h1>
-          <p className="text-xs text-stone-400">{pending.length} remaining · {done.length} completed</p>
+      <div className="flex items-center justify-between mb-1">
+        <h1 className="text-xl font-bold text-stone-800">Daily To Do Lists :</h1>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setWeekOffset(v => v - 1)}
+            className="w-7 h-7 flex items-center justify-center border border-stone-300 hover:border-stone-500 text-stone-500 transition-colors"
+            style={{ borderRadius: "2px" }}
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </button>
+          <span className="text-xs text-stone-400 min-w-[140px] text-center">{weekLabel}</span>
+          <button
+            onClick={() => setWeekOffset(v => v + 1)}
+            className="w-7 h-7 flex items-center justify-center border border-stone-300 hover:border-stone-500 text-stone-500 transition-colors"
+            style={{ borderRadius: "2px" }}
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
+          {weekOffset !== 0 && (
+            <button
+              onClick={() => setWeekOffset(0)}
+              className="text-xs border border-stone-300 px-2 py-1 text-stone-500 hover:border-stone-500 hover:text-stone-700 transition-colors"
+              style={{ borderRadius: "2px" }}
+            >
+              Today
+            </button>
+          )}
         </div>
-        <ListTodo className="w-7 h-7 text-stone-300" />
       </div>
+      <div className="border-b border-stone-300 mb-8" />
 
-      {/* Add input */}
-      <div className="flex items-center gap-2 mb-6">
-        <input
-          ref={inputRef}
-          value={input}
-          onChange={e => setInput(e.target.value)}
-          onKeyDown={e => { if (e.key === "Enter") addTodo(); }}
-          placeholder="Add a new to-do…"
-          className="flex-1 border border-stone-200 rounded-xl px-4 py-2.5 text-sm text-stone-800 placeholder:text-stone-400 outline-none focus:border-stone-400 focus:ring-2 focus:ring-stone-100 bg-white shadow-sm transition-all"
-        />
-        <button
-          onClick={addTodo}
-          className="flex items-center gap-1.5 bg-stone-800 text-white px-4 py-2.5 rounded-xl text-sm font-medium hover:bg-stone-700 transition-colors shadow-sm"
-        >
-          <Plus className="w-4 h-4" />
-          Add
-        </button>
+      {/* 4-column grid top row (Mon–Thu), then 3-column bottom row (Fri–Sun) */}
+      <div className="grid grid-cols-4 gap-8 mb-10">
+        {weekDays.slice(0, 4).map(day => (
+          <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-2 -m-2" : ""}>
+            <DayCard
+              dayName={day.name}
+              dateKey={day.dateKey}
+              displayDate={day.displayDate}
+              allTodos={allTodos}
+              onChange={handleChange}
+            />
+          </div>
+        ))}
       </div>
-
-      {/* Pending items */}
-      {pending.length > 0 && (
-        <div className="flex flex-col gap-2 mb-6">
-          {pending.map(todo => (
-            <div key={todo.id} className="group flex items-center gap-3 bg-white border border-stone-200 rounded-xl px-4 py-3 shadow-sm hover:border-stone-300 transition-all">
-              <button
-                onClick={() => toggleTodo(todo.id)}
-                className="w-5 h-5 rounded-full border-2 border-stone-300 flex-shrink-0 hover:border-stone-500 transition-colors"
-              />
-              <span className="flex-1 text-sm text-stone-700">{todo.text}</span>
-              <button
-                onClick={() => deleteTodo(todo.id)}
-                className="opacity-0 group-hover:opacity-100 text-stone-400 hover:text-red-500 transition-all"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Empty state */}
-      {todos.length === 0 && (
-        <div className="flex flex-col items-center justify-center py-20 text-stone-300 gap-3">
-          <ListTodo className="w-10 h-10" />
-          <p className="text-sm text-stone-400">No to-dos yet. Add one above!</p>
-        </div>
-      )}
-
-      {/* Done items */}
-      {done.length > 0 && (
-        <div className="flex flex-col gap-2">
-          <p className="text-xs font-semibold text-stone-400 uppercase tracking-wide px-1 mb-1">Completed</p>
-          {done.map(todo => (
-            <div key={todo.id} className="group flex items-center gap-3 bg-stone-50 border border-stone-100 rounded-xl px-4 py-3 transition-all">
-              <button
-                onClick={() => toggleTodo(todo.id)}
-                className="w-5 h-5 rounded-full bg-stone-300 flex-shrink-0 flex items-center justify-center hover:bg-stone-400 transition-colors"
-              >
-                <Check className="w-3 h-3 text-white" />
-              </button>
-              <span className="flex-1 text-sm text-stone-400 line-through">{todo.text}</span>
-              <button
-                onClick={() => deleteTodo(todo.id)}
-                className="opacity-0 group-hover:opacity-100 text-stone-400 hover:text-red-500 transition-all"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-          ))}
-        </div>
-      )}
+      <div className="grid grid-cols-4 gap-8">
+        {weekDays.slice(4).map(day => (
+          <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-2 -m-2" : ""}>
+            <DayCard
+              dayName={day.name}
+              dateKey={day.dateKey}
+              displayDate={day.displayDate}
+              allTodos={allTodos}
+              onChange={handleChange}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
