@@ -1118,7 +1118,7 @@ function MemoryView() {
           </>
         )}
         {viewMode === "M" && (
-          <div className="grid grid-cols-7 gap-2">
+          <div className="grid grid-cols-6 gap-3">
             {days.map(day => (
               <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-1 -m-1" : ""}>
                 <MemoryCard dayName={day.name} dateKey={day.dateKey} displayDate={day.displayDate} allMemories={allMemories} onChange={handleChange} compact />
