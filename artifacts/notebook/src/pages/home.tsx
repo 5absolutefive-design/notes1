@@ -12,7 +12,7 @@ import {
   Camera, Pencil, Home as HomeIcon, ChevronLeft, ChevronRight,
   Check, BookMarked, Clock, StickyNote, FolderKanban,
   CheckSquare, CalendarDays, UserRound, AlertTriangle,
-  Smile, Image as ImageIcon, Type, List, Mic, Square, Play, Pause, ListTodo,
+  Smile, Image as ImageIcon, Type, List, Mic, Square, Play, Pause, ListTodo, Brain,
 } from "lucide-react";
 import { useState, useEffect, useCallback, useRef } from "react";
 import ReactDOM from "react-dom";
@@ -291,7 +291,7 @@ function MiniCalendar({ year, month, selectedDate, onSelectDate, markedDates }: 
 }
 // ─────────────────────────────────────────────────────────────
 
-type ActiveView = "author" | "home" | "my-notebook" | "short-note" | "project" | "task" | "schedule" | "to-do";
+type ActiveView = "author" | "home" | "my-notebook" | "short-note" | "project" | "task" | "schedule" | "to-do" | "memory";
 
 const NAV_ITEMS: { id: ActiveView; label: string; icon: React.ElementType; active: boolean }[] = [
   { id: "author",     label: "Author",      icon: UserRound,      active: false },
@@ -302,6 +302,7 @@ const NAV_ITEMS: { id: ActiveView; label: string; icon: React.ElementType; activ
   { id: "task",       label: "Task",        icon: CheckSquare,    active: true  },
   { id: "schedule",   label: "Schedule",    icon: CalendarDays,   active: true  },
   { id: "to-do",      label: "To Do",       icon: ListTodo,       active: true  },
+  { id: "memory",     label: "Memory",      icon: Brain,          active: true  },
 ];
 
 function OrbitalClock24({ frozen = false }: { frozen?: boolean }) {
@@ -424,6 +425,16 @@ function AnimatedChildren({ open, children }: { open: boolean; children: React.R
 
 // ── localStorage helpers for To Do ────────────────────────────
 const TODO_KEY = "nb_daily_todos";
+const MEMORY_KEY = "nb_daily_memories";
+
+type MemoryStore = Record<string, string>; // key = "YYYY-MM-DD", value = note text
+
+function loadMemoryNotes(): MemoryStore {
+  try { return JSON.parse(localStorage.getItem(MEMORY_KEY) || "{}"); } catch { return {}; }
+}
+function saveMemoryNotes(store: MemoryStore) {
+  localStorage.setItem(MEMORY_KEY, JSON.stringify(store));
+}
 type TodoPriority = "medium" | "important" | "urgent";
 type DailyTodoItem = { id: string; text: string; done: boolean; priority?: TodoPriority };
 type DailyTodoStore = Record<string, DailyTodoItem[]>; // key = "YYYY-MM-DD"
@@ -937,6 +948,180 @@ function TodoView() {
             {days.map(day => (
               <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-1 -m-1" : ""}>
                 <DayCard dayName={day.name} dateKey={day.dateKey} displayDate={day.displayDate} allTodos={allTodos} onChange={handleChange} compact />
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ── Memory Card ───────────────────────────────────────────────
+function MemoryCard({ dateKey, dayName, displayDate, allMemories, onChange, compact }: {
+  dateKey: string;
+  dayName: string;
+  displayDate: string;
+  allMemories: MemoryStore;
+  onChange: (store: MemoryStore) => void;
+  compact?: boolean;
+}) {
+  const text = allMemories[dateKey] ?? "";
+
+  const handleChange = (val: string) => {
+    onChange({ ...allMemories, [dateKey]: val });
+  };
+
+  return (
+    <div className={`flex flex-col ${compact ? "gap-1" : "gap-2"}`}>
+      {/* Card header */}
+      <div className="flex items-baseline justify-between">
+        <span className={`font-bold text-stone-800 ${compact ? "text-[10px]" : "text-sm"}`}>{dayName}</span>
+        <span className={`text-stone-400 ${compact ? "text-[9px]" : "text-[11px]"}`}>{displayDate}</span>
+      </div>
+      <div className="border-b border-stone-200" />
+
+      {/* Blank note area */}
+      <textarea
+        value={text}
+        onChange={e => handleChange(e.target.value)}
+        placeholder={compact ? "Memory…" : "Write your memory for this day…"}
+        className={`w-full bg-transparent outline-none resize-none text-stone-700 placeholder:text-stone-300 leading-relaxed ${
+          compact ? "text-[9px] min-h-[60px]" : "text-sm min-h-[200px]"
+        }`}
+      />
+    </div>
+  );
+}
+
+// ── Memory View ───────────────────────────────────────────────
+type MemoryViewMode = "D" | "W" | "M";
+
+function MemoryView() {
+  const [allMemories, setAllMemories] = useState<MemoryStore>(() => loadMemoryNotes());
+  const [viewMode, setViewMode] = useState<MemoryViewMode>("W");
+  const [offset, setOffset] = useState(0);
+
+  const handleChange = (updated: MemoryStore) => {
+    setAllMemories(updated);
+    saveMemoryNotes(updated);
+  };
+
+  const switchMode = (mode: MemoryViewMode) => { setViewMode(mode); setOffset(0); };
+
+  const todayKey = formatDateKey(new Date());
+
+  const days = (() => {
+    const today = new Date();
+    if (viewMode === "D") {
+      const d = new Date(today);
+      d.setDate(today.getDate() + offset);
+      return [{ name: DAY_NAMES[(d.getDay() + 6) % 7], dateKey: formatDateKey(d), displayDate: formatDisplayDate(d) }];
+    } else if (viewMode === "W") {
+      const monday = getMondayOfWeek(today);
+      monday.setDate(monday.getDate() + offset * 7);
+      return DAY_NAMES.map((name, i) => {
+        const d = new Date(monday);
+        d.setDate(monday.getDate() + i);
+        return { name, dateKey: formatDateKey(d), displayDate: formatDisplayDate(d) };
+      });
+    } else {
+      const start = new Date(today.getFullYear(), today.getMonth() + offset, 1);
+      const daysInMonth = new Date(start.getFullYear(), start.getMonth() + 1, 0).getDate();
+      return Array.from({ length: daysInMonth }, (_, i) => {
+        const d = new Date(start.getFullYear(), start.getMonth(), i + 1);
+        return { name: DAY_NAMES[(d.getDay() + 6) % 7], dateKey: formatDateKey(d), displayDate: formatDisplayDate(d) };
+      });
+    }
+  })();
+
+  const rangeLabel = days.length === 1
+    ? `${days[0].displayDate} (${days[0].name})`
+    : `${days[0].displayDate} – ${days[days.length - 1].displayDate}`;
+
+  return (
+    <div className="flex-1 overflow-y-auto flex flex-col px-6 md:px-10">
+      {/* Header */}
+      <div className="pt-14 md:pt-16">
+        <div className="flex items-center justify-between mb-1">
+          <h1 className="text-xl font-bold text-stone-800">Daily Memories :</h1>
+          <div className="flex items-center gap-2">
+            {(["D", "W", "M"] as MemoryViewMode[]).map(mode => (
+              <button
+                key={mode}
+                onClick={() => switchMode(mode)}
+                className={`text-xs px-2 py-1 border transition-colors font-medium ${
+                  viewMode === mode
+                    ? "border-stone-700 bg-stone-800 text-white"
+                    : "border-stone-300 text-stone-500 hover:border-stone-500 hover:text-stone-700"
+                }`}
+                style={{ borderRadius: "2px", minWidth: "32px" }}
+              >
+                {mode}
+              </button>
+            ))}
+            <div className="w-px h-4 bg-stone-200 mx-0.5" />
+            <button
+              onClick={() => setOffset(v => v - 1)}
+              className="w-7 h-7 flex items-center justify-center border border-stone-300 hover:border-stone-500 text-stone-500 transition-colors"
+              style={{ borderRadius: "2px" }}
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <span className="text-xs text-stone-400 min-w-[140px] text-center">{rangeLabel}</span>
+            <button
+              onClick={() => setOffset(v => v + 1)}
+              className="w-7 h-7 flex items-center justify-center border border-stone-300 hover:border-stone-500 text-stone-500 transition-colors"
+              style={{ borderRadius: "2px" }}
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+            {offset !== 0 && (
+              <button
+                onClick={() => setOffset(0)}
+                className="text-xs border border-stone-300 px-2 py-1 text-stone-500 hover:border-stone-500 hover:text-stone-700 transition-colors"
+                style={{ borderRadius: "2px" }}
+              >
+                Today
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="border-b border-stone-300" />
+      </div>
+
+      {/* Grid */}
+      <div className="flex-1 flex flex-col justify-center py-6">
+        {viewMode === "D" && (
+          <div className="flex justify-center">
+            <div className="w-full max-w-sm">
+              <MemoryCard dayName={days[0].name} dateKey={days[0].dateKey} displayDate={days[0].displayDate} allMemories={allMemories} onChange={handleChange} />
+            </div>
+          </div>
+        )}
+        {viewMode === "W" && (
+          <>
+            <div className="grid grid-cols-4 gap-8 mb-10">
+              {days.slice(0, 4).map(day => (
+                <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-2 -m-2" : ""}>
+                  <MemoryCard dayName={day.name} dateKey={day.dateKey} displayDate={day.displayDate} allMemories={allMemories} onChange={handleChange} />
+                </div>
+              ))}
+            </div>
+            <div className="grid grid-cols-4 gap-8">
+              {days.slice(4).map(day => (
+                <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-2 -m-2" : ""}>
+                  <MemoryCard dayName={day.name} dateKey={day.dateKey} displayDate={day.displayDate} allMemories={allMemories} onChange={handleChange} />
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+        {viewMode === "M" && (
+          <div className="grid grid-cols-6 gap-3">
+            {days.map(day => (
+              <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-1 -m-1" : ""}>
+                <MemoryCard dayName={day.name} dateKey={day.dateKey} displayDate={day.displayDate} allMemories={allMemories} onChange={handleChange} compact />
               </div>
             ))}
           </div>
@@ -3503,8 +3688,13 @@ export default function Home() {
           <TodoView />
         )}
 
+        {/* Memory view */}
+        {activeView === "memory" && (
+          <MemoryView />
+        )}
+
         {/* All other views — blank */}
-        {activeView !== "my-notebook" && activeView !== "short-note" && activeView !== "task" && activeView !== "schedule" && activeView !== "project" && activeView !== "to-do" && (
+        {activeView !== "my-notebook" && activeView !== "short-note" && activeView !== "task" && activeView !== "schedule" && activeView !== "project" && activeView !== "to-do" && activeView !== "memory" && (
           <div className="flex-1" />
         )}
 
