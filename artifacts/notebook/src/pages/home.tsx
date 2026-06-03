@@ -561,10 +561,10 @@ function DayCard({
           }`}
           style={{ borderRadius: "2px" }}
         >
-          Task <span className="font-bold tracking-tighter">+-</span>
+          Task ±
         </button>
 
-        {/* Mini popup card */}
+        {/* Mini popup card — stays open until outside click or toggle */}
         {menuOpen && (
           <div
             className="absolute bottom-full mb-1.5 left-0 bg-white border border-stone-200 shadow-md flex flex-col overflow-hidden z-50"
@@ -573,7 +573,6 @@ function DayCard({
             <button
               onClick={() => {
                 update([...tasks, { id: crypto.randomUUID(), text: "", done: false }]);
-                setMenuOpen(false);
               }}
               className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] text-stone-600 hover:bg-stone-50 hover:text-stone-900 transition-colors text-left"
             >
@@ -583,9 +582,8 @@ function DayCard({
             <div className="border-t border-stone-100" />
             <button
               onClick={() => {
-                if (tasks.length === 0) { setMenuOpen(false); return; }
+                if (tasks.length === 0) return;
                 update(tasks.slice(0, -1));
-                setMenuOpen(false);
               }}
               className={`flex items-center gap-1.5 px-3 py-1.5 text-[11px] transition-colors text-left ${
                 tasks.length === 0
