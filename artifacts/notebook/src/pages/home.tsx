@@ -973,7 +973,7 @@ function MemoryCard({ dateKey, dayName, displayDate, allMemories, onChange, comp
   };
 
   return (
-    <div className={`flex flex-col ${compact ? "gap-1" : "gap-2"}`}>
+    <div className={`flex flex-col ${compact ? "gap-1" : "gap-2"} ${compact ? "" : "min-h-[306px]"}`}>
       {/* Card header */}
       <div className="flex items-baseline justify-between">
         <span className={`font-bold text-stone-800 ${compact ? "text-[10px]" : "text-sm"}`}>{dayName}</span>
@@ -986,8 +986,8 @@ function MemoryCard({ dateKey, dayName, displayDate, allMemories, onChange, comp
         value={text}
         onChange={e => handleChange(e.target.value)}
         placeholder={compact ? "Memory…" : "Write your memory for this day…"}
-        className={`w-full bg-transparent outline-none resize-none text-stone-700 placeholder:text-stone-300 leading-relaxed ${
-          compact ? "text-[9px] min-h-[60px]" : "text-sm min-h-[200px]"
+        className={`w-full bg-transparent outline-none resize-none text-stone-700 placeholder:text-stone-300 leading-relaxed flex-1 ${
+          compact ? "text-[9px] min-h-[60px]" : "text-sm"
         }`}
       />
     </div>
