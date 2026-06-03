@@ -424,7 +424,8 @@ function AnimatedChildren({ open, children }: { open: boolean; children: React.R
 
 // ── localStorage helpers for To Do ────────────────────────────
 const TODO_KEY = "nb_daily_todos";
-type DailyTodoItem = { id: string; text: string; done: boolean };
+type TodoPriority = "medium" | "important" | "urgent";
+type DailyTodoItem = { id: string; text: string; done: boolean; priority?: TodoPriority };
 type DailyTodoStore = Record<string, DailyTodoItem[]>; // key = "YYYY-MM-DD"
 
 function loadDailyTodos(): DailyTodoStore {
@@ -475,6 +476,26 @@ function DayCard({
   const menuRef = useRef<HTMLDivElement>(null);
   const [newText, setNewText] = useState("");
   const [confirmId, setConfirmId] = useState<string | null>(null);
+  const [priorityTaskId, setPriorityTaskId] = useState<string | null>(null);
+
+  const setTaskPriority = (id: string, priority: TodoPriority | undefined) => {
+    update(tasks.map(t => t.id === id ? { ...t, priority } : t));
+    setPriorityTaskId(null);
+  };
+
+  const priorityTextColor = (p?: TodoPriority) => {
+    if (p === "medium") return "text-blue-600";
+    if (p === "important") return "text-orange-500";
+    if (p === "urgent") return "text-red-500";
+    return "text-stone-700";
+  };
+
+  const priorityIconColor = (p?: TodoPriority) => {
+    if (p === "medium") return "text-blue-500";
+    if (p === "important") return "text-orange-500";
+    if (p === "urgent") return "text-red-500";
+    return "text-stone-400";
+  };
 
   useEffect(() => {
     if (!menuOpen) return;
@@ -538,9 +559,32 @@ function DayCard({
                     value={task.text}
                     onChange={e => updateText(task.id, e.target.value)}
                     onKeyDown={e => { if (e.key === "Enter") addTask(); }}
-                    className={`flex-1 text-[11px] bg-transparent outline-none min-w-0 placeholder:opacity-40 ${task.done ? "line-through text-stone-400" : "text-stone-600"}`}
+                    className={`flex-1 text-[11px] bg-transparent outline-none min-w-0 placeholder:opacity-40 ${task.done ? "line-through text-stone-400" : priorityTextColor(task.priority)}`}
                     placeholder="Task…"
                   />
+                  <div className="relative flex-shrink-0">
+                    <button
+                      onClick={() => setPriorityTaskId(priorityTaskId === task.id ? null : task.id)}
+                      className={`opacity-0 group-hover:opacity-100 transition-all text-sm leading-none ${priorityIconColor(task.priority)}`}
+                    >
+                      ⦿
+                    </button>
+                    {priorityTaskId === task.id && (
+                      <div className="absolute bottom-full mb-1 right-0 bg-white border border-stone-200 shadow-md z-50 flex flex-col overflow-hidden" style={{ borderRadius: "3px", minWidth: "90px" }}>
+                        <button onClick={() => setTaskPriority(task.id, "medium")} className="px-2 py-1 text-[10px] text-blue-600 hover:bg-blue-50 text-left font-medium">Medium</button>
+                        <div className="border-t border-stone-100" />
+                        <button onClick={() => setTaskPriority(task.id, "important")} className="px-2 py-1 text-[10px] text-orange-500 hover:bg-orange-50 text-left font-medium">Important</button>
+                        <div className="border-t border-stone-100" />
+                        <button onClick={() => setTaskPriority(task.id, "urgent")} className="px-2 py-1 text-[10px] text-red-500 hover:bg-red-50 text-left font-medium">Urgent</button>
+                        {task.priority && (
+                          <>
+                            <div className="border-t border-stone-100" />
+                            <button onClick={() => setTaskPriority(task.id, undefined)} className="px-2 py-1 text-[10px] text-stone-400 hover:bg-stone-50 text-left">Clear</button>
+                          </>
+                        )}
+                      </div>
+                    )}
+                  </div>
                   <button onClick={() => setConfirmId(task.id)} className="opacity-0 group-hover:opacity-100 text-stone-400 hover:text-red-500 transition-all flex-shrink-0">
                     <X className="w-2.5 h-2.5" />
                   </button>
@@ -620,10 +664,34 @@ function DayCard({
                   onChange={e => updateText(task.id, e.target.value)}
                   onKeyDown={e => { if (e.key === "Enter") addTask(); }}
                   className={`flex-1 text-sm bg-transparent outline-none min-w-0 placeholder:opacity-50 ${
-                    task.done ? "line-through text-stone-400" : "text-stone-700"
+                    task.done ? "line-through text-stone-400" : priorityTextColor(task.priority)
                   }`}
                   placeholder="Task…"
                 />
+                <div className="relative flex-shrink-0">
+                  <button
+                    onClick={() => setPriorityTaskId(priorityTaskId === task.id ? null : task.id)}
+                    className={`opacity-0 group-hover:opacity-100 transition-all text-lg leading-none ${priorityIconColor(task.priority)}`}
+                    title="Set priority"
+                  >
+                    ⦿
+                  </button>
+                  {priorityTaskId === task.id && (
+                    <div className="absolute bottom-full mb-1 right-0 bg-white border border-stone-200 shadow-md z-50 flex flex-col overflow-hidden" style={{ borderRadius: "3px", minWidth: "100px" }}>
+                      <button onClick={() => setTaskPriority(task.id, "medium")} className="px-3 py-1.5 text-[11px] text-blue-600 hover:bg-blue-50 text-left font-medium">Medium</button>
+                      <div className="border-t border-stone-100" />
+                      <button onClick={() => setTaskPriority(task.id, "important")} className="px-3 py-1.5 text-[11px] text-orange-500 hover:bg-orange-50 text-left font-medium">Important</button>
+                      <div className="border-t border-stone-100" />
+                      <button onClick={() => setTaskPriority(task.id, "urgent")} className="px-3 py-1.5 text-[11px] text-red-500 hover:bg-red-50 text-left font-medium">Urgent</button>
+                      {task.priority && (
+                        <>
+                          <div className="border-t border-stone-100" />
+                          <button onClick={() => setTaskPriority(task.id, undefined)} className="px-3 py-1.5 text-[11px] text-stone-400 hover:bg-stone-50 text-left">Clear</button>
+                        </>
+                      )}
+                    </div>
+                  )}
+                </div>
                 <button
                   onClick={() => setConfirmId(task.id)}
                   className="opacity-0 group-hover:opacity-100 text-stone-500 hover:text-red-500 transition-all flex-shrink-0"
