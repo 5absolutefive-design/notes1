@@ -516,7 +516,7 @@ function DayCard({
       <div className="border-b border-stone-300 mb-3" />
 
       {/* Task rows */}
-      <div className="flex flex-col gap-1.5 flex-1">
+      <div className="flex flex-col gap-1.5">
         {tasks.map(task => (
           <div key={task.id} className="group flex items-center gap-2">
             <button
