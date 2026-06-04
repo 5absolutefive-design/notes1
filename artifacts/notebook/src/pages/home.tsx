@@ -1017,13 +1017,14 @@ function TodoView() {
 }
 
 // ── Memory Card ───────────────────────────────────────────────
-function MemoryCard({ dateKey, dayName, displayDate, allMemories, onChange, compact }: {
+function MemoryCard({ dateKey, dayName, displayDate, allMemories, onChange, compact, large }: {
   dateKey: string;
   dayName: string;
   displayDate: string;
   allMemories: MemoryStore;
   onChange: (store: MemoryStore) => void;
   compact?: boolean;
+  large?: boolean;
 }) {
   const text = allMemories[dateKey] ?? "";
 
@@ -1032,11 +1033,11 @@ function MemoryCard({ dateKey, dayName, displayDate, allMemories, onChange, comp
   };
 
   return (
-    <div className={`flex flex-col min-h-[306px] ${compact ? "gap-1" : "gap-2"}`}>
+    <div className={`flex flex-col ${large ? "min-h-[520px]" : "min-h-[306px]"} ${compact ? "gap-1" : "gap-2"}`}>
       {/* Card header */}
       <div className="flex items-baseline justify-between">
-        <span className={`font-bold text-stone-800 ${compact ? "text-[10px]" : "text-sm"}`}>{dayName}</span>
-        <span className={`text-stone-400 ${compact ? "text-[9px]" : "text-[11px]"}`}>{displayDate}</span>
+        <span className={`font-bold text-stone-800 ${compact ? "text-[10px]" : large ? "text-xl" : "text-sm"}`}>{dayName}</span>
+        <span className={`text-stone-400 ${compact ? "text-[9px]" : large ? "text-sm" : "text-[11px]"}`}>{displayDate}</span>
       </div>
       <div className="border-b border-stone-200" />
 
@@ -1046,7 +1047,7 @@ function MemoryCard({ dateKey, dayName, displayDate, allMemories, onChange, comp
         onChange={e => handleChange(e.target.value)}
         placeholder={compact ? "Memory…" : "Write your memory for this day…"}
         className={`w-full bg-transparent outline-none resize-none text-stone-700 placeholder:text-stone-300 leading-relaxed flex-1 ${
-          compact ? "text-[11px] min-h-[60px]" : "text-base"
+          compact ? "text-[11px] min-h-[60px]" : large ? "text-xl" : "text-base"
         }`}
       />
     </div>
@@ -1153,8 +1154,8 @@ function MemoryView() {
       <div className="flex-1 flex flex-col justify-center py-6">
         {viewMode === "D" && (
           <div className="flex justify-center">
-            <div className="w-full max-w-sm">
-              <MemoryCard dayName={days[0].name} dateKey={days[0].dateKey} displayDate={days[0].displayDate} allMemories={allMemories} onChange={handleChange} />
+            <div className="w-full max-w-2xl">
+              <MemoryCard dayName={days[0].name} dateKey={days[0].dateKey} displayDate={days[0].displayDate} allMemories={allMemories} onChange={handleChange} large />
             </div>
           </div>
         )}
