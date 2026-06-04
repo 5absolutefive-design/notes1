@@ -1046,7 +1046,7 @@ function MemoryCard({ dateKey, dayName, displayDate, allMemories, onChange, comp
         onChange={e => handleChange(e.target.value)}
         placeholder={compact ? "Memory…" : "Write your memory for this day…"}
         className={`w-full bg-transparent outline-none resize-none text-stone-700 placeholder:text-stone-300 leading-relaxed flex-1 ${
-          compact ? "text-[9px] min-h-[60px]" : "text-sm"
+          compact ? "text-[11px] min-h-[60px]" : "text-base"
         }`}
       />
     </div>
