@@ -1238,101 +1238,102 @@ function MemoryView() {
         </div>
       </div>
 
-      {/* Calendar side panel */}
+      {/* Full-year calendar overlay */}
       {showCalendar && (
-        <>
-          <div
-            className="absolute inset-0 z-10"
-            onClick={() => setShowCalendar(false)}
-          />
-          <div
-            className="absolute top-0 right-0 h-full w-72 bg-white border-l border-stone-200 shadow-xl z-20 flex flex-col"
-            onClick={e => e.stopPropagation()}
-          >
-            {/* Panel header */}
-            <div className="flex items-center justify-between px-4 pt-14 pb-3 border-b border-stone-200">
-              <span className="text-sm font-semibold text-stone-800">Calendar</span>
+        <div
+          className="absolute inset-0 z-20 bg-white flex flex-col"
+          onClick={e => e.stopPropagation()}
+        >
+          {/* Header */}
+          <div className="flex items-center justify-between px-8 pt-14 pb-4 border-b border-stone-200 flex-shrink-0">
+            <div className="flex items-center gap-4">
               <button
-                onClick={() => setShowCalendar(false)}
-                className="w-6 h-6 flex items-center justify-center text-stone-400 hover:text-stone-700 transition-colors"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Month navigation */}
-            <div className="flex items-center justify-between px-4 py-3">
-              <button
-                onClick={prevCalMonth}
+                onClick={() => setCalYear(y => y - 1)}
                 className="w-7 h-7 flex items-center justify-center border border-stone-300 hover:border-stone-500 text-stone-500 transition-colors"
                 style={{ borderRadius: "2px" }}
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <span className="text-sm font-medium text-stone-700">
-                {MONTH_NAMES[calMonth]} {calYear}
-              </span>
+              <span className="text-xl font-bold text-stone-800">{calYear}</span>
               <button
-                onClick={nextCalMonth}
+                onClick={() => setCalYear(y => y + 1)}
                 className="w-7 h-7 flex items-center justify-center border border-stone-300 hover:border-stone-500 text-stone-500 transition-colors"
                 style={{ borderRadius: "2px" }}
               >
                 <ChevronRight className="w-4 h-4" />
               </button>
             </div>
-
-            {/* Day headers */}
-            <div className="grid grid-cols-7 px-3 mb-1">
-              {DAY_SHORT.map(d => (
-                <div key={d} className="text-center text-[10px] font-medium text-stone-400 py-1">{d}</div>
-              ))}
-            </div>
-
-            {/* Day cells */}
-            <div className="grid grid-cols-7 px-3 gap-y-1 flex-1 content-start">
-              {calCells.map((d, i) => {
-                if (!d) return <div key={i} />;
-                const dk = formatDateKey(d);
-                const isToday = dk === todayKey;
-                const isActive = activeDateKeys.has(dk);
-                const hasEntry = !!allMemories[dk]?.trim();
-                return (
-                  <button
-                    key={i}
-                    onClick={() => handleCalDayClick(d)}
-                    className={`relative flex flex-col items-center justify-center w-8 h-8 mx-auto text-xs font-medium rounded transition-colors ${
-                      isActive
-                        ? "bg-stone-800 text-white"
-                        : isToday
-                        ? "bg-stone-100 text-stone-800 font-bold"
-                        : "text-stone-600 hover:bg-stone-100"
-                    }`}
-                  >
-                    {d.getDate()}
-                    {hasEntry && (
-                      <span className={`absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${isActive ? "bg-white" : "bg-stone-400"}`} />
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-
-            {/* Go to today */}
-            <div className="px-4 py-4 border-t border-stone-100">
+            <div className="flex items-center gap-3">
               <button
                 onClick={() => {
                   setCalYear(todayObj.getFullYear());
-                  setCalMonth(todayObj.getMonth());
                   handleCalDayClick(todayObj);
                 }}
-                className="w-full text-xs border border-stone-300 py-1.5 text-stone-600 hover:border-stone-500 hover:text-stone-800 transition-colors"
+                className="text-xs border border-stone-300 px-3 py-1.5 text-stone-600 hover:border-stone-500 hover:text-stone-800 transition-colors"
                 style={{ borderRadius: "2px" }}
               >
                 Go to Today
               </button>
+              <button
+                onClick={() => setShowCalendar(false)}
+                className="w-7 h-7 flex items-center justify-center border border-stone-300 hover:border-stone-500 text-stone-500 transition-colors"
+                style={{ borderRadius: "2px" }}
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
           </div>
-        </>
+
+          {/* 12-month grid */}
+          <div className="flex-1 overflow-y-auto px-8 py-6">
+            <div className="grid grid-cols-4 gap-8">
+              {MONTH_NAMES.map((monthName, mIdx) => {
+                const firstDow = (new Date(calYear, mIdx, 1).getDay() + 6) % 7;
+                const dim = new Date(calYear, mIdx + 1, 0).getDate();
+                const cells: (number | null)[] = [
+                  ...Array(firstDow).fill(null),
+                  ...Array.from({ length: dim }, (_, i) => i + 1),
+                ];
+                while (cells.length % 7 !== 0) cells.push(null);
+                return (
+                  <div key={mIdx} className="flex flex-col gap-1">
+                    <div className="text-sm font-semibold text-stone-700 mb-2">{monthName}</div>
+                    <div className="grid grid-cols-7 gap-y-0.5">
+                      {DAY_SHORT.map(ds => (
+                        <div key={ds} className="text-center text-[9px] font-medium text-stone-400 pb-1">{ds}</div>
+                      ))}
+                      {cells.map((day, ci) => {
+                        if (!day) return <div key={ci} />;
+                        const dk = formatDateKey(new Date(calYear, mIdx, day));
+                        const isToday = dk === todayKey;
+                        const isActive = activeDateKeys.has(dk);
+                        const hasEntry = !!allMemories[dk]?.trim();
+                        return (
+                          <button
+                            key={ci}
+                            onClick={() => handleCalDayClick(new Date(calYear, mIdx, day))}
+                            className={`relative flex flex-col items-center justify-center w-7 h-7 mx-auto text-[11px] font-medium rounded transition-colors ${
+                              isActive
+                                ? "bg-stone-800 text-white"
+                                : isToday
+                                ? "bg-stone-200 text-stone-900 font-bold"
+                                : "text-stone-600 hover:bg-stone-100"
+                            }`}
+                          >
+                            {day}
+                            {hasEntry && (
+                              <span className={`absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${isActive ? "bg-white" : "bg-stone-400"}`} />
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
