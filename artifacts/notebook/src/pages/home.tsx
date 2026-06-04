@@ -1061,6 +1061,13 @@ function MemoryView() {
   const [allMemories, setAllMemories] = useState<MemoryStore>(() => loadMemoryNotes());
   const [viewMode, setViewMode] = useState<MemoryViewMode>("W");
   const [offset, setOffset] = useState(0);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const todayObj = new Date();
+  const [calYear, setCalYear] = useState(todayObj.getFullYear());
+  const [calMonth, setCalMonth] = useState(todayObj.getMonth());
+
+  const MONTH_NAMES = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+  const DAY_SHORT = ["Mo","Tu","We","Th","Fr","Sa","Su"];
 
   const handleChange = (updated: MemoryStore) => {
     setAllMemories(updated);
@@ -1069,7 +1076,7 @@ function MemoryView() {
 
   const switchMode = (mode: MemoryViewMode) => { setViewMode(mode); setOffset(0); };
 
-  const todayKey = formatDateKey(new Date());
+  const todayKey = formatDateKey(todayObj);
 
   const days = (() => {
     const today = new Date();
@@ -1099,94 +1106,234 @@ function MemoryView() {
     ? `${days[0].displayDate} (${days[0].name})`
     : `${days[0].displayDate} – ${days[days.length - 1].displayDate}`;
 
+  const prevCalMonth = () => {
+    if (calMonth === 0) { setCalMonth(11); setCalYear(y => y - 1); }
+    else setCalMonth(m => m - 1);
+  };
+  const nextCalMonth = () => {
+    if (calMonth === 11) { setCalMonth(0); setCalYear(y => y + 1); }
+    else setCalMonth(m => m + 1);
+  };
+
+  const handleCalDayClick = (d: Date) => {
+    const todayMid = new Date(todayObj.getFullYear(), todayObj.getMonth(), todayObj.getDate());
+    const clickedMid = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const diff = Math.round((clickedMid.getTime() - todayMid.getTime()) / 86400000);
+    setViewMode("D");
+    setOffset(diff);
+    setShowCalendar(false);
+  };
+
+  const calFirstDow = (new Date(calYear, calMonth, 1).getDay() + 6) % 7;
+  const calDaysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const calCells: (Date | null)[] = [
+    ...Array(calFirstDow).fill(null),
+    ...Array.from({ length: calDaysInMonth }, (_, i) => new Date(calYear, calMonth, i + 1)),
+  ];
+  while (calCells.length % 7 !== 0) calCells.push(null);
+
+  const activeDateKeys = new Set(days.map(d => d.dateKey));
+
   return (
-    <div className="flex-1 overflow-y-auto flex flex-col px-6 md:px-10">
-      {/* Header */}
-      <div className="pt-14 md:pt-16">
-        <div className="flex items-center justify-between mb-1">
-          <h1 className="text-xl font-bold text-stone-800">Daily Memories :</h1>
-          <div className="flex items-center gap-2">
-            {(["D", "W", "M"] as MemoryViewMode[]).map(mode => (
+    <div className="flex-1 overflow-hidden flex flex-col relative">
+      <div className="flex-1 overflow-y-auto flex flex-col px-6 md:px-10">
+        {/* Header */}
+        <div className="pt-14 md:pt-16">
+          <div className="flex items-center justify-between mb-1">
+            <h1 className="text-xl font-bold text-stone-800">Daily Memories :</h1>
+            <div className="flex items-center gap-2">
+              {(["D", "W", "M"] as MemoryViewMode[]).map(mode => (
+                <button
+                  key={mode}
+                  onClick={() => switchMode(mode)}
+                  className={`text-xs px-2 py-1 border transition-colors font-medium ${
+                    viewMode === mode
+                      ? "border-stone-700 bg-stone-800 text-white"
+                      : "border-stone-300 text-stone-500 hover:border-stone-500 hover:text-stone-700"
+                  }`}
+                  style={{ borderRadius: "2px", minWidth: "32px" }}
+                >
+                  {mode}
+                </button>
+              ))}
+              <div className="w-px h-4 bg-stone-200 mx-0.5" />
               <button
-                key={mode}
-                onClick={() => switchMode(mode)}
-                className={`text-xs px-2 py-1 border transition-colors font-medium ${
-                  viewMode === mode
+                onClick={() => setOffset(v => v - 1)}
+                className="w-7 h-7 flex items-center justify-center border border-stone-300 hover:border-stone-500 text-stone-500 transition-colors"
+                style={{ borderRadius: "2px" }}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <span className="text-xs text-stone-400 min-w-[140px] text-center">{rangeLabel}</span>
+              <button
+                onClick={() => setOffset(v => v + 1)}
+                className="w-7 h-7 flex items-center justify-center border border-stone-300 hover:border-stone-500 text-stone-500 transition-colors"
+                style={{ borderRadius: "2px" }}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+              {offset !== 0 && (
+                <button
+                  onClick={() => setOffset(0)}
+                  className="text-xs border border-stone-300 px-2 py-1 text-stone-500 hover:border-stone-500 hover:text-stone-700 transition-colors"
+                  style={{ borderRadius: "2px" }}
+                >
+                  Today
+                </button>
+              )}
+              <div className="w-px h-4 bg-stone-200 mx-0.5" />
+              <button
+                onClick={() => setShowCalendar(v => !v)}
+                className={`w-7 h-7 flex items-center justify-center border transition-colors ${
+                  showCalendar
                     ? "border-stone-700 bg-stone-800 text-white"
                     : "border-stone-300 text-stone-500 hover:border-stone-500 hover:text-stone-700"
                 }`}
-                style={{ borderRadius: "2px", minWidth: "32px" }}
-              >
-                {mode}
-              </button>
-            ))}
-            <div className="w-px h-4 bg-stone-200 mx-0.5" />
-            <button
-              onClick={() => setOffset(v => v - 1)}
-              className="w-7 h-7 flex items-center justify-center border border-stone-300 hover:border-stone-500 text-stone-500 transition-colors"
-              style={{ borderRadius: "2px" }}
-            >
-              <ChevronLeft className="w-4 h-4" />
-            </button>
-            <span className="text-xs text-stone-400 min-w-[140px] text-center">{rangeLabel}</span>
-            <button
-              onClick={() => setOffset(v => v + 1)}
-              className="w-7 h-7 flex items-center justify-center border border-stone-300 hover:border-stone-500 text-stone-500 transition-colors"
-              style={{ borderRadius: "2px" }}
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-            {offset !== 0 && (
-              <button
-                onClick={() => setOffset(0)}
-                className="text-xs border border-stone-300 px-2 py-1 text-stone-500 hover:border-stone-500 hover:text-stone-700 transition-colors"
                 style={{ borderRadius: "2px" }}
+                title="Open calendar"
               >
-                Today
+                <CalendarDays className="w-4 h-4" />
               </button>
-            )}
+            </div>
           </div>
+          <div className="border-b border-stone-300" />
         </div>
-        <div className="border-b border-stone-300" />
+
+        {/* Grid */}
+        <div className="flex-1 flex flex-col justify-center py-6">
+          {viewMode === "D" && (
+            <div className="flex justify-center">
+              <div className="w-full max-w-2xl">
+                <MemoryCard dayName={days[0].name} dateKey={days[0].dateKey} displayDate={days[0].displayDate} allMemories={allMemories} onChange={handleChange} large />
+              </div>
+            </div>
+          )}
+          {viewMode === "W" && (
+            <>
+              <div className="grid grid-cols-4 gap-8 mb-10">
+                {days.slice(0, 4).map(day => (
+                  <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-2 -m-2" : ""}>
+                    <MemoryCard dayName={day.name} dateKey={day.dateKey} displayDate={day.displayDate} allMemories={allMemories} onChange={handleChange} />
+                  </div>
+                ))}
+              </div>
+              <div className="grid grid-cols-4 gap-8">
+                {days.slice(4).map(day => (
+                  <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-2 -m-2" : ""}>
+                    <MemoryCard dayName={day.name} dateKey={day.dateKey} displayDate={day.displayDate} allMemories={allMemories} onChange={handleChange} />
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+          {viewMode === "M" && (
+            <div className="grid grid-cols-6 gap-3">
+              {days.map(day => (
+                <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-1 -m-1" : ""}>
+                  <MemoryCard dayName={day.name} dateKey={day.dateKey} displayDate={day.displayDate} allMemories={allMemories} onChange={handleChange} compact />
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Grid */}
-      <div className="flex-1 flex flex-col justify-center py-6">
-        {viewMode === "D" && (
-          <div className="flex justify-center">
-            <div className="w-full max-w-2xl">
-              <MemoryCard dayName={days[0].name} dateKey={days[0].dateKey} displayDate={days[0].displayDate} allMemories={allMemories} onChange={handleChange} large />
+      {/* Calendar side panel */}
+      {showCalendar && (
+        <>
+          <div
+            className="absolute inset-0 z-10"
+            onClick={() => setShowCalendar(false)}
+          />
+          <div
+            className="absolute top-0 right-0 h-full w-72 bg-white border-l border-stone-200 shadow-xl z-20 flex flex-col"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Panel header */}
+            <div className="flex items-center justify-between px-4 pt-14 pb-3 border-b border-stone-200">
+              <span className="text-sm font-semibold text-stone-800">Calendar</span>
+              <button
+                onClick={() => setShowCalendar(false)}
+                className="w-6 h-6 flex items-center justify-center text-stone-400 hover:text-stone-700 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
             </div>
-          </div>
-        )}
-        {viewMode === "W" && (
-          <>
-            <div className="grid grid-cols-4 gap-8 mb-10">
-              {days.slice(0, 4).map(day => (
-                <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-2 -m-2" : ""}>
-                  <MemoryCard dayName={day.name} dateKey={day.dateKey} displayDate={day.displayDate} allMemories={allMemories} onChange={handleChange} />
-                </div>
+
+            {/* Month navigation */}
+            <div className="flex items-center justify-between px-4 py-3">
+              <button
+                onClick={prevCalMonth}
+                className="w-7 h-7 flex items-center justify-center border border-stone-300 hover:border-stone-500 text-stone-500 transition-colors"
+                style={{ borderRadius: "2px" }}
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <span className="text-sm font-medium text-stone-700">
+                {MONTH_NAMES[calMonth]} {calYear}
+              </span>
+              <button
+                onClick={nextCalMonth}
+                className="w-7 h-7 flex items-center justify-center border border-stone-300 hover:border-stone-500 text-stone-500 transition-colors"
+                style={{ borderRadius: "2px" }}
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Day headers */}
+            <div className="grid grid-cols-7 px-3 mb-1">
+              {DAY_SHORT.map(d => (
+                <div key={d} className="text-center text-[10px] font-medium text-stone-400 py-1">{d}</div>
               ))}
             </div>
-            <div className="grid grid-cols-4 gap-8">
-              {days.slice(4).map(day => (
-                <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-2 -m-2" : ""}>
-                  <MemoryCard dayName={day.name} dateKey={day.dateKey} displayDate={day.displayDate} allMemories={allMemories} onChange={handleChange} />
-                </div>
-              ))}
+
+            {/* Day cells */}
+            <div className="grid grid-cols-7 px-3 gap-y-1 flex-1 content-start">
+              {calCells.map((d, i) => {
+                if (!d) return <div key={i} />;
+                const dk = formatDateKey(d);
+                const isToday = dk === todayKey;
+                const isActive = activeDateKeys.has(dk);
+                const hasEntry = !!allMemories[dk]?.trim();
+                return (
+                  <button
+                    key={i}
+                    onClick={() => handleCalDayClick(d)}
+                    className={`relative flex flex-col items-center justify-center w-8 h-8 mx-auto text-xs font-medium rounded transition-colors ${
+                      isActive
+                        ? "bg-stone-800 text-white"
+                        : isToday
+                        ? "bg-stone-100 text-stone-800 font-bold"
+                        : "text-stone-600 hover:bg-stone-100"
+                    }`}
+                  >
+                    {d.getDate()}
+                    {hasEntry && (
+                      <span className={`absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${isActive ? "bg-white" : "bg-stone-400"}`} />
+                    )}
+                  </button>
+                );
+              })}
             </div>
-          </>
-        )}
-        {viewMode === "M" && (
-          <div className="grid grid-cols-6 gap-3">
-            {days.map(day => (
-              <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-1 -m-1" : ""}>
-                <MemoryCard dayName={day.name} dateKey={day.dateKey} displayDate={day.displayDate} allMemories={allMemories} onChange={handleChange} compact />
-              </div>
-            ))}
+
+            {/* Go to today */}
+            <div className="px-4 py-4 border-t border-stone-100">
+              <button
+                onClick={() => {
+                  setCalYear(todayObj.getFullYear());
+                  setCalMonth(todayObj.getMonth());
+                  handleCalDayClick(todayObj);
+                }}
+                className="w-full text-xs border border-stone-300 py-1.5 text-stone-600 hover:border-stone-500 hover:text-stone-800 transition-colors"
+                style={{ borderRadius: "2px" }}
+              >
+                Go to Today
+              </button>
+            </div>
           </div>
-        )}
-      </div>
+        </>
+      )}
     </div>
   );
 }
