@@ -1250,7 +1250,7 @@ function MemoryView() {
       {/* Full-year calendar overlay */}
       {showCalendar && (
         <div
-          className={`absolute inset-0 z-20 bg-white flex flex-col transition-transform duration-300 ease-out ${calSlideIn ? "translate-x-0" : "translate-x-full"}`}
+          className={`absolute inset-0 z-20 bg-white flex flex-col transition-transform duration-500 ease-out ${calSlideIn ? "translate-x-0" : "translate-x-full"}`}
           onClick={e => e.stopPropagation()}
         >
           {/* Header */}
