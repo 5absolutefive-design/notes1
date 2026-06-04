@@ -1062,6 +1062,7 @@ function MemoryView() {
   const [viewMode, setViewMode] = useState<MemoryViewMode>("W");
   const [offset, setOffset] = useState(0);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [calSlideIn, setCalSlideIn] = useState(false);
   const todayObj = new Date();
   const [calYear, setCalYear] = useState(todayObj.getFullYear());
   const [calMonth, setCalMonth] = useState(todayObj.getMonth());
@@ -1114,6 +1115,14 @@ function MemoryView() {
     if (calMonth === 11) { setCalMonth(0); setCalYear(y => y + 1); }
     else setCalMonth(m => m + 1);
   };
+
+  useEffect(() => {
+    if (showCalendar) {
+      requestAnimationFrame(() => requestAnimationFrame(() => setCalSlideIn(true)));
+    } else {
+      setCalSlideIn(false);
+    }
+  }, [showCalendar]);
 
   const handleCalDayClick = (d: Date) => {
     const todayMid = new Date(todayObj.getFullYear(), todayObj.getMonth(), todayObj.getDate());
@@ -1241,7 +1250,7 @@ function MemoryView() {
       {/* Full-year calendar overlay */}
       {showCalendar && (
         <div
-          className="absolute inset-0 z-20 bg-white flex flex-col"
+          className={`absolute inset-0 z-20 bg-white flex flex-col transition-transform duration-300 ease-out ${calSlideIn ? "translate-x-0" : "translate-x-full"}`}
           onClick={e => e.stopPropagation()}
         >
           {/* Header */}
