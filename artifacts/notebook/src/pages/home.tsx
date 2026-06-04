@@ -436,6 +436,23 @@ function loadMemoryNotes(): MemoryStore {
 function saveMemoryNotes(store: MemoryStore) {
   localStorage.setItem(MEMORY_KEY, JSON.stringify(store));
 }
+
+const MOOD_KEY = "nb_daily_moods";
+type MoodValue = "great" | "good" | "normal" | "bad" | "terrible";
+type MoodStore = Record<string, MoodValue>;
+const MOOD_OPTIONS: { value: MoodValue; emoji: string; label: string }[] = [
+  { value: "great",    emoji: "🟢", label: "Great" },
+  { value: "good",     emoji: "🔵", label: "Good" },
+  { value: "normal",   emoji: "⚪", label: "Normal" },
+  { value: "bad",      emoji: "🟠", label: "Bad" },
+  { value: "terrible", emoji: "🔴", label: "Terrible" },
+];
+function loadMoodNotes(): MoodStore {
+  try { return JSON.parse(localStorage.getItem(MOOD_KEY) || "{}"); } catch { return {}; }
+}
+function saveMoodNotes(store: MoodStore) {
+  localStorage.setItem(MOOD_KEY, JSON.stringify(store));
+}
 type TodoPriority = "medium" | "important" | "urgent";
 type DailyTodoItem = { id: string; text: string; done: boolean; priority?: TodoPriority };
 type DailyTodoStore = Record<string, DailyTodoItem[]>; // key = "YYYY-MM-DD"
@@ -1017,26 +1034,75 @@ function TodoView() {
 }
 
 // ── Memory Card ───────────────────────────────────────────────
-function MemoryCard({ dateKey, dayName, displayDate, allMemories, onChange, compact, large }: {
+function MemoryCard({ dateKey, dayName, displayDate, allMemories, onChange, allMoods, onMoodChange, compact, large }: {
   dateKey: string;
   dayName: string;
   displayDate: string;
   allMemories: MemoryStore;
   onChange: (store: MemoryStore) => void;
+  allMoods: MoodStore;
+  onMoodChange: (store: MoodStore) => void;
   compact?: boolean;
   large?: boolean;
 }) {
   const text = allMemories[dateKey] ?? "";
+  const mood = allMoods[dateKey] ?? null;
+  const [showMoodPicker, setShowMoodPicker] = useState(false);
+  const moodRef = useRef<HTMLDivElement>(null);
 
   const handleChange = (val: string) => {
     onChange({ ...allMemories, [dateKey]: val });
   };
 
+  const handleMoodSelect = (val: MoodValue) => {
+    onMoodChange({ ...allMoods, [dateKey]: val });
+    setShowMoodPicker(false);
+  };
+
+  useEffect(() => {
+    if (!showMoodPicker) return;
+    const handler = (e: MouseEvent) => {
+      if (moodRef.current && !moodRef.current.contains(e.target as Node)) {
+        setShowMoodPicker(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showMoodPicker]);
+
+  const currentMood = MOOD_OPTIONS.find(o => o.value === mood);
+
   return (
     <div className={`flex flex-col ${large ? "min-h-[520px]" : "min-h-[306px]"} ${compact ? "gap-1" : "gap-2"}`}>
       {/* Card header */}
-      <div className="flex items-baseline justify-between">
-        <span className={`font-bold text-stone-800 ${compact ? "text-[14px]" : large ? "text-[28px]" : "text-[20px]"}`}>{dayName}</span>
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          {/* Mood button */}
+          <div className="relative" ref={moodRef}>
+            <button
+              onClick={() => setShowMoodPicker(v => !v)}
+              className={`flex items-center justify-center transition-opacity hover:opacity-70 ${compact ? "text-[13px]" : large ? "text-[22px]" : "text-[16px]"}`}
+              title="Set mood"
+            >
+              {currentMood ? currentMood.emoji : <span className="text-stone-300" style={{ fontSize: compact ? "11px" : large ? "18px" : "14px" }}>◯</span>}
+            </button>
+            {showMoodPicker && (
+              <div className="absolute left-0 top-full mt-1 z-50 bg-white border border-stone-200 shadow-lg rounded py-1 min-w-[130px]">
+                {MOOD_OPTIONS.map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => handleMoodSelect(opt.value)}
+                    className={`w-full flex items-center gap-2 px-3 py-1.5 text-left text-xs hover:bg-stone-50 transition-colors ${mood === opt.value ? "font-semibold text-stone-800" : "text-stone-600"}`}
+                  >
+                    <span>{opt.emoji}</span>
+                    <span>{opt.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <span className={`font-bold text-stone-800 ${compact ? "text-[14px]" : large ? "text-[28px]" : "text-[20px]"}`}>{dayName}</span>
+        </div>
         <span className={`text-stone-400 ${compact ? "text-[9px]" : large ? "text-sm" : "text-[11px]"}`}>{displayDate}</span>
       </div>
       <div className="border-b border-stone-200" />
@@ -1060,6 +1126,7 @@ type MemoryViewMode = "D" | "W" | "M";
 
 function MemoryView() {
   const [allMemories, setAllMemories] = useState<MemoryStore>(() => loadMemoryNotes());
+  const [allMoods, setAllMoods] = useState<MoodStore>(() => loadMoodNotes());
   const [viewMode, setViewMode] = useState<MemoryViewMode>("W");
   const [offset, setOffset] = useState(0);
   const [showCalendar, setShowCalendar] = useState(false);
@@ -1075,6 +1142,11 @@ function MemoryView() {
   const handleChange = (updated: MemoryStore) => {
     setAllMemories(updated);
     saveMemoryNotes(updated);
+  };
+
+  const handleMoodChange = (updated: MoodStore) => {
+    setAllMoods(updated);
+    saveMoodNotes(updated);
   };
 
   const switchMode = (mode: MemoryViewMode) => { setViewMode(mode); setOffset(0); };
@@ -1220,7 +1292,7 @@ function MemoryView() {
           {viewMode === "D" && (
             <div className="flex justify-center">
               <div className="w-full max-w-2xl">
-                <MemoryCard dayName={days[0].name} dateKey={days[0].dateKey} displayDate={days[0].displayDate} allMemories={allMemories} onChange={handleChange} large />
+                <MemoryCard dayName={days[0].name} dateKey={days[0].dateKey} displayDate={days[0].displayDate} allMemories={allMemories} onChange={handleChange} allMoods={allMoods} onMoodChange={handleMoodChange} large />
               </div>
             </div>
           )}
@@ -1229,14 +1301,14 @@ function MemoryView() {
               <div className="grid grid-cols-4 gap-8 mb-10">
                 {days.slice(0, 4).map(day => (
                   <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-2 -m-2" : ""}>
-                    <MemoryCard dayName={day.name} dateKey={day.dateKey} displayDate={day.displayDate} allMemories={allMemories} onChange={handleChange} />
+                    <MemoryCard dayName={day.name} dateKey={day.dateKey} displayDate={day.displayDate} allMemories={allMemories} onChange={handleChange} allMoods={allMoods} onMoodChange={handleMoodChange} />
                   </div>
                 ))}
               </div>
               <div className="grid grid-cols-4 gap-8">
                 {days.slice(4).map(day => (
                   <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-2 -m-2" : ""}>
-                    <MemoryCard dayName={day.name} dateKey={day.dateKey} displayDate={day.displayDate} allMemories={allMemories} onChange={handleChange} />
+                    <MemoryCard dayName={day.name} dateKey={day.dateKey} displayDate={day.displayDate} allMemories={allMemories} onChange={handleChange} allMoods={allMoods} onMoodChange={handleMoodChange} />
                   </div>
                 ))}
               </div>
@@ -1246,7 +1318,7 @@ function MemoryView() {
             <div className="grid grid-cols-6 gap-3">
               {days.map(day => (
                 <div key={day.dateKey} className={day.dateKey === todayKey ? "ring-2 ring-stone-300 rounded p-1 -m-1" : ""}>
-                  <MemoryCard dayName={day.name} dateKey={day.dateKey} displayDate={day.displayDate} allMemories={allMemories} onChange={handleChange} compact />
+                  <MemoryCard dayName={day.name} dateKey={day.dateKey} displayDate={day.displayDate} allMemories={allMemories} onChange={handleChange} allMoods={allMoods} onMoodChange={handleMoodChange} compact />
                 </div>
               ))}
             </div>
