@@ -440,12 +440,12 @@ function saveMemoryNotes(store: MemoryStore) {
 const MOOD_KEY = "nb_daily_moods";
 type MoodValue = "great" | "good" | "normal" | "bad" | "terrible";
 type MoodStore = Record<string, MoodValue>;
-const MOOD_OPTIONS: { value: MoodValue; emoji: string; label: string }[] = [
-  { value: "great",    emoji: "🟢", label: "Great" },
-  { value: "good",     emoji: "🔵", label: "Good" },
-  { value: "normal",   emoji: "⚪", label: "Normal" },
-  { value: "bad",      emoji: "🟠", label: "Bad" },
-  { value: "terrible", emoji: "🔴", label: "Terrible" },
+const MOOD_OPTIONS: { value: MoodValue; emoji: string; label: string; color: string }[] = [
+  { value: "great",    emoji: "🟢", label: "Great",    color: "#22c55e" },
+  { value: "good",     emoji: "🔵", label: "Good",     color: "#3b82f6" },
+  { value: "normal",   emoji: "⚪", label: "Normal",   color: "#a8a29e" },
+  { value: "bad",      emoji: "🟠", label: "Bad",      color: "#f97316" },
+  { value: "terrible", emoji: "🔴", label: "Terrible", color: "#ef4444" },
 ];
 function loadMoodNotes(): MoodStore {
   try { return JSON.parse(localStorage.getItem(MOOD_KEY) || "{}"); } catch { return {}; }
@@ -1072,8 +1072,18 @@ function MemoryCard({ dateKey, dayName, displayDate, allMemories, onChange, allM
 
   const currentMood = MOOD_OPTIONS.find(o => o.value === mood);
 
+  const moodColor = currentMood ? currentMood.color : undefined;
+
   return (
-    <div className={`flex flex-col ${large ? "min-h-[520px]" : "min-h-[306px]"} ${compact ? "gap-1" : "gap-2"}`}>
+    <div
+      className={`flex flex-col ${large ? "min-h-[520px]" : "min-h-[306px]"} ${compact ? "gap-1" : "gap-2"} border transition-colors`}
+      style={{
+        borderColor: moodColor ?? "#e7e5e4",
+        borderWidth: compact ? "1.5px" : "2px",
+        padding: compact ? "6px" : large ? "16px" : "10px",
+        borderRadius: "3px",
+      }}
+    >
       {/* Card header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -1084,17 +1094,21 @@ function MemoryCard({ dateKey, dayName, displayDate, allMemories, onChange, allM
               className={`flex items-center justify-center transition-opacity hover:opacity-70 ${compact ? "text-[13px]" : large ? "text-[22px]" : "text-[16px]"}`}
               title="Set mood"
             >
-              {currentMood ? currentMood.emoji : <span className="text-stone-300" style={{ fontSize: compact ? "11px" : large ? "18px" : "14px" }}>◯</span>}
+              {currentMood
+                ? <span style={{ color: currentMood.color, fontSize: compact ? "11px" : large ? "20px" : "15px" }}>●</span>
+                : <span className="text-stone-300" style={{ fontSize: compact ? "11px" : large ? "20px" : "15px" }}>◯</span>
+              }
             </button>
             {showMoodPicker && (
-              <div className="absolute left-0 top-full mt-1 z-50 bg-white border border-stone-200 shadow-lg rounded py-1 min-w-[130px]">
+              <div className="absolute left-0 top-full mt-1 z-50 bg-white border border-stone-200 shadow-lg py-1 min-w-[130px]" style={{ borderRadius: "3px" }}>
                 {MOOD_OPTIONS.map(opt => (
                   <button
                     key={opt.value}
                     onClick={() => handleMoodSelect(opt.value)}
-                    className={`w-full flex items-center gap-2 px-3 py-1.5 text-left text-xs hover:bg-stone-50 transition-colors ${mood === opt.value ? "font-semibold text-stone-800" : "text-stone-600"}`}
+                    className={`w-full flex items-center gap-2 px-3 py-2 text-left text-xs hover:bg-stone-50 transition-colors ${mood === opt.value ? "font-semibold" : "text-stone-600"}`}
+                    style={mood === opt.value ? { color: opt.color } : undefined}
                   >
-                    <span>{opt.emoji}</span>
+                    <span style={{ color: opt.color, fontSize: "13px" }}>●</span>
                     <span>{opt.label}</span>
                   </button>
                 ))}
@@ -1442,20 +1456,26 @@ function MemoryView() {
                         if (!day) return <div key={ci} />;
                         const dk = formatDateKey(new Date(calYear, mIdx, day));
                         const isToday = dk === todayKey;
-                        const isActive = activeDateKeys.has(dk);
                         const hasEntry = !!allMemories[dk]?.trim();
+                        const dayMood = allMoods[dk] ? MOOD_OPTIONS.find(o => o.value === allMoods[dk]) : null;
                         return (
                           <button
                             key={ci}
                             onClick={() => handleCalDayClick(new Date(calYear, mIdx, day))}
-                            className={`relative flex flex-col items-center justify-center w-7 h-7 mx-auto text-[11px] font-medium transition-colors ${
-                              isToday
-                                ? "border border-stone-800 text-stone-900 font-bold"
-                                : "text-stone-600 hover:bg-stone-100 rounded"
-                            }`}
+                            className={`relative flex flex-col items-center justify-center w-7 h-7 mx-auto text-[11px] font-medium transition-colors hover:opacity-80`}
+                            style={{
+                              border: dayMood
+                                ? `1.5px solid ${dayMood.color}`
+                                : isToday
+                                ? "1.5px solid #1c1917"
+                                : "1.5px solid transparent",
+                              color: isToday ? "#1c1917" : "#57534e",
+                              fontWeight: isToday ? 700 : 400,
+                              borderRadius: "2px",
+                            }}
                           >
                             {day}
-                            {hasEntry && (
+                            {hasEntry && !dayMood && (
                               <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-stone-400" />
                             )}
                           </button>
