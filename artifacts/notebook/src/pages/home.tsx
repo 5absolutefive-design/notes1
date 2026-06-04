@@ -1063,6 +1063,7 @@ function MemoryView() {
   const [offset, setOffset] = useState(0);
   const [showCalendar, setShowCalendar] = useState(false);
   const [calSlideIn, setCalSlideIn] = useState(false);
+  const [calPopupDate, setCalPopupDate] = useState<Date | null>(null);
   const todayObj = new Date();
   const [calYear, setCalYear] = useState(todayObj.getFullYear());
   const [calMonth, setCalMonth] = useState(todayObj.getMonth());
@@ -1125,12 +1126,17 @@ function MemoryView() {
   }, [showCalendar]);
 
   const handleCalDayClick = (d: Date) => {
+    setCalPopupDate(d);
+  };
+
+  const handleCalPopupGoToDay = (d: Date) => {
     const todayMid = new Date(todayObj.getFullYear(), todayObj.getMonth(), todayObj.getDate());
     const clickedMid = new Date(d.getFullYear(), d.getMonth(), d.getDate());
     const diff = Math.round((clickedMid.getTime() - todayMid.getTime()) / 86400000);
     setViewMode("D");
     setOffset(diff);
     setShowCalendar(false);
+    setCalPopupDate(null);
   };
 
   const calFirstDow = (new Date(calYear, calMonth, 1).getDay() + 6) % 7;
@@ -1292,6 +1298,54 @@ function MemoryView() {
               </button>
             </div>
           </div>
+
+          {/* Day memory popup */}
+          {calPopupDate && (() => {
+            const dk = formatDateKey(calPopupDate);
+            const dayName = DAY_NAMES[(calPopupDate.getDay() + 6) % 7];
+            const dispDate = formatDisplayDate(calPopupDate);
+            const text = allMemories[dk] ?? "";
+            return (
+              <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/20" onClick={() => setCalPopupDate(null)}>
+                <div
+                  className="bg-white rounded-lg shadow-2xl w-full max-w-lg mx-8 flex flex-col overflow-hidden"
+                  style={{ maxHeight: "70%" }}
+                  onClick={e => e.stopPropagation()}
+                >
+                  {/* Popup header */}
+                  <div className="flex items-center justify-between px-5 py-4 border-b border-stone-200">
+                    <div>
+                      <div className="text-base font-bold text-stone-800">{dayName}</div>
+                      <div className="text-xs text-stone-400 mt-0.5">{dispDate}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => handleCalPopupGoToDay(calPopupDate)}
+                        className="text-xs border border-stone-300 px-3 py-1.5 text-stone-600 hover:border-stone-700 hover:text-stone-800 transition-colors"
+                        style={{ borderRadius: "2px" }}
+                      >
+                        Open in Day view
+                      </button>
+                      <button
+                        onClick={() => setCalPopupDate(null)}
+                        className="w-7 h-7 flex items-center justify-center text-stone-400 hover:text-stone-700 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                  {/* Memory text */}
+                  <div className="flex-1 overflow-y-auto px-5 py-4" style={{ minHeight: "160px" }}>
+                    {text.trim() ? (
+                      <p className="text-stone-700 text-sm leading-relaxed whitespace-pre-wrap">{text}</p>
+                    ) : (
+                      <p className="text-stone-300 text-sm italic">No memory written for this day.</p>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
 
           {/* 12-month grid */}
           <div className="flex-1 overflow-y-auto px-8 py-6">
