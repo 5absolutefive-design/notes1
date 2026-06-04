@@ -1375,17 +1375,15 @@ function MemoryView() {
                           <button
                             key={ci}
                             onClick={() => handleCalDayClick(new Date(calYear, mIdx, day))}
-                            className={`relative flex flex-col items-center justify-center w-7 h-7 mx-auto text-[11px] font-medium rounded transition-colors ${
-                              isActive
-                                ? "bg-stone-800 text-white"
-                                : isToday
-                                ? "bg-stone-200 text-stone-900 font-bold"
-                                : "text-stone-600 hover:bg-stone-100"
+                            className={`relative flex flex-col items-center justify-center w-7 h-7 mx-auto text-[11px] font-medium transition-colors ${
+                              isToday
+                                ? "border border-stone-800 text-stone-900 font-bold"
+                                : "text-stone-600 hover:bg-stone-100 rounded"
                             }`}
                           >
                             {day}
                             {hasEntry && (
-                              <span className={`absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full ${isActive ? "bg-white" : "bg-stone-400"}`} />
+                              <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-stone-400" />
                             )}
                           </button>
                         );
