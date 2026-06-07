@@ -1684,13 +1684,13 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                   <div className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Font Size</div>
                   <div className="flex rounded-md border border-stone-200 overflow-hidden text-[10px] font-semibold">
                     <button
-                      onMouseDown={e => { e.preventDefault(); setCtxFontSizeMode("all"); }}
-                      className={`px-2 py-0.5 transition-colors ${ctxFontSizeMode === "all" ? "bg-indigo-500 text-white" : "bg-white text-stone-500 hover:bg-indigo-50"}`}>
+                      onMouseDown={e => { e.preventDefault(); setCtxFontSizeMode(ctxFontSizeMode === "all" ? "selected" : "all"); }}
+                      className={`px-2 py-0.5 transition-colors ${ctxFontSizeMode === "all" ? "bg-indigo-500 text-white mode-glow" : "bg-white text-stone-500 hover:bg-indigo-50"}`}>
                       All
                     </button>
                     <button
-                      onMouseDown={e => { e.preventDefault(); setCtxFontSizeMode("selected"); }}
-                      className={`px-2 py-0.5 transition-colors border-l border-stone-200 ${ctxFontSizeMode === "selected" ? "bg-indigo-500 text-white" : "bg-white text-stone-500 hover:bg-indigo-50"}`}>
+                      onMouseDown={e => { e.preventDefault(); setCtxFontSizeMode(ctxFontSizeMode === "selected" ? "all" : "selected"); }}
+                      className={`px-2 py-0.5 transition-colors border-l border-stone-200 ${ctxFontSizeMode === "selected" ? "bg-indigo-500 text-white mode-glow" : "bg-white text-stone-500 hover:bg-indigo-50"}`}>
                       Selected
                     </button>
                   </div>
@@ -1984,6 +1984,11 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           50% { box-shadow: 0 0 0 3px rgba(99,102,241,0.18); border-color: #6366f1; }
         }
         .font-glow { animation: font-glow-pulse 1.6s ease-in-out infinite; }
+        @keyframes mode-glow-pulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(99,102,241,0.4); }
+          50% { box-shadow: 0 0 0 4px rgba(99,102,241,0.22); }
+        }
+        .mode-glow { animation: mode-glow-pulse 1.4s ease-in-out infinite; }
       `}</style>
     </div>
   );
