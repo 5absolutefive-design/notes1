@@ -586,9 +586,9 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     const card = tableSubCardRef.current.getBoundingClientRect();
     const vh = window.innerHeight;
     const vw = window.innerWidth;
-    // Prefer left of context menu; fall back to right if no space
-    let left = anchor.left - card.width - 4;
-    if (left < 8) left = anchor.right + 4;
+    // Prefer right of context menu; fall back to left if no space
+    let left = anchor.right + 4;
+    if (left + card.width > vw - 8) left = anchor.left - card.width - 4;
     // Align bottom of card with bottom of anchor row; clamp so it stays on screen
     let top = anchor.bottom - card.height;
     top = Math.max(8, Math.min(top, vh - card.height - 8));
