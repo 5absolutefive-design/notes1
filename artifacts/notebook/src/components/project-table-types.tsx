@@ -41,6 +41,14 @@ export const DEFAULT_PRIORITY_OPTIONS: SelectOption[] = [
   { id: "p3", label: "High",   color: "red"    },
 ];
 
+export const PRIORITY_LEVELS = [
+  { emoji: "🔴", label: "Urgent",   hex: "#EF4444", bg: "#FEF2F2", border: "#FECACA" },
+  { emoji: "🟠", label: "High",     hex: "#F97316", bg: "#FFF7ED", border: "#FED7AA" },
+  { emoji: "🟡", label: "Medium",   hex: "#EAB308", bg: "#FEFCE8", border: "#FEF08A" },
+  { emoji: "🔵", label: "Low",      hex: "#3B82F6", bg: "#EFF6FF", border: "#BFDBFE" },
+  { emoji: "⚪", label: "Optional", hex: "#94A3B8", bg: "#F8FAFC", border: "#E2E8F0" },
+] as const;
+
 // ── Column type list ─────────────────────────────────────────────
 export const COL_TYPES: { type: ColType; icon: string; label: string }[] = [
   { type: "text",     icon: "T",  label: "Text"     },
@@ -93,6 +101,12 @@ export function setColOptions(th: HTMLElement, options: SelectOption[]) {
 export function makeBadgeHtml(label: string, color: keyof typeof SELECT_COLORS): string {
   const c = SELECT_COLORS[color] ?? SELECT_COLORS.gray;
   return `<span style="display:inline-flex;align-items:center;padding:2px 9px;border-radius:12px;background:${c.bg};color:${c.text};border:1px solid ${c.border};font-size:12px;font-weight:500;white-space:nowrap;line-height:18px;max-width:100%;overflow:hidden;text-overflow:ellipsis">${label}</span>`;
+}
+
+export function makePriorityBadgeHtml(label: string): string {
+  const pl = PRIORITY_LEVELS.find(p => p.label === label);
+  if (!pl) return `<span style="color:#9ca3af;font-size:13px">—</span>`;
+  return `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;background:${pl.bg};color:${pl.hex};border:1px solid ${pl.border};font-size:12px;font-weight:600;white-space:nowrap;line-height:18px">${pl.emoji} ${pl.label}</span>`;
 }
 
 // ── Cell inner HTML by type ──────────────────────────────────────
@@ -149,11 +163,14 @@ export function makeCellInner(type: ColType, val: string, options?: SelectOption
       return `<span data-progresscell="1" style="display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;width:100%"><span style="flex:1;height:7px;border-radius:4px;background:#f3f4f6;overflow:hidden"><span style="display:block;height:100%;width:${pct}%;background:${pct === 100 ? "#22c55e" : "#3b82f6"};border-radius:4px"></span></span><span style="font-size:11px;color:#6b7280;min-width:28px;text-align:right">${pct}%</span></span>`;
     }
 
-    case "select":
-    case "priority": {
+    case "select": {
       const opts = options || [];
       const opt = opts.find(o => o.id === val) || opts.find(o => o.label === val);
       return `<span data-selectcell="1" style="display:block;cursor:pointer;user-select:none;min-height:20px">${opt ? makeBadgeHtml(opt.label, opt.color) : '<span style="color:#9ca3af;font-size:13px">—</span>'}</span>`;
+    }
+
+    case "priority": {
+      return `<span data-prioritycell="1" style="display:block;cursor:pointer;user-select:none;min-height:20px">${val ? makePriorityBadgeHtml(val) : '<span style="color:#9ca3af;font-size:13px">—</span>'}</span>`;
     }
 
     case "multi": {
@@ -465,6 +482,73 @@ export function SelectCellPopup({ td, th, rect, multi, onClose, onSave }: Select
           );
         })}
       </div>
+    </div>,
+    document.body
+  );
+}
+
+// ════════════════════════════════════════════════════════════════
+// ── PriorityCellPopup — fixed 5-level picker ─────────────────────
+// ════════════════════════════════════════════════════════════════
+interface PriorityCellPopupProps {
+  td: HTMLElement;
+  rect: DOMRect;
+  onClose: () => void;
+  onSave: () => void;
+}
+
+export function PriorityCellPopup({ td, rect, onClose, onSave }: PriorityCellPopupProps) {
+  const popRef = useRef<HTMLDivElement>(null);
+  const current = td.dataset.cellVal || "";
+
+  let top = rect.bottom + 4;
+  const left = Math.min(rect.left, window.innerWidth - 200);
+  if (top + 260 > window.innerHeight) top = Math.max(8, rect.top - 260);
+
+  const pick = (label: string) => {
+    const newVal = label === current ? "" : label;
+    td.dataset.cellVal = newVal;
+    td.innerHTML = makeCellInner("priority", newVal);
+    onSave();
+    onClose();
+  };
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (popRef.current && !popRef.current.contains(e.target as Node)) onClose();
+    };
+    document.addEventListener("mousedown", handler, true);
+    return () => document.removeEventListener("mousedown", handler, true);
+  }, []);
+
+  return createPortal(
+    <div
+      ref={popRef}
+      onMouseDown={e => e.stopPropagation()}
+      style={{ position: "fixed", top, left, zIndex: 99999, minWidth: 180 }}
+      className="bg-white rounded-xl shadow-2xl border border-stone-200 p-1.5 flex flex-col gap-0.5"
+    >
+      {PRIORITY_LEVELS.map(pl => {
+        const isSel = current === pl.label;
+        return (
+          <button
+            key={pl.label}
+            onClick={() => pick(pl.label)}
+            className="w-full text-left px-2.5 py-1.5 rounded-lg flex items-center gap-2.5 transition-colors hover:bg-stone-50"
+            style={{ background: isSel ? pl.bg : undefined }}
+          >
+            <span style={{ fontSize: 15, lineHeight: 1 }}>{pl.emoji}</span>
+            <span style={{ fontSize: 13, fontWeight: 600, color: pl.hex }}>{pl.label}</span>
+            {isSel && (
+              <span style={{ marginLeft: "auto", display: "flex" }}>
+                <svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke={pl.hex} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="1.5,6 4.5,9 10.5,3" />
+                </svg>
+              </span>
+            )}
+          </button>
+        );
+      })}
     </div>,
     document.body
   );

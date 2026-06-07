@@ -7,7 +7,7 @@ import {
   ChevronRight, Link, Mic, PenLine, Eraser, Table,
 } from "lucide-react";
 import {
-  ColTypePicker, SelectCellPopup, InlineEditPopup,
+  ColTypePicker, SelectCellPopup, PriorityCellPopup, InlineEditPopup,
   applyColType, hydrateTables, makeCellInner, getColType, getColOptions,
   getColIndex, findTh,
   type ColType,
@@ -220,6 +220,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   // ── Column type popups ────────────────────────────────────────
   const [colTypePopup, setColTypePopup] = useState<{ th: HTMLElement; rect: DOMRect } | null>(null);
   const [selectCellPopup, setSelectCellPopup] = useState<{ td: HTMLElement; th: HTMLElement; rect: DOMRect; multi: boolean } | null>(null);
+  const [priorityCellPopup, setPriorityCellPopup] = useState<{ td: HTMLElement; rect: DOMRect } | null>(null);
   const [inlineEditPopup, setInlineEditPopup] = useState<{ td: HTMLElement; th: HTMLElement; rect: DOMRect; type: ColType } | null>(null);
 
   const [drawTool, setDrawTool] = useState<DrawTool | null>(null);
@@ -1118,10 +1119,20 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             return;
           }
 
-          if (type === "select" || type === "multi" || type === "priority") {
+          if (type === "priority") {
+            const rect = td.getBoundingClientRect();
+            setPriorityCellPopup({ td, rect });
+            setColTypePopup(null);
+            setSelectCellPopup(null);
+            setInlineEditPopup(null);
+            return;
+          }
+
+          if (type === "select" || type === "multi") {
             const rect = td.getBoundingClientRect();
             setSelectCellPopup({ td, th, rect, multi: type === "multi" });
             setColTypePopup(null);
+            setPriorityCellPopup(null);
             setInlineEditPopup(null);
             return;
           }
@@ -1778,6 +1789,16 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           rect={selectCellPopup.rect}
           multi={selectCellPopup.multi}
           onClose={() => setSelectCellPopup(null)}
+          onSave={saveContent}
+        />
+      )}
+
+      {/* ── Priority cell popup ── */}
+      {priorityCellPopup && (
+        <PriorityCellPopup
+          td={priorityCellPopup.td}
+          rect={priorityCellPopup.rect}
+          onClose={() => setPriorityCellPopup(null)}
           onSave={saveContent}
         />
       )}
