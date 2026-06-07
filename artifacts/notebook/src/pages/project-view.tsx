@@ -600,7 +600,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
 
   const restoreSelection = () => {
     if (!savedRangeRef.current) return;
-    editorRef.current?.focus();
+    editorRef.current?.focus({ preventScroll: true });
     const sel = window.getSelection();
     if (sel) {
       sel.removeAllRanges();
