@@ -169,6 +169,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const [ctxTableHover, setCtxTableHover] = useState<{ r: number; c: number } | null>(null);
   const [ctxTableCustomRows, setCtxTableCustomRows] = useState("");
   const [ctxTableCustomCols, setCtxTableCustomCols] = useState("");
+  const tableItemRef = useRef<HTMLDivElement>(null);
+  const tableSubCardRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLDivElement>(null);
   const ctxMenuRef = useRef<HTMLDivElement>(null);
@@ -576,6 +578,24 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     e.preventDefault();
     setCtxMenu({ x: e.clientX, y: e.clientY, formatOpen: false, alignOpen: false, bulletOpen: false, highlightOpen: false, headingOpen: false, dividerOpen: false, linkOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1, drawOpen: false, tableOpen: false });
   };
+
+  // ── Clamp table sub-card inside viewport using fixed positioning
+  useLayoutEffect(() => {
+    if (!ctxMenu?.tableOpen || !tableSubCardRef.current || !tableItemRef.current) return;
+    const anchor = tableItemRef.current.getBoundingClientRect();
+    const card = tableSubCardRef.current.getBoundingClientRect();
+    const vh = window.innerHeight;
+    const vw = window.innerWidth;
+    // Prefer left of context menu; fall back to right if no space
+    let left = anchor.left - card.width - 4;
+    if (left < 8) left = anchor.right + 4;
+    // Align bottom of card with bottom of anchor row; clamp so it stays on screen
+    let top = anchor.bottom - card.height;
+    top = Math.max(8, Math.min(top, vh - card.height - 8));
+    left = Math.max(8, Math.min(left, vw - card.width - 8));
+    tableSubCardRef.current.style.top = `${top}px`;
+    tableSubCardRef.current.style.left = `${left}px`;
+  }, [ctxMenu?.tableOpen]);
 
   // ── Clamp context menu inside viewport after it renders
   useLayoutEffect(() => {
@@ -1561,11 +1581,11 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           <CtxSection label="Insert" />
           <CtxItem icon={<CheckSquare className="w-3.5 h-3.5"/>} label="To-Do Item" onClick={() => { insertTodo(); setCtxMenu(null); }} />
           {/* Table → side sub-card with grid picker */}
-          <div className="relative">
+          <div className="relative" ref={tableItemRef}>
             <CtxItem icon={<Table className="w-3.5 h-3.5"/>} label="Table" hasArrow
               onClick={() => setCtxMenu(m => m ? { ...m, tableOpen: !m.tableOpen, formatOpen: false, alignOpen: false, bulletOpen: false, dividerOpen: false, linkOpen: false, drawOpen: false } : null)} />
             {ctxMenu.tableOpen && (
-              <div className="absolute right-full bottom-0 mr-1 bg-white rounded-xl shadow-2xl border border-stone-200 p-3 z-[10000]" style={{ minWidth: 230 }}
+              <div ref={tableSubCardRef} className="fixed bg-white rounded-xl shadow-2xl border border-stone-200 p-3 z-[10000]" style={{ minWidth: 230, top: 0, left: 0 }}
                 onMouseDown={e => e.stopPropagation()}>
                 {/* Grid hover picker */}
                 <div className="text-[11px] font-semibold text-stone-400 mb-2 text-center">
