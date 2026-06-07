@@ -181,6 +181,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const tableSubCardRef = useRef<HTMLDivElement>(null);
   const [ctxFontSearch, setCtxFontSearch] = useState("");
   const [ctxFontSize, setCtxFontSize] = useState(16);
+  const [ctxFontSizeMode, setCtxFontSizeMode] = useState<"all" | "selected">("selected");
   const fontItemRef = useRef<HTMLDivElement>(null);
   const fontSubCardRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
@@ -655,8 +656,12 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const applyCtxFontSize = (size: number) => {
     editorRef.current?.focus();
     setCtxFontSize(size);
-    const sel = window.getSelection();
-    if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+    if (ctxFontSizeMode === "all") {
+      document.execCommand("selectAll");
+    } else {
+      const sel = window.getSelection();
+      if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+    }
     document.execCommand("fontSize", false, "7");
     const fontEls = editorRef.current?.querySelectorAll('font[size="7"]');
     fontEls?.forEach(el => {
@@ -1622,7 +1627,21 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
               <div ref={fontSubCardRef} className="fixed bg-white rounded-xl shadow-2xl border border-stone-200 p-3 z-[10000]" style={{ minWidth: 270, top: 0, left: 0 }}
                 onMouseDown={e => e.stopPropagation()}>
                 {/* Font Size */}
-                <div className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-2">Font Size</div>
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Font Size</div>
+                  <div className="flex rounded-md border border-stone-200 overflow-hidden text-[10px] font-semibold">
+                    <button
+                      onMouseDown={e => { e.preventDefault(); setCtxFontSizeMode("all"); }}
+                      className={`px-2 py-0.5 transition-colors ${ctxFontSizeMode === "all" ? "bg-indigo-500 text-white" : "bg-white text-stone-500 hover:bg-indigo-50"}`}>
+                      All
+                    </button>
+                    <button
+                      onMouseDown={e => { e.preventDefault(); setCtxFontSizeMode("selected"); }}
+                      className={`px-2 py-0.5 transition-colors border-l border-stone-200 ${ctxFontSizeMode === "selected" ? "bg-indigo-500 text-white" : "bg-white text-stone-500 hover:bg-indigo-50"}`}>
+                      Selected
+                    </button>
+                  </div>
+                </div>
                 <div className="flex items-center gap-2 mb-1">
                   <button onMouseDown={e => { e.preventDefault(); applyCtxFontSize(Math.max(8, ctxFontSize - 2)); }}
                     className="w-7 h-7 rounded border border-stone-300 bg-white hover:bg-stone-100 text-stone-600 text-base font-bold flex items-center justify-center transition-colors">−</button>
