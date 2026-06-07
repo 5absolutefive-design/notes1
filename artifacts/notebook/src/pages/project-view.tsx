@@ -6,6 +6,12 @@ import {
   AlignLeft, AlignCenter, AlignRight, List, ListOrdered,
   ChevronRight, Link, Mic, PenLine, Eraser, Table,
 } from "lucide-react";
+import {
+  ColTypePicker, SelectCellPopup, InlineEditPopup,
+  applyColType, hydrateTables, makeCellInner, getColType, getColOptions,
+  getColIndex, findTh,
+  type ColType,
+} from "@/components/project-table-types";
 
 // ── Types (exported for use in home.tsx) ─────────────────────────
 export interface ProjectDoc {
@@ -211,6 +217,11 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const dragRef = useRef<{ id: string; startMx: number; startMy: number; startBx: number; startBy: number } | null>(null);
   const resizeRef = useRef<{ id: string; startMx: number; startW: number; startBx: number; side: "br" | "bl" | "tr" | "tl" } | null>(null);
 
+  // ── Column type popups ────────────────────────────────────────
+  const [colTypePopup, setColTypePopup] = useState<{ th: HTMLElement; rect: DOMRect } | null>(null);
+  const [selectCellPopup, setSelectCellPopup] = useState<{ td: HTMLElement; th: HTMLElement; rect: DOMRect; multi: boolean } | null>(null);
+  const [inlineEditPopup, setInlineEditPopup] = useState<{ td: HTMLElement; th: HTMLElement; rect: DOMRect; type: ColType } | null>(null);
+
   const [drawTool, setDrawTool] = useState<DrawTool | null>(null);
   const drawToolRef = useRef<DrawTool | null>(null);
   const [eraserPos, setEraserPos] = useState<{ x: number; y: number } | null>(null);
@@ -344,6 +355,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
       } else {
         editorRef.current.style.fontSize = "";
       }
+      // Hydrate typed table cells
+      hydrateTables(editorRef.current);
     }
     if (titleRef.current)
       titleRef.current.textContent = activeProject?.title || "";
@@ -378,6 +391,23 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(saveContent, 600);
   }, [saveContent]);
+
+  // ── Listen for date input changes inside typed table cells ────
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    const handler = (e: Event) => {
+      const target = e.target as HTMLInputElement;
+      if (target.tagName === "INPUT" && target.type === "date") {
+        const td = target.closest("td") as HTMLElement | null;
+        if (!td) return;
+        td.dataset.cellVal = target.value;
+        debouncedSave();
+      }
+    };
+    editor.addEventListener("change", handler);
+    return () => editor.removeEventListener("change", handler);
+  }, [debouncedSave]);
 
   // ── Close menus on outside click
   useEffect(() => {
@@ -517,9 +547,9 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
       }
       // Hover: change cursor
       const cell = getCellAt(e);
-      if (!cell) { editor.style.cursor = ""; return; }
+      if (!cell) { (editor as HTMLElement).style.cursor = ""; return; }
       const edge = getResizeEdge(e, cell);
-      editor.style.cursor = edge === "col" ? "col-resize" : edge === "row" ? "row-resize" : "";
+      (editor as HTMLElement).style.cursor = edge === "col" ? "col-resize" : edge === "row" ? "row-resize" : "";
     }
 
     function onMouseDown(e: MouseEvent) {
@@ -567,7 +597,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
         rowState = null;
         document.body.style.userSelect = "";
         document.body.style.cursor = "";
-        editor.style.cursor = "";
+        (editor as HTMLElement).style.cursor = "";
         // Trigger save after resize
         if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
         saveTimerRef.current = setTimeout(saveContent, 400);
@@ -930,6 +960,41 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     saveContent();
   };
 
+  // ── Column type helpers ───────────────────────────────────────
+  const handleColTypeChange = (th: HTMLElement, type: ColType) => {
+    applyColType(th, type, undefined, saveContent);
+    setColTypePopup(null);
+  };
+
+  const handleSortCol = (th: HTMLElement, dir: "asc" | "desc") => {
+    const table = th.closest("table");
+    if (!table) return;
+    const idx = getColIndex(th);
+    const tbody = table.querySelector("tbody");
+    if (!tbody) return;
+    const rows = Array.from(tbody.rows) as HTMLTableRowElement[];
+    rows.sort((a, b) => {
+      const av = (a.cells[idx] as HTMLElement)?.dataset.cellVal || a.cells[idx]?.textContent || "";
+      const bv = (b.cells[idx] as HTMLElement)?.dataset.cellVal || b.cells[idx]?.textContent || "";
+      const cmp = av.localeCompare(bv, undefined, { numeric: true });
+      return dir === "asc" ? cmp : -cmp;
+    });
+    rows.forEach(r => tbody.appendChild(r));
+    saveContent();
+  };
+
+  const handleDeleteColFromPicker = (th: HTMLElement) => {
+    const table = th.closest("table");
+    if (!table) return;
+    const idx = getColIndex(th);
+    for (let i = 0; i < table.rows.length; i++) {
+      const row = table.rows[i];
+      if (row.cells.length > 1) row.removeChild(row.cells[idx]);
+    }
+    saveContent();
+    updateTableToolbar();
+  };
+
   const insertDividerStyle = (style: string) => {
     const styles: Record<string, string> = {
       single:  `border:none;border-top:1.5px solid #d6d3d1;margin:12px 0`,
@@ -1006,8 +1071,73 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     `style="position:absolute;top:5px;right:6px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.08);border:none;cursor:pointer;font-size:14px;color:#777;line-height:1;padding:0;display:inline-flex;align-items:center;justify-content:center;z-index:10;flex-shrink:0" ` +
     `title="Remove">&#215;</button>`;
 
+  // ── MouseDown on editor: intercept th clicks to show type picker
+  const handleEditorMouseDown = (e: React.MouseEvent) => {
+    if (drawTool) return;
+    const target = e.target as HTMLElement;
+    const th = target.closest("th") as HTMLElement | null;
+    if (th && editorRef.current?.contains(th) && !th.closest("[data-lined]")) {
+      e.preventDefault();
+      const rect = th.getBoundingClientRect();
+      setColTypePopup({ th, rect });
+      setSelectCellPopup(null);
+      setInlineEditPopup(null);
+    }
+  };
+
   const handleEditorClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
+
+    // ── Typed td cell interactions ────────────────────────────────
+    const td = target.closest("td") as HTMLElement | null;
+    if (td && editorRef.current?.contains(td) && !td.closest("[data-lined]")) {
+      const th = findTh(td);
+      if (th) {
+        const type = getColType(th);
+        if (type !== "text") {
+          e.preventDefault();
+          e.stopPropagation();
+
+          if (type === "check") {
+            const current = td.dataset.cellVal === "true";
+            const newVal = String(!current);
+            td.dataset.cellVal = newVal;
+            td.innerHTML = makeCellInner("check", newVal);
+            debouncedSave();
+            return;
+          }
+
+          if (type === "rating") {
+            const star = (target as HTMLElement).closest("[data-star]") as HTMLElement | null;
+            if (star) {
+              const newVal = star.dataset.star || "0";
+              td.dataset.cellVal = newVal;
+              td.innerHTML = makeCellInner("rating", newVal);
+              debouncedSave();
+            }
+            return;
+          }
+
+          if (type === "select" || type === "multi") {
+            const rect = td.getBoundingClientRect();
+            setSelectCellPopup({ td, th, rect, multi: type === "multi" });
+            setColTypePopup(null);
+            setInlineEditPopup(null);
+            return;
+          }
+
+          if (["number", "currency", "url", "email", "phone", "person", "progress"].includes(type)) {
+            const rect = td.getBoundingClientRect();
+            setInlineEditPopup({ td, th, rect, type: type as ColType });
+            setColTypePopup(null);
+            setSelectCellPopup(null);
+            return;
+          }
+          // date: native input handles itself
+          return;
+        }
+      }
+    }
 
     // Remove button clicked → delete the parent block
     const removeButton = target.closest('[data-remove-btn]');
@@ -1446,6 +1576,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             onInput={debouncedSave}
             onKeyDown={handleEditorKeyDown}
             onContextMenu={handleContextMenu}
+            onMouseDown={handleEditorMouseDown}
             onClick={handleEditorClick}
             className="outline-none text-stone-800 text-[15px] leading-relaxed"
             style={{
@@ -1624,6 +1755,43 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           <FolderKanban className="w-10 h-10 text-stone-300" />
           <p className="text-sm">Select a project from the sidebar</p>
         </div>
+      )}
+
+      {/* ── Column type picker popup ── */}
+      {colTypePopup && (
+        <ColTypePicker
+          th={colTypePopup.th}
+          rect={colTypePopup.rect}
+          onClose={() => setColTypePopup(null)}
+          onTypeChange={handleColTypeChange}
+          onDeleteCol={() => handleDeleteColFromPicker(colTypePopup.th)}
+          onSortAZ={() => handleSortCol(colTypePopup.th, "asc")}
+          onSortZA={() => handleSortCol(colTypePopup.th, "desc")}
+        />
+      )}
+
+      {/* ── Select / Multi cell popup ── */}
+      {selectCellPopup && (
+        <SelectCellPopup
+          td={selectCellPopup.td}
+          th={selectCellPopup.th}
+          rect={selectCellPopup.rect}
+          multi={selectCellPopup.multi}
+          onClose={() => setSelectCellPopup(null)}
+          onSave={saveContent}
+        />
+      )}
+
+      {/* ── Inline edit popup (number, url, email, phone, person, currency, progress) ── */}
+      {inlineEditPopup && (
+        <InlineEditPopup
+          td={inlineEditPopup.td}
+          th={inlineEditPopup.th}
+          rect={inlineEditPopup.rect}
+          type={inlineEditPopup.type}
+          onClose={() => setInlineEditPopup(null)}
+          onSave={saveContent}
+        />
       )}
 
       {/* ── Right-click context menu ── */}
