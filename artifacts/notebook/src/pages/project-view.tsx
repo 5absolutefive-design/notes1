@@ -1728,7 +1728,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           </div>
 
           <div className="my-1 border-t border-stone-100" />
-          <CtxSection label="Insert" />
+          <CtxSection label="Attach" />
           <CtxItem icon={<CheckSquare className="w-3.5 h-3.5"/>} label="To-Do Item" onClick={() => { insertTodo(); setCtxMenu(null); }} />
           {/* Table → side sub-card with grid picker */}
           <div className="relative" ref={tableItemRef}>
