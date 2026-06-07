@@ -7,7 +7,7 @@ import {
   ChevronRight, Link, Mic, PenLine, Eraser, Table,
 } from "lucide-react";
 import {
-  ColTypePicker, SelectCellPopup, PriorityCellPopup, InlineEditPopup,
+  ColTypePicker, SelectCellPopup, PriorityCellPopup,
   applyColType, hydrateTables, makeCellInner, getColType, getColOptions,
   getColIndex, findTh,
   type ColType,
@@ -221,7 +221,6 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const [colTypePopup, setColTypePopup] = useState<{ th: HTMLElement; rect: DOMRect } | null>(null);
   const [selectCellPopup, setSelectCellPopup] = useState<{ td: HTMLElement; th: HTMLElement; rect: DOMRect; multi: boolean } | null>(null);
   const [priorityCellPopup, setPriorityCellPopup] = useState<{ td: HTMLElement; rect: DOMRect } | null>(null);
-  const [inlineEditPopup, setInlineEditPopup] = useState<{ td: HTMLElement; th: HTMLElement; rect: DOMRect; type: ColType } | null>(null);
 
   const [drawTool, setDrawTool] = useState<DrawTool | null>(null);
   const drawToolRef = useRef<DrawTool | null>(null);
@@ -1082,9 +1081,41 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
       const rect = th.getBoundingClientRect();
       setColTypePopup({ th, rect });
       setSelectCellPopup(null);
-      setInlineEditPopup(null);
     }
   };
+
+  const startDirectEdit = useCallback((td: HTMLElement, th: HTMLElement, type: ColType) => {
+    if (td.dataset.editing === "1") return;
+    td.dataset.editing = "1";
+    const rawVal = td.dataset.cellVal || "";
+    td.contentEditable = "true";
+    td.textContent = rawVal;
+    td.style.outline = "2px solid #6366f1";
+    td.style.outlineOffset = "-2px";
+    td.focus();
+    const range = document.createRange();
+    range.selectNodeContents(td);
+    const sel = window.getSelection();
+    sel?.removeAllRanges();
+    sel?.addRange(range);
+    const finish = () => {
+      const newVal = type === "progress"
+        ? String(Math.min(100, Math.max(0, parseInt(td.textContent || "0") || 0)))
+        : (td.textContent || "").trim();
+      td.dataset.cellVal = newVal;
+      td.contentEditable = "false";
+      td.style.outline = "";
+      td.style.outlineOffset = "";
+      delete td.dataset.editing;
+      const opts = getColOptions(th, type as ColType);
+      td.innerHTML = makeCellInner(type, newVal, opts);
+      saveContent();
+    };
+    td.addEventListener("blur", finish, { once: true });
+    td.addEventListener("keydown", (e: KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === "Escape") { e.preventDefault(); td.blur(); }
+    }, { once: true });
+  }, [saveContent]);
 
   const handleEditorClick = (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
@@ -1124,7 +1155,6 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             setPriorityCellPopup({ td, rect });
             setColTypePopup(null);
             setSelectCellPopup(null);
-            setInlineEditPopup(null);
             return;
           }
 
@@ -1133,15 +1163,14 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             setSelectCellPopup({ td, th, rect, multi: type === "multi" });
             setColTypePopup(null);
             setPriorityCellPopup(null);
-            setInlineEditPopup(null);
             return;
           }
 
           if (["number", "currency", "url", "email", "phone", "person", "progress"].includes(type)) {
-            const rect = td.getBoundingClientRect();
-            setInlineEditPopup({ td, th, rect, type: type as ColType });
             setColTypePopup(null);
             setSelectCellPopup(null);
+            setPriorityCellPopup(null);
+            startDirectEdit(td, th, type as ColType);
             return;
           }
           // date: native input handles itself
@@ -1799,18 +1828,6 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           td={priorityCellPopup.td}
           rect={priorityCellPopup.rect}
           onClose={() => setPriorityCellPopup(null)}
-          onSave={saveContent}
-        />
-      )}
-
-      {/* ── Inline edit popup (number, url, email, phone, person, currency, progress) ── */}
-      {inlineEditPopup && (
-        <InlineEditPopup
-          td={inlineEditPopup.td}
-          th={inlineEditPopup.th}
-          rect={inlineEditPopup.rect}
-          type={inlineEditPopup.type}
-          onClose={() => setInlineEditPopup(null)}
           onSave={saveContent}
         />
       )}
