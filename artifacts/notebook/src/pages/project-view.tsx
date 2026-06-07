@@ -1565,7 +1565,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             <CtxItem icon={<Table className="w-3.5 h-3.5"/>} label="Table" hasArrow
               onClick={() => setCtxMenu(m => m ? { ...m, tableOpen: !m.tableOpen, formatOpen: false, alignOpen: false, bulletOpen: false, dividerOpen: false, linkOpen: false, drawOpen: false } : null)} />
             {ctxMenu.tableOpen && (
-              <div className="absolute left-full top-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 p-3 z-[10000]" style={{ minWidth: 230 }}
+              <div className="absolute right-full top-0 mr-1 bg-white rounded-xl shadow-2xl border border-stone-200 p-3 z-[10000]" style={{ minWidth: 230 }}
                 onMouseDown={e => e.stopPropagation()}>
                 {/* Grid hover picker */}
                 <div className="text-[11px] font-semibold text-stone-400 mb-2 text-center">
