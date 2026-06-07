@@ -95,6 +95,7 @@ interface ContextMenuState {
   todoCount: number;
   todoRemoveCount: number;
   drawOpen: boolean;
+  tableOpen: boolean;
 }
 
 interface ImageBlock {
@@ -165,6 +166,9 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const [showBannerPicker, setShowBannerPicker] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [ctxMenu, setCtxMenu] = useState<ContextMenuState | null>(null);
+  const [ctxTableHover, setCtxTableHover] = useState<{ r: number; c: number } | null>(null);
+  const [ctxTableCustomRows, setCtxTableCustomRows] = useState("");
+  const [ctxTableCustomCols, setCtxTableCustomCols] = useState("");
   const editorRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLDivElement>(null);
   const ctxMenuRef = useRef<HTMLDivElement>(null);
@@ -570,7 +574,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   // ── Right-click handler
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
-    setCtxMenu({ x: e.clientX, y: e.clientY, formatOpen: false, alignOpen: false, bulletOpen: false, highlightOpen: false, headingOpen: false, dividerOpen: false, linkOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1, drawOpen: false });
+    setCtxMenu({ x: e.clientX, y: e.clientY, formatOpen: false, alignOpen: false, bulletOpen: false, highlightOpen: false, headingOpen: false, dividerOpen: false, linkOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1, drawOpen: false, tableOpen: false });
   };
 
   // ── Clamp context menu inside viewport after it renders
@@ -663,16 +667,20 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     setCtxMenu(null);
   };
 
-  const insertTable = () => {
+  const insertTable = () => insertTableWithSize(4, 4);
+
+  const insertTableWithSize = (numRows: number, numCols: number) => {
     const thStyle = `background:#f9fafb;padding:6px 10px;text-align:left;font-size:12px;font-weight:600;color:#374151;border:1.5px solid #b0b7c3;border-top:none;border-bottom:3px double #b0b7c3;min-width:120px`;
     const tdStyle = `padding:6px 10px;border:1.5px solid #b0b7c3;min-width:120px;font-size:13px;color:#1f2937`;
-    const headers = ["Column 1", "Column 2", "Column 3", "Column 4"];
-    const ths = headers.map(h => `<th style="${thStyle}" contenteditable="true">${h}</th>`).join("");
-    const tds = headers.map(() => `<td style="${tdStyle}" contenteditable="true"><br/></td>`).join("");
-    const rows = [tds, tds, tds].map(r => `<tr>${r}</tr>`).join("");
+    const ths = Array.from({ length: numCols }, (_, i) => `<th style="${thStyle}" contenteditable="true">Column ${i + 1}</th>`).join("");
+    const tdRow = Array.from({ length: numCols }, () => `<td style="${tdStyle}" contenteditable="true"><br/></td>`).join("");
+    const rows = Array.from({ length: numRows }, () => `<tr>${tdRow}</tr>`).join("");
     const tableHtml = `<br/><table style="border-collapse:collapse;width:100%;margin:8px 0;border-left:1.5px solid #b0b7c3"><thead><tr>${ths}</tr></thead><tbody>${rows}</tbody></table><br/>`;
     insertHTML(tableHtml);
     setCtxMenu(null);
+    setCtxTableHover(null);
+    setCtxTableCustomRows("");
+    setCtxTableCustomCols("");
   };
 
   const insertLined = () => {
@@ -1552,7 +1560,70 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           <div className="my-1 border-t border-stone-100" />
           <CtxSection label="Insert" />
           <CtxItem icon={<CheckSquare className="w-3.5 h-3.5"/>} label="To-Do Item" onClick={() => { insertTodo(); setCtxMenu(null); }} />
-          <CtxItem icon={<Table className="w-3.5 h-3.5"/>} label="Table" onClick={() => { insertTable(); setCtxMenu(null); }} />
+          {/* Table → side sub-card with grid picker */}
+          <div className="relative">
+            <CtxItem icon={<Table className="w-3.5 h-3.5"/>} label="Table" hasArrow
+              onClick={() => setCtxMenu(m => m ? { ...m, tableOpen: !m.tableOpen, formatOpen: false, alignOpen: false, bulletOpen: false, dividerOpen: false, linkOpen: false, drawOpen: false } : null)} />
+            {ctxMenu.tableOpen && (
+              <div className="absolute left-full top-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 p-3 z-[10000]" style={{ minWidth: 230 }}
+                onMouseDown={e => e.stopPropagation()}>
+                {/* Grid hover picker */}
+                <div className="text-[11px] font-semibold text-stone-400 mb-2 text-center">
+                  {ctxTableHover ? `${ctxTableHover.r} × ${ctxTableHover.c} Table` : "Hover to pick size"}
+                </div>
+                <div className="grid gap-[2px]" style={{ gridTemplateColumns: "repeat(10, 1fr)" }}
+                  onMouseLeave={() => setCtxTableHover(null)}>
+                  {Array.from({ length: 10 }, (_, ri) =>
+                    Array.from({ length: 10 }, (_, ci) => {
+                      const r = ri + 1; const c = ci + 1;
+                      const isHighlighted = ctxTableHover ? r <= ctxTableHover.r && c <= ctxTableHover.c : false;
+                      return (
+                        <div key={`${r}-${c}`}
+                          className={`w-5 h-5 border cursor-pointer transition-colors rounded-sm ${isHighlighted ? "bg-orange-200 border-orange-400" : "bg-stone-100 border-stone-300 hover:bg-orange-100 hover:border-orange-300"}`}
+                          onMouseEnter={() => setCtxTableHover({ r, c })}
+                          onClick={() => { if (ctxTableHover) insertTableWithSize(ctxTableHover.r, ctxTableHover.c); }}
+                        />
+                      );
+                    })
+                  )}
+                </div>
+                <div className="text-[10px] text-stone-400 text-center mt-1.5">Max 10 × 10 (grid)</div>
+                {/* Custom size */}
+                <div className="mt-3 pt-3 border-t border-stone-100">
+                  <div className="text-[11px] font-semibold text-stone-400 mb-2 text-center">Custom</div>
+                  <div className="flex items-center gap-1.5 justify-center">
+                    <span className="text-[11px] text-stone-400">Rows</span>
+                    <input type="number" min={1} value={ctxTableCustomRows} placeholder="—"
+                      onChange={e => setCtxTableCustomRows(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === "Enter") {
+                          const r = parseInt(ctxTableCustomRows); const c = parseInt(ctxTableCustomCols);
+                          if (!isNaN(r) && !isNaN(c) && r >= 1 && c >= 1) insertTableWithSize(Math.min(r, 999), Math.min(c, 200));
+                        }
+                      }}
+                      className="w-14 h-6 text-center text-[12px] border border-stone-300 rounded bg-white focus:outline-none focus:border-orange-400" />
+                    <span className="text-[11px] text-stone-400">Cols</span>
+                    <input type="number" min={1} max={200} value={ctxTableCustomCols} placeholder="—"
+                      onChange={e => setCtxTableCustomCols(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === "Enter") {
+                          const r = parseInt(ctxTableCustomRows); const c = parseInt(ctxTableCustomCols);
+                          if (!isNaN(r) && !isNaN(c) && r >= 1 && c >= 1) insertTableWithSize(Math.min(r, 999), Math.min(c, 200));
+                        }
+                      }}
+                      className="w-14 h-6 text-center text-[12px] border border-stone-300 rounded bg-white focus:outline-none focus:border-orange-400" />
+                    <button
+                      onClick={() => {
+                        const r = parseInt(ctxTableCustomRows); const c = parseInt(ctxTableCustomCols);
+                        if (!isNaN(r) && !isNaN(c) && r >= 1 && c >= 1) insertTableWithSize(Math.min(r, 999), Math.min(c, 200));
+                      }}
+                      className="h-6 px-2.5 text-[11px] font-semibold rounded bg-orange-400 text-white hover:bg-orange-500 transition-colors">Apply</button>
+                  </div>
+                  <div className="text-[10px] text-stone-400 text-center mt-1.5">Rows: unlimited · Cols: max 200</div>
+                </div>
+              </div>
+            )}
+          </div>
           <CtxItem icon={<Table className="w-3.5 h-3.5"/>} label="Lined" onClick={() => { insertLined(); setCtxMenu(null); }} />
           {/* Bullet List → side sub-card with many styles */}
           <div className="relative">
