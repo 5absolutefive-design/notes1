@@ -673,7 +673,25 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
 
   const applyCtxFontName = (name: string) => {
     restoreSelection();
-    document.execCommand("fontName", false, name);
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0) return;
+    if (sel.isCollapsed) {
+      // No selection — apply to whole editor
+      if (editorRef.current) {
+        editorRef.current.style.fontFamily = name;
+        debouncedSave();
+      }
+      return;
+    }
+    // Use marker trick: wrap with execCommand then replace <font> with <span style>
+    document.execCommand("fontName", false, "__FONT_MARKER__");
+    const fontEls = editorRef.current?.querySelectorAll('font[face="__FONT_MARKER__"]');
+    fontEls?.forEach(el => {
+      const span = document.createElement("span");
+      span.style.fontFamily = name;
+      span.innerHTML = el.innerHTML;
+      el.replaceWith(span);
+    });
     debouncedSave();
   };
 
@@ -1655,7 +1673,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           <div className="my-1 border-t border-stone-100" />
           {/* Font → side sub-card with size + family */}
           <div className="relative" ref={fontItemRef}>
-            <CtxItem icon={<span className="text-[11px] font-bold">Aa</span>} label="Font" hasArrow
+            <CtxItem icon={<span className="w-3.5 h-3.5 flex items-center justify-center text-[11px] font-bold leading-none">Aa</span>} label="Font" hasArrow
               onClick={() => setCtxMenu(m => m ? { ...m, fontOpen: !m.fontOpen, formatOpen: false, alignOpen: false, bulletOpen: false, dividerOpen: false, linkOpen: false, drawOpen: false, tableOpen: false } : null)} />
             {ctxMenu.fontOpen && (
               <div ref={fontSubCardRef} className="fixed bg-white rounded-xl shadow-2xl border border-stone-200 p-3 z-[10000]" style={{ minWidth: 270, top: 0, left: 0 }}
