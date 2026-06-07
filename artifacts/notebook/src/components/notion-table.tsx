@@ -132,10 +132,8 @@ function RowHandle({ onStart }: { onStart: (e: React.MouseEvent) => void }) {
 export function NotionTable({ content, onChange }: { content: string; onChange: (v: string) => void }) {
   const [data, setData] = useState<NTableData>(() => parseData(content));
   const [hoverRow, setHoverRow] = useState<string | null>(null);
-  const [editingColId, setEditingColId] = useState<string | null>(null);
-  const [editingColName, setEditingColName] = useState("");
   const [colMenu, setColMenu] = useState<{ colId: string; rect: DOMRect } | null>(null);
-  const [typeMenu, setTypeMenu] = useState<{ colId: string; rect: DOMRect } | null>(null);
+  const [colMenuName, setColMenuName] = useState("");
   const [selectMenu, setSelectMenu] = useState<{ rowId: string; colId: string; rect: DOMRect } | null>(null);
   const [selectSearch, setSelectSearch] = useState("");
   const [sortConfig, setSortConfig] = useState<{ colId: string; dir: "asc" | "desc" } | null>(null);
@@ -217,8 +215,7 @@ export function NotionTable({ content, onChange }: { content: string; onChange: 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (!(e.target as Element).closest("[data-ntbl-menu]")) {
-        setColMenu(null); setTypeMenu(null); setSelectMenu(null); setSelectSearch("");
-        setEditingColId(null);
+        setColMenu(null); setSelectMenu(null); setSelectSearch("");
       }
     };
     document.addEventListener("mousedown", handler);
@@ -236,11 +233,9 @@ export function NotionTable({ content, onChange }: { content: string; onChange: 
   };
   const renameColumn = (colId: string, name: string) => {
     if (name.trim()) update(d => ({ ...d, columns: d.columns.map(c => c.id === colId ? { ...c, name: name.trim() } : c) }));
-    setEditingColId(null);
   };
   const changeColType = (colId: string, type: ColType) => {
     update(d => ({ ...d, columns: d.columns.map(c => c.id === colId ? { ...c, type } : c), rows: d.rows.map(r => ({ ...r, [colId]: type === "checkbox" ? false : undefined })) }));
-    setTypeMenu(null); setColMenu(null);
   };
   const addSelectOpt = (colId: string, label: string, color: keyof typeof SELECT_COLORS): string => {
     const id = `opt_${Date.now()}`;
@@ -321,22 +316,18 @@ export function NotionTable({ content, onChange }: { content: string; onChange: 
               {data.columns.map((col) => (
                 <th key={col.id} style={{ width: col.width, minWidth: col.width, maxWidth: col.width, height: 36, borderRight: "1px solid #e5e7eb", borderBottom: "2px solid #111827", background: "#f9fafb", padding: 0, position: "sticky", top: 0, zIndex: 10, userSelect: "none", overflow: "visible" }}>
                   <div style={{ display: "flex", alignItems: "center", height: "100%", position: "relative" }}>
-                    {editingColId === col.id ? (
-                      <input data-ntbl-menu="colinput" autoFocus value={editingColName}
-                        onChange={e => setEditingColName(e.target.value)}
-                        onKeyDown={e => { if (e.key === "Enter") renameColumn(col.id, editingColName); if (e.key === "Escape") setEditingColId(null); }}
-                        onBlur={() => renameColumn(col.id, editingColName)}
-                        style={{ flex: 1, height: "100%", border: "none", borderBottom: "2px solid #3b82f6", outline: "none", padding: "0 8px", fontSize: 12, fontWeight: 600, background: "#eff6ff", color: "#374151" }}
-                      />
-                    ) : (
-                      <button onClick={e => { if (activeResize.current) return; const th = (e.currentTarget as HTMLElement).closest("th")!; setColMenu({ colId: col.id, rect: th.getBoundingClientRect() }); }}
-                        style={{ flex: 1, height: "100%", display: "flex", alignItems: "center", gap: 5, padding: "0 8px", background: "none", border: "none", cursor: "pointer", overflow: "hidden", color: "#374151", fontWeight: 600, fontSize: 12 }}>
-                        <span style={{ color: "#9ca3af", display: "flex", flexShrink: 0 }}>{COL_TYPE_META[col.type].icon}</span>
-                        <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>{col.name}</span>
-                        {sortConfig?.colId === col.id && <span style={{ fontSize: 10, color: "#3b82f6" }}>{sortConfig.dir === "asc" ? "↑" : "↓"}</span>}
-                        <ChevronDown style={{ width: 10, height: 10, color: "#9ca3af", flexShrink: 0 }} />
-                      </button>
-                    )}
+                    <button onClick={e => {
+                        if (activeResize.current) return;
+                        const th = (e.currentTarget as HTMLElement).closest("th")!;
+                        setColMenu({ colId: col.id, rect: th.getBoundingClientRect() });
+                        setColMenuName(col.name);
+                      }}
+                      style={{ flex: 1, height: "100%", display: "flex", alignItems: "center", gap: 5, padding: "0 8px", background: colMenu?.colId === col.id ? "#eff6ff" : "none", border: "none", cursor: "pointer", overflow: "hidden", color: "#374151", fontWeight: 600, fontSize: 12 }}>
+                      <span style={{ color: "#9ca3af", display: "flex", flexShrink: 0 }}>{COL_TYPE_META[col.type].icon}</span>
+                      <span style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>{col.name}</span>
+                      {sortConfig?.colId === col.id && <span style={{ fontSize: 10, color: "#3b82f6" }}>{sortConfig.dir === "asc" ? "↑" : "↓"}</span>}
+                      <ChevronDown style={{ width: 10, height: 10, color: "#9ca3af", flexShrink: 0 }} />
+                    </button>
                     {/* Col resize — header only */}
                     <ColHandle onStart={e => startColResize(col.id, e)} />
                   </div>
@@ -495,41 +486,89 @@ export function NotionTable({ content, onChange }: { content: string; onChange: 
 
       {/* ── Portals ─────────────────────────────────────────────── */}
 
-      {/* Column menu */}
+      {/* ── Unified Column Settings Card ── */}
       {colMenu && createPortal(
-        <div data-ntbl-menu="colmenu" style={{ position: "fixed", top: colMenu.rect.bottom + 2, left: colMenu.rect.left, zIndex: 9999, background: "white", borderRadius: 10, boxShadow: "0 8px 30px rgba(0,0,0,0.15)", border: "1px solid #e5e7eb", minWidth: 200, padding: "4px 0" }}>
-          <button onMouseDown={e => { e.preventDefault(); const col = data.columns.find(c => c.id === colMenu.colId); setEditingColId(colMenu.colId); setEditingColName(col?.name ?? ""); setColMenu(null); }}
-            style={mBtn} onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")} onMouseLeave={e => (e.currentTarget.style.background = "none")}>✏️ Rename</button>
-          <button onClick={e => { setTypeMenu({ colId: colMenu.colId, rect: (e.currentTarget as HTMLElement).getBoundingClientRect() }); }}
-            style={mBtn} onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")} onMouseLeave={e => (e.currentTarget.style.background = "none")}>
-            <span style={{ color: "#6b7280", display: "flex" }}>{COL_TYPE_META[data.columns.find(c => c.id === colMenu.colId)?.type ?? "text"].icon}</span>
-            Change type <ChevronDown style={{ width: 10, height: 10, marginLeft: "auto", transform: "rotate(-90deg)", color: "#9ca3af" }} />
-          </button>
-          <div style={{ borderTop: "1px solid #f3f4f6", margin: "3px 0" }} />
-          <button onClick={() => { setSortConfig({ colId: colMenu.colId, dir: "asc" }); setColMenu(null); }} style={mBtn} onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")} onMouseLeave={e => (e.currentTarget.style.background = "none")}><ArrowUp style={{ width: 12, height: 12, color: "#6b7280" }} /> Sort A → Z</button>
-          <button onClick={() => { setSortConfig({ colId: colMenu.colId, dir: "desc" }); setColMenu(null); }} style={mBtn} onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")} onMouseLeave={e => (e.currentTarget.style.background = "none")}><ArrowDown style={{ width: 12, height: 12, color: "#6b7280" }} /> Sort Z → A</button>
-          <div style={{ borderTop: "1px solid #f3f4f6", margin: "3px 0" }} />
-          <button onClick={() => deleteColumn(colMenu.colId)} style={{ ...mBtn, color: "#dc2626" }} onMouseEnter={e => (e.currentTarget.style.background = "#fef2f2")} onMouseLeave={e => (e.currentTarget.style.background = "none")}><Trash2 style={{ width: 12, height: 12 }} /> Delete column</button>
-        </div>,
-        document.body
-      )}
+        (() => {
+          const col = data.columns.find(c => c.id === colMenu.colId);
+          if (!col) return null;
+          const cardW = 260;
+          const vw = window.innerWidth;
+          const vh = window.innerHeight;
+          const rawLeft = colMenu.rect.left;
+          const left = Math.min(rawLeft, vw - cardW - 8);
+          const top = Math.min(colMenu.rect.bottom + 4, vh - 340);
+          return (
+            <div data-ntbl-menu="colmenu"
+              style={{ position: "fixed", top, left, zIndex: 9999, background: "white", borderRadius: 14, boxShadow: "0 12px 40px rgba(0,0,0,0.16)", border: "1px solid #e5e7eb", width: cardW, overflow: "hidden" }}>
 
-      {/* Type picker */}
-      {typeMenu && createPortal(
-        <div data-ntbl-menu="typemenu" style={{ position: "fixed", top: typeMenu.rect.top, left: typeMenu.rect.right + 6, zIndex: 10000, background: "white", borderRadius: 10, boxShadow: "0 8px 30px rgba(0,0,0,0.15)", border: "1px solid #e5e7eb", minWidth: 160, padding: "4px 0" }}>
-          {(Object.entries(COL_TYPE_META) as Array<[ColType, { label: string; icon: React.ReactNode }]>).map(([type, meta]) => {
-            const cur = data.columns.find(c => c.id === typeMenu.colId)?.type === type;
-            return (
-              <button key={type} onClick={() => changeColType(typeMenu.colId, type)} style={{ ...mBtn, background: cur ? "#f0f9ff" : "none" }}
-                onMouseEnter={e => (e.currentTarget.style.background = cur ? "#e0f2fe" : "#f3f4f6")}
-                onMouseLeave={e => (e.currentTarget.style.background = cur ? "#f0f9ff" : "none")}>
-                <span style={{ color: "#6b7280", display: "flex" }}>{meta.icon}</span>
-                {meta.label}
-                {cur && <Check style={{ width: 11, height: 11, marginLeft: "auto", color: "#3b82f6" }} />}
-              </button>
-            );
-          })}
-        </div>,
+              {/* Rename section */}
+              <div style={{ padding: "12px 12px 10px" }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 6 }}>Column Name</div>
+                <input
+                  data-ntbl-menu="colmenu"
+                  autoFocus
+                  value={colMenuName}
+                  onChange={e => setColMenuName(e.target.value)}
+                  onKeyDown={e => {
+                    if (e.key === "Enter") { renameColumn(col.id, colMenuName); setColMenu(null); }
+                    if (e.key === "Escape") setColMenu(null);
+                  }}
+                  style={{ width: "100%", padding: "6px 10px", border: "1.5px solid #e5e7eb", borderRadius: 8, fontSize: 13, fontWeight: 600, color: "#111827", outline: "none", background: "#fafafa", boxSizing: "border-box" }}
+                  onFocus={e => (e.currentTarget.style.borderColor = "#3b82f6")}
+                  onBlur={e => { e.currentTarget.style.borderColor = "#e5e7eb"; renameColumn(col.id, colMenuName); }}
+                />
+              </div>
+
+              {/* Type picker section */}
+              <div style={{ padding: "0 12px 12px" }}>
+                <div style={{ fontSize: 10, fontWeight: 700, color: "#9ca3af", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 8 }}>Column Type</div>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(5, 1fr)", gap: 4 }}>
+                  {(Object.entries(COL_TYPE_META) as Array<[ColType, { label: string; icon: React.ReactNode }]>).map(([type, meta]) => {
+                    const isActive = col.type === type;
+                    return (
+                      <button key={type}
+                        onClick={() => changeColType(col.id, type)}
+                        title={meta.label}
+                        style={{
+                          display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+                          gap: 4, padding: "8px 4px", borderRadius: 8, border: isActive ? "1.5px solid #3b82f6" : "1.5px solid #e5e7eb",
+                          background: isActive ? "#eff6ff" : "#fafafa", cursor: "pointer",
+                          transition: "all 0.12s",
+                        }}
+                        onMouseEnter={e => { if (!isActive) { e.currentTarget.style.background = "#f3f4f6"; e.currentTarget.style.borderColor = "#d1d5db"; }}}
+                        onMouseLeave={e => { if (!isActive) { e.currentTarget.style.background = "#fafafa"; e.currentTarget.style.borderColor = "#e5e7eb"; }}}>
+                        <span style={{ color: isActive ? "#3b82f6" : "#6b7280", display: "flex" }}>{meta.icon}</span>
+                        <span style={{ fontSize: 9, fontWeight: 600, color: isActive ? "#3b82f6" : "#6b7280", lineHeight: 1 }}>{meta.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Divider */}
+              <div style={{ borderTop: "1px solid #f3f4f6" }} />
+
+              {/* Sort + Delete */}
+              <div style={{ padding: "4px 0" }}>
+                <button onClick={() => { setSortConfig({ colId: col.id, dir: "asc" }); setColMenu(null); }}
+                  style={{ ...mBtn }} onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")} onMouseLeave={e => (e.currentTarget.style.background = "none")}>
+                  <ArrowUp style={{ width: 12, height: 12, color: "#6b7280" }} /> Sort A → Z
+                  {sortConfig?.colId === col.id && sortConfig.dir === "asc" && <Check style={{ width: 10, height: 10, marginLeft: "auto", color: "#3b82f6" }} />}
+                </button>
+                <button onClick={() => { setSortConfig({ colId: col.id, dir: "desc" }); setColMenu(null); }}
+                  style={{ ...mBtn }} onMouseEnter={e => (e.currentTarget.style.background = "#f3f4f6")} onMouseLeave={e => (e.currentTarget.style.background = "none")}>
+                  <ArrowDown style={{ width: 12, height: 12, color: "#6b7280" }} /> Sort Z → A
+                  {sortConfig?.colId === col.id && sortConfig.dir === "desc" && <Check style={{ width: 10, height: 10, marginLeft: "auto", color: "#3b82f6" }} />}
+                </button>
+                <div style={{ borderTop: "1px solid #f3f4f6", margin: "3px 0" }} />
+                <button onClick={() => deleteColumn(col.id)}
+                  style={{ ...mBtn, color: "#dc2626" }} onMouseEnter={e => (e.currentTarget.style.background = "#fef2f2")} onMouseLeave={e => (e.currentTarget.style.background = "none")}>
+                  <Trash2 style={{ width: 12, height: 12 }} /> Delete column
+                </button>
+              </div>
+            </div>
+          );
+        })(),
         document.body
       )}
 
