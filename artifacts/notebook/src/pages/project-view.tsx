@@ -718,7 +718,13 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const insertHTML = (html: string) => {
     const editor = editorRef.current;
     if (!editor) return;
-    editor.focus();
+
+    // Restore the cursor position saved at right-click time; fall back to editor focus
+    if (savedRangeRef.current) {
+      restoreSelection();
+    } else {
+      editor.focus();
+    }
 
     const sel = window.getSelection();
     if (sel && sel.rangeCount > 0) {
