@@ -1914,8 +1914,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
       {fontPanelOpen && (
         <div ref={fontPanelRef}
           className="fixed z-[10001] bg-white rounded-2xl shadow-2xl border border-stone-200 p-3"
-          style={{ minWidth: 280, top: Math.min(fontPanelPos.y, window.innerHeight - 480), left: Math.min(fontPanelPos.x, window.innerWidth - 295) }}
-          onMouseDown={e => e.stopPropagation()}>
+          style={{ minWidth: 280, top: Math.min(fontPanelPos.y, window.innerHeight - 480), left: Math.min(fontPanelPos.x, window.innerWidth - 295) }}>
           {/* Header */}
           <div className="flex items-center justify-between mb-3">
             <span className="text-[11px] font-bold text-stone-500 uppercase tracking-widest">Font</span>
