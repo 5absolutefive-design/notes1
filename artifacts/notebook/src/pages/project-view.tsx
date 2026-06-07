@@ -81,6 +81,13 @@ const HIGHLIGHT_COLORS = [
   { label: "Purple",  color: "#e9d5ff" },
 ];
 
+const FONTS_CTX = [
+  "Inter", "Arial", "Arial Black", "Georgia", "Times New Roman",
+  "Verdana", "Trebuchet MS", "Courier New", "Comic Sans MS",
+  "Roboto", "Lato", "Poppins", "Nunito", "Merriweather",
+  "Myriad Pro", "Poppins Light", "Impact", "Palatino",
+];
+
 interface ContextMenuState {
   x: number;
   y: number;
@@ -96,6 +103,7 @@ interface ContextMenuState {
   todoRemoveCount: number;
   drawOpen: boolean;
   tableOpen: boolean;
+  fontOpen: boolean;
 }
 
 interface ImageBlock {
@@ -171,6 +179,10 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const [ctxTableCustomCols, setCtxTableCustomCols] = useState("");
   const tableItemRef = useRef<HTMLDivElement>(null);
   const tableSubCardRef = useRef<HTMLDivElement>(null);
+  const [ctxFontSearch, setCtxFontSearch] = useState("");
+  const [ctxFontSize, setCtxFontSize] = useState(16);
+  const fontItemRef = useRef<HTMLDivElement>(null);
+  const fontSubCardRef = useRef<HTMLDivElement>(null);
   const editorRef = useRef<HTMLDivElement>(null);
   const titleRef = useRef<HTMLDivElement>(null);
   const ctxMenuRef = useRef<HTMLDivElement>(null);
@@ -576,8 +588,24 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   // ── Right-click handler
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
-    setCtxMenu({ x: e.clientX, y: e.clientY, formatOpen: false, alignOpen: false, bulletOpen: false, highlightOpen: false, headingOpen: false, dividerOpen: false, linkOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1, drawOpen: false, tableOpen: false });
+    setCtxMenu({ x: e.clientX, y: e.clientY, formatOpen: false, alignOpen: false, bulletOpen: false, highlightOpen: false, headingOpen: false, dividerOpen: false, linkOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1, drawOpen: false, tableOpen: false, fontOpen: false });
   };
+
+  // ── Clamp font sub-card inside viewport using fixed positioning
+  useLayoutEffect(() => {
+    if (!ctxMenu?.fontOpen || !fontSubCardRef.current || !fontItemRef.current) return;
+    const anchor = fontItemRef.current.getBoundingClientRect();
+    const card = fontSubCardRef.current.getBoundingClientRect();
+    const vh = window.innerHeight;
+    const vw = window.innerWidth;
+    let left = anchor.right + 4;
+    if (left + card.width > vw - 8) left = anchor.left - card.width - 4;
+    let top = anchor.bottom - card.height;
+    top = Math.max(8, Math.min(top, vh - card.height - 8));
+    left = Math.max(8, Math.min(left, vw - card.width - 8));
+    fontSubCardRef.current.style.top = `${top}px`;
+    fontSubCardRef.current.style.left = `${left}px`;
+  }, [ctxMenu?.fontOpen]);
 
   // ── Clamp table sub-card inside viewport using fixed positioning
   useLayoutEffect(() => {
@@ -615,6 +643,28 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     editorRef.current?.focus();
     document.execCommand(cmd, false, value);
     setCtxMenu(null);
+    debouncedSave();
+  };
+
+  const applyCtxFontName = (name: string) => {
+    editorRef.current?.focus();
+    document.execCommand("fontName", false, name);
+    debouncedSave();
+  };
+
+  const applyCtxFontSize = (size: number) => {
+    editorRef.current?.focus();
+    setCtxFontSize(size);
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+    document.execCommand("fontSize", false, "7");
+    const fontEls = editorRef.current?.querySelectorAll('font[size="7"]');
+    fontEls?.forEach(el => {
+      const span = document.createElement("span");
+      span.style.fontSize = `${size}px`;
+      span.innerHTML = el.innerHTML;
+      el.replaceWith(span);
+    });
     debouncedSave();
   };
 
@@ -1563,6 +1613,53 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             )}
           </div>
 
+          <div className="my-1 border-t border-stone-100" />
+          {/* Font → side sub-card with size + family */}
+          <div className="relative" ref={fontItemRef}>
+            <CtxItem icon={<span className="text-[11px] font-bold">Aa</span>} label="Font" hasArrow
+              onClick={() => setCtxMenu(m => m ? { ...m, fontOpen: !m.fontOpen, formatOpen: false, alignOpen: false, bulletOpen: false, dividerOpen: false, linkOpen: false, drawOpen: false, tableOpen: false } : null)} />
+            {ctxMenu.fontOpen && (
+              <div ref={fontSubCardRef} className="fixed bg-white rounded-xl shadow-2xl border border-stone-200 p-3 z-[10000]" style={{ minWidth: 270, top: 0, left: 0 }}
+                onMouseDown={e => e.stopPropagation()}>
+                {/* Font Size */}
+                <div className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-2">Font Size</div>
+                <div className="flex items-center gap-2 mb-1">
+                  <button onMouseDown={e => { e.preventDefault(); applyCtxFontSize(Math.max(8, ctxFontSize - 2)); }}
+                    className="w-7 h-7 rounded border border-stone-300 bg-white hover:bg-stone-100 text-stone-600 text-base font-bold flex items-center justify-center transition-colors">−</button>
+                  <span className="w-12 text-center text-sm font-semibold text-stone-700">{ctxFontSize}px</span>
+                  <button onMouseDown={e => { e.preventDefault(); applyCtxFontSize(Math.min(96, ctxFontSize + 2)); }}
+                    className="w-7 h-7 rounded border border-stone-300 bg-white hover:bg-stone-100 text-stone-600 text-base font-bold flex items-center justify-center transition-colors">+</button>
+                </div>
+                <div className="flex flex-wrap gap-1 mb-1">
+                  {[10, 12, 14, 16, 18, 20, 24, 28, 32, 48, 72].map(s => (
+                    <button key={s} onMouseDown={e => { e.preventDefault(); applyCtxFontSize(s); }}
+                      className={`h-6 px-1.5 text-[10px] font-semibold rounded border transition-colors ${ctxFontSize === s ? "bg-indigo-100 border-indigo-400 text-indigo-700" : "border-stone-200 hover:bg-indigo-50 text-stone-600"}`}>
+                      {s}
+                    </button>
+                  ))}
+                </div>
+                {/* Font Family */}
+                <div className="border-t border-stone-100 pt-3 mt-2">
+                  <div className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-2">Font</div>
+                  <input
+                    value={ctxFontSearch}
+                    onChange={e => setCtxFontSearch(e.target.value)}
+                    placeholder="Search font..."
+                    className="w-full h-7 px-2 text-xs border border-stone-300 rounded bg-white focus:outline-none focus:border-indigo-400 mb-2"
+                  />
+                  <div className="max-h-44 overflow-y-auto flex flex-col gap-0.5">
+                    {FONTS_CTX.filter(f => f.toLowerCase().includes(ctxFontSearch.toLowerCase())).map(f => (
+                      <button key={f} onMouseDown={e => { e.preventDefault(); applyCtxFontName(f); }}
+                        className="w-full text-left px-2 py-1 rounded-lg hover:bg-indigo-50 transition-colors flex items-center gap-2 group">
+                        <span className="text-[11px] text-stone-400 w-24 shrink-0 truncate">{f}</span>
+                        <span className="text-sm text-stone-800 truncate" style={{ fontFamily: f }}>Abc 123</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
           <div className="my-1 border-t border-stone-100" />
           {/* Align button → side sub-card */}
           <div className="relative">
