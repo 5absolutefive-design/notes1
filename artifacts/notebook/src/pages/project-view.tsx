@@ -181,6 +181,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const tableSubCardRef = useRef<HTMLDivElement>(null);
   const [ctxFontSearch, setCtxFontSearch] = useState("");
   const [ctxFontSize, setCtxFontSize] = useState(16);
+  const [ctxSelectedFont, setCtxSelectedFont] = useState<string | null>(null);
   const [ctxFontSizeMode, setCtxFontSizeMode] = useState<"all" | "selected">("selected");
   const fontItemRef = useRef<HTMLDivElement>(null);
   const fontSubCardRef = useRef<HTMLDivElement>(null);
@@ -1719,13 +1720,30 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                     className="w-full h-7 px-2 text-xs border border-stone-300 rounded bg-white focus:outline-none focus:border-indigo-400 mb-2"
                   />
                   <div className="max-h-44 overflow-y-auto flex flex-col gap-0.5">
-                    {FONTS_CTX.filter(f => f.toLowerCase().includes(ctxFontSearch.toLowerCase())).map(f => (
-                      <button key={f} onMouseDown={e => { e.preventDefault(); applyCtxFontName(f); }}
-                        className="w-full text-left px-2 py-1 rounded-lg hover:bg-indigo-50 transition-colors flex items-center gap-2 group">
-                        <span className="text-[11px] text-stone-400 w-24 shrink-0 truncate">{f}</span>
-                        <span className="text-sm text-stone-800 truncate" style={{ fontFamily: f }}>Abc 123</span>
-                      </button>
-                    ))}
+                    {FONTS_CTX.filter(f => f.toLowerCase().includes(ctxFontSearch.toLowerCase())).map(f => {
+                      const isSelected = ctxSelectedFont === f;
+                      return (
+                        <button key={f}
+                          onMouseDown={e => {
+                            e.preventDefault();
+                            if (isSelected) {
+                              setCtxSelectedFont(null);
+                            } else {
+                              applyCtxFontName(f);
+                              setCtxSelectedFont(f);
+                            }
+                          }}
+                          className={`w-full text-left px-2 py-1 rounded-lg transition-colors flex items-center gap-2 group ${
+                            isSelected
+                              ? "bg-indigo-50 border border-indigo-300 font-glow"
+                              : "hover:bg-indigo-50 border border-transparent"
+                          }`}>
+                          <span className={`text-[11px] w-24 shrink-0 truncate ${isSelected ? "text-indigo-600 font-semibold" : "text-stone-400"}`}>{f}</span>
+                          <span className={`text-sm truncate ${isSelected ? "text-indigo-700" : "text-stone-800"}`} style={{ fontFamily: f }}>Abc 123</span>
+                          {isSelected && <span className="ml-auto text-indigo-400 text-[10px] font-semibold shrink-0">✓ active</span>}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </div>
@@ -1961,6 +1979,11 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
         [contenteditable] ol { list-style-type: decimal; padding-left: 1.5em; margin: 4px 0; }
         .img-blk-locked .img-lock-btn { opacity: 0; }
         .img-blk-locked:hover .img-lock-btn { opacity: 1; }
+        @keyframes font-glow-pulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(99,102,241,0.25); border-color: #a5b4fc; }
+          50% { box-shadow: 0 0 0 3px rgba(99,102,241,0.18); border-color: #6366f1; }
+        }
+        .font-glow { animation: font-glow-pulse 1.6s ease-in-out infinite; }
       `}</style>
     </div>
   );
