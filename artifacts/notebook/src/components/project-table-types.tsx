@@ -42,11 +42,11 @@ export const DEFAULT_PRIORITY_OPTIONS: SelectOption[] = [
 ];
 
 export const PRIORITY_LEVELS = [
-  { emoji: "🔴", label: "Urgent",   hex: "#EF4444", bg: "#FEF2F2", border: "#FECACA" },
-  { emoji: "🟠", label: "High",     hex: "#F97316", bg: "#FFF7ED", border: "#FED7AA" },
-  { emoji: "🟡", label: "Medium",   hex: "#EAB308", bg: "#FEFCE8", border: "#FEF08A" },
-  { emoji: "🔵", label: "Low",      hex: "#3B82F6", bg: "#EFF6FF", border: "#BFDBFE" },
-  { emoji: "⚪", label: "Optional", hex: "#94A3B8", bg: "#F8FAFC", border: "#E2E8F0" },
+  { label: "Urgent",   hex: "#EF4444", bg: "#FEF2F2", border: "#FECACA" },
+  { label: "High",     hex: "#F97316", bg: "#FFF7ED", border: "#FED7AA" },
+  { label: "Medium",   hex: "#EAB308", bg: "#FEFCE8", border: "#FEF08A" },
+  { label: "Low",      hex: "#3B82F6", bg: "#EFF6FF", border: "#BFDBFE" },
+  { label: "Optional", hex: "#94A3B8", bg: "#F8FAFC", border: "#E2E8F0" },
 ] as const;
 
 // ── Column type list ─────────────────────────────────────────────
@@ -106,7 +106,7 @@ export function makeBadgeHtml(label: string, color: keyof typeof SELECT_COLORS):
 export function makePriorityBadgeHtml(label: string): string {
   const pl = PRIORITY_LEVELS.find(p => p.label === label);
   if (!pl) return `<span style="color:#9ca3af;font-size:13px">—</span>`;
-  return `<span style="display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:12px;background:${pl.bg};color:${pl.hex};border:1px solid ${pl.border};font-size:12px;font-weight:600;white-space:nowrap;line-height:18px">${pl.emoji} ${pl.label}</span>`;
+  return `<span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:12px;background:${pl.bg};color:${pl.hex};border:1px solid ${pl.border};font-size:12px;font-weight:600;white-space:nowrap;line-height:18px">${pl.label}</span>`;
 }
 
 // ── Cell inner HTML by type ──────────────────────────────────────
@@ -537,7 +537,6 @@ export function PriorityCellPopup({ td, rect, onClose, onSave }: PriorityCellPop
             className="w-full text-left px-2.5 py-1.5 rounded-lg flex items-center gap-2.5 transition-colors hover:bg-stone-50"
             style={{ background: isSel ? pl.bg : undefined }}
           >
-            <span style={{ fontSize: 15, lineHeight: 1 }}>{pl.emoji}</span>
             <span style={{ fontSize: 13, fontWeight: 600, color: pl.hex }}>{pl.label}</span>
             {isSel && (
               <span style={{ marginLeft: "auto", display: "flex" }}>
