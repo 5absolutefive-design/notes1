@@ -1118,7 +1118,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             return;
           }
 
-          if (type === "select" || type === "multi") {
+          if (type === "select" || type === "multi" || type === "priority") {
             const rect = td.getBoundingClientRect();
             setSelectCellPopup({ td, th, rect, multi: type === "multi" });
             setColTypePopup(null);

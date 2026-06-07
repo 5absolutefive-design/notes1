@@ -6,7 +6,7 @@ import { Plus } from "lucide-react";
 export type ColType =
   | "text" | "number" | "select" | "multi" | "check"
   | "date" | "url" | "email" | "phone" | "rating"
-  | "progress" | "person" | "currency";
+  | "progress" | "person" | "currency" | "priority";
 
 export interface SelectOption {
   id: string;
@@ -35,11 +35,18 @@ export const DEFAULT_STATUS_OPTIONS: SelectOption[] = [
   { id: "s3", label: "Done",        color: "green" },
 ];
 
+export const DEFAULT_PRIORITY_OPTIONS: SelectOption[] = [
+  { id: "p1", label: "Low",    color: "gray"   },
+  { id: "p2", label: "Medium", color: "yellow" },
+  { id: "p3", label: "High",   color: "red"    },
+];
+
 // ── Column type list ─────────────────────────────────────────────
 export const COL_TYPES: { type: ColType; icon: string; label: string }[] = [
   { type: "text",     icon: "T",  label: "Text"     },
   { type: "number",   icon: "#",  label: "Number"   },
   { type: "select",   icon: "◈",  label: "Progress" },
+  { type: "priority", icon: "⚑",  label: "Priority" },
   { type: "multi",    icon: "⊞",  label: "Multi"    },
   { type: "check",    icon: "☑",  label: "Check"    },
   { type: "date",     icon: "📅", label: "Date"     },
@@ -69,12 +76,13 @@ export function findTh(td: HTMLElement): HTMLElement | null {
   return (ths[idx] as HTMLElement) ?? null;
 }
 
-export function getColOptions(th: HTMLElement): SelectOption[] {
+export function getColOptions(th: HTMLElement, type?: ColType): SelectOption[] {
   try {
     const raw = th.dataset.colOptions;
     if (raw) return JSON.parse(raw);
   } catch { /* ignore */ }
-  return [...DEFAULT_STATUS_OPTIONS];
+  const colType = type || (th.dataset.colType as ColType);
+  return colType === "priority" ? [...DEFAULT_PRIORITY_OPTIONS] : [...DEFAULT_STATUS_OPTIONS];
 }
 
 export function setColOptions(th: HTMLElement, options: SelectOption[]) {
@@ -141,7 +149,8 @@ export function makeCellInner(type: ColType, val: string, options?: SelectOption
       return `<span data-progresscell="1" style="display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;width:100%"><span style="flex:1;height:7px;border-radius:4px;background:#f3f4f6;overflow:hidden"><span style="display:block;height:100%;width:${pct}%;background:${pct === 100 ? "#22c55e" : "#3b82f6"};border-radius:4px"></span></span><span style="font-size:11px;color:#6b7280;min-width:28px;text-align:right">${pct}%</span></span>`;
     }
 
-    case "select": {
+    case "select":
+    case "priority": {
       const opts = options || [];
       const opt = opts.find(o => o.id === val) || opts.find(o => o.label === val);
       return `<span data-selectcell="1" style="display:block;cursor:pointer;user-select:none;min-height:20px">${opt ? makeBadgeHtml(opt.label, opt.color) : '<span style="color:#9ca3af;font-size:13px">—</span>'}</span>`;
@@ -170,7 +179,7 @@ export function applyColType(
   const table = th.closest("table");
   if (!table) return;
   const idx = getColIndex(th);
-  const opts = options ?? getColOptions(th);
+  const opts = options ?? getColOptions(th, type);
   const tbody = table.querySelector("tbody");
   if (!tbody) return;
 
