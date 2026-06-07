@@ -39,7 +39,7 @@ export const DEFAULT_STATUS_OPTIONS: SelectOption[] = [
 export const COL_TYPES: { type: ColType; icon: string; label: string }[] = [
   { type: "text",     icon: "T",  label: "Text"     },
   { type: "number",   icon: "#",  label: "Number"   },
-  { type: "select",   icon: "◈",  label: "Select"   },
+  { type: "select",   icon: "◈",  label: "Progress" },
   { type: "multi",    icon: "⊞",  label: "Multi"    },
   { type: "check",    icon: "☑",  label: "Check"    },
   { type: "date",     icon: "📅", label: "Date"     },
@@ -47,7 +47,7 @@ export const COL_TYPES: { type: ColType; icon: string; label: string }[] = [
   { type: "email",    icon: "@",  label: "Email"    },
   { type: "phone",    icon: "☏",  label: "Phone"    },
   { type: "rating",   icon: "★",  label: "Rating"   },
-  { type: "progress", icon: "▓",  label: "Progress" },
+  { type: "progress", icon: "▓",  label: "% Bar"    },
   { type: "person",   icon: "👤", label: "Person"   },
   { type: "currency", icon: "$",  label: "Currency" },
 ];
