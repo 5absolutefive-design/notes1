@@ -330,6 +330,15 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
         btn.setAttribute("data-remove-btn", "1");
         (btn as HTMLElement).removeAttribute("onclick");
       });
+      // Restore saved base font size for this project
+      const savedFs = activeId ? localStorage.getItem(`nb_proj_fs_${activeId}`) : null;
+      const fsNum = savedFs ? parseInt(savedFs, 10) : null;
+      if (fsNum && !isNaN(fsNum)) {
+        editorRef.current.style.fontSize = `${fsNum}px`;
+        setCtxFontSize(fsNum);
+      } else {
+        editorRef.current.style.fontSize = "";
+      }
     }
     if (titleRef.current)
       titleRef.current.textContent = activeProject?.title || "";
@@ -586,9 +595,24 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     setTimeout(updateLastTodoPos, 30);
   }, [saveContent, updateLastTodoPos]);
 
+  // ── Save selection range on right-click so it can be restored before formatting
+  const savedRangeRef = useRef<Range | null>(null);
+
+  const restoreSelection = () => {
+    if (!savedRangeRef.current) return;
+    editorRef.current?.focus();
+    const sel = window.getSelection();
+    if (sel) {
+      sel.removeAllRanges();
+      sel.addRange(savedRangeRef.current);
+    }
+  };
+
   // ── Right-click handler
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
+    const sel = window.getSelection();
+    savedRangeRef.current = (sel && sel.rangeCount > 0) ? sel.getRangeAt(0).cloneRange() : null;
     setCtxMenu({ x: e.clientX, y: e.clientY, formatOpen: false, alignOpen: false, bulletOpen: false, highlightOpen: false, headingOpen: false, dividerOpen: false, linkOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1, drawOpen: false, tableOpen: false, fontOpen: false });
   };
 
@@ -648,29 +672,33 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   };
 
   const applyCtxFontName = (name: string) => {
-    editorRef.current?.focus();
+    restoreSelection();
     document.execCommand("fontName", false, name);
     debouncedSave();
   };
 
   const applyCtxFontSize = (size: number) => {
-    editorRef.current?.focus();
     setCtxFontSize(size);
     if (ctxFontSizeMode === "all") {
-      document.execCommand("selectAll");
+      if (editorRef.current) {
+        editorRef.current.style.fontSize = `${size}px`;
+        if (activeId) localStorage.setItem(`nb_proj_fs_${activeId}`, String(size));
+      }
+      debouncedSave();
     } else {
+      restoreSelection();
       const sel = window.getSelection();
       if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
+      document.execCommand("fontSize", false, "7");
+      const fontEls = editorRef.current?.querySelectorAll('font[size="7"]');
+      fontEls?.forEach(el => {
+        const span = document.createElement("span");
+        span.style.fontSize = `${size}px`;
+        span.innerHTML = el.innerHTML;
+        el.replaceWith(span);
+      });
+      debouncedSave();
     }
-    document.execCommand("fontSize", false, "7");
-    const fontEls = editorRef.current?.querySelectorAll('font[size="7"]');
-    fontEls?.forEach(el => {
-      const span = document.createElement("span");
-      span.style.fontSize = `${size}px`;
-      span.innerHTML = el.innerHTML;
-      el.replaceWith(span);
-    });
-    debouncedSave();
   };
 
   const insertCustomBullet = (type: string) => {
@@ -1902,9 +1930,9 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
         .hide-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         [data-placeholder]:empty:before { content: attr(data-placeholder); color: #c0bdb8; pointer-events: none; }
-        [contenteditable] h1 { font-size: 2em; font-weight: 700; margin: 0.5em 0 0.25em; line-height: 1.2; }
-        [contenteditable] h2 { font-size: 1.5em; font-weight: 700; margin: 0.5em 0 0.25em; line-height: 1.3; }
-        [contenteditable] h3 { font-size: 1.2em; font-weight: 600; margin: 0.4em 0 0.2em; line-height: 1.4; }
+        [contenteditable] h1 { font-size: 32px; font-weight: 700; margin: 0.5em 0 0.25em; line-height: 1.2; }
+        [contenteditable] h2 { font-size: 24px; font-weight: 700; margin: 0.5em 0 0.25em; line-height: 1.3; }
+        [contenteditable] h3 { font-size: 19px; font-weight: 600; margin: 0.4em 0 0.2em; line-height: 1.4; }
         [contenteditable] ul { list-style-type: disc; padding-left: 1.5em; margin: 4px 0; }
         [contenteditable] ol { list-style-type: decimal; padding-left: 1.5em; margin: 4px 0; }
         .img-blk-locked .img-lock-btn { opacity: 0; }
