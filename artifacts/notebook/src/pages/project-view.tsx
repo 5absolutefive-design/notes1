@@ -695,7 +695,16 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     e.preventDefault();
     const sel = window.getSelection();
     savedRangeRef.current = (sel && sel.rangeCount > 0) ? sel.getRangeAt(0).cloneRange() : null;
-    setCtxMenu({ x: e.clientX, y: e.clientY, formatOpen: false, alignOpen: false, bulletOpen: false, highlightOpen: false, fontColorOpen: false, headingOpen: false, dividerOpen: false, linkOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1, drawOpen: false, tableOpen: false, fontOpen: false, blockOpen: false, mediaOpen: false });
+    let menuX = e.clientX;
+    let menuY = e.clientY;
+    if (savedRangeRef.current) {
+      const rect = savedRangeRef.current.getBoundingClientRect();
+      if (rect && rect.width > 0) {
+        menuY = rect.bottom + 8;
+        menuX = e.clientX;
+      }
+    }
+    setCtxMenu({ x: menuX, y: menuY, formatOpen: false, alignOpen: false, bulletOpen: false, highlightOpen: false, fontColorOpen: false, headingOpen: false, dividerOpen: false, linkOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1, drawOpen: false, tableOpen: false, fontOpen: false, blockOpen: false, mediaOpen: false });
     if (savedRangeRef.current) {
       setTimeout(() => restoreSelection(), 0);
     }
