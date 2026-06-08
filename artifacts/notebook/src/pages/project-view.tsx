@@ -774,6 +774,20 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     debouncedSave();
   };
 
+  const execAllCaps = () => {
+    restoreSelection();
+    const sel = window.getSelection();
+    if (!sel || sel.rangeCount === 0 || sel.isCollapsed) { setCtxMenu(null); return; }
+    const range = sel.getRangeAt(0);
+    const text = range.toString();
+    if (!text) { setCtxMenu(null); return; }
+    const isAllCaps = text === text.toUpperCase();
+    const transformed = isAllCaps ? text.toLowerCase() : text.toUpperCase();
+    document.execCommand("insertText", false, transformed);
+    setCtxMenu(null);
+    debouncedSave();
+  };
+
   const applyCtxFontName = (name: string, fromPanel = false) => {
     if (!fromPanel) restoreSelection();
     const sel = window.getSelection();
@@ -2262,6 +2276,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             {ctxMenu.formatOpen && (
               <div className="absolute left-full top-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 py-1.5 z-[10000] min-w-[180px]">
                 <CtxItem icon={<Bold className="w-3.5 h-3.5"/>}          label="Bold"          shortcut="Ctrl+B" onClick={() => execFmt("bold")} />
+                <CtxItem icon={<span className="w-3.5 h-3.5 flex items-center justify-center text-[10px] font-black tracking-tight leading-none">AA</span>} label="All Caps" onClick={execAllCaps} />
                 <CtxItem icon={<Italic className="w-3.5 h-3.5"/>}        label="Italic"        shortcut="Ctrl+I" onClick={() => execFmt("italic")} />
                 <CtxItem icon={<Underline className="w-3.5 h-3.5"/>}     label="Underline"     shortcut="Ctrl+U" onClick={() => execFmt("underline")} />
                 <CtxItem icon={<Strikethrough className="w-3.5 h-3.5"/>} label="Strikethrough" onClick={() => execFmt("strikeThrough")} />
