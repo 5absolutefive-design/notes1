@@ -1300,12 +1300,11 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           if (note.style.position !== 'absolute') {
             const noteRect = note.getBoundingClientRect();
             const editorRect = editor.getBoundingClientRect();
-            const scrollTop = editor.closest('.overflow-y-auto, [style*="overflow"]')?.scrollTop ?? 0;
             note.style.position = 'absolute';
-            note.style.left = `${noteRect.left - editorRect.left + (parseFloat(editor.style.paddingLeft) || 48)}px`;
-            note.style.top = `${noteRect.top - editorRect.top + scrollTop}px`;
+            note.style.left = `${noteRect.left - editorRect.left}px`;
+            note.style.top = `${noteRect.top - editorRect.top}px`;
             note.style.margin = '0';
-            note.style.display = 'block';
+            note.style.display = 'inline-block';
           }
           startLeft = parseFloat(note.style.left) || 0;
           startTop = parseFloat(note.style.top) || 0;
