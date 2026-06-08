@@ -1385,7 +1385,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const insertStickyNote = () => {
     insertHTML(
       `<div contenteditable="false" data-quote-block="1" data-sticky-note="1" style="position:relative;display:inline-block;width:33%;min-width:120px;background:#f5f3ff;border:1.5px solid #c4b5fd;border-radius:10px;padding:28px 36px 10px 14px;margin:8px 0;box-shadow:2px 3px 8px rgba(99,102,241,0.10);resize:horizontal;overflow:auto;vertical-align:top">` +
-      `<div contenteditable="false" style="position:absolute;top:6px;left:0;right:0;text-align:center;font-size:15px;pointer-events:none;user-select:none">📌</div>` +
+      `<div contenteditable="false" style="position:absolute;top:-11px;left:0;right:0;text-align:center;font-size:20px;pointer-events:none;user-select:none;line-height:1">📌</div>` +
       `<button data-drag-btn="1" contenteditable="false" title="Drag to move" ` +
       `style="position:absolute;top:27px;right:6px;width:18px;height:18px;border-radius:50%;background:rgba(99,102,241,0.10);border:none;cursor:grab;font-size:13px;color:#7c3aed;line-height:1;padding:0;display:inline-flex;align-items:center;justify-content:center;z-index:10;flex-shrink:0;user-select:none">&#9995;</button>` +
       removeBtn() +
