@@ -3,6 +3,7 @@ import pinIcon from "@assets/pin-svgrepo-com_1780935998946.png";
 import numberIcon from "@assets/number-svgrepo-com_1780936571964.png";
 import cardIcon from "@assets/card-layout-filled-svgrepo-com_1780936676782.png";
 import columnIcon from "@assets/column-spacing-svgrepo-com_1780936842510.png";
+import definitionIcon from "@assets/card-plus-svgrepo-com_1780937097258.png";
 import {
   Plus, ImagePlus, FolderKanban, X,
   Bold, Italic, Underline, Strikethrough, Highlighter,
@@ -2747,10 +2748,11 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 {/* Definition Block */}
                 <button onMouseDown={e => { e.preventDefault(); insertDefinitionBlock(); }}
                   className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-amber-50 text-left group transition-colors">
-                  <span className="w-7 h-7 rounded-md bg-amber-100 flex items-center justify-center text-base flex-shrink-0">🔖</span>
+                  <span className="w-7 h-7 flex items-center justify-center flex-shrink-0">
+                    <img src={definitionIcon} alt="definition" className="w-6 h-6" />
+                  </span>
                   <div>
                     <div className="text-xs font-semibold text-stone-700">Definition</div>
-                    <div className="text-[10px] text-stone-400">Term + description</div>
                   </div>
                 </button>
               </div>
