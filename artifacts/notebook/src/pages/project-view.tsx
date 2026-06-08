@@ -7,7 +7,7 @@ import {
   ChevronRight, Link, Mic, PenLine, Eraser, Table,
 } from "lucide-react";
 import {
-  ColTypePicker, SelectCellPopup, PriorityCellPopup,
+  ColTypePicker, SelectCellPopup, PriorityCellPopup, ProgressCellPopup,
   applyColType, hydrateTables, makeCellInner, getColType, getColOptions,
   getColIndex, findTh,
   type ColType,
@@ -221,6 +221,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const [colTypePopup, setColTypePopup] = useState<{ th: HTMLElement; rect: DOMRect } | null>(null);
   const [selectCellPopup, setSelectCellPopup] = useState<{ td: HTMLElement; th: HTMLElement; rect: DOMRect; multi: boolean } | null>(null);
   const [priorityCellPopup, setPriorityCellPopup] = useState<{ td: HTMLElement; rect: DOMRect } | null>(null);
+  const [progressCellPopup, setProgressCellPopup] = useState<{ td: HTMLElement; rect: DOMRect } | null>(null);
 
   const [drawTool, setDrawTool] = useState<DrawTool | null>(null);
   const drawToolRef = useRef<DrawTool | null>(null);
@@ -1163,10 +1164,20 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             return;
           }
 
-          if (["number", "currency", "url", "email", "phone", "person", "progress"].includes(type)) {
+          if (type === "progress") {
+            const rect = td.getBoundingClientRect();
+            setProgressCellPopup({ td, rect });
             setColTypePopup(null);
             setSelectCellPopup(null);
             setPriorityCellPopup(null);
+            return;
+          }
+
+          if (["number", "currency", "url", "email", "phone", "person"].includes(type)) {
+            setColTypePopup(null);
+            setSelectCellPopup(null);
+            setPriorityCellPopup(null);
+            setProgressCellPopup(null);
             startDirectEdit(td, th, type as ColType);
             return;
           }
@@ -1825,6 +1836,16 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           td={priorityCellPopup.td}
           rect={priorityCellPopup.rect}
           onClose={() => setPriorityCellPopup(null)}
+          onSave={saveContent}
+        />
+      )}
+
+      {/* ── Progress cell popup ── */}
+      {progressCellPopup && (
+        <ProgressCellPopup
+          td={progressCellPopup.td}
+          rect={progressCellPopup.rect}
+          onClose={() => setProgressCellPopup(null)}
           onSave={saveContent}
         />
       )}

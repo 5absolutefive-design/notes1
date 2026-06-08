@@ -554,6 +554,91 @@ export function PriorityCellPopup({ td, rect, onClose, onSave }: PriorityCellPop
 }
 
 // ════════════════════════════════════════════════════════════════
+// ── ProgressCellPopup — slider + live bar ───────────────────────
+// ════════════════════════════════════════════════════════════════
+interface ProgressCellPopupProps {
+  td: HTMLElement;
+  rect: DOMRect;
+  onClose: () => void;
+  onSave: () => void;
+}
+
+export function ProgressCellPopup({ td, rect, onClose, onSave }: ProgressCellPopupProps) {
+  const [pct, setPct] = useState(() => Math.min(100, Math.max(0, parseInt(td.dataset.cellVal || "0") || 0)));
+  const popRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  let top = rect.bottom + 6;
+  const left = Math.min(rect.left, window.innerWidth - 220);
+  if (top + 140 > window.innerHeight) top = Math.max(8, rect.top - 140);
+
+  const commit = (val: number) => {
+    const clamped = Math.min(100, Math.max(0, val));
+    td.dataset.cellVal = String(clamped);
+    td.innerHTML = makeCellInner("progress", String(clamped));
+    onSave();
+    onClose();
+  };
+
+  useEffect(() => {
+    inputRef.current?.focus();
+    inputRef.current?.select();
+  }, []);
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (popRef.current && !popRef.current.contains(e.target as Node)) commit(pct);
+    };
+    document.addEventListener("mousedown", handler, true);
+    return () => document.removeEventListener("mousedown", handler, true);
+  }, [pct]);
+
+  const color = pct < 50 ? "#f97316" : "#22c55e";
+
+  return createPortal(
+    <div
+      ref={popRef}
+      onMouseDown={e => e.stopPropagation()}
+      style={{ position: "fixed", top, left, zIndex: 99999, width: 200 }}
+      className="bg-white rounded-xl shadow-2xl border border-stone-200 p-3 flex flex-col gap-2.5"
+    >
+      {/* Live bar */}
+      <div style={{ height: 8, borderRadius: 6, background: "#f3f4f6", overflow: "hidden" }}>
+        <div style={{ height: "100%", width: `${pct}%`, background: color, borderRadius: 6, transition: "width 0.12s, background 0.2s" }} />
+      </div>
+
+      {/* Number input */}
+      <div className="flex items-center gap-2">
+        <input
+          ref={inputRef}
+          type="number"
+          min={0}
+          max={100}
+          value={pct}
+          onChange={e => setPct(Math.min(100, Math.max(0, parseInt(e.target.value) || 0)))}
+          onKeyDown={e => { if (e.key === "Enter") commit(pct); if (e.key === "Escape") onClose(); }}
+          className="w-full text-sm px-2 py-1 border border-stone-200 rounded-lg focus:outline-none focus:border-stone-400 text-center"
+          style={{ fontFamily: "inherit", fontWeight: 600, color }}
+        />
+        <span className="text-sm font-semibold" style={{ color, minWidth: 32 }}>{pct}%</span>
+      </div>
+
+      {/* Slider */}
+      <input
+        type="range"
+        min={0}
+        max={100}
+        value={pct}
+        onChange={e => setPct(Number(e.target.value))}
+        className="w-full accent-current"
+        style={{ accentColor: color }}
+      />
+    </div>,
+    document.body
+  );
+}
+
+// ════════════════════════════════════════════════════════════════
 // ── InlineEditPopup (number, currency, url, email, phone, person, progress) ──
 // ════════════════════════════════════════════════════════════════
 interface InlineEditPopupProps {
