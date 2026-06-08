@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
-import { Plus } from "lucide-react";
 
 // ── Types ────────────────────────────────────────────────────────
 export type ColType =
@@ -34,6 +33,15 @@ export const DEFAULT_STATUS_OPTIONS: SelectOption[] = [
   { id: "s2", label: "In Progress", color: "blue"  },
   { id: "s3", label: "Done",        color: "green" },
 ];
+
+export const STATUS_OPTIONS = [
+  { label: "Not Started", emoji: "⚪", hex: "#6B7280", bg: "#F3F4F6", border: "#D1D5DB" },
+  { label: "Planned",     emoji: "🔵", hex: "#3B82F6", bg: "#EFF6FF", border: "#BFDBFE" },
+  { label: "In Progress", emoji: "🟡", hex: "#D97706", bg: "#FFFBEB", border: "#FDE68A" },
+  { label: "On Hold",     emoji: "🟠", hex: "#F97316", bg: "#FFF7ED", border: "#FED7AA" },
+  { label: "Review",      emoji: "🟣", hex: "#8B5CF6", bg: "#F5F3FF", border: "#DDD6FE" },
+  { label: "Completed",   emoji: "🟢", hex: "#22C55E", bg: "#F0FDF4", border: "#BBF7D0" },
+] as const;
 
 export const DEFAULT_PRIORITY_OPTIONS: SelectOption[] = [
   { id: "p1", label: "Low",    color: "gray"   },
@@ -103,6 +111,12 @@ export function makeBadgeHtml(label: string, color: keyof typeof SELECT_COLORS):
   return `<span style="display:inline-flex;align-items:center;padding:2px 9px;border-radius:12px;background:${c.bg};color:${c.text};border:1px solid ${c.border};font-size:12px;font-weight:500;white-space:nowrap;line-height:18px;max-width:100%;overflow:hidden;text-overflow:ellipsis">${label}</span>`;
 }
 
+export function makeStatusBadgeHtml(label: string): string {
+  const s = STATUS_OPTIONS.find(o => o.label === label);
+  if (!s) return `<span style="color:#9ca3af;font-size:13px">—</span>`;
+  return `<span style="display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:12px;background:${s.bg};color:${s.hex};border:1px solid ${s.border};font-size:12px;font-weight:500;white-space:nowrap;line-height:18px">${s.emoji} ${s.label}</span>`;
+}
+
 export function makePriorityBadgeHtml(label: string): string {
   const pl = PRIORITY_LEVELS.find(p => p.label === label);
   if (!pl) return `<span style="color:#9ca3af;font-size:13px">—</span>`;
@@ -164,9 +178,7 @@ export function makeCellInner(type: ColType, val: string, options?: SelectOption
     }
 
     case "select": {
-      const opts = options || [];
-      const opt = opts.find(o => o.id === val) || opts.find(o => o.label === val);
-      return `<span data-selectcell="1" style="display:block;cursor:pointer;user-select:none;min-height:20px">${opt ? makeBadgeHtml(opt.label, opt.color) : '<span style="color:#9ca3af;font-size:13px">—</span>'}</span>`;
+      return `<span data-selectcell="1" style="display:block;cursor:pointer;user-select:none;min-height:20px">${val ? makeStatusBadgeHtml(val) : '<span style="color:#9ca3af;font-size:13px">—</span>'}</span>`;
     }
 
     case "priority": {
@@ -341,7 +353,7 @@ export function ColTypePicker({ th, rect, onClose, onTypeChange, onDeleteCol, on
 }
 
 // ════════════════════════════════════════════════════════════════
-// ── SelectCellPopup (for select & multi types) ───────────────────
+// ── SelectCellPopup — simple fixed status picker ─────────────────
 // ════════════════════════════════════════════════════════════════
 interface SelectCellPopupProps {
   td: HTMLElement;
@@ -352,136 +364,55 @@ interface SelectCellPopupProps {
   onSave: () => void;
 }
 
-export function SelectCellPopup({ td, th, rect, multi, onClose, onSave }: SelectCellPopupProps) {
-  const [options, setOptions] = useState<SelectOption[]>(() => getColOptions(th));
-  const [search, setSearch] = useState("");
-  const [selectedIds, setSelectedIds] = useState<string[]>(() => {
-    const val = td.dataset.cellVal || "";
-    return val ? val.split(",").filter(Boolean) : [];
-  });
+export function SelectCellPopup({ td, rect, onClose, onSave }: SelectCellPopupProps) {
+  const current = td.dataset.cellVal || "";
   const popRef = useRef<HTMLDivElement>(null);
-  const searchRef = useRef<HTMLInputElement>(null);
-
-  const nextColor = COLOR_NAMES[options.length % COLOR_NAMES.length];
-  const type: ColType = multi ? "multi" : "select";
 
   let top = rect.bottom + 4;
-  const left = Math.min(rect.left, window.innerWidth - 260);
-  if (top + 320 > window.innerHeight) top = Math.max(8, rect.top - 320);
-
-  useEffect(() => {
-    searchRef.current?.focus();
-  }, []);
-
-  const commit = (ids: string[], opts: SelectOption[]) => {
-    setColOptions(th, opts);
-    const val = ids.join(",");
-    td.dataset.cellVal = val;
-    td.innerHTML = makeCellInner(type, val, opts);
-    onSave();
-  };
+  const left = Math.min(rect.left, window.innerWidth - 200);
+  if (top + STATUS_OPTIONS.length * 38 + 16 > window.innerHeight) top = Math.max(8, rect.top - (STATUS_OPTIONS.length * 38 + 16));
 
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (popRef.current && !popRef.current.contains(e.target as Node)) {
-        commit(selectedIds, options);
-        onClose();
-      }
+      if (popRef.current && !popRef.current.contains(e.target as Node)) onClose();
     };
     document.addEventListener("mousedown", handler, true);
     return () => document.removeEventListener("mousedown", handler, true);
-  }, [selectedIds, options]);
+  }, []);
 
-  const toggleOption = (opt: SelectOption) => {
-    setSelectedIds(prev => {
-      if (multi) {
-        return prev.includes(opt.id) ? prev.filter(id => id !== opt.id) : [...prev, opt.id];
-      }
-      const next = prev[0] === opt.id ? [] : [opt.id];
-      return next;
-    });
+  const pick = (label: string) => {
+    const newVal = label === current ? "" : label;
+    td.dataset.cellVal = newVal;
+    td.innerHTML = makeCellInner("select", newVal);
+    onSave();
+    onClose();
   };
-
-  const createOption = (colorOverride?: keyof typeof SELECT_COLORS) => {
-    if (!search.trim()) return;
-    const newOpt: SelectOption = {
-      id: `opt_${Date.now()}`,
-      label: search.trim(),
-      color: colorOverride ?? nextColor,
-    };
-    const newOpts = [...options, newOpt];
-    setOptions(newOpts);
-    setSelectedIds(prev => multi ? [...prev, newOpt.id] : [newOpt.id]);
-    setSearch("");
-  };
-
-  const filtered = options.filter(o => o.label.toLowerCase().includes(search.toLowerCase()));
-  const hasExact = options.some(o => o.label.toLowerCase() === search.toLowerCase());
 
   return createPortal(
     <div
       ref={popRef}
       onMouseDown={e => e.stopPropagation()}
-      style={{ position: "fixed", top, left, zIndex: 99999, minWidth: 230, maxWidth: 280 }}
-      className="bg-white rounded-xl shadow-2xl border border-stone-200 p-2"
+      style={{ position: "fixed", top, left, zIndex: 99999, minWidth: 180 }}
+      className="bg-white rounded-xl shadow-2xl border border-stone-200 p-1.5 flex flex-col gap-0.5"
     >
-      <input
-        ref={searchRef}
-        value={search}
-        onChange={e => setSearch(e.target.value)}
-        onKeyDown={e => {
-          if (e.key === "Enter") {
-            const exact = options.find(o => o.label.toLowerCase() === search.toLowerCase());
-            if (exact) { toggleOption(exact); setSearch(""); }
-            else if (search.trim()) createOption();
-          }
-          if (e.key === "Escape") { commit(selectedIds, options); onClose(); }
-        }}
-        placeholder="Search or create option..."
-        className="w-full px-2.5 py-1.5 text-xs border border-stone-200 rounded-lg focus:outline-none focus:border-indigo-400 mb-1.5"
-      />
-
-      <div className="max-h-[160px] overflow-y-auto flex flex-col gap-0.5 mb-1.5">
-        {filtered.map(opt => {
-          const c = SELECT_COLORS[opt.color] ?? SELECT_COLORS.gray;
-          const isSel = selectedIds.includes(opt.id);
-          return (
-            <button key={opt.id} onClick={() => toggleOption(opt)}
-              className={`w-full text-left px-2 py-1 rounded-lg flex items-center gap-2 transition-colors ${isSel ? "bg-indigo-50" : "hover:bg-stone-50"}`}>
-              {multi && (
-                <span style={{ width: 14, height: 14, borderRadius: 3, border: `2px solid ${isSel ? "#3b82f6" : "#d1d5db"}`, background: isSel ? "#3b82f6" : "white", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  {isSel && <svg viewBox="0 0 10 10" width="8" height="8" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="1.5,5 4,7.5 8.5,2.5" /></svg>}
-                </span>
-              )}
-              <span style={{ display: "inline-flex", alignItems: "center", padding: "1px 8px", borderRadius: 12, background: c.bg, color: c.text, border: `1px solid ${c.border}`, fontSize: 12, fontWeight: 500 }}>
-                {opt.label}
+      {STATUS_OPTIONS.map(s => {
+        const isSel = current === s.label;
+        return (
+          <button key={s.label} onClick={() => pick(s.label)}
+            className="w-full text-left px-2.5 py-1.5 rounded-lg flex items-center gap-2.5 transition-colors hover:bg-stone-50"
+            style={{ background: isSel ? s.bg : undefined }}>
+            <span style={{ fontSize: 15 }}>{s.emoji}</span>
+            <span style={{ fontSize: 13, fontWeight: 500, color: isSel ? s.hex : "#374151" }}>{s.label}</span>
+            {isSel && (
+              <span style={{ marginLeft: "auto" }}>
+                <svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke={s.hex} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="1.5,6 4.5,9 10.5,3" />
+                </svg>
               </span>
-            </button>
-          );
-        })}
-        {search && !hasExact && (
-          <button onClick={() => createOption()}
-            className="w-full text-left px-2 py-1 rounded-lg hover:bg-indigo-50 text-xs text-indigo-600 flex items-center gap-1.5 transition-colors">
-            <Plus className="w-3 h-3" /> Create "{search}"
+            )}
           </button>
-        )}
-      </div>
-
-      {/* Color picker */}
-      <div className="border-t border-stone-100 pt-1.5 flex items-center gap-1.5 flex-wrap">
-        <span className="text-[10px] text-stone-400 font-medium">Colors:</span>
-        {COLOR_NAMES.map(cn => {
-          const c = SELECT_COLORS[cn];
-          return (
-            <button
-              key={cn}
-              title={cn}
-              onClick={() => { if (search.trim()) createOption(cn); }}
-              style={{ width: 18, height: 18, borderRadius: "50%", background: c.bg, border: `2px solid ${c.border}`, cursor: "pointer", flexShrink: 0 }}
-            />
-          );
-        })}
-      </div>
+        );
+      })}
     </div>,
     document.body
   );
