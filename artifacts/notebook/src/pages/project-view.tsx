@@ -210,6 +210,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const [hoverTableBtns, setHoverTableBtns] = useState(false);
   const [tableLinesHidden, setTableLinesHidden] = useState(false);
   const activeTableRef = useRef<HTMLTableElement | null>(null);
+  const activeEditRef = useRef<{ td: HTMLElement; finish: () => void } | null>(null);
   const tableResizeObserverRef = useRef<ResizeObserver | null>(null);
   const [imageBlocks, setImageBlocks] = useState<ImageBlock[]>([]);
   const imgInputRef = useRef<HTMLInputElement>(null);
@@ -1105,6 +1106,11 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   };
 
   const startDirectEdit = useCallback((td: HTMLElement, th: HTMLElement, type: ColType) => {
+    // Finish any currently-active edit first (blur won't fire if e.preventDefault was used)
+    if (activeEditRef.current && activeEditRef.current.td !== td) {
+      activeEditRef.current.finish();
+      activeEditRef.current = null;
+    }
     if (td.dataset.editing === "1") return;
     td.dataset.editing = "1";
     const rawVal = td.dataset.cellVal || "";
@@ -1115,7 +1121,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     const sel = window.getSelection();
     const range = document.createRange();
     if (td.firstChild) {
-      range.setStart(td.firstChild, td.textContent?.length ?? 0);
+      range.setStart(td.firstChild, (td.textContent?.length ?? 0));
       range.collapse(true);
     } else {
       range.setStart(td, 0);
@@ -1124,6 +1130,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     sel?.removeAllRanges();
     sel?.addRange(range);
     const finish = () => {
+      if (activeEditRef.current?.td === td) activeEditRef.current = null;
+      td.removeEventListener("keydown", onKeyDown);
       const newVal = type === "progress"
         ? String(Math.min(100, Math.max(0, parseInt(td.textContent || "0") || 0)))
         : (td.textContent || "").trim();
@@ -1136,7 +1144,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     };
     const isNumeric = type === "number" || type === "currency";
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Enter" || e.key === "Escape") { e.preventDefault(); td.removeEventListener("keydown", onKeyDown); td.blur(); return; }
+      if (e.key === "Enter" || e.key === "Escape") { e.preventDefault(); finish(); return; }
       if (isNumeric) {
         const allowed = ["Backspace","Delete","ArrowLeft","ArrowRight","ArrowUp","ArrowDown","Tab","Home","End"];
         if (!allowed.includes(e.key) && !/^[-\d.]$/.test(e.key) && !e.ctrlKey && !e.metaKey) {
@@ -1144,6 +1152,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
         }
       }
     };
+    activeEditRef.current = { td, finish };
     td.addEventListener("blur", finish, { once: true });
     td.addEventListener("keydown", onKeyDown);
   }, [saveContent]);
