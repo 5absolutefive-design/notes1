@@ -2700,7 +2700,6 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                   </span>
                   <div>
                     <div className="text-xs font-semibold text-stone-700 group-hover:text-yellow-700">Sticky Note</div>
-                    <div className="text-[10px] text-stone-400">Yellow note card</div>
                   </div>
                 </button>
                 {/* Card */}
