@@ -225,6 +225,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const titleRef = useRef<HTMLDivElement>(null);
   const ctxMenuRef = useRef<HTMLDivElement>(null);
   const bannerPickerRef = useRef<HTMLDivElement>(null);
+  const calloutPickerRef = useRef<HTMLDivElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
   const bannerUploadRef = useRef<HTMLInputElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -449,6 +450,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   ctxMenuStateRef.current = ctxMenu;
   const showBannerPickerRef = useRef(showBannerPicker);
   showBannerPickerRef.current = showBannerPicker;
+  const calloutPickerPosRef = useRef(calloutPickerPos);
+  calloutPickerPosRef.current = calloutPickerPos;
   const showEmojiPickerRef = useRef(showEmojiPicker);
   showEmojiPickerRef.current = showEmojiPicker;
   const fontPanelOpenRef = useRef(fontPanelOpen);
@@ -465,6 +468,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
       if (fontPanelOpenRef.current && fontPanelRef.current && !fontPanelRef.current.contains(e.target as Node)
           && editorRef.current && !editorRef.current.contains(e.target as Node))
         setFontPanelOpen(false);
+      if (calloutPickerPosRef.current && calloutPickerRef.current && !calloutPickerRef.current.contains(e.target as Node))
+        setCalloutPickerPos(null);
     };
     document.addEventListener("mousedown", handler, true);
     return () => document.removeEventListener("mousedown", handler, true);
@@ -3054,6 +3059,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
       {/* Callout Block floating sub-picker */}
       {calloutPickerPos && (
         <div
+          ref={calloutPickerRef}
           className="fixed z-[20000] p-2.5 rounded-xl border border-stone-200 bg-white shadow-2xl grid grid-cols-2 gap-1.5"
           style={{ top: calloutPickerPos.top, left: calloutPickerPos.left, minWidth: 180 }}
           onMouseDown={e => e.stopPropagation()}
