@@ -1134,10 +1134,18 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
       td.innerHTML = makeCellInner(type, newVal, opts);
       saveContent();
     };
+    const isNumeric = type === "number" || type === "currency";
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Enter" || e.key === "Escape") { e.preventDefault(); td.removeEventListener("keydown", onKeyDown); td.blur(); return; }
+      if (isNumeric) {
+        const allowed = ["Backspace","Delete","ArrowLeft","ArrowRight","ArrowUp","ArrowDown","Tab","Home","End"];
+        if (!allowed.includes(e.key) && !/^[-\d.]$/.test(e.key) && !e.ctrlKey && !e.metaKey) {
+          e.preventDefault();
+        }
+      }
+    };
     td.addEventListener("blur", finish, { once: true });
-    td.addEventListener("keydown", (e: KeyboardEvent) => {
-      if (e.key === "Enter" || e.key === "Escape") { e.preventDefault(); td.blur(); }
-    }, { once: true });
+    td.addEventListener("keydown", onKeyDown);
   }, [saveContent]);
 
   const handleEditorClick = (e: React.MouseEvent) => {
