@@ -2109,7 +2109,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           <div className="flex items-center bg-[#faf9f7] rounded-lg shadow-2xl overflow-hidden border border-stone-200">
             {/* Copy */}
             <button
-              className="flex items-center gap-1.5 px-3 py-2 text-stone-700 text-xs font-medium hover:bg-stone-100 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-stone-700 text-xs font-medium hover:bg-stone-100 transition-colors"
               onMouseDown={e => { e.preventDefault(); e.stopPropagation(); }}
               onClick={() => {
                 const sel = window.getSelection();
@@ -2127,7 +2127,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
 
             {/* Cut */}
             <button
-              className="flex items-center gap-1.5 px-3 py-2 text-stone-700 text-xs font-medium hover:bg-stone-100 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-stone-700 text-xs font-medium hover:bg-stone-100 transition-colors"
               onMouseDown={e => { e.preventDefault(); e.stopPropagation(); }}
               onClick={() => {
                 document.execCommand("cut");
@@ -2142,7 +2142,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
 
             {/* Paste */}
             <button
-              className="flex items-center gap-1.5 px-3 py-2 text-stone-700 text-xs font-medium hover:bg-stone-100 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-stone-700 text-xs font-medium hover:bg-stone-100 transition-colors"
               onMouseDown={e => { e.preventDefault(); e.stopPropagation(); }}
               onClick={async () => {
                 setSelPopup(null);
@@ -2163,7 +2163,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
 
             {/* Tools */}
             <button
-              className="flex items-center gap-1.5 px-3 py-2 text-stone-700 text-xs font-medium hover:bg-stone-100 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-stone-700 text-xs font-medium hover:bg-stone-100 transition-colors"
               onMouseDown={e => { e.preventDefault(); e.stopPropagation(); }}
               onClick={() => {
                 const sel = window.getSelection();
