@@ -2695,8 +2695,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 {/* Sticky Note */}
                 <button onMouseDown={e => { e.preventDefault(); insertStickyNote(); }}
                   className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-yellow-50 text-left group transition-colors">
-                  <span className="w-7 h-7 rounded-md bg-yellow-100 flex items-center justify-center flex-shrink-0">
-                    <img src={pinIcon} alt="pin" className="w-4 h-4" style={{ filter: "invert(60%) sepia(80%) saturate(500%) hue-rotate(5deg) brightness(95%)" }} />
+                  <span className="w-7 h-7 flex items-center justify-center flex-shrink-0">
+                    <img src={pinIcon} alt="pin" className="w-7 h-7" style={{ filter: "invert(60%) sepia(80%) saturate(500%) hue-rotate(5deg) brightness(95%)" }} />
                   </span>
                   <div>
                     <div className="text-xs font-semibold text-stone-700 group-hover:text-yellow-700">Sticky Note</div>
