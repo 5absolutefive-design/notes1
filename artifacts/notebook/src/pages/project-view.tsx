@@ -1072,10 +1072,29 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     `style="position:absolute;top:5px;right:6px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.08);border:none;cursor:pointer;font-size:14px;color:#777;line-height:1;padding:0;display:inline-flex;align-items:center;justify-content:center;z-index:10;flex-shrink:0" ` +
     `title="Remove">&#215;</button>`;
 
-  // ── MouseDown on editor: intercept th clicks to show type picker
+  // ── MouseDown on editor: intercept th + typed td clicks ─────────
   const handleEditorMouseDown = (e: React.MouseEvent) => {
     if (drawTool) return;
     const target = e.target as HTMLElement;
+
+    // Typed td cells: prevent browser focus dance, start edit immediately
+    const td = target.closest("td") as HTMLElement | null;
+    if (td && editorRef.current?.contains(td) && !td.closest("[data-lined]")) {
+      const th = findTh(td);
+      if (th) {
+        const type = getColType(th);
+        if (["number", "currency", "url", "email", "phone", "person"].includes(type)) {
+          e.preventDefault();
+          setColTypePopup(null);
+          setSelectCellPopup(null);
+          setPriorityCellPopup(null);
+          setProgressCellPopup(null);
+          startDirectEdit(td, th, type as ColType);
+          return;
+        }
+      }
+    }
+
     const th = target.closest("th") as HTMLElement | null;
     if (th && editorRef.current?.contains(th) && !th.closest("[data-lined]")) {
       e.preventDefault();
@@ -1092,10 +1111,16 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     td.contentEditable = "true";
     td.textContent = rawVal;
     td.focus();
-    const range = document.createRange();
-    range.collapse(false);
-    range.selectNodeContents(td);
+    // Place cursor at end of content
     const sel = window.getSelection();
+    const range = document.createRange();
+    if (td.firstChild) {
+      range.setStart(td.firstChild, td.textContent?.length ?? 0);
+      range.collapse(true);
+    } else {
+      range.setStart(td, 0);
+      range.collapse(true);
+    }
     sel?.removeAllRanges();
     sel?.addRange(range);
     const finish = () => {
@@ -1173,14 +1198,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             return;
           }
 
-          if (["number", "currency", "url", "email", "phone", "person"].includes(type)) {
-            setColTypePopup(null);
-            setSelectCellPopup(null);
-            setPriorityCellPopup(null);
-            setProgressCellPopup(null);
-            startDirectEdit(td, th, type as ColType);
-            return;
-          }
+          // number/currency/url/email/phone/person handled in mousedown
+
           // date: native input handles itself
           return;
         }
