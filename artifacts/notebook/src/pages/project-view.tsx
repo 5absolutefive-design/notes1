@@ -2213,11 +2213,12 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             <button
               className="flex items-center gap-1.5 px-3 py-1.5 text-stone-700 text-xs font-medium hover:bg-stone-100 transition-colors"
               onMouseDown={e => { e.preventDefault(); e.stopPropagation(); }}
-              onClick={() => {
+              onClick={(e) => {
                 const sel = window.getSelection();
                 savedRangeRef.current = (sel && sel.rangeCount > 0) ? sel.getRangeAt(0).cloneRange() : null;
-                const px = selPopup.x;
-                const py = selPopup.y - 10;
+                const btnRect = e.currentTarget.getBoundingClientRect();
+                const px = btnRect.right + 6;
+                const py = btnRect.top;
                 setSelPopup(null);
                 setCtxMenu({ x: px, y: py, formatOpen: false, alignOpen: false, bulletOpen: false, highlightOpen: false, fontColorOpen: false, headingOpen: false, dividerOpen: false, linkOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1, drawOpen: false, tableOpen: false, fontOpen: false, blockOpen: false, mediaOpen: false });
               }}
