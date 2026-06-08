@@ -788,23 +788,30 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     setCtxMenu(null);
     const el = pdfContentRef.current;
     if (!el) return;
-    const html2canvas = (await import("html2canvas")).default;
+    const domtoimage = (await import("dom-to-image-more")).default;
     const { jsPDF } = await import("jspdf");
-    const canvas = await html2canvas(el, { scale: 2, useCORS: true, allowTaint: true, backgroundColor: "#ffffff" });
-    const imgData = canvas.toDataURL("image/png");
+    const scale = 2;
+    const dataUrl = await domtoimage.toPng(el, {
+      width: el.scrollWidth * scale,
+      height: el.scrollHeight * scale,
+      style: { transform: `scale(${scale})`, transformOrigin: "top left" },
+    });
     const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
     const pageWidth = pdf.internal.pageSize.getWidth();
     const pageHeight = pdf.internal.pageSize.getHeight();
+    const img = new Image();
+    img.src = dataUrl;
+    await new Promise(res => { img.onload = res; });
     const imgWidth = pageWidth;
-    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    const imgHeight = (img.height * imgWidth) / img.width;
     let heightLeft = imgHeight;
     let position = 0;
-    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+    pdf.addImage(dataUrl, "PNG", 0, position, imgWidth, imgHeight);
     heightLeft -= pageHeight;
     while (heightLeft > 0) {
       position = heightLeft - imgHeight;
       pdf.addPage();
-      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      pdf.addImage(dataUrl, "PNG", 0, position, imgWidth, imgHeight);
       heightLeft -= pageHeight;
     }
     const title = activeProject?.title || "document";
