@@ -820,6 +820,12 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     pdf.save(`${title}.pdf`);
   };
 
+  const getProjectExtras = (id: number) => ({
+    imgs: (() => { try { const r = localStorage.getItem(`nb_project_imgs_${id}`); return r ? JSON.parse(r) : []; } catch { return []; } })(),
+    arrows: (() => { try { const r = localStorage.getItem(`nb_project_arrows_${id}`); return r ? JSON.parse(r) : []; } catch { return []; } })(),
+    fs: localStorage.getItem(`nb_proj_fs_${id}`) ?? null,
+  });
+
   const downloadProject = () => {
     if (!activeProject) return;
     const allProjects = loadProjects();
@@ -827,11 +833,15 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
       const subs = allProjects.filter(p => p.parentId === parentId);
       return subs.flatMap(p => [p, ...collectSubs(p.id)]);
     };
+    const subProjects = collectSubs(activeProject.id);
+    const extras: Record<number, ReturnType<typeof getProjectExtras>> = {};
+    [activeProject, ...subProjects].forEach(p => { extras[p.id] = getProjectExtras(p.id); });
     const exportData = {
-      version: "1.0",
+      version: "1.1",
       exportedAt: new Date().toISOString(),
       project: activeProject,
-      subProjects: collectSubs(activeProject.id),
+      subProjects,
+      extras,
     };
     const blob = new Blob([JSON.stringify(exportData)], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -863,6 +873,15 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           parentId: idMap.get(p.parentId!) ?? (maxId + 1),
           createdAt: ts, updatedAt: ts,
         }));
+        // Restore extras (imgs, arrows, fs) with remapped IDs
+        const extras = data.extras ?? {};
+        idMap.forEach((newId, oldId) => {
+          const ex = extras[oldId];
+          if (!ex) return;
+          if (ex.imgs?.length) localStorage.setItem(`nb_project_imgs_${newId}`, JSON.stringify(ex.imgs));
+          if (ex.arrows?.length) localStorage.setItem(`nb_project_arrows_${newId}`, JSON.stringify(ex.arrows));
+          if (ex.fs) localStorage.setItem(`nb_proj_fs_${newId}`, ex.fs);
+        });
         const updated = [...allProjects, newRoot, ...newSubs];
         saveProjects(updated);
         setProjects(updated);
