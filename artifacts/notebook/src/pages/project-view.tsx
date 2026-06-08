@@ -1085,6 +1085,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
       if (th) {
         const type = getColType(th);
         if (["number", "currency", "url", "email", "phone", "person"].includes(type)) {
+          // If already editing this cell, let browser handle normally (allows text select/copy)
+          if (td.dataset.editing === "1") return;
           e.preventDefault();
           setColTypePopup(null);
           setSelectCellPopup(null);
