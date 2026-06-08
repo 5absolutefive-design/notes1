@@ -2714,7 +2714,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 <button onMouseDown={e => { e.preventDefault(); insertCardBlock(); }}
                   className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-stone-50 text-left group transition-colors">
                   <span className="w-7 h-7 flex items-center justify-center flex-shrink-0">
-                    <img src={cardIcon} alt="card" className="w-6 h-6" />
+                    <img src={cardIcon} alt="card" className="w-5 h-5" />
                   </span>
                   <div>
                     <div className="text-xs font-semibold text-stone-700 group-hover:text-stone-900">Card</div>
@@ -2734,7 +2734,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 <button onMouseDown={e => { e.preventDefault(); insertTwoColumnBlock(); }}
                   className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-slate-50 text-left group transition-colors">
                   <span className="w-7 h-7 flex items-center justify-center flex-shrink-0">
-                    <img src={columnIcon} alt="two column" className="w-6 h-6" />
+                    <img src={columnIcon} alt="two column" className="w-5 h-5" />
                   </span>
                   <div>
                     <div className="text-xs font-semibold text-stone-700">Two Column</div>
@@ -2744,7 +2744,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 <button onMouseDown={e => { e.preventDefault(); insertCodeBlock(); }}
                   className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-zinc-50 text-left group transition-colors">
                   <span className="w-7 h-7 flex items-center justify-center flex-shrink-0">
-                    <img src={codeIcon} alt="code block" className="w-6 h-6" />
+                    <img src={codeIcon} alt="code block" className="w-5 h-5" />
                   </span>
                   <div>
                     <div className="text-xs font-semibold text-stone-700">Code Block</div>
@@ -2754,7 +2754,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 <button onMouseDown={e => { e.preventDefault(); insertDefinitionBlock(); }}
                   className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-amber-50 text-left group transition-colors">
                   <span className="w-7 h-7 flex items-center justify-center flex-shrink-0">
-                    <img src={definitionIcon} alt="definition" className="w-6 h-6" />
+                    <img src={definitionIcon} alt="definition" className="w-5 h-5" />
                   </span>
                   <div>
                     <div className="text-xs font-semibold text-stone-700">Definition</div>
