@@ -61,7 +61,7 @@ function A4Page({
       {/* A4 paper */}
       <div
         className="bg-white shadow-xl"
-        style={{ minHeight: 1123, padding: "96px 8px 96px 8px" }}
+        style={{ minHeight: 1123, padding: "16px 16px 16px 16px" }}
       >
         <div
           ref={editorRef}
