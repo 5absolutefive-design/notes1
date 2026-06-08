@@ -1442,13 +1442,13 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
 
   const insertDefinitionBlock = () => {
     insertHTML(
-      `<div contenteditable="false" data-quote-block="1" style="position:relative;display:flex;gap:12px;background:#f1f0ef;border:1.5px solid #d6d3d1;border-radius:10px;padding:12px 36px 12px 14px;margin:8px 0;box-shadow:inset 0 2px 6px rgba(0,0,0,0.07),inset 0 1px 2px rgba(0,0,0,0.05)" onmouseenter="this.querySelectorAll('[data-remove-btn],[data-drag-btn]').forEach(b=>b.style.display='inline-flex')" onmouseleave="this.querySelectorAll('[data-remove-btn],[data-drag-btn]').forEach(b=>b.style.display='none')">` +
-      `<button data-remove-btn="1" contenteditable="false" style="position:absolute;top:5px;right:6px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.08);border:none;cursor:pointer;font-size:14px;color:#78716c;line-height:1;padding:0;display:none;align-items:center;justify-content:center;z-index:10;flex-shrink:0" title="Remove">&#215;</button>` +
-      `<button data-drag-btn="1" contenteditable="false" title="Drag to move" style="position:absolute;top:27px;right:6px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.06);border:none;cursor:grab;font-size:13px;color:#78716c;line-height:1;padding:0;display:none;align-items:center;justify-content:center;z-index:10;flex-shrink:0;user-select:none">&#9995;</button>` +
-      `<p contenteditable="true" data-placeholder="Term" style="margin:0;min-width:80px;width:80px;flex-shrink:0;font-weight:700;color:#292524;font-size:13px;outline:none;font-family:Inter,sans-serif"></p>` +
-      `<div style="width:1.5px;background:#c7c3c0;flex-shrink:0;border-radius:2px"></div>` +
-      `<p contenteditable="true" data-placeholder="Definition or description…" style="margin:0;flex:1;color:#57534e;font-size:13px;outline:none;font-family:Inter,sans-serif"></p>` +
-      `</div><br/>`
+      `<div contenteditable="false" data-quote-block="1" data-sticky-note="1" style="position:relative;display:inline-block;vertical-align:top;margin:14px 0 8px;">` +
+      `<div style="position:relative;width:440px;min-width:120px;background:#f8f7f6;border:1.5px solid #e5e3e1;border-radius:12px;padding:14px 36px 14px 16px;overflow:auto;min-height:60px;resize:horizontal" onmouseenter="this.querySelectorAll('[data-remove-btn],[data-drag-btn]').forEach(b=>b.style.display='inline-flex')" onmouseleave="this.querySelectorAll('[data-remove-btn],[data-drag-btn]').forEach(b=>b.style.display='none')">` +
+      `<button data-remove-btn="1" contenteditable="false" style="position:absolute;top:5px;right:6px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.07);border:none;cursor:pointer;font-size:14px;color:#a8a29e;line-height:1;padding:0;display:none;align-items:center;justify-content:center;z-index:10;flex-shrink:0" title="Remove">&#215;</button>` +
+      `<button data-drag-btn="1" contenteditable="false" title="Drag to move" style="position:absolute;top:27px;right:6px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.05);border:none;cursor:grab;font-size:13px;color:#a8a29e;line-height:1;padding:0;display:none;align-items:center;justify-content:center;z-index:10;flex-shrink:0;user-select:none">&#9995;</button>` +
+      `<p contenteditable="true" data-placeholder="Write something…" style="margin:0;color:#57534e;font-size:13px;outline:none;font-family:Inter,sans-serif;min-height:40px"></p>` +
+      `<div style="position:absolute;bottom:3px;right:3px;width:10px;height:10px;cursor:se-resize;opacity:0.25;background:linear-gradient(135deg,transparent 40%,#a8a29e 40%,#a8a29e 55%,transparent 55%,transparent 70%,#a8a29e 70%,#a8a29e 85%,transparent 85%)"></div>` +
+      `</div></div><br/>`
     );
     setCtxMenu(null);
   };
