@@ -160,7 +160,7 @@ export function makeCellInner(type: ColType, val: string, options?: SelectOption
 
     case "progress": {
       const pct = Math.min(100, Math.max(0, parseInt(val) || 0));
-      return `<span data-progresscell="1" style="display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;width:100%"><span style="flex:1;height:7px;border-radius:4px;background:#f3f4f6;overflow:hidden"><span style="display:block;height:100%;width:${pct}%;background:${pct === 100 ? "#22c55e" : "#3b82f6"};border-radius:4px"></span></span><span style="font-size:11px;color:#6b7280;min-width:28px;text-align:right">${pct}%</span></span>`;
+      return `<span data-progresscell="1" style="display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;width:100%"><span style="flex:1;height:7px;border-radius:4px;background:#f3f4f6;overflow:hidden"><span style="display:block;height:100%;width:${pct}%;background:${pct >= 50 ? "#22c55e" : "#f97316"};border-radius:4px"></span></span><span style="font-size:11px;color:#6b7280;min-width:28px;text-align:right">${pct}%</span></span>`;
     }
 
     case "select": {
