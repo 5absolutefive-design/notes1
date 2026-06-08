@@ -13,7 +13,7 @@ import {
   CheckSquare, Minus, Heading1, Heading2, Heading3,
   AlignLeft, AlignCenter, AlignRight, List, ListOrdered,
   ChevronRight, Link, Mic, PenLine, Eraser, Table, Video,
-  Copy, Scissors, Clipboard, Wrench, FileDown,
+  Copy, Scissors, Clipboard, Wrench, FileDown, FileUp, ArrowLeftRight,
 } from "lucide-react";
 import {
   ColTypePicker, SelectCellPopup, PriorityCellPopup, ProgressCellPopup,
@@ -230,6 +230,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const pdfContentRef = useRef<HTMLDivElement>(null);
+  const transferUploadRef = useRef<HTMLInputElement>(null);
+  const [showTransferCard, setShowTransferCard] = useState(false);
   const [lastTodoPos, setLastTodoPos] = useState<{ top: number; left: number } | null>(null);
   const [showTodoButtons, setShowTodoButtons] = useState(false);
   const [tableToolbar, setTableToolbar] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
@@ -816,6 +818,58 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     }
     const title = activeProject?.title || "document";
     pdf.save(`${title}.pdf`);
+  };
+
+  const downloadProject = () => {
+    if (!activeProject) return;
+    const allProjects = loadProjects();
+    const collectSubs = (parentId: number): ProjectDoc[] => {
+      const subs = allProjects.filter(p => p.parentId === parentId);
+      return subs.flatMap(p => [p, ...collectSubs(p.id)]);
+    };
+    const exportData = {
+      version: "1.0",
+      exportedAt: new Date().toISOString(),
+      project: activeProject,
+      subProjects: collectSubs(activeProject.id),
+    };
+    const blob = new Blob([JSON.stringify(exportData)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${activeProject.title || "project"}.nbproject`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setShowTransferCard(false);
+  };
+
+  const uploadProject = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const data = JSON.parse(e.target?.result as string);
+        if (!data.project || !data.version) throw new Error("Invalid file");
+        const allProjects = loadProjects();
+        const maxId = allProjects.reduce((m, p) => Math.max(m, p.id), 0);
+        const idMap = new Map<number, number>();
+        idMap.set(data.project.id, maxId + 1);
+        (data.subProjects || []).forEach((p: ProjectDoc, i: number) => {
+          idMap.set(p.id, maxId + 2 + i);
+        });
+        const ts = new Date().toISOString();
+        const newRoot: ProjectDoc = { ...data.project, id: maxId + 1, parentId: undefined, createdAt: ts, updatedAt: ts };
+        const newSubs: ProjectDoc[] = (data.subProjects || []).map((p: ProjectDoc, i: number) => ({
+          ...p, id: maxId + 2 + i,
+          parentId: idMap.get(p.parentId!) ?? (maxId + 1),
+          createdAt: ts, updatedAt: ts,
+        }));
+        const updated = [...allProjects, newRoot, ...newSubs];
+        saveProjects(updated);
+        setProjects(updated);
+        setShowTransferCard(false);
+      } catch { alert("Invalid .nbproject file. Please upload a valid project file."); }
+    };
+    reader.readAsText(file);
   };
 
   const execAllCaps = () => {
@@ -1968,8 +2022,17 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             />
           </div>
 
-          {/* Divider below title */}
-          <div className="mx-12 mt-3 mb-6 border-t border-stone-200" />
+          {/* Divider below title + Project Transfer button */}
+          <div className="mx-12 mt-3 mb-6 flex items-center gap-3">
+            <div className="flex-1 border-t border-stone-200" />
+            <button
+              onClick={() => setShowTransferCard(v => !v)}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-stone-200 bg-white hover:bg-indigo-50 hover:border-indigo-300 text-stone-500 hover:text-indigo-600 text-[11px] font-semibold transition-all shadow-sm"
+            >
+              <ArrowLeftRight className="w-3 h-3" />
+              Project Transfer
+            </button>
+          </div>
 
           {/* Content editor */}
           <div
@@ -2005,6 +2068,10 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
 
           {/* Hidden voice file input */}
           <input ref={voiceInputRef} type="file" accept="audio/*" className="hidden" onChange={handleVoiceFile} />
+
+          {/* Hidden transfer upload input */}
+          <input ref={transferUploadRef} type="file" accept=".nbproject,application/json" className="hidden"
+            onChange={e => { const f = e.target.files?.[0]; if (f) uploadProject(f); e.target.value = ""; }} />
 
           {/* SVG shape overlay */}
           {(arrows.length > 0 || drawingArrow) && (
@@ -2807,6 +2874,60 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             onClick={downloadPdf}
           />
         </div>
+      )}
+
+      {/* ── Project Transfer Card ── */}
+      {showTransferCard && activeProject && (
+        <>
+          <div className="fixed inset-0 z-[9990]" onClick={() => setShowTransferCard(false)} />
+          <div className="fixed z-[9991] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl border border-stone-200 w-[300px] overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between px-4 py-3 border-b border-stone-100">
+              <div className="flex items-center gap-2">
+                <div className="w-7 h-7 rounded-lg bg-indigo-100 flex items-center justify-center">
+                  <ArrowLeftRight className="w-3.5 h-3.5 text-indigo-600" />
+                </div>
+                <span className="text-sm font-bold text-stone-800">Project Transfer</span>
+              </div>
+              <button onClick={() => setShowTransferCard(false)} className="w-6 h-6 flex items-center justify-center rounded-md hover:bg-stone-100 text-stone-400 hover:text-stone-600 transition-colors">
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+            {/* Body */}
+            <div className="p-3 flex flex-col gap-2">
+              {/* Download */}
+              <button
+                onClick={downloadProject}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 hover:border-indigo-200 transition-all group text-left"
+              >
+                <div className="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+                  <FileDown className="w-4.5 h-4.5 text-white" />
+                </div>
+                <div>
+                  <div className="text-sm font-bold text-indigo-700">Download Project</div>
+                  <div className="text-[11px] text-indigo-400 mt-0.5">Save as <span className="font-mono">.nbproject</span> file</div>
+                </div>
+              </button>
+              {/* Upload */}
+              <button
+                onClick={() => transferUploadRef.current?.click()}
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 hover:border-emerald-200 transition-all group text-left"
+              >
+                <div className="w-9 h-9 rounded-lg bg-emerald-600 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+                  <FileUp className="w-4.5 h-4.5 text-white" />
+                </div>
+                <div>
+                  <div className="text-sm font-bold text-emerald-700">Upload Project</div>
+                  <div className="text-[11px] text-emerald-400 mt-0.5">Restore from <span className="font-mono">.nbproject</span> file</div>
+                </div>
+              </button>
+            </div>
+            {/* Footer note */}
+            <div className="px-4 pb-3 text-[10px] text-stone-400 text-center">
+              All content, images & audio are preserved in the file
+            </div>
+          </div>
+        </>
       )}
 
       {/* ── Independent floating font panel ── */}
