@@ -88,6 +88,19 @@ const HIGHLIGHT_COLORS = [
   { label: "Purple",  color: "#e9d5ff" },
 ];
 
+const FONT_COLORS = [
+  { label: "Black",   color: "#000000" },
+  { label: "Gray",    color: "#6b7280" },
+  { label: "Red",     color: "#ef4444" },
+  { label: "Orange",  color: "#f97316" },
+  { label: "Yellow",  color: "#eab308" },
+  { label: "Green",   color: "#22c55e" },
+  { label: "Blue",    color: "#3b82f6" },
+  { label: "Indigo",  color: "#6366f1" },
+  { label: "Purple",  color: "#a855f7" },
+  { label: "Pink",    color: "#ec4899" },
+];
+
 const FONTS_CTX = [
   "Inter", "Arial", "Arial Black", "Georgia", "Times New Roman",
   "Verdana", "Trebuchet MS", "Courier New", "Comic Sans MS",
@@ -102,6 +115,7 @@ interface ContextMenuState {
   alignOpen: boolean;
   bulletOpen: boolean;
   highlightOpen: boolean;
+  fontColorOpen: boolean;
   headingOpen: boolean;
   dividerOpen: boolean;
   linkOpen: boolean;
@@ -681,7 +695,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     e.preventDefault();
     const sel = window.getSelection();
     savedRangeRef.current = (sel && sel.rangeCount > 0) ? sel.getRangeAt(0).cloneRange() : null;
-    setCtxMenu({ x: e.clientX, y: e.clientY, formatOpen: false, alignOpen: false, bulletOpen: false, highlightOpen: false, headingOpen: false, dividerOpen: false, linkOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1, drawOpen: false, tableOpen: false, fontOpen: false, blockOpen: false, mediaOpen: false });
+    setCtxMenu({ x: e.clientX, y: e.clientY, formatOpen: false, alignOpen: false, bulletOpen: false, highlightOpen: false, fontColorOpen: false, headingOpen: false, dividerOpen: false, linkOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1, drawOpen: false, tableOpen: false, fontOpen: false, blockOpen: false, mediaOpen: false });
     if (savedRangeRef.current) {
       setTimeout(() => restoreSelection(), 0);
     }
@@ -2196,7 +2210,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 const px = selPopup.x;
                 const py = selPopup.y - 10;
                 setSelPopup(null);
-                setCtxMenu({ x: px, y: py, formatOpen: false, alignOpen: false, bulletOpen: false, highlightOpen: false, headingOpen: false, dividerOpen: false, linkOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1, drawOpen: false, tableOpen: false, fontOpen: false, blockOpen: false, mediaOpen: false });
+                setCtxMenu({ x: px, y: py, formatOpen: false, alignOpen: false, bulletOpen: false, highlightOpen: false, fontColorOpen: false, headingOpen: false, dividerOpen: false, linkOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1, drawOpen: false, tableOpen: false, fontOpen: false, blockOpen: false, mediaOpen: false });
               }}
             >
               <Wrench className="w-3.5 h-3.5 text-stone-500" />
@@ -2225,17 +2239,37 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           {/* Format button → side sub-card */}
           <div className="relative">
             <CtxItem icon={<Bold className="w-3.5 h-3.5"/>} label="Format" hasArrow
-              onClick={() => setCtxMenu(m => m ? { ...m, formatOpen: !m.formatOpen, alignOpen: false, bulletOpen: false, dividerOpen: false, linkOpen: false, drawOpen: false, highlightOpen: false, headingOpen: false } : null)} />
+              onClick={() => setCtxMenu(m => m ? { ...m, formatOpen: !m.formatOpen, alignOpen: false, bulletOpen: false, dividerOpen: false, linkOpen: false, drawOpen: false, highlightOpen: false, fontColorOpen: false, headingOpen: false } : null)} />
             {ctxMenu.formatOpen && (
               <div className="absolute left-full top-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 py-1.5 z-[10000] min-w-[180px]">
                 <CtxItem icon={<Bold className="w-3.5 h-3.5"/>}          label="Bold"          shortcut="Ctrl+B" onClick={() => execFmt("bold")} />
                 <CtxItem icon={<Italic className="w-3.5 h-3.5"/>}        label="Italic"        shortcut="Ctrl+I" onClick={() => execFmt("italic")} />
                 <CtxItem icon={<Underline className="w-3.5 h-3.5"/>}     label="Underline"     shortcut="Ctrl+U" onClick={() => execFmt("underline")} />
                 <CtxItem icon={<Strikethrough className="w-3.5 h-3.5"/>} label="Strikethrough" onClick={() => execFmt("strikeThrough")} />
+                {/* Font Colour */}
+                <div className="relative">
+                  <CtxItem icon={<span className="w-3.5 h-3.5 flex items-center justify-center text-[11px] font-bold" style={{ color: "#ef4444" }}>A</span>} label="Font Colour" hasArrow
+                    onClick={() => setCtxMenu(m => m ? { ...m, fontColorOpen: !m.fontColorOpen, highlightOpen: false, headingOpen: false } : null)} />
+                  {ctxMenu.fontColorOpen && (
+                    <div className="absolute left-full top-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 p-2.5 z-[10001]" style={{ minWidth: 140 }}>
+                      <div className="flex flex-wrap gap-1.5">
+                        {FONT_COLORS.map(fc => (
+                          <button key={fc.color} title={fc.label} onClick={() => execFmt("foreColor", fc.color)}
+                            className="w-6 h-6 rounded-full border-2 border-white shadow hover:scale-110 transition-transform"
+                            style={{ backgroundColor: fc.color }} />
+                        ))}
+                        <button title="Remove colour" onClick={() => execFmt("removeFormat")}
+                          className="w-6 h-6 rounded-full border-2 border-stone-300 flex items-center justify-center hover:scale-110 transition-transform">
+                          <X className="w-3 h-3 text-stone-400" />
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
                 {/* Highlight */}
                 <div className="relative">
                   <CtxItem icon={<Highlighter className="w-3.5 h-3.5"/>} label="Highlight" hasArrow
-                    onClick={() => setCtxMenu(m => m ? { ...m, highlightOpen: !m.highlightOpen, headingOpen: false } : null)} />
+                    onClick={() => setCtxMenu(m => m ? { ...m, highlightOpen: !m.highlightOpen, fontColorOpen: false, headingOpen: false } : null)} />
                   {ctxMenu.highlightOpen && (
                     <div className="absolute left-full top-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 p-2.5 flex gap-1.5 z-[10001]">
                       {HIGHLIGHT_COLORS.map(hc => (
@@ -2253,7 +2287,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 {/* Heading */}
                 <div className="relative">
                   <CtxItem icon={<Heading1 className="w-3.5 h-3.5"/>} label="Heading" hasArrow
-                    onClick={() => setCtxMenu(m => m ? { ...m, headingOpen: !m.headingOpen, highlightOpen: false } : null)} />
+                    onClick={() => setCtxMenu(m => m ? { ...m, headingOpen: !m.headingOpen, highlightOpen: false, fontColorOpen: false } : null)} />
                   {ctxMenu.headingOpen && (
                     <div className="absolute left-full top-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 py-1.5 z-[10001] min-w-[130px]">
                       <CtxItem icon={<Heading1 className="w-3.5 h-3.5"/>} label="Heading 1" onClick={() => execFmt("formatBlock", "h1")} />
