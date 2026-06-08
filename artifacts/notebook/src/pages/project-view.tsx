@@ -1541,6 +1541,16 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
       if (e.key === "b") { e.preventDefault(); execFmt("bold"); }
       else if (e.key === "i") { e.preventDefault(); execFmt("italic"); }
       else if (e.key === "u") { e.preventDefault(); execFmt("underline"); }
+      else if (e.key === "a") {
+        e.preventDefault();
+        const editor = editorRef.current;
+        if (!editor) return;
+        const range = document.createRange();
+        range.selectNodeContents(editor);
+        const sel = window.getSelection();
+        sel?.removeAllRanges();
+        sel?.addRange(range);
+      }
     }
   };
 
