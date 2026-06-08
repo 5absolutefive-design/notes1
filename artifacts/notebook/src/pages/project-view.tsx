@@ -2676,12 +2676,12 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 <div className="text-[10px] font-bold text-stone-400 uppercase tracking-widest px-2 pb-1.5">Choose Block Type</div>
                 {/* Quote Block */}
                 <button onMouseDown={e => { e.preventDefault(); insertBorderBlock(); }}
-                  className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-indigo-50 text-left group transition-colors">
+                  className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg hover:bg-indigo-50 text-left group transition-colors">
                   <span className="w-7 h-7 flex items-center justify-center flex-shrink-0">
                     <img src={quoteIcon} alt="quote block" className="w-6 h-6" />
                   </span>
                   <div>
-                    <div className="text-xs font-semibold text-stone-700 group-hover:text-indigo-700">Quote Block</div>
+                    <div className="text-[11px] font-semibold text-stone-700 group-hover:text-indigo-700">Quote Block</div>
                   </div>
                 </button>
                 {/* Callout Block */}
@@ -2691,73 +2691,73 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                     const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
                     setCalloutPickerPos({ top: rect.top, left: rect.right + 8 });
                   }}
-                  className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-blue-50 text-left group transition-colors">
+                  className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg hover:bg-blue-50 text-left group transition-colors">
                   <span className="w-7 h-7 flex items-center justify-center flex-shrink-0">
                     <img src={bulbIcon} alt="callout" className="w-6 h-6" />
                   </span>
                   <div className="flex-1">
-                    <div className="text-xs font-semibold text-stone-700 group-hover:text-blue-700">Callout Block</div>
+                    <div className="text-[11px] font-semibold text-stone-700 group-hover:text-blue-700">Callout Block</div>
                   </div>
                   <span className="text-stone-400 text-[10px]">▶</span>
                 </button>
                 {/* Sticky Note */}
                 <button onMouseDown={e => { e.preventDefault(); insertStickyNote(); }}
-                  className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-yellow-50 text-left group transition-colors">
+                  className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg hover:bg-yellow-50 text-left group transition-colors">
                   <span className="w-7 h-7 flex items-center justify-center flex-shrink-0">
                     <img src={pinIcon} alt="pin" className="w-7 h-7" />
                   </span>
                   <div>
-                    <div className="text-xs font-semibold text-stone-700 group-hover:text-yellow-700">Sticky Note</div>
+                    <div className="text-[11px] font-semibold text-stone-700 group-hover:text-yellow-700">Sticky Note</div>
                   </div>
                 </button>
                 {/* Card */}
                 <button onMouseDown={e => { e.preventDefault(); insertCardBlock(); }}
-                  className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-stone-50 text-left group transition-colors">
+                  className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg hover:bg-stone-50 text-left group transition-colors">
                   <span className="w-7 h-7 flex items-center justify-center flex-shrink-0">
                     <img src={cardIcon} alt="card" className="w-5 h-5" />
                   </span>
                   <div>
-                    <div className="text-xs font-semibold text-stone-700 group-hover:text-stone-900">Card</div>
+                    <div className="text-[11px] font-semibold text-stone-700 group-hover:text-stone-900">Card</div>
                   </div>
                 </button>
                 {/* Numbered List */}
                 <button onMouseDown={e => { e.preventDefault(); insertNumberedListBlock(); }}
-                  className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-stone-50 text-left group transition-colors">
+                  className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg hover:bg-stone-50 text-left group transition-colors">
                   <span className="w-7 h-7 flex items-center justify-center flex-shrink-0">
                     <img src={numberIcon} alt="numbered list" className="w-7 h-7" />
                   </span>
                   <div>
-                    <div className="text-xs font-semibold text-stone-700">Numbered List</div>
+                    <div className="text-[11px] font-semibold text-stone-700">Numbered List</div>
                   </div>
                 </button>
                 {/* Two Column */}
                 <button onMouseDown={e => { e.preventDefault(); insertTwoColumnBlock(); }}
-                  className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-slate-50 text-left group transition-colors">
+                  className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg hover:bg-slate-50 text-left group transition-colors">
                   <span className="w-7 h-7 flex items-center justify-center flex-shrink-0">
                     <img src={columnIcon} alt="two column" className="w-5 h-5" />
                   </span>
                   <div>
-                    <div className="text-xs font-semibold text-stone-700">Two Column</div>
+                    <div className="text-[11px] font-semibold text-stone-700">Two Column</div>
                   </div>
                 </button>
                 {/* Code Block */}
                 <button onMouseDown={e => { e.preventDefault(); insertCodeBlock(); }}
-                  className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-zinc-50 text-left group transition-colors">
+                  className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg hover:bg-zinc-50 text-left group transition-colors">
                   <span className="w-7 h-7 flex items-center justify-center flex-shrink-0">
                     <img src={codeIcon} alt="code block" className="w-5 h-5" />
                   </span>
                   <div>
-                    <div className="text-xs font-semibold text-stone-700">Code Block</div>
+                    <div className="text-[11px] font-semibold text-stone-700">Code Block</div>
                   </div>
                 </button>
                 {/* Definition Block */}
                 <button onMouseDown={e => { e.preventDefault(); insertDefinitionBlock(); }}
-                  className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-amber-50 text-left group transition-colors">
+                  className="w-full flex items-center gap-2.5 px-2 py-1 rounded-lg hover:bg-amber-50 text-left group transition-colors">
                   <span className="w-7 h-7 flex items-center justify-center flex-shrink-0">
                     <img src={definitionIcon} alt="definition" className="w-5 h-5" />
                   </span>
                   <div>
-                    <div className="text-xs font-semibold text-stone-700">Definition</div>
+                    <div className="text-[11px] font-semibold text-stone-700">Definition</div>
                   </div>
                 </button>
               </div>
