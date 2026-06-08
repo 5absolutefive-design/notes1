@@ -4,7 +4,7 @@ import {
   Bold, Italic, Underline, Strikethrough, Highlighter,
   CheckSquare, Minus, Heading1, Heading2, Heading3,
   AlignLeft, AlignCenter, AlignRight, List, ListOrdered,
-  ChevronRight, Link, Mic, PenLine, Eraser, Table,
+  ChevronRight, Link, Mic, PenLine, Eraser, Table, Video,
 } from "lucide-react";
 import {
   ColTypePicker, SelectCellPopup, PriorityCellPopup, ProgressCellPopup,
@@ -111,6 +111,7 @@ interface ContextMenuState {
   tableOpen: boolean;
   fontOpen: boolean;
   blockOpen: boolean;
+  mediaOpen: boolean;
 }
 
 interface ImageBlock {
@@ -655,7 +656,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     e.preventDefault();
     const sel = window.getSelection();
     savedRangeRef.current = (sel && sel.rangeCount > 0) ? sel.getRangeAt(0).cloneRange() : null;
-    setCtxMenu({ x: e.clientX, y: e.clientY, formatOpen: false, alignOpen: false, bulletOpen: false, highlightOpen: false, headingOpen: false, dividerOpen: false, linkOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1, drawOpen: false, tableOpen: false, fontOpen: false, blockOpen: false });
+    setCtxMenu({ x: e.clientX, y: e.clientY, formatOpen: false, alignOpen: false, bulletOpen: false, highlightOpen: false, headingOpen: false, dividerOpen: false, linkOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1, drawOpen: false, tableOpen: false, fontOpen: false, blockOpen: false, mediaOpen: false });
   };
 
   // ── Clamp font sub-card inside viewport using fixed positioning
@@ -2291,8 +2292,45 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
               </div>
             )}
           </div>
-          <CtxItem icon={<ImagePlus className="w-3.5 h-3.5"/>} label="Image" onClick={() => { setCtxMenu(null); imgInputRef.current?.click(); }} />
-          <CtxItem icon={<Mic className="w-3.5 h-3.5"/>} label="Voice" onClick={() => { setCtxMenu(null); voiceInputRef.current?.click(); }} />
+          {/* Media → sub-card */}
+          <div className="relative">
+            <CtxItem icon={<ImagePlus className="w-3.5 h-3.5"/>} label="Media" hasArrow
+              onClick={() => setCtxMenu(m => m ? { ...m, mediaOpen: !m.mediaOpen, formatOpen: false, alignOpen: false, bulletOpen: false, dividerOpen: false, linkOpen: false, drawOpen: false, tableOpen: false, blockOpen: false } : null)} />
+            {ctxMenu.mediaOpen && (
+              <div className="absolute left-full bottom-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 py-2 px-2 z-[10000] min-w-[170px]">
+                <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide px-1 mb-1.5">Choose Media Type</p>
+                <button onClick={() => { setCtxMenu(null); imgInputRef.current?.click(); }}
+                  className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-indigo-50 text-stone-700 text-left transition-colors">
+                  <span className="w-6 h-6 rounded-md bg-indigo-100 flex items-center justify-center flex-shrink-0">
+                    <ImagePlus className="w-3.5 h-3.5 text-indigo-600" />
+                  </span>
+                  <div>
+                    <div className="text-xs font-semibold text-stone-700">Image</div>
+                    <div className="text-[10px] text-stone-400">Upload a photo</div>
+                  </div>
+                </button>
+                <button onClick={() => { setCtxMenu(null); voiceInputRef.current?.click(); }}
+                  className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-rose-50 text-stone-700 text-left transition-colors">
+                  <span className="w-6 h-6 rounded-md bg-rose-100 flex items-center justify-center flex-shrink-0">
+                    <Mic className="w-3.5 h-3.5 text-rose-500" />
+                  </span>
+                  <div>
+                    <div className="text-xs font-semibold text-stone-700">Voice</div>
+                    <div className="text-[10px] text-stone-400">Record audio</div>
+                  </div>
+                </button>
+                <div className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg text-left opacity-50 cursor-not-allowed select-none">
+                  <span className="w-6 h-6 rounded-md bg-violet-100 flex items-center justify-center flex-shrink-0">
+                    <Video className="w-3.5 h-3.5 text-violet-500" />
+                  </span>
+                  <div>
+                    <div className="text-xs font-semibold text-stone-700">Video</div>
+                    <div className="text-[10px] text-stone-400">Coming soon</div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
           {/* Draw → sub-card */}
           <div className="relative">
             <CtxItem
