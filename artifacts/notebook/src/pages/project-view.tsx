@@ -201,7 +201,7 @@ interface ProjectViewProps {
 
 // ── Main component ───────────────────────────────────────────────
 export default function ProjectView({ projects, setProjects, activeId, setActiveId, onNewProject, focusTitleSignal }: ProjectViewProps) {
-  const [showCalloutPicker, setShowCalloutPicker] = useState(false);
+  const [calloutPickerPos, setCalloutPickerPos] = useState<{ top: number; left: number } | null>(null);
   const [showBannerPicker, setShowBannerPicker] = useState(false);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [ctxMenu, setCtxMenu] = useState<ContextMenuState | null>(null);
@@ -2683,42 +2683,21 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                   </div>
                 </button>
                 {/* Callout Block */}
-                <div className="relative w-full">
-                  <button onMouseDown={e => { e.preventDefault(); setShowCalloutPicker(v => !v); }}
-                    className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-blue-50 text-left group transition-colors">
-                    <span className="w-7 h-7 flex items-center justify-center flex-shrink-0">
-                      <img src={bulbIcon} alt="callout" className="w-6 h-6" />
-                    </span>
-                    <div className="flex-1">
-                      <div className="text-xs font-semibold text-stone-700 group-hover:text-blue-700">Callout Block</div>
-                    </div>
-                    <span className={`text-stone-400 text-[10px] transition-transform ${showCalloutPicker ? "rotate-180" : ""}`}>▼</span>
-                  </button>
-                  {showCalloutPicker && (
-                    <div className="mx-2 mb-1 p-2 rounded-xl border border-stone-200 bg-white shadow-md grid grid-cols-2 gap-1.5">
-                      <button onMouseDown={e => { e.preventDefault(); e.stopPropagation(); insertCalloutBlock("info"); setShowCalloutPicker(false); }}
-                        className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors">
-                        <span className="text-sm">ℹ️</span>
-                        <span className="text-[11px] font-semibold text-blue-700">Info</span>
-                      </button>
-                      <button onMouseDown={e => { e.preventDefault(); e.stopPropagation(); insertCalloutBlock("warning"); setShowCalloutPicker(false); }}
-                        className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg bg-yellow-50 hover:bg-yellow-100 border border-yellow-200 transition-colors">
-                        <span className="text-sm">⚠️</span>
-                        <span className="text-[11px] font-semibold text-yellow-700">Warning</span>
-                      </button>
-                      <button onMouseDown={e => { e.preventDefault(); e.stopPropagation(); insertCalloutBlock("success"); setShowCalloutPicker(false); }}
-                        className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg bg-green-50 hover:bg-green-100 border border-green-200 transition-colors">
-                        <span className="text-sm">✅</span>
-                        <span className="text-[11px] font-semibold text-green-700">Success</span>
-                      </button>
-                      <button onMouseDown={e => { e.preventDefault(); e.stopPropagation(); insertCalloutBlock("error"); setShowCalloutPicker(false); }}
-                        className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg bg-red-50 hover:bg-red-100 border border-red-200 transition-colors">
-                        <span className="text-sm">❌</span>
-                        <span className="text-[11px] font-semibold text-red-600">Error</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
+                <button onMouseDown={e => {
+                    e.preventDefault();
+                    if (calloutPickerPos) { setCalloutPickerPos(null); return; }
+                    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                    setCalloutPickerPos({ top: rect.top, left: rect.right + 8 });
+                  }}
+                  className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-blue-50 text-left group transition-colors">
+                  <span className="w-7 h-7 flex items-center justify-center flex-shrink-0">
+                    <img src={bulbIcon} alt="callout" className="w-6 h-6" />
+                  </span>
+                  <div className="flex-1">
+                    <div className="text-xs font-semibold text-stone-700 group-hover:text-blue-700">Callout Block</div>
+                  </div>
+                  <span className="text-stone-400 text-[10px]">▶</span>
+                </button>
                 {/* Sticky Note */}
                 <button onMouseDown={e => { e.preventDefault(); insertStickyNote(); }}
                   className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-yellow-50 text-left group transition-colors">
@@ -2895,6 +2874,37 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
         }
         .mode-glow { animation: mode-glow-pulse 1.4s ease-in-out infinite; }
       `}</style>
+
+      {/* Callout Block floating sub-picker */}
+      {calloutPickerPos && (
+        <div
+          className="fixed z-[20000] p-2.5 rounded-xl border border-stone-200 bg-white shadow-2xl grid grid-cols-2 gap-1.5"
+          style={{ top: calloutPickerPos.top, left: calloutPickerPos.left, minWidth: 180 }}
+          onMouseDown={e => e.stopPropagation()}
+        >
+          <div className="col-span-2 text-[10px] font-bold text-stone-400 uppercase tracking-widest px-1 pb-1">Choose Type</div>
+          <button onMouseDown={e => { e.preventDefault(); insertCalloutBlock("info"); setCalloutPickerPos(null); }}
+            className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors">
+            <span className="text-sm">ℹ️</span>
+            <span className="text-[11px] font-semibold text-blue-700">Info</span>
+          </button>
+          <button onMouseDown={e => { e.preventDefault(); insertCalloutBlock("warning"); setCalloutPickerPos(null); }}
+            className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg bg-yellow-50 hover:bg-yellow-100 border border-yellow-200 transition-colors">
+            <span className="text-sm">⚠️</span>
+            <span className="text-[11px] font-semibold text-yellow-700">Warning</span>
+          </button>
+          <button onMouseDown={e => { e.preventDefault(); insertCalloutBlock("success"); setCalloutPickerPos(null); }}
+            className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg bg-green-50 hover:bg-green-100 border border-green-200 transition-colors">
+            <span className="text-sm">✅</span>
+            <span className="text-[11px] font-semibold text-green-700">Success</span>
+          </button>
+          <button onMouseDown={e => { e.preventDefault(); insertCalloutBlock("error"); setCalloutPickerPos(null); }}
+            className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg bg-red-50 hover:bg-red-100 border border-red-200 transition-colors">
+            <span className="text-sm">❌</span>
+            <span className="text-[11px] font-semibold text-red-600">Error</span>
+          </button>
+        </div>
+      )}
     </div>
   );
 }
