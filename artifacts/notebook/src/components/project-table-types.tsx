@@ -35,7 +35,6 @@ export const DEFAULT_STATUS_OPTIONS: SelectOption[] = [
 ];
 
 export const STATUS_OPTIONS = [
-  { label: "Not Started", hex: "#6B7280", bg: "#F3F4F6", border: "#D1D5DB" },
   { label: "Planned",     hex: "#3B82F6", bg: "#EFF6FF", border: "#BFDBFE" },
   { label: "In Progress", hex: "#D97706", bg: "#FFFBEB", border: "#FDE68A" },
   { label: "On Hold",     hex: "#F97316", bg: "#FFF7ED", border: "#FED7AA" },
