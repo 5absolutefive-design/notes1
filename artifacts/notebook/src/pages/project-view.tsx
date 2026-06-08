@@ -1132,6 +1132,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     const finish = () => {
       if (activeEditRef.current?.td === td) activeEditRef.current = null;
       td.removeEventListener("keydown", onKeyDown);
+      td.removeEventListener("beforeinput", onBeforeInput as EventListener);
+      td.removeEventListener("input", onInput);
       const newVal = type === "progress"
         ? String(Math.min(100, Math.max(0, parseInt(td.textContent || "0") || 0)))
         : (td.textContent || "").trim();
@@ -1145,16 +1147,32 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     const isNumeric = type === "number" || type === "currency";
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Enter" || e.key === "Escape") { e.preventDefault(); finish(); return; }
-      if (isNumeric) {
-        const allowed = ["Backspace","Delete","ArrowLeft","ArrowRight","ArrowUp","ArrowDown","Tab","Home","End"];
-        if (!allowed.includes(e.key) && !/^[-\d.]$/.test(e.key) && !e.ctrlKey && !e.metaKey) {
-          e.preventDefault();
-        }
+    };
+    const onBeforeInput = (e: InputEvent) => {
+      if (!isNumeric) return;
+      const data = e.data ?? "";
+      if (data && !/^[-\d.]*$/.test(data)) e.preventDefault();
+    };
+    const onInput = () => {
+      if (!isNumeric) return;
+      const current = td.textContent || "";
+      const filtered = current.replace(/[^-\d.]/g, "");
+      if (filtered !== current) {
+        td.textContent = filtered;
+        const sel = window.getSelection();
+        const r = document.createRange();
+        const node = td.firstChild;
+        if (node) { r.setStart(node, filtered.length); r.collapse(true); }
+        else { r.setStart(td, 0); r.collapse(true); }
+        sel?.removeAllRanges();
+        sel?.addRange(r);
       }
     };
     activeEditRef.current = { td, finish };
     td.addEventListener("blur", finish, { once: true });
     td.addEventListener("keydown", onKeyDown);
+    td.addEventListener("beforeinput", onBeforeInput as EventListener);
+    td.addEventListener("input", onInput);
   }, [saveContent]);
 
   const handleEditorClick = (e: React.MouseEvent) => {
