@@ -4,6 +4,7 @@ import numberIcon from "@assets/number-svgrepo-com_1780936571964.png";
 import cardIcon from "@assets/card-layout-filled-svgrepo-com_1780936676782.png";
 import columnIcon from "@assets/column-spacing-svgrepo-com_1780936842510.png";
 import definitionIcon from "@assets/card-plus-svgrepo-com_1780937097258.png";
+import codeIcon from "@assets/code_1780940574616.png";
 import {
   Plus, ImagePlus, FolderKanban, X,
   Bold, Italic, Underline, Strikethrough, Highlighter,
@@ -2739,10 +2740,11 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 {/* Code Block */}
                 <button onMouseDown={e => { e.preventDefault(); insertCodeBlock(); }}
                   className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-zinc-50 text-left group transition-colors">
-                  <span className="w-7 h-7 rounded-md bg-zinc-800 flex items-center justify-center text-base flex-shrink-0">📝</span>
+                  <span className="w-7 h-7 flex items-center justify-center flex-shrink-0">
+                    <img src={codeIcon} alt="code block" className="w-6 h-6" />
+                  </span>
                   <div>
                     <div className="text-xs font-semibold text-stone-700">Code Block</div>
-                    <div className="text-[10px] text-stone-400">Monospace dark block</div>
                   </div>
                 </button>
                 {/* Definition Block */}
