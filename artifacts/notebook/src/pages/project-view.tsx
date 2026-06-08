@@ -1312,7 +1312,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const insertBorderBlock = () => insertHTML(
     `<div contenteditable="false" data-quote-block="1" style="position:relative;border-left:4px solid #6366f1;background:#f5f3ff;padding:10px 36px 10px 16px;border-radius:0 8px 8px 0;margin:8px 0">` +
     removeBtn() +
-    `<p contenteditable="true" style="margin:0;color:#4c1d95;font-style:italic;outline:none">Type your note here…</p></div><br/>`
+    `<p contenteditable="true" data-placeholder="Type your note here…" style="margin:0;color:#4c1d95;font-style:italic;outline:none"></p></div><br/>`
   );
 
   const insertLinkBlock = (type: string) => {
