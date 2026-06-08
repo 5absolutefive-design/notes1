@@ -2022,17 +2022,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             />
           </div>
 
-          {/* Divider below title + Project Transfer button */}
-          <div className="mx-12 mt-3 mb-6 flex items-center gap-3">
-            <div className="flex-1 border-t border-stone-200" />
-            <button
-              onClick={() => setShowTransferCard(v => !v)}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-stone-200 bg-white hover:bg-indigo-50 hover:border-indigo-300 text-stone-500 hover:text-indigo-600 text-[11px] font-semibold transition-all shadow-sm"
-            >
-              <ArrowLeftRight className="w-3 h-3" />
-              Project Transfer
-            </button>
-          </div>
+          {/* Divider below title */}
+          <div className="mx-12 mt-3 mb-6 border-t border-stone-200" />
 
           {/* Content editor */}
           <div
@@ -2866,12 +2857,12 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             )}
           </div>
 
-          {/* Download PDF */}
+          {/* Project Transfer */}
           <div className="my-1 border-t border-stone-100" />
           <CtxItem
-            icon={<FileDown className="w-3.5 h-3.5 text-indigo-500" />}
-            label="Download PDF"
-            onClick={downloadPdf}
+            icon={<ArrowLeftRight className="w-3.5 h-3.5 text-indigo-500" />}
+            label="Project Transfer"
+            onClick={() => { setCtxMenu(null); setShowTransferCard(true); }}
           />
         </div>
       )}
