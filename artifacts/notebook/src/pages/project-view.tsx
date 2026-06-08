@@ -2704,7 +2704,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 <button onMouseDown={e => { e.preventDefault(); insertStickyNote(); }}
                   className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-yellow-50 text-left group transition-colors">
                   <span className="w-7 h-7 flex items-center justify-center flex-shrink-0">
-                    <img src={pinIcon} alt="pin" className="w-6 h-6" />
+                    <img src={pinIcon} alt="pin" className="w-7 h-7" />
                   </span>
                   <div>
                     <div className="text-xs font-semibold text-stone-700 group-hover:text-yellow-700">Sticky Note</div>
@@ -2724,7 +2724,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 <button onMouseDown={e => { e.preventDefault(); insertNumberedListBlock(); }}
                   className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-stone-50 text-left group transition-colors">
                   <span className="w-7 h-7 flex items-center justify-center flex-shrink-0">
-                    <img src={numberIcon} alt="numbered list" className="w-6 h-6" />
+                    <img src={numberIcon} alt="numbered list" className="w-7 h-7" />
                   </span>
                   <div>
                     <div className="text-xs font-semibold text-stone-700">Numbered List</div>
