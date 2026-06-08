@@ -1350,9 +1350,9 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
 
   const insertNumberedListBlock = () => {
     insertHTML(
-      `<div contenteditable="false" data-quote-block="1" style="position:relative;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 36px 10px 14px;margin:8px 0">` +
+      `<div contenteditable="false" data-quote-block="1" style="position:relative;border-left:4px solid #6366f1;background:#f5f3ff;padding:10px 36px 10px 16px;border-radius:0 8px 8px 0;margin:8px 0">` +
       removeBtn() +
-      `<ol contenteditable="true" data-placeholder="Add list items…" style="margin:0;padding-left:1.4em;color:#374151;font-size:13px;outline:none"><li></li></ol></div><br/>`
+      `<ol contenteditable="true" data-placeholder="Add list items…" style="margin:0;padding-left:1.4em;color:#4c1d95;font-size:13px;outline:none;list-style-type:decimal"><li></li></ol></div><br/>`
     );
     setCtxMenu(null);
   };
