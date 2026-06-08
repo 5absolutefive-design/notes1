@@ -1090,10 +1090,9 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     const rawVal = td.dataset.cellVal || "";
     td.contentEditable = "true";
     td.textContent = rawVal;
-    td.style.outline = "2px solid #6366f1";
-    td.style.outlineOffset = "-2px";
     td.focus();
     const range = document.createRange();
+    range.collapse(false);
     range.selectNodeContents(td);
     const sel = window.getSelection();
     sel?.removeAllRanges();
@@ -1104,8 +1103,6 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
         : (td.textContent || "").trim();
       td.dataset.cellVal = newVal;
       td.contentEditable = "false";
-      td.style.outline = "";
-      td.style.outlineOffset = "";
       delete td.dataset.editing;
       const opts = getColOptions(th, type as ColType);
       td.innerHTML = makeCellInner(type, newVal, opts);

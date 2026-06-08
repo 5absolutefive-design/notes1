@@ -271,3 +271,18 @@
   text-decoration-thickness: 3px;
   text-decoration-style: solid;
 }
+
+/* Suppress browser blue selection border on contenteditable=false cells inside editor */
+[contenteditable] td[contenteditable="false"] {
+  outline: none !important;
+  -webkit-user-modify: read-only;
+}
+[contenteditable] td[contenteditable="false"]:focus,
+[contenteditable] td[contenteditable="false"]::selection {
+  outline: none !important;
+  background: transparent;
+}
+[contenteditable] td[contenteditable="true"] {
+  outline: none !important;
+  caret-color: #374151;
+}
