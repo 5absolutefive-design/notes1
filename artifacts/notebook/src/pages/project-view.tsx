@@ -1331,9 +1331,9 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
       `<span style="font-size:15px;flex-shrink:0">${cfg.icon}</span>` +
       `<div style="flex:1;min-width:0">` +
       `<div style="font-size:10px;font-weight:700;color:${cfg.color};text-transform:uppercase;letter-spacing:0.06em;margin-bottom:2px">${cfg.label}</div>` +
-      `<span data-link-url="1" contenteditable="true" ` +
+      `<span data-link-url="1" contenteditable="true" data-placeholder="Paste link here…" ` +
       `onclick="event.stopPropagation()" ` +
-      `style="outline:none;color:${cfg.color};font-size:13px;text-decoration:underline;word-break:break-all;display:block;cursor:text">Paste link here…</span>` +
+      `style="outline:none;color:${cfg.color};font-size:13px;text-decoration:underline;word-break:break-all;display:block;cursor:text"></span>` +
       `</div></div><br/>`
     );
     setCtxMenu(null);
@@ -2281,6 +2281,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
         .hide-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         [data-placeholder]:empty:before { content: attr(data-placeholder); color: #c0bdb8; pointer-events: none; }
+        [data-link-url]:empty:before { content: attr(data-placeholder); color: #aab0bb; font-style: italic; pointer-events: none; text-decoration: none; }
         [contenteditable] h1 { font-size: 32px; font-weight: 700; margin: 0.5em 0 0.25em; line-height: 1.2; }
         [contenteditable] h2 { font-size: 24px; font-weight: 700; margin: 0.5em 0 0.25em; line-height: 1.3; }
         [contenteditable] h3 { font-size: 19px; font-weight: 600; margin: 0.4em 0 0.2em; line-height: 1.4; }
