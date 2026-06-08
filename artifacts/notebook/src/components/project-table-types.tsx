@@ -35,12 +35,12 @@ export const DEFAULT_STATUS_OPTIONS: SelectOption[] = [
 ];
 
 export const STATUS_OPTIONS = [
-  { label: "Not Started", emoji: "⚪", hex: "#6B7280", bg: "#F3F4F6", border: "#D1D5DB" },
-  { label: "Planned",     emoji: "🔵", hex: "#3B82F6", bg: "#EFF6FF", border: "#BFDBFE" },
-  { label: "In Progress", emoji: "🟡", hex: "#D97706", bg: "#FFFBEB", border: "#FDE68A" },
-  { label: "On Hold",     emoji: "🟠", hex: "#F97316", bg: "#FFF7ED", border: "#FED7AA" },
-  { label: "Review",      emoji: "🟣", hex: "#8B5CF6", bg: "#F5F3FF", border: "#DDD6FE" },
-  { label: "Completed",   emoji: "🟢", hex: "#22C55E", bg: "#F0FDF4", border: "#BBF7D0" },
+  { label: "Not Started", hex: "#6B7280", bg: "#F3F4F6", border: "#D1D5DB" },
+  { label: "Planned",     hex: "#3B82F6", bg: "#EFF6FF", border: "#BFDBFE" },
+  { label: "In Progress", hex: "#D97706", bg: "#FFFBEB", border: "#FDE68A" },
+  { label: "On Hold",     hex: "#F97316", bg: "#FFF7ED", border: "#FED7AA" },
+  { label: "Review",      hex: "#8B5CF6", bg: "#F5F3FF", border: "#DDD6FE" },
+  { label: "Completed",   hex: "#22C55E", bg: "#F0FDF4", border: "#BBF7D0" },
 ] as const;
 
 export const DEFAULT_PRIORITY_OPTIONS: SelectOption[] = [
@@ -114,7 +114,7 @@ export function makeBadgeHtml(label: string, color: keyof typeof SELECT_COLORS):
 export function makeStatusBadgeHtml(label: string): string {
   const s = STATUS_OPTIONS.find(o => o.label === label);
   if (!s) return `<span style="color:#9ca3af;font-size:13px">—</span>`;
-  return `<span style="display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:12px;background:${s.bg};color:${s.hex};border:1px solid ${s.border};font-size:12px;font-weight:500;white-space:nowrap;line-height:18px">${s.emoji} ${s.label}</span>`;
+  return `<span style="display:inline-flex;align-items:center;padding:2px 9px;border-radius:12px;background:${s.bg};color:${s.hex};border:1px solid ${s.border};font-size:12px;font-weight:500;white-space:nowrap;line-height:18px">${s.label}</span>`;
 }
 
 export function makePriorityBadgeHtml(label: string): string {
@@ -401,8 +401,7 @@ export function SelectCellPopup({ td, rect, onClose, onSave }: SelectCellPopupPr
           <button key={s.label} onClick={() => pick(s.label)}
             className="w-full text-left px-2.5 py-1.5 rounded-lg flex items-center gap-2.5 transition-colors hover:bg-stone-50"
             style={{ background: isSel ? s.bg : undefined }}>
-            <span style={{ fontSize: 15 }}>{s.emoji}</span>
-            <span style={{ fontSize: 13, fontWeight: 500, color: isSel ? s.hex : "#374151" }}>{s.label}</span>
+            <span style={{ display: "inline-flex", alignItems: "center", padding: "2px 9px", borderRadius: 12, background: s.bg, color: s.hex, border: `1px solid ${s.border}`, fontSize: 12, fontWeight: 500 }}>{s.label}</span>
             {isSel && (
               <span style={{ marginLeft: "auto" }}>
                 <svg viewBox="0 0 12 12" width="12" height="12" fill="none" stroke={s.hex} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
