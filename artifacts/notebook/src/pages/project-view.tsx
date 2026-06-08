@@ -1087,35 +1087,45 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
       const editor = editorRef.current;
       if (!note || !editor) return;
 
-      // Convert to absolute if not already
-      if (note.style.position !== 'absolute') {
-        const noteRect = note.getBoundingClientRect();
-        const editorRect = editor.getBoundingClientRect();
-        const scrollTop = editor.closest('.overflow-y-auto, [style*="overflow"]')?.scrollTop ?? 0;
-        note.style.position = 'absolute';
-        note.style.left = `${noteRect.left - editorRect.left + (parseFloat(editor.style.paddingLeft) || 48)}px`;
-        note.style.top = `${noteRect.top - editorRect.top + scrollTop}px`;
-        note.style.margin = '0';
-        note.style.display = 'block';
-      }
-
       const startMouseX = e.clientX;
       const startMouseY = e.clientY;
-      const startLeft = parseFloat(note.style.left) || 0;
-      const startTop = parseFloat(note.style.top) || 0;
-      note.style.cursor = 'grabbing';
-      note.style.zIndex = '100';
+      let dragging = false;
+      let startLeft = 0;
+      let startTop = 0;
 
       const onMove = (ev: MouseEvent) => {
+        const dx = ev.clientX - startMouseX;
+        const dy = ev.clientY - startMouseY;
+        // Only start converting to absolute after mouse moves 4px (threshold)
+        if (!dragging && Math.sqrt(dx * dx + dy * dy) < 4) return;
+        if (!dragging) {
+          dragging = true;
+          if (note.style.position !== 'absolute') {
+            const noteRect = note.getBoundingClientRect();
+            const editorRect = editor.getBoundingClientRect();
+            const scrollTop = editor.closest('.overflow-y-auto, [style*="overflow"]')?.scrollTop ?? 0;
+            note.style.position = 'absolute';
+            note.style.left = `${noteRect.left - editorRect.left + (parseFloat(editor.style.paddingLeft) || 48)}px`;
+            note.style.top = `${noteRect.top - editorRect.top + scrollTop}px`;
+            note.style.margin = '0';
+            note.style.display = 'block';
+          }
+          startLeft = parseFloat(note.style.left) || 0;
+          startTop = parseFloat(note.style.top) || 0;
+          note.style.cursor = 'grabbing';
+          note.style.zIndex = '100';
+        }
         note.style.left = `${startLeft + ev.clientX - startMouseX}px`;
         note.style.top = `${Math.max(0, startTop + ev.clientY - startMouseY)}px`;
       };
       const onUp = () => {
         note.style.cursor = '';
-        note.style.zIndex = '';
+        if (dragging) {
+          note.style.zIndex = '';
+          debouncedSave();
+        }
         document.removeEventListener('mousemove', onMove);
         document.removeEventListener('mouseup', onUp);
-        debouncedSave();
       };
       document.addEventListener('mousemove', onMove);
       document.addEventListener('mouseup', onUp);
