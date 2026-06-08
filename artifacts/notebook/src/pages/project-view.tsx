@@ -2312,17 +2312,70 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           </div>
 
           <div className="my-1 border-t border-stone-100" />
-          {/* Font → opens independent floating font panel */}
+          {/* Font → side sub-card */}
           <div className="relative" ref={fontItemRef}>
             <CtxItem icon={<span className="w-3.5 h-3.5 flex items-center justify-center text-[11px] font-bold leading-none">Aa</span>} label="Font" hasArrow
-              onClick={() => {
-                if (ctxMenu) {
-                  const anchor = fontItemRef.current?.getBoundingClientRect();
-                  setFontPanelPos({ x: (anchor?.right ?? ctxMenu.x) + 8, y: anchor?.top ?? ctxMenu.y });
-                  setFontPanelOpen(true);
-                  setCtxMenu(null);
-                }
-              }} />
+              onClick={() => setCtxMenu(m => m ? { ...m, fontOpen: !m.fontOpen, formatOpen: false, alignOpen: false, bulletOpen: false, dividerOpen: false, linkOpen: false, drawOpen: false } : null)} />
+            {ctxMenu.fontOpen && (
+              <div ref={fontSubCardRef} className="fixed bg-white rounded-2xl shadow-2xl border border-stone-200 p-3 z-[10001]" style={{ minWidth: 280, top: 0, left: 0 }}
+                onMouseDown={e => e.stopPropagation()}>
+                {/* Header */}
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[11px] font-bold text-stone-500 uppercase tracking-widest">Font</span>
+                  <span className="text-[10px] text-stone-400 italic">Select text → click to apply</span>
+                </div>
+                {/* Font Size */}
+                <div className="flex items-center justify-between mb-2">
+                  <div className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Size</div>
+                  <div className="flex rounded-md border border-stone-200 overflow-hidden text-[10px] font-semibold">
+                    <button onMouseDown={e => { e.preventDefault(); setCtxFontSizeMode(ctxFontSizeMode === "all" ? "selected" : "all"); }}
+                      className={`px-2 py-0.5 transition-colors ${ctxFontSizeMode === "all" ? "bg-indigo-500 text-white mode-glow" : "bg-white text-stone-500 hover:bg-indigo-50"}`}>All</button>
+                    <button onMouseDown={e => { e.preventDefault(); setCtxFontSizeMode(ctxFontSizeMode === "selected" ? "all" : "selected"); }}
+                      className={`px-2 py-0.5 transition-colors border-l border-stone-200 ${ctxFontSizeMode === "selected" ? "bg-indigo-500 text-white mode-glow" : "bg-white text-stone-500 hover:bg-indigo-50"}`}>Selected</button>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 mb-1">
+                  <button onMouseDown={e => { e.preventDefault(); applyCtxFontSize(Math.max(8, ctxFontSize - 2), true); }}
+                    className="w-7 h-7 rounded border border-stone-300 bg-white hover:bg-stone-100 text-stone-600 text-base font-bold flex items-center justify-center transition-colors">−</button>
+                  <span className="w-12 text-center text-sm font-semibold text-stone-700">{ctxFontSize}px</span>
+                  <button onMouseDown={e => { e.preventDefault(); applyCtxFontSize(Math.min(96, ctxFontSize + 2), true); }}
+                    className="w-7 h-7 rounded border border-stone-300 bg-white hover:bg-stone-100 text-stone-600 text-base font-bold flex items-center justify-center transition-colors">+</button>
+                </div>
+                <div className="flex flex-wrap gap-1 mb-1">
+                  {[10, 12, 14, 16, 18, 20, 24, 28, 32, 48, 72].map(s => (
+                    <button key={s} onMouseDown={e => { e.preventDefault(); applyCtxFontSize(s, true); }}
+                      className={`h-6 px-1.5 text-[10px] font-semibold rounded border transition-colors ${ctxFontSize === s ? "bg-indigo-100 border-indigo-400 text-indigo-700" : "border-stone-200 hover:bg-indigo-50 text-stone-600"}`}>
+                      {s}
+                    </button>
+                  ))}
+                </div>
+                {/* Font Family */}
+                <div className="border-t border-stone-100 pt-3 mt-2">
+                  <div className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-2">Family</div>
+                  <input value={ctxFontSearch} onChange={e => setCtxFontSearch(e.target.value)}
+                    placeholder="Search font..."
+                    className="w-full h-7 px-2 text-xs border border-stone-300 rounded bg-white focus:outline-none focus:border-indigo-400 mb-2" />
+                  <div className="max-h-44 overflow-y-auto flex flex-col gap-0.5">
+                    {FONTS_CTX.filter(f => f.toLowerCase().includes(ctxFontSearch.toLowerCase())).map(f => {
+                      const isSelected = ctxSelectedFont === f;
+                      return (
+                        <button key={f}
+                          onMouseDown={e => {
+                            e.preventDefault();
+                            if (isSelected) { setCtxSelectedFont(null); }
+                            else { applyCtxFontName(f, true); setCtxSelectedFont(f); }
+                          }}
+                          className={`w-full text-left px-2 py-1 rounded-lg transition-colors flex items-center gap-2 ${isSelected ? "bg-indigo-50 border border-indigo-300 font-glow" : "hover:bg-indigo-50 border border-transparent"}`}>
+                          <span className={`text-[11px] w-24 shrink-0 truncate ${isSelected ? "text-indigo-600 font-semibold" : "text-stone-400"}`}>{f}</span>
+                          <span className={`text-sm truncate ${isSelected ? "text-indigo-700" : "text-stone-800"}`} style={{ fontFamily: f }}>Abc 123</span>
+                          {isSelected && <span className="ml-auto text-indigo-400 text-[10px] font-semibold shrink-0">✓</span>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
           <div className="my-1 border-t border-stone-100" />
           {/* Align button → side sub-card */}
