@@ -13,7 +13,7 @@ import {
   CheckSquare, Minus, Heading1, Heading2, Heading3,
   AlignLeft, AlignCenter, AlignRight, List, ListOrdered,
   ChevronRight, Link, Mic, PenLine, Eraser, Table, Video,
-  Copy, Scissors, Clipboard, Wrench,
+  Copy, Scissors, Clipboard, Wrench, FileDown,
 } from "lucide-react";
 import {
   ColTypePicker, SelectCellPopup, PriorityCellPopup, ProgressCellPopup,
@@ -229,6 +229,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const bannerUploadRef = useRef<HTMLInputElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const pdfContentRef = useRef<HTMLDivElement>(null);
   const [lastTodoPos, setLastTodoPos] = useState<{ top: number; left: number } | null>(null);
   const [showTodoButtons, setShowTodoButtons] = useState(false);
   const [tableToolbar, setTableToolbar] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
@@ -781,6 +782,33 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     document.execCommand(cmd, false, value);
     setCtxMenu(null);
     debouncedSave();
+  };
+
+  const downloadPdf = async () => {
+    setCtxMenu(null);
+    const el = pdfContentRef.current;
+    if (!el) return;
+    const html2canvas = (await import("html2canvas")).default;
+    const { jsPDF } = await import("jspdf");
+    const canvas = await html2canvas(el, { scale: 2, useCORS: true, allowTaint: true, backgroundColor: "#ffffff" });
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF({ orientation: "portrait", unit: "mm", format: "a4" });
+    const pageWidth = pdf.internal.pageSize.getWidth();
+    const pageHeight = pdf.internal.pageSize.getHeight();
+    const imgWidth = pageWidth;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    let heightLeft = imgHeight;
+    let position = 0;
+    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+    const title = activeProject?.title || "document";
+    pdf.save(`${title}.pdf`);
   };
 
   const execAllCaps = () => {
@@ -1846,7 +1874,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           })()}
 
           {/* Banner + emoji overlap wrapper */}
-          <div className="relative">
+          <div className="relative" ref={pdfContentRef}>
             {/* Banner */}
             <div className="relative h-44 w-full group" style={bannerStyle}>
               <div className="absolute inset-0 bg-black/10" />
@@ -2763,6 +2791,14 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
               </div>
             )}
           </div>
+
+          {/* Download PDF */}
+          <div className="my-1 border-t border-stone-100" />
+          <CtxItem
+            icon={<FileDown className="w-3.5 h-3.5 text-indigo-500" />}
+            label="Download PDF"
+            onClick={downloadPdf}
+          />
         </div>
       )}
 
