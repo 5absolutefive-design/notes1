@@ -1314,7 +1314,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     insertHTML(
       `<div contenteditable="false" data-quote-block="1" style="position:relative;border-left:4px solid #6366f1;background:#f5f3ff;padding:10px 36px 10px 16px;border-radius:0 8px 8px 0;margin:8px 0">` +
       removeBtn() +
-      `<p contenteditable="true" data-placeholder="Type your note here…" style="margin:0;color:#4c1d95;font-style:italic;outline:none"></p></div><br/>`
+      `<p contenteditable="true" data-placeholder="Type your note here…" style="margin:0;color:#4c1d95;font-style:italic;outline:none;font-family:Inter,sans-serif"></p></div><br/>`
     );
     setCtxMenu(null);
   };
@@ -1333,7 +1333,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
       `<span style="font-size:16px;flex-shrink:0;margin-top:1px">${v.icon}</span>` +
       `<div style="flex:1;min-width:0">` +
       `<div style="font-size:10px;font-weight:700;color:${v.color};text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px">${v.label}</div>` +
-      `<p contenteditable="true" data-placeholder="Type your message…" style="margin:0;color:${v.color};font-size:13px;outline:none"></p>` +
+      `<p contenteditable="true" data-placeholder="Type your message…" style="margin:0;color:${v.color};font-size:13px;outline:none;font-family:Inter,sans-serif"></p>` +
       `</div></div><br/>`
     );
     setCtxMenu(null);
@@ -1343,7 +1343,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     insertHTML(
       `<div contenteditable="false" data-quote-block="1" style="position:relative;background:#fef9c3;border:1.5px solid #fde047;border-radius:10px;padding:10px 36px 10px 14px;margin:8px 0;box-shadow:2px 3px 8px rgba(0,0,0,0.08)">` +
       removeBtn() +
-      `<p contenteditable="true" data-placeholder="Jot something down…" style="margin:0;color:#713f12;font-size:13px;outline:none"></p></div><br/>`
+      `<p contenteditable="true" data-placeholder="Jot something down…" style="margin:0;color:#713f12;font-size:13px;outline:none;font-family:Inter,sans-serif"></p></div><br/>`
     );
     setCtxMenu(null);
   };
@@ -1352,7 +1352,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     insertHTML(
       `<div contenteditable="false" data-quote-block="1" style="position:relative;border-left:4px solid #6366f1;background:#f5f3ff;padding:10px 36px 10px 16px;border-radius:0 8px 8px 0;margin:8px 0">` +
       removeBtn() +
-      `<ol contenteditable="true" data-placeholder="Add list items…" style="margin:0;padding-left:1.4em;color:#4c1d95;font-size:13px;outline:none;list-style-type:decimal"><li></li></ol></div><br/>`
+      `<ol contenteditable="true" data-placeholder="Add list items…" style="margin:0;padding-left:1.4em;color:#4c1d95;font-size:13px;outline:none;list-style-type:decimal;font-family:Inter,sans-serif"><li></li></ol></div><br/>`
     );
     setCtxMenu(null);
   };
@@ -1361,8 +1361,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     insertHTML(
       `<div contenteditable="false" data-quote-block="1" style="position:relative;display:grid;grid-template-columns:1fr 1fr;gap:10px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px 36px 10px 12px;margin:8px 0">` +
       removeBtn() +
-      `<p contenteditable="true" data-placeholder="Left column…" style="margin:0;min-height:40px;background:#fff;border-radius:6px;padding:6px 8px;color:#334155;font-size:13px;outline:none;border:1px solid #e2e8f0"></p>` +
-      `<p contenteditable="true" data-placeholder="Right column…" style="margin:0;min-height:40px;background:#fff;border-radius:6px;padding:6px 8px;color:#334155;font-size:13px;outline:none;border:1px solid #e2e8f0"></p>` +
+      `<p contenteditable="true" data-placeholder="Left column…" style="margin:0;min-height:40px;background:#fff;border-radius:6px;padding:6px 8px;color:#334155;font-size:13px;outline:none;border:1px solid #e2e8f0;font-family:Inter,sans-serif"></p>` +
+      `<p contenteditable="true" data-placeholder="Right column…" style="margin:0;min-height:40px;background:#fff;border-radius:6px;padding:6px 8px;color:#334155;font-size:13px;outline:none;border:1px solid #e2e8f0;font-family:Inter,sans-serif"></p>` +
       `</div><br/>`
     );
     setCtxMenu(null);
@@ -1373,7 +1373,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
       `<div contenteditable="false" data-quote-block="1" style="position:relative;background:#1e1e2e;border-radius:10px;padding:10px 36px 10px 14px;margin:8px 0">` +
       removeBtn() +
       `<div style="font-size:10px;font-weight:600;color:#6c7086;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Code</div>` +
-      `<pre contenteditable="true" data-placeholder="// Write your code here…" style="margin:0;color:#cdd6f4;font-family:monospace;font-size:13px;outline:none;white-space:pre-wrap;word-break:break-all"></pre></div><br/>`
+      `<pre contenteditable="true" data-placeholder="// Write your code here…" style="margin:0;color:#cdd6f4;font-family:'Courier New',monospace;font-size:13px;outline:none;white-space:pre-wrap;word-break:break-all"></pre></div><br/>`
     );
     setCtxMenu(null);
   };
@@ -1382,9 +1382,9 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     insertHTML(
       `<div contenteditable="false" data-quote-block="1" style="position:relative;display:flex;gap:12px;background:#fafaf9;border:1.5px solid #e7e5e4;border-radius:10px;padding:10px 36px 10px 14px;margin:8px 0">` +
       removeBtn() +
-      `<p contenteditable="true" data-placeholder="Term" style="margin:0;min-width:80px;width:80px;flex-shrink:0;font-weight:700;color:#292524;font-size:13px;outline:none"></p>` +
+      `<p contenteditable="true" data-placeholder="Term" style="margin:0;min-width:80px;width:80px;flex-shrink:0;font-weight:700;color:#292524;font-size:13px;outline:none;font-family:Inter,sans-serif"></p>` +
       `<div style="width:1.5px;background:#e7e5e4;flex-shrink:0;border-radius:2px"></div>` +
-      `<p contenteditable="true" data-placeholder="Definition or description…" style="margin:0;flex:1;color:#57534e;font-size:13px;outline:none"></p>` +
+      `<p contenteditable="true" data-placeholder="Definition or description…" style="margin:0;flex:1;color:#57534e;font-size:13px;outline:none;font-family:Inter,sans-serif"></p>` +
       `</div><br/>`
     );
     setCtxMenu(null);
