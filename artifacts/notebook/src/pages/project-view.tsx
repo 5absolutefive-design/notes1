@@ -1,6 +1,7 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
 import pinIcon from "@assets/pin-svgrepo-com_1780935998946.png";
 import numberIcon from "@assets/number-svgrepo-com_1780936571964.png";
+import cardIcon from "@assets/card-layout-filled-svgrepo-com_1780936676782.png";
 import {
   Plus, ImagePlus, FolderKanban, X,
   Bold, Italic, Underline, Strikethrough, Highlighter,
@@ -2706,10 +2707,11 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 {/* Card */}
                 <button onMouseDown={e => { e.preventDefault(); insertCardBlock(); }}
                   className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-stone-50 text-left group transition-colors">
-                  <span className="w-7 h-7 rounded-md bg-white border border-stone-200 flex items-center justify-center text-base flex-shrink-0 shadow-sm">🃏</span>
+                  <span className="w-10 h-10 flex items-center justify-center flex-shrink-0">
+                    <img src={cardIcon} alt="card" className="w-10 h-10" />
+                  </span>
                   <div>
                     <div className="text-xs font-semibold text-stone-700 group-hover:text-stone-900">Card</div>
-                    <div className="text-[10px] text-stone-400">Floating white card</div>
                   </div>
                 </button>
                 {/* Numbered List */}
