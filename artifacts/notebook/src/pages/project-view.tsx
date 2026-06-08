@@ -661,6 +661,9 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     const sel = window.getSelection();
     savedRangeRef.current = (sel && sel.rangeCount > 0) ? sel.getRangeAt(0).cloneRange() : null;
     setCtxMenu({ x: e.clientX, y: e.clientY, formatOpen: false, alignOpen: false, bulletOpen: false, highlightOpen: false, headingOpen: false, dividerOpen: false, linkOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1, drawOpen: false, tableOpen: false, fontOpen: false, blockOpen: false, mediaOpen: false });
+    if (savedRangeRef.current) {
+      setTimeout(() => restoreSelection(), 0);
+    }
   };
 
   // ── Clamp font sub-card inside viewport using fixed positioning
