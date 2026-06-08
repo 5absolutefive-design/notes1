@@ -5,6 +5,7 @@ import cardIcon from "@assets/card-layout-filled-svgrepo-com_1780936676782.png";
 import columnIcon from "@assets/column-spacing-svgrepo-com_1780936842510.png";
 import definitionIcon from "@assets/card-plus-svgrepo-com_1780937097258.png";
 import codeIcon from "@assets/code_1780940574616.png";
+import bulbIcon from "@assets/idea-bulb-glow-svgrepo-com_1780940805368.png";
 import {
   Plus, ImagePlus, FolderKanban, X,
   Bold, Italic, Underline, Strikethrough, Highlighter,
@@ -2681,20 +2682,34 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                   </div>
                 </button>
                 {/* Callout Block */}
-                <div className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-blue-50 text-left group transition-colors cursor-pointer">
-                  <span className="w-7 h-7 rounded-md bg-blue-100 flex items-center justify-center text-base flex-shrink-0">💡</span>
-                  <div>
-                    <div className="text-xs font-semibold text-stone-700 group-hover:text-blue-700 mb-0.5">Callout Block</div>
-                    <div className="flex gap-1">
-                      {(["info","warning","success","error"] as const).map(v => (
-                        <button key={v} onMouseDown={e => { e.preventDefault(); e.stopPropagation(); insertCalloutBlock(v); }}
-                          className={`text-[9px] font-bold px-1.5 py-0.5 rounded capitalize ${
-                            v === "info" ? "bg-blue-100 text-blue-600" :
-                            v === "warning" ? "bg-yellow-100 text-yellow-700" :
-                            v === "success" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"
-                          }`}>{v}</button>
-                      ))}
-                    </div>
+                <div className="w-full px-2 py-2 rounded-lg text-left">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="w-7 h-7 flex items-center justify-center flex-shrink-0">
+                      <img src={bulbIcon} alt="callout" className="w-6 h-6" />
+                    </span>
+                    <span className="text-xs font-semibold text-stone-700">Callout Block</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    <button onMouseDown={e => { e.preventDefault(); e.stopPropagation(); insertCalloutBlock("info"); }}
+                      className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-colors">
+                      <span className="text-base">ℹ️</span>
+                      <span className="text-[11px] font-semibold text-blue-700">Info</span>
+                    </button>
+                    <button onMouseDown={e => { e.preventDefault(); e.stopPropagation(); insertCalloutBlock("warning"); }}
+                      className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg bg-yellow-50 hover:bg-yellow-100 border border-yellow-200 transition-colors">
+                      <span className="text-base">⚠️</span>
+                      <span className="text-[11px] font-semibold text-yellow-700">Warning</span>
+                    </button>
+                    <button onMouseDown={e => { e.preventDefault(); e.stopPropagation(); insertCalloutBlock("success"); }}
+                      className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg bg-green-50 hover:bg-green-100 border border-green-200 transition-colors">
+                      <span className="text-base">✅</span>
+                      <span className="text-[11px] font-semibold text-green-700">Success</span>
+                    </button>
+                    <button onMouseDown={e => { e.preventDefault(); e.stopPropagation(); insertCalloutBlock("error"); }}
+                      className="flex items-center gap-1.5 px-2.5 py-2 rounded-lg bg-red-50 hover:bg-red-100 border border-red-200 transition-colors">
+                      <span className="text-base">❌</span>
+                      <span className="text-[11px] font-semibold text-red-600">Error</span>
+                    </button>
                   </div>
                 </div>
                 {/* Sticky Note */}
