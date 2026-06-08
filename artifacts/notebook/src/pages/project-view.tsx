@@ -2106,10 +2106,10 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           }}
           onMouseDown={e => e.stopPropagation()}
         >
-          <div className="flex items-center bg-[#1e1e1e] rounded-lg shadow-2xl overflow-hidden border border-white/10">
+          <div className="flex items-center bg-[#faf9f7] rounded-lg shadow-2xl overflow-hidden border border-stone-200">
             {/* Copy */}
             <button
-              className="flex items-center gap-1.5 px-3 py-2 text-white text-xs font-medium hover:bg-white/10 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-2 text-stone-700 text-xs font-medium hover:bg-stone-100 transition-colors"
               onMouseDown={e => { e.preventDefault(); e.stopPropagation(); }}
               onClick={() => {
                 const sel = window.getSelection();
@@ -2119,30 +2119,30 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 setSelPopup(null);
               }}
             >
-              <Copy className="w-3.5 h-3.5 text-stone-300" />
+              <Copy className="w-3.5 h-3.5 text-stone-500" />
               <span>Copy</span>
             </button>
 
-            <div className="w-px h-5 bg-white/15" />
+            <div className="w-px h-5 bg-stone-200" />
 
             {/* Cut */}
             <button
-              className="flex items-center gap-1.5 px-3 py-2 text-white text-xs font-medium hover:bg-white/10 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-2 text-stone-700 text-xs font-medium hover:bg-stone-100 transition-colors"
               onMouseDown={e => { e.preventDefault(); e.stopPropagation(); }}
               onClick={() => {
                 document.execCommand("cut");
                 setSelPopup(null);
               }}
             >
-              <Scissors className="w-3.5 h-3.5 text-stone-300" />
+              <Scissors className="w-3.5 h-3.5 text-stone-500" />
               <span>Cut</span>
             </button>
 
-            <div className="w-px h-5 bg-white/15" />
+            <div className="w-px h-5 bg-stone-200" />
 
             {/* Paste */}
             <button
-              className="flex items-center gap-1.5 px-3 py-2 text-white text-xs font-medium hover:bg-white/10 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-2 text-stone-700 text-xs font-medium hover:bg-stone-100 transition-colors"
               onMouseDown={e => { e.preventDefault(); e.stopPropagation(); }}
               onClick={async () => {
                 setSelPopup(null);
@@ -2155,15 +2155,15 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 }
               }}
             >
-              <Clipboard className="w-3.5 h-3.5 text-stone-300" />
+              <Clipboard className="w-3.5 h-3.5 text-stone-500" />
               <span>Paste</span>
             </button>
 
-            <div className="w-px h-5 bg-white/15" />
+            <div className="w-px h-5 bg-stone-200" />
 
             {/* Tools */}
             <button
-              className="flex items-center gap-1.5 px-3 py-2 text-white text-xs font-medium hover:bg-white/10 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-2 text-stone-700 text-xs font-medium hover:bg-stone-100 transition-colors"
               onMouseDown={e => { e.preventDefault(); e.stopPropagation(); }}
               onClick={() => {
                 const sel = window.getSelection();
@@ -2174,7 +2174,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 setCtxMenu({ x: px, y: py, formatOpen: false, alignOpen: false, bulletOpen: false, highlightOpen: false, headingOpen: false, dividerOpen: false, linkOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1, drawOpen: false, tableOpen: false, fontOpen: false, blockOpen: false, mediaOpen: false });
               }}
             >
-              <Wrench className="w-3.5 h-3.5 text-stone-300" />
+              <Wrench className="w-3.5 h-3.5 text-stone-500" />
               <span>Tools</span>
             </button>
           </div>
@@ -2184,7 +2184,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             width: 0, height: 0,
             borderLeft: "5px solid transparent",
             borderRight: "5px solid transparent",
-            borderTop: "5px solid #1e1e1e",
+            borderTop: "5px solid #faf9f7",
           }} />
         </div>
       )}
