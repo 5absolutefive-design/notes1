@@ -432,22 +432,31 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   }, [debouncedSave]);
 
   // ── Close menus on outside click
+  // Use refs to avoid stale closures and unnecessary re-registrations
+  const ctxMenuStateRef = useRef(ctxMenu);
+  ctxMenuStateRef.current = ctxMenu;
+  const showBannerPickerRef = useRef(showBannerPicker);
+  showBannerPickerRef.current = showBannerPicker;
+  const showEmojiPickerRef = useRef(showEmojiPicker);
+  showEmojiPickerRef.current = showEmojiPicker;
+  const fontPanelOpenRef = useRef(fontPanelOpen);
+  fontPanelOpenRef.current = fontPanelOpen;
+
   useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (ctxMenu && ctxMenuRef.current && !ctxMenuRef.current.contains(e.target as Node))
+      if (ctxMenuStateRef.current && ctxMenuRef.current && !ctxMenuRef.current.contains(e.target as Node))
         setCtxMenu(null);
-      if (showBannerPicker && bannerPickerRef.current && !bannerPickerRef.current.contains(e.target as Node))
+      if (showBannerPickerRef.current && bannerPickerRef.current && !bannerPickerRef.current.contains(e.target as Node))
         setShowBannerPicker(false);
-      if (showEmojiPicker && emojiPickerRef.current && !emojiPickerRef.current.contains(e.target as Node))
+      if (showEmojiPickerRef.current && emojiPickerRef.current && !emojiPickerRef.current.contains(e.target as Node))
         setShowEmojiPicker(false);
-      // Font panel stays open unless user clicks outside it AND outside the editor
-      if (fontPanelOpen && fontPanelRef.current && !fontPanelRef.current.contains(e.target as Node)
+      if (fontPanelOpenRef.current && fontPanelRef.current && !fontPanelRef.current.contains(e.target as Node)
           && editorRef.current && !editorRef.current.contains(e.target as Node))
         setFontPanelOpen(false);
     };
-    document.addEventListener("mousedown", handler);
-    return () => document.removeEventListener("mousedown", handler);
-  }, [ctxMenu, showBannerPicker, showEmojiPicker, fontPanelOpen]);
+    document.addEventListener("mousedown", handler, true);
+    return () => document.removeEventListener("mousedown", handler, true);
+  }, []);
 
   // ── Set emoji
   const setEmoji = (emoji: string) => {
@@ -759,7 +768,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
 
   // ── Formatting commands
   const execFmt = (cmd: string, value?: string) => {
-    editorRef.current?.focus();
+    restoreSelection();
     document.execCommand(cmd, false, value);
     setCtxMenu(null);
     debouncedSave();
@@ -2264,11 +2273,13 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                     <div className="absolute left-full top-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 p-2.5 z-[10001]" style={{ minWidth: 140 }}>
                       <div className="flex flex-wrap gap-1.5">
                         {FONT_COLORS.map(fc => (
-                          <button key={fc.color} title={fc.label} onClick={() => execFmt("foreColor", fc.color)}
+                          <button key={fc.color} title={fc.label}
+                            onMouseDown={e => { e.preventDefault(); execFmt("foreColor", fc.color); }}
                             className="w-6 h-6 rounded-full border-2 border-white shadow hover:scale-110 transition-transform"
                             style={{ backgroundColor: fc.color }} />
                         ))}
-                        <button title="Remove colour" onClick={() => execFmt("removeFormat")}
+                        <button title="Remove colour"
+                          onMouseDown={e => { e.preventDefault(); execFmt("removeFormat"); }}
                           className="w-6 h-6 rounded-full border-2 border-stone-300 flex items-center justify-center hover:scale-110 transition-transform">
                           <X className="w-3 h-3 text-stone-400" />
                         </button>
@@ -2283,11 +2294,13 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                   {ctxMenu.highlightOpen && (
                     <div className="absolute left-full top-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 p-2.5 flex gap-1.5 z-[10001]">
                       {HIGHLIGHT_COLORS.map(hc => (
-                        <button key={hc.color} title={hc.label} onClick={() => execFmt("hiliteColor", hc.color)}
+                        <button key={hc.color} title={hc.label}
+                          onMouseDown={e => { e.preventDefault(); execFmt("hiliteColor", hc.color); }}
                           className="w-6 h-6 rounded-full border-2 border-white shadow hover:scale-110 transition-transform"
                           style={{ backgroundColor: hc.color }} />
                       ))}
-                      <button title="Remove" onClick={() => execFmt("hiliteColor", "transparent")}
+                      <button title="Remove"
+                        onMouseDown={e => { e.preventDefault(); execFmt("hiliteColor", "transparent"); }}
                         className="w-6 h-6 rounded-full border-2 border-stone-300 flex items-center justify-center hover:scale-110 transition-transform">
                         <X className="w-3 h-3 text-stone-400" />
                       </button>
