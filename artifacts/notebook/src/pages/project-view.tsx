@@ -655,6 +655,27 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     }
   };
 
+  // ── Paste handler — strips background-color and color from external content
+  const handleEditorPaste = (e: React.ClipboardEvent) => {
+    e.preventDefault();
+    const html = e.clipboardData.getData("text/html");
+    if (html) {
+      const div = document.createElement("div");
+      div.innerHTML = html;
+      div.querySelectorAll<HTMLElement>("*").forEach(el => {
+        el.style.removeProperty("background-color");
+        el.style.removeProperty("background");
+        el.style.removeProperty("color");
+        // also remove via attribute if set directly
+        if (el.style.length === 0) el.removeAttribute("style");
+      });
+      document.execCommand("insertHTML", false, div.innerHTML);
+    } else {
+      const text = e.clipboardData.getData("text/plain");
+      document.execCommand("insertText", false, text);
+    }
+  };
+
   // ── Right-click handler
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
@@ -1869,6 +1890,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             onKeyDown={handleEditorKeyDown}
             onMouseUp={handleEditorMouseUp}
             onContextMenu={handleContextMenu}
+            onPaste={handleEditorPaste}
             onMouseDown={handleEditorMouseDown}
             onClick={handleEditorClick}
             className="outline-none text-stone-800 text-[15px] leading-relaxed"
