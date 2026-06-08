@@ -110,6 +110,7 @@ interface ContextMenuState {
   drawOpen: boolean;
   tableOpen: boolean;
   fontOpen: boolean;
+  blockOpen: boolean;
 }
 
 interface ImageBlock {
@@ -654,7 +655,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     e.preventDefault();
     const sel = window.getSelection();
     savedRangeRef.current = (sel && sel.rangeCount > 0) ? sel.getRangeAt(0).cloneRange() : null;
-    setCtxMenu({ x: e.clientX, y: e.clientY, formatOpen: false, alignOpen: false, bulletOpen: false, highlightOpen: false, headingOpen: false, dividerOpen: false, linkOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1, drawOpen: false, tableOpen: false, fontOpen: false });
+    setCtxMenu({ x: e.clientX, y: e.clientY, formatOpen: false, alignOpen: false, bulletOpen: false, highlightOpen: false, headingOpen: false, dividerOpen: false, linkOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1, drawOpen: false, tableOpen: false, fontOpen: false, blockOpen: false });
   };
 
   // ── Clamp font sub-card inside viewport using fixed positioning
@@ -1309,11 +1310,85 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     }
   };
 
-  const insertBorderBlock = () => insertHTML(
-    `<div contenteditable="false" data-quote-block="1" style="position:relative;border-left:4px solid #6366f1;background:#f5f3ff;padding:10px 36px 10px 16px;border-radius:0 8px 8px 0;margin:8px 0">` +
-    removeBtn() +
-    `<p contenteditable="true" data-placeholder="Type your note here…" style="margin:0;color:#4c1d95;font-style:italic;outline:none"></p></div><br/>`
-  );
+  const insertBorderBlock = () => {
+    insertHTML(
+      `<div contenteditable="false" data-quote-block="1" style="position:relative;border-left:4px solid #6366f1;background:#f5f3ff;padding:10px 36px 10px 16px;border-radius:0 8px 8px 0;margin:8px 0">` +
+      removeBtn() +
+      `<p contenteditable="true" data-placeholder="Type your note here…" style="margin:0;color:#4c1d95;font-style:italic;outline:none"></p></div><br/>`
+    );
+    setCtxMenu(null);
+  };
+
+  const insertCalloutBlock = (variant: "info" | "warning" | "success" | "error") => {
+    const map = {
+      info:    { bg: "#eff6ff", border: "#3b82f6", icon: "ℹ️", color: "#1d4ed8", label: "Info" },
+      warning: { bg: "#fffbeb", border: "#f59e0b", icon: "⚠️", color: "#92400e", label: "Warning" },
+      success: { bg: "#f0fdf4", border: "#22c55e", icon: "✅", color: "#166534", label: "Success" },
+      error:   { bg: "#fef2f2", border: "#ef4444", icon: "❌", color: "#991b1b", label: "Error" },
+    };
+    const v = map[variant];
+    insertHTML(
+      `<div contenteditable="false" data-quote-block="1" style="position:relative;display:flex;gap:10px;align-items:flex-start;background:${v.bg};border:1.5px solid ${v.border};border-radius:10px;padding:10px 36px 10px 12px;margin:8px 0">` +
+      removeBtn() +
+      `<span style="font-size:16px;flex-shrink:0;margin-top:1px">${v.icon}</span>` +
+      `<div style="flex:1;min-width:0">` +
+      `<div style="font-size:10px;font-weight:700;color:${v.color};text-transform:uppercase;letter-spacing:0.06em;margin-bottom:3px">${v.label}</div>` +
+      `<p contenteditable="true" data-placeholder="Type your message…" style="margin:0;color:${v.color};font-size:13px;outline:none"></p>` +
+      `</div></div><br/>`
+    );
+    setCtxMenu(null);
+  };
+
+  const insertStickyNote = () => {
+    insertHTML(
+      `<div contenteditable="false" data-quote-block="1" style="position:relative;background:#fef9c3;border:1.5px solid #fde047;border-radius:10px;padding:10px 36px 10px 14px;margin:8px 0;box-shadow:2px 3px 8px rgba(0,0,0,0.08)">` +
+      removeBtn() +
+      `<p contenteditable="true" data-placeholder="Jot something down…" style="margin:0;color:#713f12;font-size:13px;outline:none"></p></div><br/>`
+    );
+    setCtxMenu(null);
+  };
+
+  const insertNumberedListBlock = () => {
+    insertHTML(
+      `<div contenteditable="false" data-quote-block="1" style="position:relative;background:#f9fafb;border:1.5px solid #e5e7eb;border-radius:10px;padding:10px 36px 10px 14px;margin:8px 0">` +
+      removeBtn() +
+      `<ol contenteditable="true" data-placeholder="Add list items…" style="margin:0;padding-left:1.4em;color:#374151;font-size:13px;outline:none"><li></li></ol></div><br/>`
+    );
+    setCtxMenu(null);
+  };
+
+  const insertTwoColumnBlock = () => {
+    insertHTML(
+      `<div contenteditable="false" data-quote-block="1" style="position:relative;display:grid;grid-template-columns:1fr 1fr;gap:10px;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:10px;padding:10px 36px 10px 12px;margin:8px 0">` +
+      removeBtn() +
+      `<p contenteditable="true" data-placeholder="Left column…" style="margin:0;min-height:40px;background:#fff;border-radius:6px;padding:6px 8px;color:#334155;font-size:13px;outline:none;border:1px solid #e2e8f0"></p>` +
+      `<p contenteditable="true" data-placeholder="Right column…" style="margin:0;min-height:40px;background:#fff;border-radius:6px;padding:6px 8px;color:#334155;font-size:13px;outline:none;border:1px solid #e2e8f0"></p>` +
+      `</div><br/>`
+    );
+    setCtxMenu(null);
+  };
+
+  const insertCodeBlock = () => {
+    insertHTML(
+      `<div contenteditable="false" data-quote-block="1" style="position:relative;background:#1e1e2e;border-radius:10px;padding:10px 36px 10px 14px;margin:8px 0">` +
+      removeBtn() +
+      `<div style="font-size:10px;font-weight:600;color:#6c7086;text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px">Code</div>` +
+      `<pre contenteditable="true" data-placeholder="// Write your code here…" style="margin:0;color:#cdd6f4;font-family:monospace;font-size:13px;outline:none;white-space:pre-wrap;word-break:break-all"></pre></div><br/>`
+    );
+    setCtxMenu(null);
+  };
+
+  const insertDefinitionBlock = () => {
+    insertHTML(
+      `<div contenteditable="false" data-quote-block="1" style="position:relative;display:flex;gap:12px;background:#fafaf9;border:1.5px solid #e7e5e4;border-radius:10px;padding:10px 36px 10px 14px;margin:8px 0">` +
+      removeBtn() +
+      `<p contenteditable="true" data-placeholder="Term" style="margin:0;min-width:80px;width:80px;flex-shrink:0;font-weight:700;color:#292524;font-size:13px;outline:none"></p>` +
+      `<div style="width:1.5px;background:#e7e5e4;flex-shrink:0;border-radius:2px"></div>` +
+      `<p contenteditable="true" data-placeholder="Definition or description…" style="margin:0;flex:1;color:#57534e;font-size:13px;outline:none"></p>` +
+      `</div><br/>`
+    );
+    setCtxMenu(null);
+  };
 
   const insertLinkBlock = (type: string) => {
     const configs: Record<string, { color: string; bg: string; label: string; icon: string }> = {
@@ -2186,7 +2261,90 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
               </div>
             )}
           </div>
-          <CtxItem icon={<ChevronRight className="w-3.5 h-3.5"/>} label="Quote Block" onClick={insertBorderBlock} />
+          {/* Block picker */}
+          <div className="relative">
+            <CtxItem icon={<ChevronRight className="w-3.5 h-3.5"/>} label="Block" hasArrow
+              onClick={() => setCtxMenu(m => m ? { ...m, blockOpen: !m.blockOpen, formatOpen: false, alignOpen: false, bulletOpen: false, dividerOpen: false, linkOpen: false, drawOpen: false, tableOpen: false } : null)} />
+            {ctxMenu.blockOpen && (
+              <div className="fixed bg-white rounded-xl shadow-2xl border border-stone-200 p-2 z-[10000]"
+                style={{ minWidth: 220, top: ctxMenu.y, left: ctxMenu.x + 200 }}
+                onMouseDown={e => e.stopPropagation()}>
+                <div className="text-[10px] font-bold text-stone-400 uppercase tracking-widest px-2 pb-1.5">Choose Block Type</div>
+                {/* Quote Block */}
+                <button onMouseDown={e => { e.preventDefault(); insertBorderBlock(); }}
+                  className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-indigo-50 text-left group transition-colors">
+                  <span className="w-7 h-7 rounded-md bg-indigo-100 flex items-center justify-center text-base flex-shrink-0">❝</span>
+                  <div>
+                    <div className="text-xs font-semibold text-stone-700 group-hover:text-indigo-700">Quote Block</div>
+                    <div className="text-[10px] text-stone-400">Italic styled note</div>
+                  </div>
+                </button>
+                {/* Callout Block */}
+                <button onMouseDown={e => { e.preventDefault(); insertCalloutBlock("info"); }}
+                  className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-blue-50 text-left group transition-colors">
+                  <span className="w-7 h-7 rounded-md bg-blue-100 flex items-center justify-center text-base flex-shrink-0">💡</span>
+                  <div>
+                    <div className="text-xs font-semibold text-stone-700 group-hover:text-blue-700">Callout Block</div>
+                    <div className="flex gap-1 mt-0.5">
+                      {(["info","warning","success","error"] as const).map(v => (
+                        <button key={v} onMouseDown={e => { e.preventDefault(); e.stopPropagation(); insertCalloutBlock(v); }}
+                          className={`text-[9px] font-bold px-1.5 py-0.5 rounded capitalize ${
+                            v === "info" ? "bg-blue-100 text-blue-600" :
+                            v === "warning" ? "bg-yellow-100 text-yellow-700" :
+                            v === "success" ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"
+                          }`}>{v}</button>
+                      ))}
+                    </div>
+                  </div>
+                </button>
+                {/* Sticky Note */}
+                <button onMouseDown={e => { e.preventDefault(); insertStickyNote(); }}
+                  className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-yellow-50 text-left group transition-colors">
+                  <span className="w-7 h-7 rounded-md bg-yellow-100 flex items-center justify-center text-base flex-shrink-0">📌</span>
+                  <div>
+                    <div className="text-xs font-semibold text-stone-700 group-hover:text-yellow-700">Sticky Note</div>
+                    <div className="text-[10px] text-stone-400">Yellow note card</div>
+                  </div>
+                </button>
+                {/* Numbered List */}
+                <button onMouseDown={e => { e.preventDefault(); insertNumberedListBlock(); }}
+                  className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-stone-50 text-left group transition-colors">
+                  <span className="w-7 h-7 rounded-md bg-stone-100 flex items-center justify-center text-base flex-shrink-0">🔢</span>
+                  <div>
+                    <div className="text-xs font-semibold text-stone-700">Numbered List</div>
+                    <div className="text-[10px] text-stone-400">Ordered list block</div>
+                  </div>
+                </button>
+                {/* Two Column */}
+                <button onMouseDown={e => { e.preventDefault(); insertTwoColumnBlock(); }}
+                  className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-slate-50 text-left group transition-colors">
+                  <span className="w-7 h-7 rounded-md bg-slate-100 flex items-center justify-center text-base flex-shrink-0">📊</span>
+                  <div>
+                    <div className="text-xs font-semibold text-stone-700">Two Column</div>
+                    <div className="text-[10px] text-stone-400">Side-by-side layout</div>
+                  </div>
+                </button>
+                {/* Code Block */}
+                <button onMouseDown={e => { e.preventDefault(); insertCodeBlock(); }}
+                  className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-zinc-50 text-left group transition-colors">
+                  <span className="w-7 h-7 rounded-md bg-zinc-800 flex items-center justify-center text-base flex-shrink-0">📝</span>
+                  <div>
+                    <div className="text-xs font-semibold text-stone-700">Code Block</div>
+                    <div className="text-[10px] text-stone-400">Monospace dark block</div>
+                  </div>
+                </button>
+                {/* Definition Block */}
+                <button onMouseDown={e => { e.preventDefault(); insertDefinitionBlock(); }}
+                  className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-amber-50 text-left group transition-colors">
+                  <span className="w-7 h-7 rounded-md bg-amber-100 flex items-center justify-center text-base flex-shrink-0">🔖</span>
+                  <div>
+                    <div className="text-xs font-semibold text-stone-700">Definition</div>
+                    <div className="text-[10px] text-stone-400">Term + description</div>
+                  </div>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
