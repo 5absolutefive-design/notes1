@@ -187,7 +187,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const tableSubCardRef = useRef<HTMLDivElement>(null);
   const [ctxFontSearch, setCtxFontSearch] = useState("");
   const [ctxFontSize, setCtxFontSize] = useState(16);
-  const [ctxSelectedFont, setCtxSelectedFont] = useState<string | null>(null);
+  const [ctxSelectedFont, setCtxSelectedFont] = useState<string | null>("Inter");
   const [ctxFontSizeMode, setCtxFontSizeMode] = useState<"all" | "selected">("selected");
   const fontItemRef = useRef<HTMLDivElement>(null);
   const fontSubCardRef = useRef<HTMLDivElement>(null);
