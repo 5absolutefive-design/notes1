@@ -1079,6 +1079,49 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     if (drawTool) return;
     const target = e.target as HTMLElement;
 
+    // Sticky note drag handle
+    if ((target as HTMLElement).closest('[data-drag-btn]')) {
+      e.preventDefault();
+      e.stopPropagation();
+      const note = (target as HTMLElement).closest('[data-sticky-note]') as HTMLElement | null;
+      const editor = editorRef.current;
+      if (!note || !editor) return;
+
+      // Convert to absolute if not already
+      if (note.style.position !== 'absolute') {
+        const noteRect = note.getBoundingClientRect();
+        const editorRect = editor.getBoundingClientRect();
+        const scrollTop = editor.closest('.overflow-y-auto, [style*="overflow"]')?.scrollTop ?? 0;
+        note.style.position = 'absolute';
+        note.style.left = `${noteRect.left - editorRect.left + (parseFloat(editor.style.paddingLeft) || 48)}px`;
+        note.style.top = `${noteRect.top - editorRect.top + scrollTop}px`;
+        note.style.margin = '0';
+        note.style.display = 'block';
+      }
+
+      const startMouseX = e.clientX;
+      const startMouseY = e.clientY;
+      const startLeft = parseFloat(note.style.left) || 0;
+      const startTop = parseFloat(note.style.top) || 0;
+      note.style.cursor = 'grabbing';
+      note.style.zIndex = '100';
+
+      const onMove = (ev: MouseEvent) => {
+        note.style.left = `${startLeft + ev.clientX - startMouseX}px`;
+        note.style.top = `${Math.max(0, startTop + ev.clientY - startMouseY)}px`;
+      };
+      const onUp = () => {
+        note.style.cursor = '';
+        note.style.zIndex = '';
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+        debouncedSave();
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+      return;
+    }
+
     // Typed td cells: prevent browser focus dance, start edit immediately
     const td = target.closest("td") as HTMLElement | null;
     if (td && editorRef.current?.contains(td) && !td.closest("[data-lined]")) {
@@ -1342,6 +1385,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const insertStickyNote = () => {
     insertHTML(
       `<div contenteditable="false" data-quote-block="1" data-sticky-note="1" style="position:relative;display:inline-block;width:33%;min-width:120px;background:#fef9c3;border:1.5px solid #fde047;border-radius:10px;padding:10px 36px 10px 14px;margin:8px 0;box-shadow:2px 3px 8px rgba(0,0,0,0.08);resize:horizontal;overflow:auto;vertical-align:top">` +
+      `<button data-drag-btn="1" contenteditable="false" title="Drag to move" ` +
+      `style="position:absolute;top:5px;right:28px;width:18px;height:18px;border-radius:50%;background:rgba(0,0,0,0.08);border:none;cursor:grab;font-size:11px;color:#a16207;line-height:1;padding:0;display:inline-flex;align-items:center;justify-content:center;z-index:10;flex-shrink:0;user-select:none">&#9654;&#9664;</button>` +
       removeBtn() +
       `<p contenteditable="true" data-placeholder="Jot something down…" style="margin:0;color:#713f12;font-size:13px;outline:none;font-family:Inter,sans-serif;min-height:40px"></p>` +
       `<div style="position:absolute;bottom:3px;right:3px;width:10px;height:10px;cursor:se-resize;opacity:0.4;background:linear-gradient(135deg,transparent 40%,#ca8a04 40%,#ca8a04 55%,transparent 55%,transparent 70%,#ca8a04 70%,#ca8a04 85%,transparent 85%)"></div>` +
@@ -1765,6 +1810,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
               caretColor: "#6366f1",
               padding: "16px 48px 80px",
               minHeight: "6100px",
+              position: "relative",
             }}
             data-placeholder="Start writing your project notes…"
           />
@@ -2282,12 +2328,11 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                   </div>
                 </button>
                 {/* Callout Block */}
-                <button onMouseDown={e => { e.preventDefault(); insertCalloutBlock("info"); }}
-                  className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-blue-50 text-left group transition-colors">
+                <div className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-blue-50 text-left group transition-colors cursor-pointer">
                   <span className="w-7 h-7 rounded-md bg-blue-100 flex items-center justify-center text-base flex-shrink-0">💡</span>
                   <div>
-                    <div className="text-xs font-semibold text-stone-700 group-hover:text-blue-700">Callout Block</div>
-                    <div className="flex gap-1 mt-0.5">
+                    <div className="text-xs font-semibold text-stone-700 group-hover:text-blue-700 mb-0.5">Callout Block</div>
+                    <div className="flex gap-1">
                       {(["info","warning","success","error"] as const).map(v => (
                         <button key={v} onMouseDown={e => { e.preventDefault(); e.stopPropagation(); insertCalloutBlock(v); }}
                           className={`text-[9px] font-bold px-1.5 py-0.5 rounded capitalize ${
@@ -2298,7 +2343,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                       ))}
                     </div>
                   </div>
-                </button>
+                </div>
                 {/* Sticky Note */}
                 <button onMouseDown={e => { e.preventDefault(); insertStickyNote(); }}
                   className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-yellow-50 text-left group transition-colors">
