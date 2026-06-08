@@ -6,6 +6,7 @@ import columnIcon from "@assets/column-spacing-svgrepo-com_1780936842510.png";
 import definitionIcon from "@assets/card-plus-svgrepo-com_1780937097258.png";
 import codeIcon from "@assets/code_1780940574616.png";
 import bulbIcon from "@assets/idea-bulb-glow-svgrepo-com_1780940805368.png";
+import quoteIcon from "@assets/block-element-svgrepo-com_1780941287821.png";
 import {
   Plus, ImagePlus, FolderKanban, X,
   Bold, Italic, Underline, Strikethrough, Highlighter,
@@ -2676,10 +2677,11 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 {/* Quote Block */}
                 <button onMouseDown={e => { e.preventDefault(); insertBorderBlock(); }}
                   className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-indigo-50 text-left group transition-colors">
-                  <span className="w-7 h-7 rounded-md bg-indigo-100 flex items-center justify-center text-base flex-shrink-0">❝</span>
+                  <span className="w-7 h-7 flex items-center justify-center flex-shrink-0">
+                    <img src={quoteIcon} alt="quote block" className="w-6 h-6" />
+                  </span>
                   <div>
                     <div className="text-xs font-semibold text-stone-700 group-hover:text-indigo-700">Quote Block</div>
-                    <div className="text-[10px] text-stone-400">Italic styled note</div>
                   </div>
                 </button>
                 {/* Callout Block */}
