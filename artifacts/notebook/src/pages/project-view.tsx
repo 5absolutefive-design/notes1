@@ -1219,9 +1219,13 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const GRAPH_COLORS = ["#6366f1","#f59e0b","#10b981","#ef4444","#3b82f6","#ec4899"];
   const insertGraph = (type: GraphType) => {
     const id = `g_${Date.now()}`;
+    const container = scrollContainerRef.current;
+    const rect = container?.getBoundingClientRect();
+    const insertX = rect && ctxMenu ? Math.max(10, ctxMenu.x - rect.left) : 60;
+    const insertY = rect && ctxMenu && container ? Math.max(10, ctxMenu.y - rect.top + container.scrollTop) : 300;
     const newGraph: GraphBlock = {
       id, type,
-      x: 60, y: 300,
+      x: insertX, y: insertY,
       width: 380, height: 240,
       title: "My Chart",
       color: GRAPH_COLORS[0],
