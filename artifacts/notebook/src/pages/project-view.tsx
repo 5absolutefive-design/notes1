@@ -153,6 +153,8 @@ interface ContextMenuState {
   fontOpen: boolean;
   blockOpen: boolean;
   mediaOpen: boolean;
+  subActive: boolean;
+  supActive: boolean;
 }
 
 interface ImageBlock {
@@ -888,7 +890,9 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
         menuX = e.clientX;
       }
     }
-    setCtxMenu({ x: menuX, y: menuY, formatOpen: false, alignOpen: false, bulletOpen: false, highlightOpen: false, fontColorOpen: false, headingOpen: false, dividerOpen: false, linkOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1, drawOpen: false, graphOpen: false, tableOpen: false, fontOpen: false, blockOpen: false, mediaOpen: false });
+    const subActive = document.queryCommandState("subscript");
+    const supActive = document.queryCommandState("superscript");
+    setCtxMenu({ x: menuX, y: menuY, formatOpen: false, alignOpen: false, bulletOpen: false, highlightOpen: false, fontColorOpen: false, headingOpen: false, dividerOpen: false, linkOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1, drawOpen: false, graphOpen: false, tableOpen: false, fontOpen: false, blockOpen: false, mediaOpen: false, subActive, supActive });
     if (savedRangeRef.current) {
       setTimeout(() => restoreSelection(), 0);
     }
@@ -2873,8 +2877,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 <CtxItem icon={<Italic className="w-3.5 h-3.5"/>}        label="Italic"        shortcut="Ctrl+I" onClick={() => execFmt("italic")} />
                 <CtxItem icon={<Underline className="w-3.5 h-3.5"/>}     label="Underline"     shortcut="Ctrl+U" onClick={() => execFmt("underline")} />
                 <CtxItem icon={<Strikethrough className="w-3.5 h-3.5"/>} label="Strikethrough" onClick={() => execFmt("strikeThrough")} />
-                <CtxItem icon={<Subscript className="w-3.5 h-3.5"/>}    label="Subscript"    shortcut="X₂" onClick={() => execFmt("subscript")} />
-                <CtxItem icon={<Superscript className="w-3.5 h-3.5"/>}  label="Superscript"  shortcut="X²" onClick={() => execFmt("superscript")} />
+                <CtxItem icon={<Subscript className="w-3.5 h-3.5"/>}    label="Subscript"    shortcut="X₂" active={ctxMenu.subActive} onClick={() => { execFmt("subscript"); setCtxMenu(m => m ? { ...m, subActive: !m.subActive, supActive: false } : null); }} />
+                <CtxItem icon={<Superscript className="w-3.5 h-3.5"/>}  label="Superscript"  shortcut="X²" active={ctxMenu.supActive} onClick={() => { execFmt("superscript"); setCtxMenu(m => m ? { ...m, supActive: !m.supActive, subActive: false } : null); }} />
                 {/* Font Colour */}
                 <div className="relative">
                   <CtxItem icon={<span className="w-3.5 h-3.5 flex items-center justify-center text-[11px] font-bold" style={{ color: "#ef4444" }}>A</span>} label="Font Colour" hasArrow
@@ -3726,15 +3730,15 @@ function CtxSection({ label }: { label: string }) {
   );
 }
 
-function CtxItem({ icon, label, shortcut, hasArrow, onClick }: {
-  icon: React.ReactNode; label: string; shortcut?: string; hasArrow?: boolean; onClick: () => void;
+function CtxItem({ icon, label, shortcut, hasArrow, active, onClick }: {
+  icon: React.ReactNode; label: string; shortcut?: string; hasArrow?: boolean; active?: boolean; onClick: () => void;
 }) {
   return (
     <button onMouseDown={e => { e.preventDefault(); onClick(); }}
-      className="w-full flex items-center gap-2.5 px-3 py-1.5 hover:bg-indigo-50 hover:text-indigo-700 text-stone-700 transition-colors text-left">
-      <span className="text-stone-400 flex-shrink-0">{icon}</span>
+      className={`w-full flex items-center gap-2.5 px-3 py-1.5 hover:bg-indigo-50 hover:text-indigo-700 transition-colors text-left ${active ? "bg-indigo-50 text-indigo-700" : "text-stone-700"}`}>
+      <span className={`flex-shrink-0 ${active ? "text-indigo-500" : "text-stone-400"}`}>{icon}</span>
       <span className="text-xs font-medium flex-1">{label}</span>
-      {shortcut && <span className="text-[10px] text-stone-400 flex-shrink-0">{shortcut}</span>}
+      {shortcut && <span className={`text-[10px] flex-shrink-0 ${active ? "text-indigo-400 font-semibold" : "text-stone-400"}`}>{shortcut}</span>}
       {hasArrow && <ChevronRight className="w-3 h-3 text-stone-400 flex-shrink-0" />}
     </button>
   );
