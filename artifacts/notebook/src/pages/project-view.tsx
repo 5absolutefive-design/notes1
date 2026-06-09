@@ -423,6 +423,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     const onUp = (e: MouseEvent) => {
       dragRef.current = null;
       resizeRef.current = null;
+      graphDragRef.current = null;
       if (arrowDrawRef.current) {
         const container = scrollContainerRef.current;
         if (container) {
