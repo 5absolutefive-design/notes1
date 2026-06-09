@@ -290,6 +290,15 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const [drawingArrow, setDrawingArrow] = useState<ArrowShape | null>(null);
   const arrowDrawRef = useRef<{ startX: number; startY: number; type: DrawTool } | null>(null);
 
+  // ── Universal undo/redo history
+  const arrowsRef = useRef<ArrowShape[]>([]);
+  const imageBlocksRef = useRef<ImageBlock[]>([]);
+  type HistorySnap = { html: string; arrows: ArrowShape[]; imageBlocks: ImageBlock[] };
+  const historyRef = useRef<HistorySnap[]>([]);
+  const historyIndexRef = useRef<number>(-1);
+  const isRestoringRef = useRef(false);
+  const pushHistoryRef = useRef<(opts?: Partial<HistorySnap>) => void>(() => {});
+
   const activeProject = projects.find(p => p.id === activeId) ?? null;
 
   // ── Load / save image blocks per project
@@ -323,6 +332,10 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     if (!activeId) return;
     localStorage.setItem(`nb_project_arrows_${activeId}`, JSON.stringify(arrows));
   }, [arrows, activeId]);
+
+  // ── Keep refs in sync with latest state (for use inside stale closures)
+  useEffect(() => { arrowsRef.current = arrows; }, [arrows]);
+  useEffect(() => { imageBlocksRef.current = imageBlocks; }, [imageBlocks]);
 
   // ── Escape key exits draw mode
   useEffect(() => {
@@ -379,7 +392,9 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           const dist = Math.sqrt((x2 - startX) ** 2 + (y2 - startY) ** 2);
           if (dist > 8) {
             const shape: ArrowShape = { id: crypto.randomUUID(), type, x1: startX, y1: startY, x2, y2, color: "#ef4444" };
-            setArrows(prev => [...prev, shape]);
+            const newArrows = [...arrowsRef.current, shape];
+            setArrows(newArrows);
+            pushHistoryRef.current({ arrows: newArrows });
           }
         }
         arrowDrawRef.current = null;
@@ -445,12 +460,64 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
       saveProjects(updated);
       return updated;
     });
+    pushHistoryRef.current({ html: content });
   }, [activeId, setProjects]);
 
   const debouncedSave = useCallback(() => {
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(saveContent, 600);
   }, [saveContent]);
+
+  // ── Universal history push (call after any meaningful state change)
+  const pushHistory = useCallback((opts?: { html?: string; arrows?: ArrowShape[]; imageBlocks?: ImageBlock[] }) => {
+    if (isRestoringRef.current) return;
+    const html = opts?.html ?? editorRef.current?.innerHTML ?? "";
+    const arrs = opts?.arrows ?? arrowsRef.current;
+    const imgs = opts?.imageBlocks ?? imageBlocksRef.current;
+    historyRef.current = historyRef.current.slice(0, historyIndexRef.current + 1);
+    historyRef.current.push({ html, arrows: [...arrs], imageBlocks: [...imgs] });
+    if (historyRef.current.length > 60) historyRef.current.shift();
+    historyIndexRef.current = historyRef.current.length - 1;
+  }, []);
+  useEffect(() => { pushHistoryRef.current = pushHistory; }, [pushHistory]);
+
+  const universalUndo = useCallback(() => {
+    if (historyIndexRef.current <= 0) return;
+    historyIndexRef.current--;
+    const snap = historyRef.current[historyIndexRef.current];
+    if (!snap) return;
+    isRestoringRef.current = true;
+    if (editorRef.current) editorRef.current.innerHTML = snap.html;
+    setArrows(snap.arrows);
+    setImageBlocks(snap.imageBlocks);
+    isRestoringRef.current = false;
+    if (activeId) {
+      setProjects(prev => {
+        const updated = prev.map(p => p.id === activeId ? { ...p, content: snap.html, updatedAt: new Date().toISOString() } : p);
+        saveProjects(updated);
+        return updated;
+      });
+    }
+  }, [activeId, setProjects]);
+
+  const universalRedo = useCallback(() => {
+    if (historyIndexRef.current >= historyRef.current.length - 1) return;
+    historyIndexRef.current++;
+    const snap = historyRef.current[historyIndexRef.current];
+    if (!snap) return;
+    isRestoringRef.current = true;
+    if (editorRef.current) editorRef.current.innerHTML = snap.html;
+    setArrows(snap.arrows);
+    setImageBlocks(snap.imageBlocks);
+    isRestoringRef.current = false;
+    if (activeId) {
+      setProjects(prev => {
+        const updated = prev.map(p => p.id === activeId ? { ...p, content: snap.html, updatedAt: new Date().toISOString() } : p);
+        saveProjects(updated);
+        return updated;
+      });
+    }
+  }, [activeId, setProjects]);
 
   // ── Listen for date input changes inside typed table cells ────
   useEffect(() => {
@@ -1261,11 +1328,10 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
       const containerW = scrollContainerRef.current?.clientWidth ?? 700;
       const blockW = Math.min(375, containerW - 96);
       const id = `img_${Date.now()}`;
-      setImageBlocks(prev => [...prev, {
-        id, src, locked: false, width: blockW,
-        x: (containerW - blockW) / 2,
-        y: scrollTop + 120,
-      }]);
+      const newBlock = { id, src, locked: false, width: blockW, x: (containerW - blockW) / 2, y: scrollTop + 120 };
+      const newBlocks = [...imageBlocksRef.current, newBlock];
+      setImageBlocks(newBlocks);
+      pushHistory({ imageBlocks: newBlocks });
     } catch { /* ignore */ }
   };
 
@@ -1837,7 +1903,11 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             const cx = e.clientX - rect.left;
             const cy = e.clientY - rect.top + container.scrollTop;
             if (drawTool === "eraser") {
-              setArrows(prev => prev.filter(s => !shapeIntersectsCircle(s, cx, cy, ERASER_RADIUS)));
+              const filtered = arrowsRef.current.filter(s => !shapeIntersectsCircle(s, cx, cy, ERASER_RADIUS));
+              if (filtered.length !== arrowsRef.current.length) {
+                setArrows(filtered);
+                pushHistory({ arrows: filtered });
+              }
               e.preventDefault();
               return;
             }
@@ -2127,7 +2197,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 <DrawShapeEl
                   key={a.id} shape={a} isPreview={false}
                   eraserMode={drawTool === "eraser"}
-                  onRemove={() => setArrows(prev => prev.filter(x => x.id !== a.id))}
+                  onRemove={() => { const f = arrows.filter(x => x.id !== a.id); setArrows(f); pushHistory({ arrows: f }); }}
                 />
               ))}
               {drawingArrow && <DrawShapeEl shape={drawingArrow} isPreview={true} eraserMode={false} />}
@@ -2192,7 +2262,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 {!blk.locked && (
                   <button
                     data-img-btn="1"
-                    onClick={() => setImageBlocks(prev => prev.filter(b => b.id !== blk.id))}
+                    onClick={() => { const f = imageBlocks.filter(b => b.id !== blk.id); setImageBlocks(f); pushHistory({ imageBlocks: f }); }}
                     style={{
                       position: "absolute", top: -10, left: -10,
                       width: 22, height: 22, borderRadius: "50%",
@@ -2576,14 +2646,14 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           {/* Undo / Redo — same style as CtxItem, split 50/50 with divider */}
           <div className="flex">
             <button
-              onMouseDown={e => { e.preventDefault(); execFmt("undo"); setCtxMenu(null); }}
+              onMouseDown={e => { e.preventDefault(); universalUndo(); setCtxMenu(null); }}
               className="flex-1 flex items-center justify-center gap-2.5 px-3 py-1.5 hover:bg-indigo-50 hover:text-indigo-700 text-stone-700 transition-colors text-left text-xs font-medium">
               <Undo2 className="w-3.5 h-3.5 flex-shrink-0 text-stone-400" />
               <span>Undo</span>
             </button>
             <div className="w-px bg-stone-100 my-1" />
             <button
-              onMouseDown={e => { e.preventDefault(); execFmt("redo"); setCtxMenu(null); }}
+              onMouseDown={e => { e.preventDefault(); universalRedo(); setCtxMenu(null); }}
               className="flex-1 flex items-center justify-center gap-2.5 px-3 py-1.5 hover:bg-indigo-50 hover:text-indigo-700 text-stone-700 transition-colors text-left text-xs font-medium">
               <Redo2 className="w-3.5 h-3.5 flex-shrink-0 text-stone-400" />
               <span>Redo</span>
