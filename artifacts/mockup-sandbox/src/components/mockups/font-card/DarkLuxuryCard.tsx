@@ -1,129 +1,127 @@
 import { useState } from "react";
 
 const FONTS = [
-  "Inter", "Arial", "Arial Black", "Georgia", "Times New Roman",
-  "Verdana", "Trebuchet MS", "Courier New", "Comic Sans MS",
-  "Roboto", "Lato", "Poppins", "Nunito", "Merriweather", "Playfair Display",
+  "Inter", "Arial", "Georgia", "Times New Roman", "Verdana",
+  "Trebuchet MS", "Courier New", "Roboto", "Lato", "Poppins",
+  "Nunito", "Merriweather", "Playfair Display", "Comic Sans MS",
 ];
 
 const SIZES = [10, 12, 14, 16, 18, 20, 24, 28, 32, 48, 72];
 
+// Design B — Command Palette style
+// Structure: Search box dominant at top, font list looks like a command list with keyboard shortcut hints
 export function DarkLuxuryCard() {
   const [fontSize, setFontSize] = useState(16);
   const [selectedFont, setSelectedFont] = useState("Inter");
   const [mode, setMode] = useState<"all" | "selected">("all");
   const [search, setSearch] = useState("");
+  const [hoveredFont, setHoveredFont] = useState<string | null>(null);
 
   const filtered = FONTS.filter(f => f.toLowerCase().includes(search.toLowerCase()));
+  const previewFont = hoveredFont || selectedFont;
 
   return (
-    <div className="min-h-screen flex items-center justify-center"
-      style={{ background: "#0f0f13" }}>
+    <div style={{
+      minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center",
+      background: "#111", fontFamily: "'Courier New', monospace",
+    }}>
       <div style={{
-        width: 320,
-        borderRadius: 18,
-        background: "linear-gradient(160deg, #1c1c24 0%, #16161e 100%)",
-        border: "1px solid #2a2a36",
-        boxShadow: "0 0 0 1px #1e1e28, 0 20px 60px rgba(0,0,0,0.6), 0 0 80px rgba(168,120,255,0.04)",
-        padding: "18px 20px",
-        color: "#e8e3f5",
-        fontFamily: "'Inter', sans-serif",
+        width: 258,
+        background: "#0d0d0d",
+        border: "1px solid #2a2a2a",
+        borderRadius: 6,
+        overflow: "hidden",
+        boxShadow: "0 0 0 1px #1a1a1a, 0 16px 40px rgba(0,0,0,0.8)",
       }}>
-        {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
-          <div>
-            <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.15em", textTransform: "uppercase", color: "#a78bfa" }}>Font Studio</div>
-            <div style={{ fontSize: 9, color: "#6b6880", marginTop: 2 }}>Select text → click to apply</div>
-          </div>
-          <div style={{
-            width: 34, height: 34, borderRadius: 10,
-            background: "linear-gradient(135deg, #a78bfa22, #7c3aed22)",
-            border: "1px solid #a78bfa44",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 13, fontWeight: 800, color: "#a78bfa",
-          }}>Aa</div>
+        {/* Top bar */}
+        <div style={{ padding: "8px 10px", borderBottom: "1px solid #1f1f1f", display: "flex", alignItems: "center", gap: 5 }}>
+          <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#333", display: "inline-block" }} />
+          <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#333", display: "inline-block" }} />
+          <span style={{ width: 7, height: 7, borderRadius: "50%", background: "#333", display: "inline-block" }} />
+          <span style={{ flex: 1, textAlign: "center", fontSize: 9, color: "#444", letterSpacing: "0.08em" }}>font-selector</span>
         </div>
 
-        <div style={{ height: 1, background: "linear-gradient(90deg, #a78bfa33, transparent)", marginBottom: 14 }} />
-
-        {/* Size */}
-        <div style={{ marginBottom: 12 }}>
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
-            <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#6b6880" }}>Size</span>
-            <div style={{ display: "flex", borderRadius: 7, overflow: "hidden", border: "1px solid #2a2a36" }}>
-              {(["all", "selected"] as const).map(m => (
-                <button key={m} onClick={() => setMode(m)}
-                  style={{
-                    padding: "3px 10px", fontSize: 10, fontWeight: 600, border: "none", cursor: "pointer",
-                    background: mode === m ? "linear-gradient(135deg, #7c3aed, #a78bfa)" : "transparent",
-                    color: mode === m ? "#fff" : "#6b6880",
-                    textTransform: "capitalize", transition: "all 0.15s",
-                  }}>{m}</button>
-              ))}
-            </div>
+        {/* Live preview bar */}
+        <div style={{ padding: "10px 12px", borderBottom: "1px solid #1f1f1f", background: "#080808" }}>
+          <div style={{ fontSize: 8, color: "#444", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 5 }}>› preview</div>
+          <div style={{ fontFamily: previewFont, fontSize, color: "#e8e8e8", lineHeight: 1.2, minHeight: 28, transition: "all 0.12s" }}>
+            Abc 123
           </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 8 }}>
+          <div style={{ marginTop: 6, fontSize: 8, color: "#3a3a3a", fontFamily: "monospace" }}>
+            font: <span style={{ color: "#888" }}>{previewFont}</span>  size: <span style={{ color: "#888" }}>{fontSize}px</span>
+          </div>
+        </div>
+
+        {/* Size row */}
+        <div style={{ padding: "6px 10px", borderBottom: "1px solid #1f1f1f", display: "flex", alignItems: "center", gap: 5 }}>
+          <span style={{ fontSize: 8, color: "#444", letterSpacing: "0.1em", textTransform: "uppercase", flexShrink: 0 }}>size</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 3, marginLeft: "auto" }}>
             <button onClick={() => setFontSize(s => Math.max(8, s - 2))}
-              style={{
-                width: 28, height: 28, borderRadius: 8, border: "1px solid #2a2a36",
-                background: "#1e1e28", color: "#a78bfa", fontSize: 16, fontWeight: 700,
-                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-                transition: "all 0.12s",
-              }}>−</button>
-            <span style={{ flex: 1, textAlign: "center", fontSize: 15, fontWeight: 700, color: "#e8e3f5" }}>{fontSize}px</span>
+              style={{ width: 18, height: 18, background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 3, color: "#666", fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
+            <span style={{ fontSize: 10, color: "#aaa", minWidth: 30, textAlign: "center", fontVariantNumeric: "tabular-nums" }}>{fontSize}</span>
             <button onClick={() => setFontSize(s => Math.min(96, s + 2))}
-              style={{
-                width: 28, height: 28, borderRadius: 8, border: "1px solid #2a2a36",
-                background: "#1e1e28", color: "#a78bfa", fontSize: 16, fontWeight: 700,
-                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center",
-              }}>+</button>
+              style={{ width: 18, height: 18, background: "#1a1a1a", border: "1px solid #2a2a2a", borderRadius: 3, color: "#666", fontSize: 11, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
           </div>
-          <div style={{ display: "flex", flexWrap: "wrap", gap: 4 }}>
-            {SIZES.map(s => (
-              <button key={s} onClick={() => setFontSize(s)}
-                style={{
-                  height: 22, padding: "0 7px", fontSize: 10, fontWeight: 600, borderRadius: 5,
-                  border: fontSize === s ? "1px solid #a78bfa" : "1px solid #2a2a36",
-                  background: fontSize === s ? "#a78bfa18" : "#1a1a22",
-                  color: fontSize === s ? "#a78bfa" : "#55526a",
-                  cursor: "pointer", transition: "all 0.12s",
-                }}>{s}</button>
-            ))}
+        </div>
+        <div style={{ padding: "4px 10px 6px", borderBottom: "1px solid #1f1f1f", display: "flex", flexWrap: "wrap", gap: 3 }}>
+          {SIZES.map(s => (
+            <button key={s} onClick={() => setFontSize(s)}
+              style={{
+                height: 18, padding: "0 5px", fontSize: 9,
+                border: fontSize === s ? "1px solid #666" : "1px solid #222",
+                background: fontSize === s ? "#222" : "transparent",
+                color: fontSize === s ? "#ccc" : "#444",
+                borderRadius: 2, cursor: "pointer", fontFamily: "monospace",
+              }}>{s}</button>
+          ))}
+        </div>
+
+        {/* Mode + search */}
+        <div style={{ padding: "6px 10px", borderBottom: "1px solid #1f1f1f", display: "flex", gap: 4 }}>
+          {(["all", "selected"] as const).map(m => (
+            <button key={m} onClick={() => setMode(m)}
+              style={{
+                padding: "2px 7px", fontSize: 8, fontWeight: 700, letterSpacing: "0.08em",
+                border: "1px solid", borderColor: mode === m ? "#aaa" : "#222",
+                background: mode === m ? "#222" : "transparent",
+                color: mode === m ? "#ccc" : "#444",
+                borderRadius: 2, cursor: "pointer", textTransform: "uppercase",
+              }}>{m}</button>
+          ))}
+        </div>
+        <div style={{ padding: "6px 10px", borderBottom: "1px solid #1f1f1f" }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 5, background: "#111", border: "1px solid #2a2a2a", borderRadius: 3, padding: "4px 8px" }}>
+            <span style={{ fontSize: 10, color: "#333" }}>›</span>
+            <input value={search} onChange={e => setSearch(e.target.value)}
+              placeholder="search font..."
+              style={{
+                flex: 1, background: "transparent", border: "none", outline: "none",
+                fontSize: 11, color: "#ccc", fontFamily: "'Courier New', monospace",
+              }} />
           </div>
         </div>
 
-        <div style={{ height: 1, background: "#1e1e28", margin: "10px 0" }} />
-
-        {/* Family */}
-        <div>
-          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#6b6880", marginBottom: 8 }}>Family</div>
-          <input
-            value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Search font..."
-            style={{
-              width: "100%", height: 30, padding: "0 10px", borderRadius: 8, fontSize: 11,
-              border: "1px solid #2a2a36", background: "#13131a", color: "#c5bfdd",
-              outline: "none", boxSizing: "border-box",
-            }}
-          />
-          <div style={{ maxHeight: 190, overflowY: "auto", marginTop: 6, display: "flex", flexDirection: "column", gap: 1 }}>
-            {filtered.map(f => {
-              const sel = selectedFont === f;
-              return (
-                <button key={f} onClick={() => setSelectedFont(f)}
-                  style={{
-                    display: "flex", alignItems: "center", gap: 10, padding: "6px 10px", borderRadius: 8,
-                    border: sel ? "1px solid #a78bfa55" : "1px solid transparent",
-                    background: sel ? "#a78bfa14" : "transparent",
-                    cursor: "pointer", textAlign: "left", transition: "all 0.12s",
-                  }}>
-                  <span style={{ fontSize: 10, width: 80, flexShrink: 0, color: sel ? "#a78bfa" : "#55526a", fontWeight: sel ? 600 : 400, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f}</span>
-                  <span style={{ fontSize: 14, fontFamily: f, color: sel ? "#e8e3f5" : "#7a7590", flex: 1 }}>Abc 123</span>
-                  {sel && <span style={{ color: "#a78bfa", fontSize: 11, fontWeight: 700 }}>✓</span>}
-                </button>
-              );
-            })}
-          </div>
+        {/* Font command list */}
+        <div style={{ maxHeight: 200, overflowY: "auto" }}>
+          {filtered.map(f => {
+            const sel = selectedFont === f;
+            const hov = hoveredFont === f;
+            return (
+              <button key={f}
+                onClick={() => setSelectedFont(f)}
+                onMouseEnter={() => setHoveredFont(f)}
+                onMouseLeave={() => setHoveredFont(null)}
+                style={{
+                  display: "flex", alignItems: "center", width: "100%", padding: "5px 10px",
+                  background: sel ? "#1c1c1c" : hov ? "#141414" : "transparent",
+                  border: "none", borderBottom: "1px solid #141414", cursor: "pointer", textAlign: "left",
+                }}>
+                <span style={{ fontSize: 8, color: sel ? "#888" : "#333", width: 16, flexShrink: 0 }}>{sel ? "●" : "○"}</span>
+                <span style={{ fontSize: 10, color: sel ? "#ddd" : hov ? "#aaa" : "#555", flex: 1, fontFamily: "'Courier New', monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f}</span>
+                <span style={{ fontFamily: f, fontSize: 13, color: sel ? "#fff" : hov ? "#888" : "#2a2a2a" }}>Aa</span>
+              </button>
+            );
+          })}
         </div>
       </div>
     </div>
