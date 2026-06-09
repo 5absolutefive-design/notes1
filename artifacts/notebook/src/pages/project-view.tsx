@@ -2396,17 +2396,18 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             return (
               <div key={g.id} style={{ position: "absolute", left: g.x, top: g.y, width: g.width, zIndex: 25, userSelect: "none" }}>
                 <div
-                  onMouseDown={e => {
-                    if ((e.target as HTMLElement).closest("[data-graph-btn]")) return;
-                    e.preventDefault();
-                    graphDragRef.current = { id: g.id, startMx: e.clientX, startMy: e.clientY, startBx: g.x, startBy: g.y };
-                  }}
-                  style={{ cursor: "grab", background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: 10, boxShadow: "0 2px 12px rgba(0,0,0,0.09)", overflow: "hidden" }}
+                  style={{ cursor: "default", background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: 10, boxShadow: "0 2px 12px rgba(0,0,0,0.09)", overflow: "hidden" }}
                 >
                   {/* Header */}
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px 4px", borderBottom: "1px solid #f1f0ee" }}>
                     <span style={{ fontSize: 12, fontWeight: 700, color: "#374151", fontFamily: "Georgia, serif" }}>{g.title}</span>
                     <div style={{ display: "flex", gap: 4 }}>
+                      <button data-graph-btn="1" title="Move chart"
+                        onMouseDown={e => {
+                          e.preventDefault();
+                          graphDragRef.current = { id: g.id, startMx: e.clientX, startMy: e.clientY, startBx: g.x, startBy: g.y };
+                        }}
+                        style={{ width: 20, height: 20, borderRadius: 4, border: "1px solid #e2e8f0", background: "#f8fafc", cursor: "grab", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center" }}>✋</button>
                       <button data-graph-btn="1" title="Edit data"
                         onClick={() => setGraphEditor({ id: g.id, data: [...g.data], title: g.title, type: g.type, color: g.color })}
                         style={{ width: 20, height: 20, borderRadius: 4, border: "1px solid #e2e8f0", background: "#f8fafc", cursor: "pointer", fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center" }}>✏️</button>
