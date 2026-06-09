@@ -35,7 +35,7 @@ export function GlassmorphismCard() {
         <div style={{
           padding: "18px 16px 14px",
           borderBottom: "none",
-          background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+          background: "#b5b5b5",
         }}>
           <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.18em", color: "rgba(255,255,255,0.55)", textTransform: "uppercase", marginBottom: 10 }}>
             Specimen · {selectedFont}
