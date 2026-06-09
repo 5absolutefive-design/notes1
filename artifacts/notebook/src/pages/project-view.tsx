@@ -21,7 +21,7 @@ import {
   CheckSquare, Minus, Heading1, Heading2, Heading3,
   AlignLeft, AlignCenter, AlignRight, List, ListOrdered,
   ChevronRight, Link, Mic, PenLine, Eraser, Table, Video,
-  Copy, Scissors, Clipboard, Wrench, FileDown, FileUp, ArrowLeftRight,
+  Copy, Scissors, Clipboard, Wrench, FileDown, FileUp, ArrowLeftRight, Undo2, Redo2,
 } from "lucide-react";
 import {
   ColTypePicker, SelectCellPopup, PriorityCellPopup, ProgressCellPopup,
@@ -2570,6 +2570,22 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 <CtxItem icon={<AlignRight className="w-3.5 h-3.5"/>}  label="Align Right"  onClick={() => execFmt("justifyRight")} />
               </div>
             )}
+          </div>
+
+          {/* Undo / Redo — same width as Align button, split 50/50 */}
+          <div className="flex px-2 py-1 gap-1">
+            <button
+              onMouseDown={e => { e.preventDefault(); execFmt("undo"); setCtxMenu(null); }}
+              className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg border border-stone-100 hover:bg-indigo-50 hover:border-indigo-200 text-stone-600 hover:text-indigo-700 transition-colors text-xs font-medium">
+              <Undo2 className="w-3.5 h-3.5 flex-shrink-0" />
+              <span>Undo</span>
+            </button>
+            <button
+              onMouseDown={e => { e.preventDefault(); execFmt("redo"); setCtxMenu(null); }}
+              className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg border border-stone-100 hover:bg-indigo-50 hover:border-indigo-200 text-stone-600 hover:text-indigo-700 transition-colors text-xs font-medium">
+              <Redo2 className="w-3.5 h-3.5 flex-shrink-0" />
+              <span>Redo</span>
+            </button>
           </div>
 
           <div className="my-1 border-t border-stone-100" />
