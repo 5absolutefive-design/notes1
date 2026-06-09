@@ -916,7 +916,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     const vw = window.innerWidth;
     let left = anchor.right + 4;
     if (left + card.width > vw - 8) left = anchor.left - card.width - 4;
-    let top = anchor.bottom - card.height;
+    let top = anchor.top + anchor.height / 2 - card.height / 2;
     top = Math.max(8, Math.min(top, vh - card.height - 8));
     left = Math.max(8, Math.min(left, vw - card.width - 8));
     fontSubCardRef.current.style.top = `${top}px`;
