@@ -1148,6 +1148,13 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     debouncedSave();
   };
 
+  const CLOSE_ALL_SUBS = {
+    formatOpen: false, fontOpen: false, alignOpen: false, bulletOpen: false,
+    dividerOpen: false, linkOpen: false, drawOpen: false, tableOpen: false,
+    mediaOpen: false, blockOpen: false, graphOpen: false,
+    highlightOpen: false, fontColorOpen: false, headingOpen: false,
+  };
+
   const applyCtxFontName = (name: string, fromPanel = false) => {
     restoreSelection();
     void fromPanel;
@@ -2958,7 +2965,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           {/* Format button → side sub-card */}
           <div className="relative">
             <CtxItem icon={<Bold className="w-3.5 h-3.5"/>} label="Format" hasArrow
-              onClick={() => setCtxMenu(m => m ? { ...m, formatOpen: !m.formatOpen, alignOpen: false, bulletOpen: false, dividerOpen: false, linkOpen: false, drawOpen: false, highlightOpen: false, fontColorOpen: false, headingOpen: false } : null)} />
+              onClick={() => setCtxMenu(m => m ? { ...m, ...CLOSE_ALL_SUBS, formatOpen: !m.formatOpen } : null)} />
             {ctxMenu.formatOpen && (
               <div className="absolute left-full top-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 py-1.5 z-[10000] min-w-[180px]">
                 <CtxItem icon={<span className="w-3.5 h-3.5 flex items-center justify-center text-[10px] font-bold leading-none text-stone-500">T</span>} label="Normal" onClick={() => { execFmt("removeFormat"); restoreSelection(); setCtxMenu(null); }} />
@@ -2989,7 +2996,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 {/* Font Colour */}
                 <div className="relative">
                   <CtxItem icon={<span className="w-3.5 h-3.5 flex items-center justify-center text-[11px] font-bold" style={{ color: "#ef4444" }}>A</span>} label="Font Colour" hasArrow
-                    onClick={() => setCtxMenu(m => m ? { ...m, fontColorOpen: !m.fontColorOpen, highlightOpen: false, headingOpen: false } : null)} />
+                    onClick={() => setCtxMenu(m => m ? { ...m, ...CLOSE_ALL_SUBS, formatOpen: true, fontColorOpen: !m.fontColorOpen } : null)} />
                   {ctxMenu.fontColorOpen && (
                     <div className="absolute left-full top-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 p-2.5 z-[10001]" style={{ minWidth: 140 }}>
                       <div className="flex flex-wrap gap-1.5">
@@ -3011,7 +3018,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 {/* Highlight */}
                 <div className="relative">
                   <CtxItem icon={<Highlighter className="w-3.5 h-3.5"/>} label="Highlight" hasArrow
-                    onClick={() => setCtxMenu(m => m ? { ...m, highlightOpen: !m.highlightOpen, fontColorOpen: false, headingOpen: false } : null)} />
+                    onClick={() => setCtxMenu(m => m ? { ...m, ...CLOSE_ALL_SUBS, formatOpen: true, highlightOpen: !m.highlightOpen } : null)} />
                   {ctxMenu.highlightOpen && (
                     <div className="absolute left-full top-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 p-2.5 flex gap-1.5 z-[10001]">
                       {HIGHLIGHT_COLORS.map(hc => (
@@ -3031,7 +3038,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 {/* Heading */}
                 <div className="relative">
                   <CtxItem icon={<Heading1 className="w-3.5 h-3.5"/>} label="Heading" hasArrow
-                    onClick={() => setCtxMenu(m => m ? { ...m, headingOpen: !m.headingOpen, highlightOpen: false, fontColorOpen: false } : null)} />
+                    onClick={() => setCtxMenu(m => m ? { ...m, ...CLOSE_ALL_SUBS, formatOpen: true, headingOpen: !m.headingOpen } : null)} />
                   {ctxMenu.headingOpen && (
                     <div className="absolute left-full top-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 py-1.5 z-[10001] min-w-[130px]">
                       <CtxItem icon={<Heading1 className="w-3.5 h-3.5"/>} label="Heading 1" onClick={() => execFmt("formatBlock", "h1")} />
@@ -3049,7 +3056,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           {/* Font → side sub-card */}
           <div className="relative" ref={fontItemRef}>
             <CtxItem icon={<span className="w-3.5 h-3.5 flex items-center justify-center text-[11px] font-bold leading-none">Aa</span>} label="Font" hasArrow
-              onClick={() => setCtxMenu(m => m ? { ...m, fontOpen: !m.fontOpen, formatOpen: false, alignOpen: false, bulletOpen: false, dividerOpen: false, linkOpen: false, drawOpen: false } : null)} />
+              onClick={() => setCtxMenu(m => m ? { ...m, ...CLOSE_ALL_SUBS, fontOpen: !m.fontOpen } : null)} />
             {ctxMenu.fontOpen && (
               <div ref={fontSubCardRef} className="fixed z-[10001]" style={{ minWidth: 220, top: 0, left: 0 }}
                 onMouseDown={e => e.stopPropagation()}>
@@ -3155,7 +3162,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           {/* Align button → side sub-card */}
           <div className="relative">
             <CtxItem icon={<AlignLeft className="w-3.5 h-3.5"/>} label="Align" hasArrow
-              onClick={() => setCtxMenu(m => m ? { ...m, alignOpen: !m.alignOpen, formatOpen: false, bulletOpen: false, dividerOpen: false, linkOpen: false, drawOpen: false } : null)} />
+              onClick={() => setCtxMenu(m => m ? { ...m, ...CLOSE_ALL_SUBS, alignOpen: !m.alignOpen } : null)} />
             {ctxMenu.alignOpen && (
               <div className="absolute left-full top-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 py-1.5 z-[10000] min-w-[160px]">
                 <CtxItem icon={<AlignLeft className="w-3.5 h-3.5"/>}   label="Align Left"   onClick={() => execFmt("justifyLeft")} />
@@ -3189,7 +3196,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           {/* Table → side sub-card with grid picker */}
           <div className="relative" ref={tableItemRef}>
             <CtxItem icon={<Table className="w-3.5 h-3.5"/>} label="Table" hasArrow
-              onClick={() => setCtxMenu(m => m ? { ...m, tableOpen: !m.tableOpen, formatOpen: false, alignOpen: false, bulletOpen: false, dividerOpen: false, linkOpen: false, drawOpen: false } : null)} />
+              onClick={() => setCtxMenu(m => m ? { ...m, ...CLOSE_ALL_SUBS, tableOpen: !m.tableOpen } : null)} />
             {ctxMenu.tableOpen && (
               <div ref={tableSubCardRef} className="fixed bg-white rounded-xl shadow-2xl border border-stone-200 p-3 z-[10000]" style={{ minWidth: 230, top: 0, left: 0 }}
                 onMouseDown={e => e.stopPropagation()}>
@@ -3254,7 +3261,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           {/* Bullet List → side sub-card with many styles */}
           <div className="relative">
             <CtxItem icon={<List className="w-3.5 h-3.5"/>} label="Bullet List" hasArrow
-              onClick={() => setCtxMenu(m => m ? { ...m, bulletOpen: !m.bulletOpen, formatOpen: false, alignOpen: false, dividerOpen: false, linkOpen: false, drawOpen: false } : null)} />
+              onClick={() => setCtxMenu(m => m ? { ...m, ...CLOSE_ALL_SUBS, bulletOpen: !m.bulletOpen } : null)} />
             {ctxMenu.bulletOpen && (
               <div className="absolute left-full bottom-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 py-2 px-2 z-[10000] min-w-[220px]">
                 <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide px-1 mb-1.5">Choose a list style</p>
@@ -3295,7 +3302,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           {/* Divider Line → side sub-card with styles */}
           <div className="relative">
             <CtxItem icon={<Minus className="w-3.5 h-3.5"/>} label="Divider Line" hasArrow
-              onClick={() => setCtxMenu(m => m ? { ...m, dividerOpen: !m.dividerOpen, bulletOpen: false, formatOpen: false, alignOpen: false, linkOpen: false, drawOpen: false } : null)} />
+              onClick={() => setCtxMenu(m => m ? { ...m, ...CLOSE_ALL_SUBS, dividerOpen: !m.dividerOpen } : null)} />
             {ctxMenu.dividerOpen && (
               <div className="absolute left-full bottom-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 py-2 px-3 z-[10000] min-w-[200px]">
                 <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide mb-2">Choose a divider style</p>
@@ -3319,7 +3326,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           {/* Links → side sub-card with link types */}
           <div className="relative">
             <CtxItem icon={<Link className="w-3.5 h-3.5"/>} label="Links" hasArrow
-              onClick={() => setCtxMenu(m => m ? { ...m, linkOpen: !m.linkOpen, dividerOpen: false, bulletOpen: false, formatOpen: false, alignOpen: false, drawOpen: false } : null)} />
+              onClick={() => setCtxMenu(m => m ? { ...m, ...CLOSE_ALL_SUBS, linkOpen: !m.linkOpen } : null)} />
             {ctxMenu.linkOpen && (
               <div className="absolute left-full bottom-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 py-2 px-2 z-[10000] min-w-[190px]">
                 <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide px-1 mb-1.5">Choose a link type</p>
@@ -3342,7 +3349,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           {/* Media → sub-card */}
           <div className="relative">
             <CtxItem icon={<ImagePlus className="w-3.5 h-3.5"/>} label="Media" hasArrow
-              onClick={() => setCtxMenu(m => m ? { ...m, mediaOpen: !m.mediaOpen, formatOpen: false, alignOpen: false, bulletOpen: false, dividerOpen: false, linkOpen: false, drawOpen: false, tableOpen: false, blockOpen: false } : null)} />
+              onClick={() => setCtxMenu(m => m ? { ...m, ...CLOSE_ALL_SUBS, mediaOpen: !m.mediaOpen } : null)} />
             {ctxMenu.mediaOpen && (
               <div className="absolute left-full bottom-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 py-2 px-2 z-[10000] min-w-[170px]">
                 <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide px-1 mb-1.5">Choose Media Type</p>
@@ -3384,7 +3391,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
               icon={<PenLine className="w-3.5 h-3.5"/>}
               label={drawTool ? `Drawing: ${DRAW_TOOL_LABELS[drawTool]}` : "Draw"}
               hasArrow
-              onClick={() => setCtxMenu(m => m ? { ...m, drawOpen: !m.drawOpen, formatOpen: false, alignOpen: false, bulletOpen: false, dividerOpen: false, linkOpen: false } : null)}
+              onClick={() => setCtxMenu(m => m ? { ...m, ...CLOSE_ALL_SUBS, drawOpen: !m.drawOpen } : null)}
             />
             {ctxMenu.drawOpen && (
               <div className="absolute left-full bottom-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 py-2 px-2 z-[10000] min-w-[256px]">
@@ -3423,7 +3430,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           {/* Graph → sub-card */}
           <div className="relative">
             <CtxItem icon={<BarChart2 className="w-3.5 h-3.5"/>} label="Graph" hasArrow
-              onClick={() => setCtxMenu(m => m ? { ...m, graphOpen: !m.graphOpen, drawOpen: false, formatOpen: false, alignOpen: false, bulletOpen: false, dividerOpen: false, linkOpen: false, tableOpen: false, blockOpen: false, mediaOpen: false } : null)} />
+              onClick={() => setCtxMenu(m => m ? { ...m, ...CLOSE_ALL_SUBS, graphOpen: !m.graphOpen } : null)} />
             {ctxMenu.graphOpen && (
               <div className="absolute left-full bottom-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 py-2 px-2 z-[10000] min-w-[190px]">
                 <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide px-1 mb-1.5">Choose Chart Type</p>
@@ -3445,7 +3452,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           {/* Block picker */}
           <div className="relative">
             <CtxItem icon={<ChevronRight className="w-3.5 h-3.5"/>} label="Block" hasArrow
-              onClick={() => setCtxMenu(m => m ? { ...m, blockOpen: !m.blockOpen, formatOpen: false, alignOpen: false, bulletOpen: false, dividerOpen: false, linkOpen: false, drawOpen: false, tableOpen: false } : null)} />
+              onClick={() => setCtxMenu(m => m ? { ...m, ...CLOSE_ALL_SUBS, blockOpen: !m.blockOpen } : null)} />
             {ctxMenu.blockOpen && (
               <div className="fixed bg-white rounded-xl shadow-2xl border border-stone-200 p-2 z-[10000]"
                 style={{ minWidth: 220, top: ctxMenu.y, left: ctxMenu.x + 200 }}
