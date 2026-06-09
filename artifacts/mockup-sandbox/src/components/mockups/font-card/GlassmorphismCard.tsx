@@ -26,9 +26,10 @@ export function GlassmorphismCard() {
       <div style={{
         width: 258,
         background: "#fff",
-        border: "1.5px solid #000",
-        borderRadius: 4,
+        border: "none",
+        borderRadius: 14,
         overflow: "hidden",
+        boxShadow: "0 4px 6px rgba(0,0,0,0.04), 0 12px 32px rgba(0,0,0,0.10), 0 2px 4px rgba(0,0,0,0.06)",
       }}>
         {/* Specimen hero */}
         <div style={{
