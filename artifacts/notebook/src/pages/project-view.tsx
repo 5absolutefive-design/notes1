@@ -158,19 +158,26 @@ interface ArrowShape {
 
 // ── Draw tool constants ───────────────────────────────────────────
 const DRAW_SHAPES = [
-  { key: "arrow",    icon: "→", label: "Arrow"    },
-  { key: "line",     icon: "—", label: "Line"     },
-  { key: "dashed",   icon: "╌", label: "Dashed"   },
-  { key: "vline",    icon: "|", label: "V-Line"   },
-  { key: "rect",     icon: "▭", label: "Box"      },
-  { key: "circle",   icon: "○", label: "Circle"   },
-  { key: "triangle", icon: "△", label: "Triangle" },
-  { key: "arc",      icon: "⌒", label: "Arc"      },
+  { key: "arrow",    icon: "→",  label: "Arrow"    },
+  { key: "line",     icon: "—",  label: "Line"     },
+  { key: "dashed",   icon: "╌",  label: "Dashed"   },
+  { key: "vline",    icon: "|",  label: "V-Line"   },
+  { key: "rect",     icon: "▭",  label: "Box"      },
+  { key: "circle",   icon: "○",  label: "Circle"   },
+  { key: "triangle", icon: "△",  label: "Triangle" },
+  { key: "arc",      icon: "⌒",  label: "Arc"      },
+  { key: "diamond",  icon: "◇",  label: "Diamond"  },
+  { key: "star",     icon: "☆",  label: "Star"     },
+  { key: "double",   icon: "↔",  label: "D-Arrow"  },
+  { key: "cross",    icon: "✚",  label: "Cross"    },
+  { key: "pentagon", icon: "⬠",  label: "Pentagon" },
 ];
 
 const DRAW_TOOL_LABELS: Record<string, string> = {
   arrow: "Arrow", line: "Line", dashed: "Dashed", vline: "V-Line",
-  rect: "Box", circle: "Circle", triangle: "Triangle", arc: "Arc", eraser: "Eraser",
+  rect: "Box", circle: "Circle", triangle: "Triangle", arc: "Arc",
+  diamond: "Diamond", star: "Star", double: "D-Arrow", cross: "Cross", pentagon: "Pentagon",
+  eraser: "Eraser",
 };
 
 // ── Eraser geometry helpers ───────────────────────────────────────
@@ -2094,6 +2101,9 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 <marker id="ah-red" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
                   <polygon points="0 0, 10 3.5, 0 7" fill="#ef4444" />
                 </marker>
+                <marker id="ah-start" markerWidth="10" markerHeight="7" refX="1" refY="3.5" orient="auto-start-reverse">
+                  <polygon points="0 0, 10 3.5, 0 7" fill="#ef4444" />
+                </marker>
               </defs>
               {arrows.map(a => (
                 <DrawShapeEl
@@ -3136,6 +3146,40 @@ function DrawShapeEl({ shape, isPreview, eraserMode, onRemove }: {
       const maxY = Math.max(y1, y2);
       const d = `M ${lx} ${maxY} A ${Math.max(rx2, 1)} ${Math.max(ry2, 1)} 0 0 1 ${rx3} ${maxY}`;
       return <path {...common} d={d} strokeDasharray={previewDash} />;
+    }
+    case "diamond": {
+      const cx = (x1 + x2) / 2, cy = (y1 + y2) / 2;
+      const hw = Math.abs(x2 - x1) / 2, hh = Math.abs(y2 - y1) / 2;
+      const pts = `${cx},${cy - hh} ${cx + hw},${cy} ${cx},${cy + hh} ${cx - hw},${cy}`;
+      return <polygon {...common} points={pts} strokeDasharray={previewDash} />;
+    }
+    case "star": {
+      const cx = (x1 + x2) / 2, cy = (y1 + y2) / 2;
+      const outerR = Math.min(Math.abs(x2 - x1), Math.abs(y2 - y1)) / 2;
+      const innerR = outerR * 0.42;
+      const pts = Array.from({ length: 10 }, (_, i) => {
+        const angle = (i * Math.PI) / 5 - Math.PI / 2;
+        const r = i % 2 === 0 ? outerR : innerR;
+        return `${cx + r * Math.cos(angle)},${cy + r * Math.sin(angle)}`;
+      }).join(" ");
+      return <polygon {...common} points={pts} strokeDasharray={previewDash} />;
+    }
+    case "double": {
+      return <line {...common} x1={x1} y1={y1} x2={x2} y2={y2} strokeDasharray={previewDash} markerStart="url(#ah-start)" markerEnd="url(#ah-red)" />;
+    }
+    case "cross": {
+      const cx = (x1 + x2) / 2, cy = (y1 + y2) / 2;
+      const d = `M ${x1} ${cy} L ${x2} ${cy} M ${cx} ${y1} L ${cx} ${y2}`;
+      return <path {...common} d={d} strokeDasharray={previewDash} />;
+    }
+    case "pentagon": {
+      const cx = (x1 + x2) / 2, cy = (y1 + y2) / 2;
+      const r = Math.min(Math.abs(x2 - x1), Math.abs(y2 - y1)) / 2;
+      const pts = Array.from({ length: 5 }, (_, i) => {
+        const angle = (i * 2 * Math.PI) / 5 - Math.PI / 2;
+        return `${cx + r * Math.cos(angle)},${cy + r * Math.sin(angle)}`;
+      }).join(" ");
+      return <polygon {...common} points={pts} strokeDasharray={previewDash} />;
     }
     default:
       return null;
