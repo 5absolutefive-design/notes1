@@ -947,9 +947,18 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   }, [ctxMenu?.x, ctxMenu?.y]);
 
   // ── Formatting commands
+  // Commands that are block-level or reset formatting — no need to break continuation
+  const BLOCK_FMT_CMDS = new Set([
+    "justifyLeft","justifyCenter","justifyRight","justifyFull",
+    "formatBlock","removeFormat","indent","outdent",
+  ]);
   const execFmt = (cmd: string, value?: string) => {
     restoreSelection();
     document.execCommand(cmd, false, value);
+    // Move cursor outside the formatted element so typing doesn't continue the format
+    if (!BLOCK_FMT_CMDS.has(cmd)) {
+      setTimeout(breakFormatAfterApply, 0);
+    }
     setCtxMenu(null);
     debouncedSave();
   };
@@ -962,8 +971,6 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     let node: Node | null = sel.getRangeAt(0).startContainer;
     while (node && node !== editorRef.current) {
       if (node.nodeName === "SUP" || node.nodeName === "SUB") {
-        // Insert a zero-width non-joiner after the element so the browser
-        // knows the cursor is genuinely outside the formatted span.
         const zwnj = document.createTextNode("\u200B");
         node.parentNode?.insertBefore(zwnj, node.nextSibling);
         const newRange = document.createRange();
@@ -975,6 +982,43 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
       }
       node = node.parentNode;
     }
+  };
+
+  // After applying any inline format (bold, italic, color, highlight, etc.),
+  // move cursor OUTSIDE the outermost inline-format element so subsequent
+  // typing does NOT inherit the format.
+  const INLINE_FORMAT_TAGS = new Set([
+    "B","STRONG","I","EM","U","S","STRIKE","DEL","FONT","SPAN","SUP","SUB","MARK","BIG","SMALL",
+  ]);
+  const breakFormatAfterApply = () => {
+    const sel = window.getSelection();
+    if (!sel || !sel.rangeCount) return;
+    const range = sel.getRangeAt(0);
+    // Walk up from cursor to find the outermost inline-format element
+    let node: Node | null = range.startContainer;
+    let outermostInlineFmt: Node | null = null;
+    while (node && node !== editorRef.current) {
+      if (node.nodeType === Node.ELEMENT_NODE &&
+          INLINE_FORMAT_TAGS.has((node as Element).tagName)) {
+        outermostInlineFmt = node;
+      }
+      node = node.parentNode;
+    }
+    // Insert a zero-width space just AFTER the outermost formatted element
+    // and place the cursor there so typing starts in plain mode.
+    const escape = document.createTextNode("\u200B");
+    if (outermostInlineFmt && outermostInlineFmt.parentNode) {
+      outermostInlineFmt.parentNode.insertBefore(escape, outermostInlineFmt.nextSibling);
+    } else {
+      const r = range.cloneRange();
+      r.collapse(false);
+      r.insertNode(escape);
+    }
+    const newRange = document.createRange();
+    newRange.setStartAfter(escape);
+    newRange.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(newRange);
   };
 
   const downloadPdf = async () => {
