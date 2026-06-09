@@ -34,25 +34,25 @@ export function GlassmorphismCard() {
         {/* Specimen hero */}
         <div style={{
           padding: "18px 16px 14px",
-          borderBottom: "1px solid #000",
-          background: "#000",
+          borderBottom: "1px solid #e0d8cc",
+          background: "#f0ebe0",
         }}>
-          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.18em", color: "#666", textTransform: "uppercase", marginBottom: 10 }}>
+          <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.18em", color: "#a89880", textTransform: "uppercase", marginBottom: 10 }}>
             Specimen · {selectedFont}
           </div>
           <div style={{
             fontFamily: selectedFont, fontSize, lineHeight: 1.15,
-            color: "#fff", wordBreak: "break-word", minHeight: 40,
+            color: "#1a1714", wordBreak: "break-word", minHeight: 40,
             transition: "font-size 0.15s, font-family 0.1s",
           }}>
             Abc 123
           </div>
           <div style={{ marginTop: 10, display: "flex", alignItems: "center", gap: 6 }}>
             <button onClick={() => setFontSize(s => Math.max(8, s - 2))}
-              style={{ width: 22, height: 22, background: "transparent", border: "1px solid #444", borderRadius: 2, color: "#fff", fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
-            <span style={{ fontSize: 11, color: "#aaa", fontVariantNumeric: "tabular-nums", minWidth: 36, textAlign: "center" }}>{fontSize}px</span>
+              style={{ width: 22, height: 22, background: "transparent", border: "1px solid #c8bfb0", borderRadius: 2, color: "#444", fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
+            <span style={{ fontSize: 11, color: "#888", fontVariantNumeric: "tabular-nums", minWidth: 36, textAlign: "center" }}>{fontSize}px</span>
             <button onClick={() => setFontSize(s => Math.min(96, s + 2))}
-              style={{ width: 22, height: 22, background: "transparent", border: "1px solid #444", borderRadius: 2, color: "#fff", fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
+              style={{ width: 22, height: 22, background: "transparent", border: "1px solid #c8bfb0", borderRadius: 2, color: "#444", fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
           </div>
         </div>
 
