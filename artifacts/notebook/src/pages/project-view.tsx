@@ -26,6 +26,7 @@ import {
   AlignLeft, AlignCenter, AlignRight, List, ListOrdered,
   ChevronRight, Link, Mic, PenLine, Eraser, Table, Video,
   Copy, Scissors, Clipboard, Wrench, FileDown, FileUp, ArrowLeftRight, Undo2, Redo2, BarChart2,
+  Subscript, Superscript,
 } from "lucide-react";
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area,
@@ -2872,6 +2873,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 <CtxItem icon={<Italic className="w-3.5 h-3.5"/>}        label="Italic"        shortcut="Ctrl+I" onClick={() => execFmt("italic")} />
                 <CtxItem icon={<Underline className="w-3.5 h-3.5"/>}     label="Underline"     shortcut="Ctrl+U" onClick={() => execFmt("underline")} />
                 <CtxItem icon={<Strikethrough className="w-3.5 h-3.5"/>} label="Strikethrough" onClick={() => execFmt("strikeThrough")} />
+                <CtxItem icon={<Subscript className="w-3.5 h-3.5"/>}    label="Subscript"    shortcut="X₂" onClick={() => execFmt("subscript")} />
+                <CtxItem icon={<Superscript className="w-3.5 h-3.5"/>}  label="Superscript"  shortcut="X²" onClick={() => execFmt("superscript")} />
                 {/* Font Colour */}
                 <div className="relative">
                   <CtxItem icon={<span className="w-3.5 h-3.5 flex items-center justify-center text-[11px] font-bold" style={{ color: "#ef4444" }}>A</span>} label="Font Colour" hasArrow
