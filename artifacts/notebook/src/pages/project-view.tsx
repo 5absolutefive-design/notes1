@@ -1996,7 +1996,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             const isLined = activeTableRef.current?.dataset.lined === "true";
             const btnStyle = (variant: "red"|"green"): React.CSSProperties => ({
               width: 16, height: 16, borderRadius: 0, border: "1px solid #e7e5e4",
-              background: "#fafaf8", color: "#374151", fontSize: 7, fontWeight: 700,
+              background: "#fafaf8", color: "#374151", fontSize: 8, fontWeight: 700,
               lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer"
             });
             const hoverRed = (e: React.MouseEvent<HTMLButtonElement>) => { const t = e.currentTarget; t.style.background = "#fee2e2"; t.style.color = "#dc2626"; };
