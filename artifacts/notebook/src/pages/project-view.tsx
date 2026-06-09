@@ -3128,7 +3128,7 @@ function DrawShapeEl({ shape, isPreview, eraserMode, onRemove }: {
   const sw = 2.5;
   const canClick = !isPreview && eraserMode && onRemove;
   const ptrEvents: React.CSSProperties["pointerEvents"] = canClick ? "auto" : "none";
-  const cursor = canClick ? "crosshair" : "default";
+  const cursor = canClick ? "inherit" : "default";
   const opacity = isPreview ? 0.55 : 1;
   const previewDash = isPreview ? "6 3" : undefined;
 
