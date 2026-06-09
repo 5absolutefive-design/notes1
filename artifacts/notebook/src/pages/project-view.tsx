@@ -1,5 +1,12 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
 import cylinderIcon from "@assets/3d-cylinder-3d-design-3d-shape-cylinder-geometric-geometry-svg_1780973962135.svg";
+import cubeIcon from "@assets/3d-cube-3d-design-3d-shape-cube-geometric-geometry-3-svgrepo-c_1780974626332.svg";
+import octahedronIcon from "@assets/3d-design-3d-octahedron-3d-shape-geometric-geometry-octahedron_1780974626332.svg";
+import triPrismIcon from "@assets/3d-design-3d-shape-3d-triangle-shape-geometric-geometry-shape-_1780974626332.svg";
+import hexPrismIcon from "@assets/3d-hexagonal-prism-3d-shape-geometric-geometry-hexagon-prism-s_1780974626333.svg";
+import pentPrismIcon from "@assets/3d-pentagonal-prism-3d-shape-geometric-geometry-pentagon-prism_1780974626333.svg";
+import pyramidIcon from "@assets/3d-pyramid-3d-shape-geometric-geometry-prism-pyramid-svgrepo-c_1780974626333.svg";
+import triPyramidIcon from "@assets/3d-shape-3d-triangle-shape-geometric-prism-pyramid-shape-svgre_1780974626334.svg";
 import pinIcon from "@assets/pin-svgrepo-com_1780935998946.png";
 import numberIcon from "@assets/number-svgrepo-com_1780936571964.png";
 import cardIcon from "@assets/card-layout-filled-svgrepo-com_1780936676782.png";
@@ -172,13 +179,22 @@ const DRAW_SHAPES = [
   { key: "double",   icon: "↔",  label: "D-Arrow"  },
   { key: "cross",    icon: "✚",  label: "Cross"    },
   { key: "pentagon",  icon: "⬠",  label: "Pentagon"  },
-  { key: "cylinder",  icon: <img src={cylinderIcon} className="w-4 h-4 object-contain" />, label: "Cylinder"  },
+  { key: "cylinder",   icon: <img src={cylinderIcon}   className="w-4 h-4 object-contain" />, label: "Cylinder"   },
+  { key: "cube",       icon: <img src={cubeIcon}       className="w-4 h-4 object-contain" />, label: "Cube"       },
+  { key: "octahedron", icon: <img src={octahedronIcon} className="w-4 h-4 object-contain" />, label: "Octahedron" },
+  { key: "triprism",   icon: <img src={triPrismIcon}   className="w-4 h-4 object-contain" />, label: "Tri-Prism"  },
+  { key: "hexprism",   icon: <img src={hexPrismIcon}   className="w-4 h-4 object-contain" />, label: "Hex-Prism"  },
+  { key: "pentprism",  icon: <img src={pentPrismIcon}  className="w-4 h-4 object-contain" />, label: "Pent-Prism" },
+  { key: "pyramid",    icon: <img src={pyramidIcon}    className="w-4 h-4 object-contain" />, label: "Pyramid"    },
+  { key: "tripyramid", icon: <img src={triPyramidIcon} className="w-4 h-4 object-contain" />, label: "Tri-Pyr"    },
 ];
 
 const DRAW_TOOL_LABELS: Record<string, string> = {
   arrow: "Arrow", line: "Line", dashed: "Dashed", vline: "V-Line",
   rect: "Box", circle: "Circle", triangle: "Triangle", arc: "Arc",
-  diamond: "Diamond", star: "Star", double: "D-Arrow", cross: "Cross", pentagon: "Pentagon", cylinder: "Cylinder",
+  diamond: "Diamond", star: "Star", double: "D-Arrow", cross: "Cross", pentagon: "Pentagon",
+  cylinder: "Cylinder", cube: "Cube", octahedron: "Octahedron", triprism: "Tri-Prism",
+  hexprism: "Hex-Prism", pentprism: "Pent-Prism", pyramid: "Pyramid", tripyramid: "Tri-Pyr",
   eraser: "Eraser",
 };
 
@@ -3183,12 +3199,29 @@ function DrawShapeEl({ shape, isPreview, eraserMode, onRemove }: {
       }).join(" ");
       return <polygon {...common} points={pts} strokeDasharray={previewDash} />;
     }
-    case "cylinder": {
+    case "cylinder":
+    case "cube":
+    case "octahedron":
+    case "triprism":
+    case "hexprism":
+    case "pentprism":
+    case "pyramid":
+    case "tripyramid": {
+      const iconMap: Record<string, string> = {
+        cylinder: cylinderIcon,
+        cube: cubeIcon,
+        octahedron: octahedronIcon,
+        triprism: triPrismIcon,
+        hexprism: hexPrismIcon,
+        pentprism: pentPrismIcon,
+        pyramid: pyramidIcon,
+        tripyramid: triPyramidIcon,
+      };
       const rx = Math.min(x1, x2), ry = Math.min(y1, y2);
       const rw = Math.abs(x2 - x1), rh = Math.abs(y2 - y1);
       return (
         <image
-          href={cylinderIcon}
+          href={iconMap[type]}
           x={rx} y={ry}
           width={Math.max(rw, 1)} height={Math.max(rh, 1)}
           opacity={opacity}
