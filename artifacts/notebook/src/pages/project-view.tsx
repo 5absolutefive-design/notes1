@@ -1149,7 +1149,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   };
 
   const applyCtxFontName = (name: string, fromPanel = false) => {
-    if (!fromPanel) restoreSelection();
+    restoreSelection();
+    void fromPanel;
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0) return;
     if (sel.isCollapsed) {
@@ -1181,7 +1182,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
       }
       debouncedSave();
     } else {
-      if (!fromPanel) restoreSelection();
+      restoreSelection();
       const sel = window.getSelection();
       if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
       document.execCommand("fontSize", false, "7");
