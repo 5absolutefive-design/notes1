@@ -3266,9 +3266,10 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 ].map(({ type, label, icon, imgSrc, color, bg, dot }) => (
                   <button key={type} onClick={() => insertGraph(type)}
                     className={`w-full flex items-center gap-2.5 px-2 py-2 rounded-lg ${bg} text-stone-700 transition-colors text-left`}>
-                    <span className={`w-5 h-5 rounded-full ${dot} flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0`}>
-                      {imgSrc ? <img src={imgSrc} alt={label} className="w-3.5 h-3.5 invert" /> : icon}
-                    </span>
+                    {imgSrc
+                      ? <img src={imgSrc} alt={label} className="w-5 h-5 flex-shrink-0" />
+                      : <span className={`w-5 h-5 rounded-full ${dot} flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0`}>{icon}</span>
+                    }
                     <span className={`text-xs font-medium ${color}`}>{label}</span>
                   </button>
                 ))}
