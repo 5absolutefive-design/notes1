@@ -3140,7 +3140,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                             transition: "background 0.1s",
                           }}>
                           <span style={{ fontSize: 9, color: isSelected ? "#555" : "#bbb", width: 18, flexShrink: 0, fontVariantNumeric: "tabular-nums" }}>{String(FONTS_CTX.indexOf(f) + 1).padStart(2, "0")}</span>
-                          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: isSelected ? "#444" : "#aaa", width: 80, flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f}</span>
+                          <span style={{ fontSize: 9, fontWeight: 400, letterSpacing: "0.05em", textTransform: "uppercase", color: isSelected ? "#444" : "#aaa", width: 80, flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f}</span>
                           <span style={{ fontFamily: f, fontSize: 15, color: "#222", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Abc</span>
                         </button>
                       );
