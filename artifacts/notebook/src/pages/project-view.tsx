@@ -1995,8 +1995,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           {tableToolbar && (() => {
             const isLined = activeTableRef.current?.dataset.lined === "true";
             const btnStyle = (variant: "red"|"green"): React.CSSProperties => ({
-              width: 18, height: 18, borderRadius: 8, border: "1px solid #e7e5e4",
-              background: "#fafaf8", color: "#374151", fontSize: 11, fontWeight: 700,
+              width: 16, height: 16, borderRadius: 0, border: "1px solid #e7e5e4",
+              background: "#fafaf8", color: "#374151", fontSize: 7, fontWeight: 700,
               lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer"
             });
             const hoverRed = (e: React.MouseEvent<HTMLButtonElement>) => { const t = e.currentTarget; t.style.background = "#fee2e2"; t.style.color = "#dc2626"; };
