@@ -21,8 +21,12 @@ import {
   CheckSquare, Minus, Heading1, Heading2, Heading3,
   AlignLeft, AlignCenter, AlignRight, List, ListOrdered,
   ChevronRight, Link, Mic, PenLine, Eraser, Table, Video,
-  Copy, Scissors, Clipboard, Wrench, FileDown, FileUp, ArrowLeftRight, Undo2, Redo2,
+  Copy, Scissors, Clipboard, Wrench, FileDown, FileUp, ArrowLeftRight, Undo2, Redo2, BarChart2,
 } from "lucide-react";
+import {
+  BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area,
+  XAxis, YAxis, Tooltip, ResponsiveContainer,
+} from "recharts";
 import {
   ColTypePicker, SelectCellPopup, PriorityCellPopup, ProgressCellPopup,
   applyColType, hydrateTables, makeCellInner, getColType, getColOptions,
@@ -139,6 +143,7 @@ interface ContextMenuState {
   todoCount: number;
   todoRemoveCount: number;
   drawOpen: boolean;
+  graphOpen: boolean;
   tableOpen: boolean;
   fontOpen: boolean;
   blockOpen: boolean;
@@ -152,6 +157,19 @@ interface ImageBlock {
   y: number;
   width: number;
   locked: boolean;
+}
+
+type GraphType = "bar" | "line" | "pie" | "area";
+interface GraphBlock {
+  id: string;
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+  type: GraphType;
+  title: string;
+  color: string;
+  data: { label: string; value: number }[];
 }
 
 type DrawTool = "arrow" | "line" | "rect" | "circle" | "triangle" | "dashed" | "vline" | "arc" | "eraser";
@@ -269,6 +287,9 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const tableResizeObserverRef = useRef<ResizeObserver | null>(null);
   const [imageBlocks, setImageBlocks] = useState<ImageBlock[]>([]);
   const imgInputRef = useRef<HTMLInputElement>(null);
+  const [graphBlocks, setGraphBlocks] = useState<GraphBlock[]>([]);
+  const [graphEditor, setGraphEditor] = useState<{ id: string; data: { label: string; value: number }[]; title: string; type: GraphType; color: string } | null>(null);
+  const graphDragRef = useRef<{ id: string; startMx: number; startMy: number; startBx: number; startBy: number } | null>(null);
   const voiceInputRef = useRef<HTMLInputElement>(null);
   const dragRef = useRef<{ id: string; startMx: number; startMy: number; startBx: number; startBy: number } | null>(null);
   const resizeRef = useRef<{ id: string; startMx: number; startW: number; startBx: number; side: "br" | "bl" | "tr" | "tl" } | null>(null);
@@ -333,6 +354,20 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     localStorage.setItem(`nb_project_arrows_${activeId}`, JSON.stringify(arrows));
   }, [arrows, activeId]);
 
+  // ── Load / save graph blocks per project
+  useEffect(() => {
+    if (!activeId) { setGraphBlocks([]); return; }
+    try {
+      const raw = localStorage.getItem(`nb_project_graphs_${activeId}`);
+      setGraphBlocks(raw ? JSON.parse(raw) : []);
+    } catch { setGraphBlocks([]); }
+  }, [activeId]);
+
+  useEffect(() => {
+    if (!activeId) return;
+    localStorage.setItem(`nb_project_graphs_${activeId}`, JSON.stringify(graphBlocks));
+  }, [graphBlocks, activeId]);
+
   // ── Keep refs in sync with latest state (for use inside stale closures)
   useEffect(() => { arrowsRef.current = arrows; }, [arrows]);
   useEffect(() => { imageBlocksRef.current = imageBlocks; }, [imageBlocks]);
@@ -347,6 +382,12 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   // ── Document-level drag and resize handlers for image blocks
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
+      if (graphDragRef.current) {
+        const { id, startMx, startMy, startBx, startBy } = graphDragRef.current;
+        setGraphBlocks(prev => prev.map(g => g.id === id
+          ? { ...g, x: startBx + e.clientX - startMx, y: startBy + e.clientY - startMy }
+          : g));
+      }
       if (dragRef.current) {
         const { id, startMx, startMy, startBx, startBy } = dragRef.current;
         setImageBlocks(prev => prev.map(b => b.id === id
@@ -822,7 +863,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
         menuX = e.clientX;
       }
     }
-    setCtxMenu({ x: menuX, y: menuY, formatOpen: false, alignOpen: false, bulletOpen: false, highlightOpen: false, fontColorOpen: false, headingOpen: false, dividerOpen: false, linkOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1, drawOpen: false, tableOpen: false, fontOpen: false, blockOpen: false, mediaOpen: false });
+    setCtxMenu({ x: menuX, y: menuY, formatOpen: false, alignOpen: false, bulletOpen: false, highlightOpen: false, fontColorOpen: false, headingOpen: false, dividerOpen: false, linkOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1, drawOpen: false, graphOpen: false, tableOpen: false, fontOpen: false, blockOpen: false, mediaOpen: false });
     if (savedRangeRef.current) {
       setTimeout(() => restoreSelection(), 0);
     }
@@ -1148,6 +1189,27 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     const tds = [1,2,3].map(() => `<tr><td style="${tdStyle}" contenteditable="true"><br/></td></tr>`).join("");
     const html = `<br/><table data-lined="true" style="border-collapse:collapse;width:100%;margin:8px 0;border:1.5px solid #b0b7c3;border-radius:6px;overflow:hidden"><thead><tr>${th}</tr></thead><tbody>${tds}</tbody></table><br/>`;
     insertHTML(html);
+    setCtxMenu(null);
+  };
+
+  const GRAPH_COLORS = ["#6366f1","#f59e0b","#10b981","#ef4444","#3b82f6","#ec4899"];
+  const insertGraph = (type: GraphType) => {
+    const id = `g_${Date.now()}`;
+    const newGraph: GraphBlock = {
+      id, type,
+      x: 60, y: 300,
+      width: 380, height: 240,
+      title: "My Chart",
+      color: GRAPH_COLORS[0],
+      data: [
+        { label: "Jan", value: 40 },
+        { label: "Feb", value: 70 },
+        { label: "Mar", value: 55 },
+        { label: "Apr", value: 90 },
+        { label: "May", value: 65 },
+      ],
+    };
+    setGraphBlocks(prev => [...prev, newGraph]);
     setCtxMenu(null);
   };
 
@@ -2327,11 +2389,139 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
               </div>
             </div>
           ))}
+
+          {/* ── Graph blocks ── */}
+          {graphBlocks.map(g => {
+            const PIE_COLORS = ["#6366f1","#f59e0b","#10b981","#ef4444","#3b82f6","#ec4899","#8b5cf6","#14b8a6"];
+            return (
+              <div key={g.id} style={{ position: "absolute", left: g.x, top: g.y, width: g.width, zIndex: 25, userSelect: "none" }}>
+                <div
+                  onMouseDown={e => {
+                    if ((e.target as HTMLElement).closest("[data-graph-btn]")) return;
+                    e.preventDefault();
+                    graphDragRef.current = { id: g.id, startMx: e.clientX, startMy: e.clientY, startBx: g.x, startBy: g.y };
+                  }}
+                  style={{ cursor: "grab", background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: 10, boxShadow: "0 2px 12px rgba(0,0,0,0.09)", overflow: "hidden" }}
+                >
+                  {/* Header */}
+                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px 4px", borderBottom: "1px solid #f1f0ee" }}>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "#374151", fontFamily: "Georgia, serif" }}>{g.title}</span>
+                    <div style={{ display: "flex", gap: 4 }}>
+                      <button data-graph-btn="1" title="Edit data"
+                        onClick={() => setGraphEditor({ id: g.id, data: [...g.data], title: g.title, type: g.type, color: g.color })}
+                        style={{ width: 20, height: 20, borderRadius: 4, border: "1px solid #e2e8f0", background: "#f8fafc", cursor: "pointer", fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center" }}>✏️</button>
+                      <button data-graph-btn="1" title="Delete chart"
+                        onClick={() => setGraphBlocks(prev => prev.filter(x => x.id !== g.id))}
+                        style={{ width: 20, height: 20, borderRadius: 4, border: "1px solid #fecaca", background: "#fff5f5", cursor: "pointer", fontSize: 11, color: "#ef4444", display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700 }}>×</button>
+                    </div>
+                  </div>
+                  {/* Chart */}
+                  <div style={{ padding: "8px 4px 8px 0", height: g.height }}>
+                    <ResponsiveContainer width="100%" height="100%">
+                      {g.type === "bar" ? (
+                        <BarChart data={g.data} margin={{ top: 4, right: 8, bottom: 4, left: -10 }}>
+                          <XAxis dataKey="label" tick={{ fontSize: 10 }} />
+                          <YAxis tick={{ fontSize: 10 }} />
+                          <Tooltip />
+                          <Bar dataKey="value" fill={g.color} radius={[3,3,0,0]} />
+                        </BarChart>
+                      ) : g.type === "line" ? (
+                        <LineChart data={g.data} margin={{ top: 4, right: 8, bottom: 4, left: -10 }}>
+                          <XAxis dataKey="label" tick={{ fontSize: 10 }} />
+                          <YAxis tick={{ fontSize: 10 }} />
+                          <Tooltip />
+                          <Line type="monotone" dataKey="value" stroke={g.color} strokeWidth={2} dot={{ r: 3 }} />
+                        </LineChart>
+                      ) : g.type === "area" ? (
+                        <AreaChart data={g.data} margin={{ top: 4, right: 8, bottom: 4, left: -10 }}>
+                          <XAxis dataKey="label" tick={{ fontSize: 10 }} />
+                          <YAxis tick={{ fontSize: 10 }} />
+                          <Tooltip />
+                          <Area type="monotone" dataKey="value" stroke={g.color} fill={g.color + "33"} strokeWidth={2} />
+                        </AreaChart>
+                      ) : (
+                        <PieChart>
+                          <Pie data={g.data} dataKey="value" nameKey="label" cx="50%" cy="50%" outerRadius="70%" label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false}>
+                            {g.data.map((_, i) => <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />)}
+                          </Pie>
+                          <Tooltip />
+                        </PieChart>
+                      )}
+                    </ResponsiveContainer>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
         </div>
       ) : (
         <div className="flex-1 flex flex-col items-center justify-center gap-4 text-stone-400">
           <FolderKanban className="w-10 h-10 text-stone-300" />
           <p className="text-sm">Select a project from the sidebar</p>
+        </div>
+      )}
+
+      {/* ── Graph editor popup ── */}
+      {graphEditor && (
+        <div className="fixed inset-0 z-[20000] flex items-center justify-center" style={{ background: "rgba(0,0,0,0.35)" }}
+          onMouseDown={() => setGraphEditor(null)}>
+          <div className="bg-white rounded-2xl shadow-2xl border border-stone-200 p-5 w-[380px] max-h-[90vh] overflow-y-auto"
+            onMouseDown={e => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-sm font-bold text-stone-800">Edit Chart</h3>
+              <button onClick={() => setGraphEditor(null)} className="text-stone-400 hover:text-stone-600 text-lg font-bold leading-none">×</button>
+            </div>
+            {/* Title */}
+            <label className="block text-xs font-semibold text-stone-500 mb-1">Title</label>
+            <input value={graphEditor.title} onChange={e => setGraphEditor(prev => prev ? { ...prev, title: e.target.value } : null)}
+              className="w-full border border-stone-200 rounded-lg px-3 py-1.5 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-indigo-300" />
+            {/* Chart type */}
+            <label className="block text-xs font-semibold text-stone-500 mb-1">Chart Type</label>
+            <div className="flex gap-2 mb-3">
+              {(["bar","line","area","pie"] as GraphType[]).map(t => (
+                <button key={t} onClick={() => setGraphEditor(prev => prev ? { ...prev, type: t } : null)}
+                  className={`flex-1 py-1 rounded-lg text-xs font-medium border transition-colors ${graphEditor.type === t ? "bg-indigo-600 text-white border-indigo-600" : "bg-stone-50 text-stone-600 border-stone-200 hover:bg-stone-100"}`}>
+                  {t[0].toUpperCase() + t.slice(1)}
+                </button>
+              ))}
+            </div>
+            {/* Color */}
+            <label className="block text-xs font-semibold text-stone-500 mb-1">Color</label>
+            <div className="flex gap-2 mb-4 flex-wrap">
+              {["#6366f1","#f59e0b","#10b981","#ef4444","#3b82f6","#ec4899","#8b5cf6","#14b8a6"].map(c => (
+                <button key={c} onClick={() => setGraphEditor(prev => prev ? { ...prev, color: c } : null)}
+                  style={{ background: c, width: 26, height: 26, borderRadius: 6, border: graphEditor.color === c ? "3px solid #1e293b" : "2px solid transparent", cursor: "pointer", flexShrink: 0 }} />
+              ))}
+            </div>
+            {/* Data rows */}
+            <label className="block text-xs font-semibold text-stone-500 mb-1">Data</label>
+            <div className="space-y-1.5 mb-3 max-h-48 overflow-y-auto pr-1">
+              {graphEditor.data.map((row, i) => (
+                <div key={i} className="flex items-center gap-2">
+                  <input value={row.label} placeholder="Label"
+                    onChange={e => setGraphEditor(prev => { if (!prev) return null; const d = [...prev.data]; d[i] = { ...d[i], label: e.target.value }; return { ...prev, data: d }; })}
+                    className="flex-1 border border-stone-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-300" />
+                  <input type="number" value={row.value} placeholder="0"
+                    onChange={e => setGraphEditor(prev => { if (!prev) return null; const d = [...prev.data]; d[i] = { ...d[i], value: Number(e.target.value) }; return { ...prev, data: d }; })}
+                    className="w-20 border border-stone-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-300" />
+                  <button onClick={() => setGraphEditor(prev => prev ? { ...prev, data: prev.data.filter((_, j) => j !== i) } : null)}
+                    className="text-red-400 hover:text-red-600 font-bold text-sm leading-none">×</button>
+                </div>
+              ))}
+            </div>
+            <button onClick={() => setGraphEditor(prev => prev ? { ...prev, data: [...prev.data, { label: "New", value: 0 }] } : null)}
+              className="w-full py-1.5 text-xs font-medium text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50 transition-colors mb-4">+ Add row</button>
+            {/* Save */}
+            <button onClick={() => {
+              if (!graphEditor) return;
+              setGraphBlocks(prev => prev.map(g => g.id === graphEditor.id
+                ? { ...g, title: graphEditor.title, type: graphEditor.type, color: graphEditor.color, data: graphEditor.data }
+                : g));
+              setGraphEditor(null);
+            }} className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors">
+              Save Chart
+            </button>
+          </div>
         </div>
       )}
 
@@ -2459,7 +2649,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 const px = btnRect.right + 6;
                 const py = btnRect.top;
                 setSelPopup(null);
-                setCtxMenu({ x: px, y: py, formatOpen: false, alignOpen: false, bulletOpen: false, highlightOpen: false, fontColorOpen: false, headingOpen: false, dividerOpen: false, linkOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1, drawOpen: false, tableOpen: false, fontOpen: false, blockOpen: false, mediaOpen: false });
+                setCtxMenu({ x: px, y: py, formatOpen: false, alignOpen: false, bulletOpen: false, highlightOpen: false, fontColorOpen: false, headingOpen: false, dividerOpen: false, linkOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1, drawOpen: false, graphOpen: false, tableOpen: false, fontOpen: false, blockOpen: false, mediaOpen: false });
               }}
             >
               <Wrench className="w-3.5 h-3.5 text-stone-500" />
@@ -2887,6 +3077,28 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                     </button>
                   )}
                 </div>
+              </div>
+            )}
+          </div>
+          {/* Graph → sub-card */}
+          <div className="relative">
+            <CtxItem icon={<BarChart2 className="w-3.5 h-3.5"/>} label="Graph" hasArrow
+              onClick={() => setCtxMenu(m => m ? { ...m, graphOpen: !m.graphOpen, drawOpen: false, formatOpen: false, alignOpen: false, bulletOpen: false, dividerOpen: false, linkOpen: false, tableOpen: false, blockOpen: false, mediaOpen: false } : null)} />
+            {ctxMenu.graphOpen && (
+              <div className="absolute left-full bottom-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 py-2 px-2 z-[10000] min-w-[190px]">
+                <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide px-1 mb-1.5">Choose Chart Type</p>
+                {[
+                  { type: "bar"  as GraphType, label: "Bar Chart",  icon: "▬", color: "text-indigo-600",  bg: "hover:bg-indigo-50",  dot: "bg-indigo-500" },
+                  { type: "line" as GraphType, label: "Line Chart", icon: "〜", color: "text-emerald-600", bg: "hover:bg-emerald-50", dot: "bg-emerald-500" },
+                  { type: "area" as GraphType, label: "Area Chart", icon: "◿", color: "text-blue-600",    bg: "hover:bg-blue-50",    dot: "bg-blue-500" },
+                  { type: "pie"  as GraphType, label: "Pie Chart",  icon: "◔", color: "text-amber-600",   bg: "hover:bg-amber-50",   dot: "bg-amber-500" },
+                ].map(({ type, label, icon, color, bg, dot }) => (
+                  <button key={type} onClick={() => insertGraph(type)}
+                    className={`w-full flex items-center gap-2.5 px-2 py-2 rounded-lg ${bg} text-stone-700 transition-colors text-left`}>
+                    <span className={`w-5 h-5 rounded-full ${dot} flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0`}>{icon}</span>
+                    <span className={`text-xs font-medium ${color}`}>{label}</span>
+                  </button>
+                ))}
               </div>
             )}
           </div>
