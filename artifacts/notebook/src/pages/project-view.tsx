@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area,
-  XAxis, YAxis, Tooltip, ResponsiveContainer,
+  XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
 } from "recharts";
 import {
   ColTypePicker, SelectCellPopup, PriorityCellPopup, ProgressCellPopup,
@@ -160,6 +160,11 @@ interface ImageBlock {
 }
 
 type GraphType = "bar" | "line" | "pie" | "area";
+interface GraphSeries {
+  name: string;
+  color: string;
+  values: number[];
+}
 interface GraphBlock {
   id: string;
   x: number;
@@ -170,6 +175,7 @@ interface GraphBlock {
   title: string;
   color: string;
   data: { label: string; value: number }[];
+  series?: GraphSeries[];
 }
 
 type DrawTool = "arrow" | "line" | "rect" | "circle" | "triangle" | "dashed" | "vline" | "arc" | "eraser";
@@ -288,7 +294,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const [imageBlocks, setImageBlocks] = useState<ImageBlock[]>([]);
   const imgInputRef = useRef<HTMLInputElement>(null);
   const [graphBlocks, setGraphBlocks] = useState<GraphBlock[]>([]);
-  const [graphEditor, setGraphEditor] = useState<{ id: string; data: { label: string; value: number }[]; title: string; type: GraphType; color: string } | null>(null);
+  const [graphEditor, setGraphEditor] = useState<{ id: string; data: { label: string; value: number }[]; title: string; type: GraphType; color: string; series: GraphSeries[] } | null>(null);
   const graphDragRef = useRef<{ id: string; startMx: number; startMy: number; startBx: number; startBy: number } | null>(null);
   const graphResizeRef = useRef<{ id: string; startMx: number; startMy: number; startW: number; startH: number; side: "r" | "b" | "br" } | null>(null);
   const voiceInputRef = useRef<HTMLInputElement>(null);
@@ -2407,6 +2413,35 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           {/* ── Graph blocks ── */}
           {graphBlocks.map(g => {
             const PIE_COLORS = ["#6366f1","#f59e0b","#10b981","#ef4444","#3b82f6","#ec4899","#8b5cf6","#14b8a6"];
+            const MULTI_COLORS = ["#6366f1","#f59e0b","#10b981","#ef4444","#3b82f6","#ec4899","#8b5cf6","#14b8a6"];
+            let lineChartEl: React.ReactElement;
+            if (g.series && g.series.length > 0) {
+              const lineData = g.data.map((d, i) => {
+                const obj: Record<string, number | string> = { label: d.label };
+                g.series!.forEach(s => { obj[s.name] = s.values[i] ?? 0; });
+                return obj;
+              });
+              lineChartEl = (
+                <LineChart data={lineData} margin={{ top: 4, right: 8, bottom: 16, left: -10 }}>
+                  <XAxis dataKey="label" tick={{ fontSize: 10 }} />
+                  <YAxis tick={{ fontSize: 10 }} />
+                  <Tooltip />
+                  <Legend wrapperStyle={{ fontSize: 10, paddingTop: 2 }} />
+                  {g.series.map((s, si) => (
+                    <Line key={s.name} type="monotone" dataKey={s.name} stroke={s.color || MULTI_COLORS[si % MULTI_COLORS.length]} strokeWidth={2} dot={{ r: 3 }} />
+                  ))}
+                </LineChart>
+              );
+            } else {
+              lineChartEl = (
+                <LineChart data={g.data} margin={{ top: 4, right: 8, bottom: 4, left: -10 }}>
+                  <XAxis dataKey="label" tick={{ fontSize: 10 }} />
+                  <YAxis tick={{ fontSize: 10 }} />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="value" stroke={g.color} strokeWidth={2} dot={{ r: 3 }} />
+                </LineChart>
+              );
+            }
             return (
               <div key={g.id} style={{ position: "absolute", left: g.x, top: g.y, width: g.width, zIndex: 25, userSelect: "none" }}>
                 <div
@@ -2423,7 +2458,12 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                         }}
                         style={{ width: 20, height: 20, borderRadius: 4, border: "1px solid #e2e8f0", background: "#f8fafc", cursor: "grab", fontSize: 13, display: "flex", alignItems: "center", justifyContent: "center" }}>✋</button>
                       <button data-graph-btn="1" title="Edit data"
-                        onClick={() => setGraphEditor({ id: g.id, data: [...g.data], title: g.title, type: g.type, color: g.color })}
+                        onClick={() => {
+                          const existingSeries = g.series && g.series.length > 0
+                            ? g.series.map(s => ({ ...s, values: [...s.values] }))
+                            : [];
+                          setGraphEditor({ id: g.id, data: [...g.data], title: g.title, type: g.type, color: g.color, series: existingSeries });
+                        }}
                         style={{ width: 20, height: 20, borderRadius: 4, border: "1px solid #e2e8f0", background: "#f8fafc", cursor: "pointer", fontSize: 11, display: "flex", alignItems: "center", justifyContent: "center" }}>✏️</button>
                       <button data-graph-btn="1" title="Delete chart"
                         onClick={() => setGraphBlocks(prev => prev.filter(x => x.id !== g.id))}
@@ -2440,14 +2480,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                           <Tooltip />
                           <Bar dataKey="value" fill={g.color} radius={[3,3,0,0]} />
                         </BarChart>
-                      ) : g.type === "line" ? (
-                        <LineChart data={g.data} margin={{ top: 4, right: 8, bottom: 4, left: -10 }}>
-                          <XAxis dataKey="label" tick={{ fontSize: 10 }} />
-                          <YAxis tick={{ fontSize: 10 }} />
-                          <Tooltip />
-                          <Line type="monotone" dataKey="value" stroke={g.color} strokeWidth={2} dot={{ r: 3 }} />
-                        </LineChart>
-                      ) : g.type === "area" ? (
+                      ) : g.type === "line" ? lineChartEl : g.type === "area" ? (
                         <AreaChart data={g.data} margin={{ top: 4, right: 8, bottom: 4, left: -10 }}>
                           <XAxis dataKey="label" tick={{ fontSize: 10 }} />
                           <YAxis tick={{ fontSize: 10 }} />
@@ -2521,37 +2554,138 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 </button>
               ))}
             </div>
-            {/* Color */}
-            <label className="block text-xs font-semibold text-stone-500 mb-1">Color</label>
-            <div className="flex gap-2 mb-4 flex-wrap">
-              {["#6366f1","#f59e0b","#10b981","#ef4444","#3b82f6","#ec4899","#8b5cf6","#14b8a6"].map(c => (
-                <button key={c} onClick={() => setGraphEditor(prev => prev ? { ...prev, color: c } : null)}
-                  style={{ background: c, width: 26, height: 26, borderRadius: 6, border: graphEditor.color === c ? "3px solid #1e293b" : "2px solid transparent", cursor: "pointer", flexShrink: 0 }} />
-              ))}
-            </div>
-            {/* Data rows */}
-            <label className="block text-xs font-semibold text-stone-500 mb-1">Data</label>
-            <div className="space-y-1.5 mb-3 max-h-48 overflow-y-auto pr-1">
-              {graphEditor.data.map((row, i) => (
-                <div key={i} className="flex items-center gap-2">
-                  <input value={row.label} placeholder="Label"
-                    onChange={e => setGraphEditor(prev => { if (!prev) return null; const d = [...prev.data]; d[i] = { ...d[i], label: e.target.value }; return { ...prev, data: d }; })}
-                    className="flex-1 border border-stone-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-300" />
-                  <input type="number" value={row.value} placeholder="0"
-                    onChange={e => setGraphEditor(prev => { if (!prev) return null; const d = [...prev.data]; d[i] = { ...d[i], value: Number(e.target.value) }; return { ...prev, data: d }; })}
-                    className="w-20 border border-stone-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-300" />
-                  <button onClick={() => setGraphEditor(prev => prev ? { ...prev, data: prev.data.filter((_, j) => j !== i) } : null)}
-                    className="text-red-400 hover:text-red-600 font-bold text-sm leading-none">×</button>
+            {/* Color — only for non-line or single-series line */}
+            {(graphEditor.type !== "line" || graphEditor.series.length === 0) && (<>
+              <label className="block text-xs font-semibold text-stone-500 mb-1">Color</label>
+              <div className="flex gap-2 mb-4 flex-wrap">
+                {["#6366f1","#f59e0b","#10b981","#ef4444","#3b82f6","#ec4899","#8b5cf6","#14b8a6"].map(c => (
+                  <button key={c} onClick={() => setGraphEditor(prev => prev ? { ...prev, color: c } : null)}
+                    style={{ background: c, width: 26, height: 26, borderRadius: 6, border: graphEditor.color === c ? "3px solid #1e293b" : "2px solid transparent", cursor: "pointer", flexShrink: 0 }} />
+                ))}
+              </div>
+            </>)}
+
+            {/* ── Line chart: multi-series editor ── */}
+            {graphEditor.type === "line" ? (() => {
+              const SCOLS = ["#6366f1","#f59e0b","#10b981","#ef4444","#3b82f6","#ec4899","#8b5cf6","#14b8a6"];
+              const isMulti = graphEditor.series.length > 0;
+              return (<>
+                {/* Toggle single ↔ multi */}
+                <div className="flex items-center justify-between mb-3">
+                  <label className="text-xs font-semibold text-stone-500">Multiple Lines</label>
+                  <button onClick={() => {
+                    if (isMulti) {
+                      setGraphEditor(prev => prev ? { ...prev, series: [] } : null);
+                    } else {
+                      const initialSeries: GraphSeries[] = [{
+                        name: "Line 1", color: SCOLS[0],
+                        values: graphEditor.data.map(d => d.value),
+                      }];
+                      setGraphEditor(prev => prev ? { ...prev, series: initialSeries } : null);
+                    }
+                  }} className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${isMulti ? "bg-emerald-500" : "bg-stone-200"}`}>
+                    <span className={`inline-block h-3.5 w-3.5 rounded-full bg-white shadow transition-transform ${isMulti ? "translate-x-[18px]" : "translate-x-1"}`} />
+                  </button>
                 </div>
-              ))}
-            </div>
-            <button onClick={() => setGraphEditor(prev => prev ? { ...prev, data: [...prev.data, { label: "New", value: 0 }] } : null)}
-              className="w-full py-1.5 text-xs font-medium text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50 transition-colors mb-4">+ Add row</button>
+
+                {/* X-axis labels (shared) */}
+                <label className="block text-xs font-semibold text-stone-500 mb-1">{isMulti ? "X-axis Labels" : "Data"}</label>
+                <div className="space-y-1.5 mb-2 max-h-36 overflow-y-auto pr-1">
+                  {graphEditor.data.map((row, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <input value={row.label} placeholder="Label"
+                        onChange={e => setGraphEditor(prev => { if (!prev) return null; const d = [...prev.data]; d[i] = { ...d[i], label: e.target.value }; return { ...prev, data: d }; })}
+                        className="flex-1 border border-stone-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-300" />
+                      {!isMulti && (
+                        <input type="number" value={row.value} placeholder="0"
+                          onChange={e => setGraphEditor(prev => { if (!prev) return null; const d = [...prev.data]; d[i] = { ...d[i], value: Number(e.target.value) }; return { ...prev, data: d }; })}
+                          className="w-20 border border-stone-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-300" />
+                      )}
+                      <button onClick={() => setGraphEditor(prev => {
+                        if (!prev) return null;
+                        const newData = prev.data.filter((_, j) => j !== i);
+                        const newSeries = prev.series.map(s => ({ ...s, values: s.values.filter((_, j) => j !== i) }));
+                        return { ...prev, data: newData, series: newSeries };
+                      })} className="text-red-400 hover:text-red-600 font-bold text-sm leading-none">×</button>
+                    </div>
+                  ))}
+                </div>
+                <button onClick={() => setGraphEditor(prev => {
+                  if (!prev) return null;
+                  const newData = [...prev.data, { label: `P${prev.data.length + 1}`, value: 0 }];
+                  const newSeries = prev.series.map(s => ({ ...s, values: [...s.values, 0] }));
+                  return { ...prev, data: newData, series: newSeries };
+                })} className="w-full py-1 text-xs font-medium text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50 transition-colors mb-3">+ Add label</button>
+
+                {/* Series blocks */}
+                {isMulti && (<>
+                  <div className="border-t border-stone-100 pt-3 mb-2">
+                    <label className="block text-xs font-semibold text-stone-500 mb-2">Lines / Series</label>
+                    <div className="space-y-3 max-h-56 overflow-y-auto pr-1">
+                      {graphEditor.series.map((s, si) => (
+                        <div key={si} className="rounded-lg border border-stone-200 p-2 bg-stone-50">
+                          <div className="flex items-center gap-2 mb-2">
+                            {/* Color dots */}
+                            <div className="flex gap-1 flex-wrap">
+                              {SCOLS.map(c => (
+                                <button key={c} onClick={() => setGraphEditor(prev => { if (!prev) return null; const ns = [...prev.series]; ns[si] = { ...ns[si], color: c }; return { ...prev, series: ns }; })}
+                                  style={{ width: 14, height: 14, borderRadius: "50%", background: c, border: s.color === c ? "2px solid #1e293b" : "2px solid transparent", cursor: "pointer", flexShrink: 0 }} />
+                              ))}
+                            </div>
+                            <input value={s.name} placeholder="Line name"
+                              onChange={e => setGraphEditor(prev => { if (!prev) return null; const ns = [...prev.series]; ns[si] = { ...ns[si], name: e.target.value }; return { ...prev, series: ns }; })}
+                              className="flex-1 min-w-0 border border-stone-200 rounded px-2 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-300 bg-white" />
+                            <button onClick={() => setGraphEditor(prev => prev ? { ...prev, series: prev.series.filter((_, j) => j !== si) } : null)}
+                              className="text-red-400 hover:text-red-600 font-bold text-sm leading-none flex-shrink-0">×</button>
+                          </div>
+                          {/* Values per label */}
+                          <div className="flex flex-wrap gap-1">
+                            {graphEditor.data.map((d, li) => (
+                              <div key={li} className="flex flex-col items-center gap-0.5" style={{ minWidth: 44 }}>
+                                <span className="text-[9px] text-stone-400 truncate w-full text-center">{d.label}</span>
+                                <input type="number" value={s.values[li] ?? 0}
+                                  onChange={e => setGraphEditor(prev => { if (!prev) return null; const ns = [...prev.series]; const vs = [...ns[si].values]; vs[li] = Number(e.target.value); ns[si] = { ...ns[si], values: vs }; return { ...prev, series: ns }; })}
+                                  className="w-full border border-stone-200 rounded px-1 py-0.5 text-xs text-center focus:outline-none focus:ring-1 focus:ring-indigo-300 bg-white" />
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <button onClick={() => setGraphEditor(prev => {
+                      if (!prev) return null;
+                      const newSeries: GraphSeries = { name: `Line ${prev.series.length + 1}`, color: SCOLS[prev.series.length % SCOLS.length], values: prev.data.map(() => 0) };
+                      return { ...prev, series: [...prev.series, newSeries] };
+                    })} className="w-full py-1 mt-2 text-xs font-medium text-emerald-600 border border-emerald-200 rounded-lg hover:bg-emerald-50 transition-colors">+ Add line</button>
+                  </div>
+                </>)}
+              </>);
+            })() : (<>
+              {/* Non-line chart: regular data editor */}
+              <label className="block text-xs font-semibold text-stone-500 mb-1">Data</label>
+              <div className="space-y-1.5 mb-3 max-h-48 overflow-y-auto pr-1">
+                {graphEditor.data.map((row, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <input value={row.label} placeholder="Label"
+                      onChange={e => setGraphEditor(prev => { if (!prev) return null; const d = [...prev.data]; d[i] = { ...d[i], label: e.target.value }; return { ...prev, data: d }; })}
+                      className="flex-1 border border-stone-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-300" />
+                    <input type="number" value={row.value} placeholder="0"
+                      onChange={e => setGraphEditor(prev => { if (!prev) return null; const d = [...prev.data]; d[i] = { ...d[i], value: Number(e.target.value) }; return { ...prev, data: d }; })}
+                      className="w-20 border border-stone-200 rounded px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-300" />
+                    <button onClick={() => setGraphEditor(prev => prev ? { ...prev, data: prev.data.filter((_, j) => j !== i) } : null)}
+                      className="text-red-400 hover:text-red-600 font-bold text-sm leading-none">×</button>
+                  </div>
+                ))}
+              </div>
+              <button onClick={() => setGraphEditor(prev => prev ? { ...prev, data: [...prev.data, { label: "New", value: 0 }] } : null)}
+                className="w-full py-1.5 text-xs font-medium text-indigo-600 border border-indigo-200 rounded-lg hover:bg-indigo-50 transition-colors mb-4">+ Add row</button>
+            </>)}
+
             {/* Save */}
             <button onClick={() => {
               if (!graphEditor) return;
               setGraphBlocks(prev => prev.map(g => g.id === graphEditor.id
-                ? { ...g, title: graphEditor.title, type: graphEditor.type, color: graphEditor.color, data: graphEditor.data }
+                ? { ...g, title: graphEditor.title, type: graphEditor.type, color: graphEditor.color, data: graphEditor.data, series: graphEditor.series.length > 0 ? graphEditor.series : undefined }
                 : g));
               setGraphEditor(null);
             }} className="w-full py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-xl transition-colors">
