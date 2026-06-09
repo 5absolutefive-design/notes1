@@ -155,6 +155,10 @@ interface ContextMenuState {
   mediaOpen: boolean;
   subActive: boolean;
   supActive: boolean;
+  boldActive: boolean;
+  italicActive: boolean;
+  underlineActive: boolean;
+  strikeActive: boolean;
 }
 
 interface ImageBlock {
@@ -893,7 +897,11 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     }
     const subActive = document.queryCommandState("subscript");
     const supActive = document.queryCommandState("superscript");
-    setCtxMenu({ x: menuX, y: menuY, formatOpen: false, alignOpen: false, bulletOpen: false, highlightOpen: false, fontColorOpen: false, headingOpen: false, dividerOpen: false, linkOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1, drawOpen: false, graphOpen: false, tableOpen: false, fontOpen: false, blockOpen: false, mediaOpen: false, subActive, supActive });
+    const boldActive = document.queryCommandState("bold");
+    const italicActive = document.queryCommandState("italic");
+    const underlineActive = document.queryCommandState("underline");
+    const strikeActive = document.queryCommandState("strikeThrough");
+    setCtxMenu({ x: menuX, y: menuY, formatOpen: false, alignOpen: false, bulletOpen: false, highlightOpen: false, fontColorOpen: false, headingOpen: false, dividerOpen: false, linkOpen: false, todoOpen: false, todoCount: 1, todoRemoveCount: 1, drawOpen: false, graphOpen: false, tableOpen: false, fontOpen: false, blockOpen: false, mediaOpen: false, subActive, supActive, boldActive, italicActive, underlineActive, strikeActive });
     if (savedRangeRef.current) {
       setTimeout(() => restoreSelection(), 0);
     }
@@ -2954,11 +2962,11 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
               <div className="absolute left-full top-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 py-1.5 z-[10000] min-w-[180px]">
                 <CtxItem icon={<span className="w-3.5 h-3.5 flex items-center justify-center text-[10px] font-bold leading-none text-stone-500">T</span>} label="Normal" onClick={() => { execFmt("removeFormat"); restoreSelection(); setCtxMenu(null); }} />
                 <div className="my-1 border-t border-stone-100" />
-                <CtxItem icon={<Bold className="w-3.5 h-3.5"/>}          label="Bold"          shortcut="Ctrl+B" onClick={() => execFmt("bold")} />
+                <CtxItem icon={<Bold className="w-3.5 h-3.5"/>}          label="Bold"          shortcut="Ctrl+B" active={ctxMenu.boldActive}      onClick={() => execFmt("bold")} />
                 <CtxItem icon={<span className="w-3.5 h-3.5 flex items-center justify-center text-[10px] font-black tracking-tight leading-none">AA</span>} label="All Caps" onClick={execAllCaps} />
-                <CtxItem icon={<Italic className="w-3.5 h-3.5"/>}        label="Italic"        shortcut="Ctrl+I" onClick={() => execFmt("italic")} />
-                <CtxItem icon={<Underline className="w-3.5 h-3.5"/>}     label="Underline"     shortcut="Ctrl+U" onClick={() => execFmt("underline")} />
-                <CtxItem icon={<Strikethrough className="w-3.5 h-3.5"/>} label="Strikethrough" onClick={() => execFmt("strikeThrough")} />
+                <CtxItem icon={<Italic className="w-3.5 h-3.5"/>}        label="Italic"        shortcut="Ctrl+I" active={ctxMenu.italicActive}    onClick={() => execFmt("italic")} />
+                <CtxItem icon={<Underline className="w-3.5 h-3.5"/>}     label="Underline"     shortcut="Ctrl+U" active={ctxMenu.underlineActive} onClick={() => execFmt("underline")} />
+                <CtxItem icon={<Strikethrough className="w-3.5 h-3.5"/>} label="Strikethrough"                   active={ctxMenu.strikeActive}    onClick={() => execFmt("strikeThrough")} />
                 <CtxItem icon={<Subscript className="w-3.5 h-3.5"/>}    label="Subscript"    shortcut="X₂" active={ctxMenu.subActive} onClick={() => {
                   restoreSelection();
                   const wasActive = document.queryCommandState("subscript");
