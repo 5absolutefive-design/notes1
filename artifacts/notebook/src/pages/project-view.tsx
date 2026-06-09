@@ -3050,46 +3050,79 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             <CtxItem icon={<span className="w-3.5 h-3.5 flex items-center justify-center text-[11px] font-bold leading-none">Aa</span>} label="Font" hasArrow
               onClick={() => setCtxMenu(m => m ? { ...m, fontOpen: !m.fontOpen, formatOpen: false, alignOpen: false, bulletOpen: false, dividerOpen: false, linkOpen: false, drawOpen: false } : null)} />
             {ctxMenu.fontOpen && (
-              <div ref={fontSubCardRef} className="fixed bg-white rounded-2xl shadow-2xl border border-stone-200 p-3 z-[10001]" style={{ minWidth: 280, top: 0, left: 0 }}
+              <div ref={fontSubCardRef} className="fixed z-[10001]" style={{ minWidth: 258, top: 0, left: 0 }}
                 onMouseDown={e => e.stopPropagation()}>
-                {/* Header */}
-                <div className="flex items-center justify-between mb-3">
-                  <span className="text-[11px] font-bold text-stone-500 uppercase tracking-widest">Font</span>
-                  <span className="text-[10px] text-stone-400 italic">Select text → click to apply</span>
-                </div>
-                {/* Font Size */}
-                <div className="flex items-center justify-between mb-2">
-                  <div className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Size</div>
-                  <div className="flex rounded-md border border-stone-200 overflow-hidden text-[10px] font-semibold">
-                    <button onMouseDown={e => { e.preventDefault(); setCtxFontSizeMode(ctxFontSizeMode === "all" ? "selected" : "all"); }}
-                      className={`px-2 py-0.5 transition-colors ${ctxFontSizeMode === "all" ? "bg-indigo-500 text-white mode-glow" : "bg-white text-stone-500 hover:bg-indigo-50"}`}>All</button>
-                    <button onMouseDown={e => { e.preventDefault(); setCtxFontSizeMode(ctxFontSizeMode === "selected" ? "all" : "selected"); }}
-                      className={`px-2 py-0.5 transition-colors border-l border-stone-200 ${ctxFontSizeMode === "selected" ? "bg-indigo-500 text-white mode-glow" : "bg-white text-stone-500 hover:bg-indigo-50"}`}>Selected</button>
+                <div style={{
+                  width: 258, background: "#fff", borderRadius: 14, overflow: "hidden",
+                  boxShadow: "0 4px 6px rgba(0,0,0,0.04), 0 12px 32px rgba(0,0,0,0.10), 0 2px 4px rgba(0,0,0,0.06)",
+                  fontFamily: "Inter, sans-serif",
+                }}>
+                  {/* Specimen hero */}
+                  <div style={{ padding: "14px 14px 12px", background: "#c2c2c2" }}>
+                    <div style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.18em", color: "rgba(255,255,255,0.55)", textTransform: "uppercase", marginBottom: 8 }}>
+                      Specimen · {ctxSelectedFont ?? "Inter"}
+                    </div>
+                    <div style={{
+                      fontFamily: ctxSelectedFont ?? "Inter", fontSize: ctxFontSize, lineHeight: 1.15,
+                      color: "#fff", wordBreak: "break-word", minHeight: 36,
+                      transition: "font-size 0.15s, font-family 0.1s",
+                      textShadow: "0 1px 8px rgba(0,0,0,0.18)",
+                    }}>
+                      Abc 123
+                    </div>
+                    <div style={{ marginTop: 8, display: "flex", alignItems: "center", gap: 6 }}>
+                      <button onMouseDown={e => { e.preventDefault(); applyCtxFontSize(Math.max(8, ctxFontSize - 2), true); }}
+                        style={{ width: 22, height: 22, background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 2, color: "#fff", fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>−</button>
+                      <span style={{ fontSize: 11, color: "rgba(255,255,255,0.8)", fontVariantNumeric: "tabular-nums", minWidth: 36, textAlign: "center" }}>{ctxFontSize}px</span>
+                      <button onMouseDown={e => { e.preventDefault(); applyCtxFontSize(Math.min(96, ctxFontSize + 2), true); }}
+                        style={{ width: 22, height: 22, background: "rgba(255,255,255,0.15)", border: "1px solid rgba(255,255,255,0.25)", borderRadius: 2, color: "#fff", fontSize: 13, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center" }}>+</button>
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center gap-2 mb-1">
-                  <button onMouseDown={e => { e.preventDefault(); applyCtxFontSize(Math.max(8, ctxFontSize - 2), true); }}
-                    className="w-7 h-7 rounded border border-stone-300 bg-white hover:bg-stone-100 text-stone-600 text-base font-bold flex items-center justify-center transition-colors">−</button>
-                  <span className="w-12 text-center text-sm font-semibold text-stone-700">{ctxFontSize}px</span>
-                  <button onMouseDown={e => { e.preventDefault(); applyCtxFontSize(Math.min(96, ctxFontSize + 2), true); }}
-                    className="w-7 h-7 rounded border border-stone-300 bg-white hover:bg-stone-100 text-stone-600 text-base font-bold flex items-center justify-center transition-colors">+</button>
-                </div>
-                <div className="flex flex-wrap gap-1 mb-1">
-                  {[10, 12, 14, 16, 18, 20, 24, 28, 32, 48, 72].map(s => (
-                    <button key={s} onMouseDown={e => { e.preventDefault(); applyCtxFontSize(s, true); }}
-                      className={`h-6 px-1.5 text-[10px] font-semibold rounded border transition-colors ${ctxFontSize === s ? "bg-indigo-100 border-indigo-400 text-indigo-700" : "border-stone-200 hover:bg-indigo-50 text-stone-600"}`}>
-                      {s}
-                    </button>
-                  ))}
-                </div>
-                {/* Font Family */}
-                <div className="border-t border-stone-100 pt-3 mt-2">
-                  <div className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-2">Family</div>
-                  <input value={ctxFontSearch} onChange={e => setCtxFontSearch(e.target.value)}
-                    placeholder="Search font..."
-                    className="w-full h-7 px-2 text-xs border border-stone-300 rounded bg-white focus:outline-none focus:border-indigo-400 mb-2" />
-                  <div className="max-h-44 overflow-y-auto flex flex-col gap-0.5">
-                    {FONTS_CTX.filter(f => f.toLowerCase().includes(ctxFontSearch.toLowerCase())).map(f => {
+
+                  {/* Size presets */}
+                  <div style={{ padding: "7px 12px", borderBottom: "1px solid #e8e8e8", display: "flex", flexWrap: "wrap", gap: 3 }}>
+                    {[10, 12, 14, 16, 18, 20, 24, 28, 32, 48, 72].map(s => (
+                      <button key={s} onMouseDown={e => { e.preventDefault(); applyCtxFontSize(s, true); }}
+                        style={{
+                          height: 20, padding: "0 6px", fontSize: 9, fontWeight: 600, borderRadius: 2,
+                          border: ctxFontSize === s ? "1.5px solid #c2c2c2" : "1px solid #ddd",
+                          background: ctxFontSize === s ? "#c2c2c2" : "#fafafa",
+                          color: ctxFontSize === s ? "#333" : "#666",
+                          cursor: "pointer", transition: "all 0.1s",
+                        }}>{s}</button>
+                    ))}
+                  </div>
+
+                  {/* Mode toggle */}
+                  <div style={{ padding: "7px 12px", borderBottom: "1px solid #e8e8e8", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
+                    <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#999" }}>Apply to</span>
+                    <div style={{ display: "flex", border: "1px solid #c2c2c2", borderRadius: 2, overflow: "hidden" }}>
+                      {(["all", "selected"] as const).map(m => (
+                        <button key={m} onMouseDown={e => { e.preventDefault(); setCtxFontSizeMode(m); }}
+                          style={{
+                            padding: "2px 8px", fontSize: 9, fontWeight: 700, border: "none", cursor: "pointer",
+                            background: ctxFontSizeMode === m ? "#c2c2c2" : "#fff",
+                            color: ctxFontSizeMode === m ? "#333" : "#888",
+                            textTransform: "capitalize", letterSpacing: "0.05em",
+                          }}>{m}</button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Search */}
+                  <div style={{ padding: "7px 12px", borderBottom: "1px solid #e8e8e8" }}>
+                    <input value={ctxFontSearch} onChange={e => setCtxFontSearch(e.target.value)}
+                      placeholder="Search typeface..."
+                      style={{
+                        width: "100%", height: 26, padding: "0 8px", fontSize: 11,
+                        border: "1px solid #ccc", borderRadius: 2, background: "#fafafa",
+                        outline: "none", boxSizing: "border-box", color: "#222",
+                      }} />
+                  </div>
+
+                  {/* Font list — editorial row style */}
+                  <div style={{ maxHeight: 220, overflowY: "auto" }}>
+                    {FONTS_CTX.filter(f => f.toLowerCase().includes(ctxFontSearch.toLowerCase())).map((f, i, arr) => {
                       const isSelected = ctxSelectedFont === f;
                       return (
                         <button key={f}
@@ -3098,10 +3131,17 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                             if (isSelected) { setCtxSelectedFont(null); }
                             else { applyCtxFontName(f, true); setCtxSelectedFont(f); }
                           }}
-                          className={`w-full text-left px-2 py-1 rounded-lg transition-colors flex items-center gap-2 ${isSelected ? "bg-indigo-50 border border-indigo-300 font-glow" : "hover:bg-indigo-50 border border-transparent"}`}>
-                          <span className={`text-[11px] w-24 shrink-0 truncate ${isSelected ? "text-indigo-600 font-semibold" : "text-stone-400"}`}>{f}</span>
-                          <span className={`text-sm truncate ${isSelected ? "text-indigo-700" : "text-stone-800"}`} style={{ fontFamily: f }}>Abc 123</span>
-                          {isSelected && <span className="ml-auto text-indigo-400 text-[10px] font-semibold shrink-0">✓</span>}
+                          style={{
+                            display: "flex", alignItems: "center", width: "100%",
+                            padding: "7px 12px",
+                            borderBottom: i < arr.length - 1 ? "1px solid #f0f0f0" : "none",
+                            background: isSelected ? "#c2c2c2" : "transparent",
+                            border: "none", cursor: "pointer", textAlign: "left",
+                            transition: "background 0.1s",
+                          }}>
+                          <span style={{ fontSize: 9, color: isSelected ? "#555" : "#bbb", width: 18, flexShrink: 0, fontVariantNumeric: "tabular-nums" }}>{String(FONTS_CTX.indexOf(f) + 1).padStart(2, "0")}</span>
+                          <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: isSelected ? "#444" : "#aaa", width: 80, flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f}</span>
+                          <span style={{ fontFamily: f, fontSize: 15, color: "#222", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Abc</span>
                         </button>
                       );
                     })}
