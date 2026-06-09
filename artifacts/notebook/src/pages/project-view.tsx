@@ -2423,6 +2423,9 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             const PIE_COLORS = ["#6366f1","#f59e0b","#10b981","#ef4444","#3b82f6","#ec4899","#8b5cf6","#14b8a6"];
             const MULTI_COLORS = ["#6366f1","#f59e0b","#10b981","#ef4444","#3b82f6","#ec4899","#8b5cf6","#14b8a6"];
             const hasNegative = g.data.some(d => d.value < 0);
+            const hasNegativeInSeries = g.series && g.series.length > 0
+              ? g.series.some(s => s.values.some(v => v < 0))
+              : false;
             let lineChartEl: React.ReactElement;
             if (g.series && g.series.length > 0) {
               const lineData = g.data.map((d, i) => {
@@ -2436,6 +2439,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                   <YAxis tick={{ fontSize: 10 }} />
                   <Tooltip />
                   <Legend wrapperStyle={{ fontSize: 10, paddingTop: 2 }} />
+                  {hasNegativeInSeries && <ReferenceLine y={0} stroke="#cbd5e1" strokeWidth={1.5} strokeDasharray="4 3" style={{ filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.15))" }} />}
                   {g.series.map((s, si) => (
                     <Line key={s.name} type="monotone" dataKey={s.name} stroke={s.color || MULTI_COLORS[si % MULTI_COLORS.length]} strokeWidth={2} dot={{ r: 3 }} />
                   ))}
@@ -2447,6 +2451,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                   <XAxis dataKey="label" tick={{ fontSize: 10 }} />
                   <YAxis tick={{ fontSize: 10 }} />
                   <Tooltip />
+                  {hasNegative && <ReferenceLine y={0} stroke="#cbd5e1" strokeWidth={1.5} strokeDasharray="4 3" style={{ filter: "drop-shadow(0 1px 3px rgba(0,0,0,0.15))" }} />}
                   <Line type="monotone" dataKey="value" stroke={g.color} strokeWidth={2} dot={{ r: 3 }} />
                 </LineChart>
               );
