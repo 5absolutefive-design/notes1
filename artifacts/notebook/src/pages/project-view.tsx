@@ -2572,23 +2572,22 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             )}
           </div>
 
-          {/* Undo / Redo — looks like one button, invisible divider in middle */}
-          <div className="flex px-2 py-1">
-            <div className="flex flex-1 rounded-lg border border-stone-100 overflow-hidden">
-              <button
-                onMouseDown={e => { e.preventDefault(); execFmt("undo"); setCtxMenu(null); }}
-                className="flex-1 flex items-center justify-center gap-1.5 py-1.5 hover:bg-indigo-50 text-stone-600 hover:text-indigo-700 transition-colors text-xs font-medium">
-                <Undo2 className="w-3.5 h-3.5 flex-shrink-0" />
-                <span>Undo</span>
-              </button>
-              <div className="w-px bg-stone-100" />
-              <button
-                onMouseDown={e => { e.preventDefault(); execFmt("redo"); setCtxMenu(null); }}
-                className="flex-1 flex items-center justify-center gap-1.5 py-1.5 hover:bg-indigo-50 text-stone-600 hover:text-indigo-700 transition-colors text-xs font-medium">
-                <Redo2 className="w-3.5 h-3.5 flex-shrink-0" />
-                <span>Redo</span>
-              </button>
-            </div>
+          <div className="mx-3 border-t border-stone-100" />
+          {/* Undo / Redo — same style as CtxItem, split 50/50 with divider */}
+          <div className="flex">
+            <button
+              onMouseDown={e => { e.preventDefault(); execFmt("undo"); setCtxMenu(null); }}
+              className="flex-1 flex items-center justify-center gap-2.5 px-3 py-1.5 hover:bg-indigo-50 hover:text-indigo-700 text-stone-700 transition-colors text-left text-xs font-medium">
+              <Undo2 className="w-3.5 h-3.5 flex-shrink-0 text-stone-400" />
+              <span>Undo</span>
+            </button>
+            <div className="w-px bg-stone-100 my-1" />
+            <button
+              onMouseDown={e => { e.preventDefault(); execFmt("redo"); setCtxMenu(null); }}
+              className="flex-1 flex items-center justify-center gap-2.5 px-3 py-1.5 hover:bg-indigo-50 hover:text-indigo-700 text-stone-700 transition-colors text-left text-xs font-medium">
+              <Redo2 className="w-3.5 h-3.5 flex-shrink-0 text-stone-400" />
+              <span>Redo</span>
+            </button>
           </div>
 
           <div className="my-1 border-t border-stone-100" />
