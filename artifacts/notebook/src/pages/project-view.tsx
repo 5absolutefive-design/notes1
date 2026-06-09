@@ -3050,10 +3050,10 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             <CtxItem icon={<span className="w-3.5 h-3.5 flex items-center justify-center text-[11px] font-bold leading-none">Aa</span>} label="Font" hasArrow
               onClick={() => setCtxMenu(m => m ? { ...m, fontOpen: !m.fontOpen, formatOpen: false, alignOpen: false, bulletOpen: false, dividerOpen: false, linkOpen: false, drawOpen: false } : null)} />
             {ctxMenu.fontOpen && (
-              <div ref={fontSubCardRef} className="fixed z-[10001]" style={{ minWidth: 258, top: 0, left: 0 }}
+              <div ref={fontSubCardRef} className="fixed z-[10001]" style={{ minWidth: 220, top: 0, left: 0 }}
                 onMouseDown={e => e.stopPropagation()}>
                 <div style={{
-                  width: 258, background: "#fff", borderRadius: 14, overflow: "hidden",
+                  width: 220, background: "#fff", borderRadius: 14, overflow: "hidden",
                   boxShadow: "0 4px 6px rgba(0,0,0,0.04), 0 12px 32px rgba(0,0,0,0.10), 0 2px 4px rgba(0,0,0,0.06)",
                   fontFamily: "Inter, sans-serif",
                 }}>
