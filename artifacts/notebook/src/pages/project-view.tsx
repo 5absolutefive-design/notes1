@@ -1,4 +1,5 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
+import cylinderIcon from "@assets/3d-cylinder-3d-design-3d-shape-cylinder-geometric-geometry-svg_1780973962135.svg";
 import pinIcon from "@assets/pin-svgrepo-com_1780935998946.png";
 import numberIcon from "@assets/number-svgrepo-com_1780936571964.png";
 import cardIcon from "@assets/card-layout-filled-svgrepo-com_1780936676782.png";
@@ -170,13 +171,14 @@ const DRAW_SHAPES = [
   { key: "star",     icon: "☆",  label: "Star"     },
   { key: "double",   icon: "↔",  label: "D-Arrow"  },
   { key: "cross",    icon: "✚",  label: "Cross"    },
-  { key: "pentagon", icon: "⬠",  label: "Pentagon" },
+  { key: "pentagon",  icon: "⬠",  label: "Pentagon"  },
+  { key: "cylinder",  icon: <img src={cylinderIcon} className="w-4 h-4 object-contain" />, label: "Cylinder"  },
 ];
 
 const DRAW_TOOL_LABELS: Record<string, string> = {
   arrow: "Arrow", line: "Line", dashed: "Dashed", vline: "V-Line",
   rect: "Box", circle: "Circle", triangle: "Triangle", arc: "Arc",
-  diamond: "Diamond", star: "Star", double: "D-Arrow", cross: "Cross", pentagon: "Pentagon",
+  diamond: "Diamond", star: "Star", double: "D-Arrow", cross: "Cross", pentagon: "Pentagon", cylinder: "Cylinder",
   eraser: "Eraser",
 };
 
@@ -3180,6 +3182,20 @@ function DrawShapeEl({ shape, isPreview, eraserMode, onRemove }: {
         return `${cx + r * Math.cos(angle)},${cy + r * Math.sin(angle)}`;
       }).join(" ");
       return <polygon {...common} points={pts} strokeDasharray={previewDash} />;
+    }
+    case "cylinder": {
+      const rx = Math.min(x1, x2), ry = Math.min(y1, y2);
+      const rw = Math.abs(x2 - x1), rh = Math.abs(y2 - y1);
+      return (
+        <image
+          href={cylinderIcon}
+          x={rx} y={ry}
+          width={Math.max(rw, 1)} height={Math.max(rh, 1)}
+          opacity={opacity}
+          style={{ pointerEvents: ptrEvents, cursor }}
+          onClick={canClick ? onRemove : undefined}
+        />
+      );
     }
     default:
       return null;
