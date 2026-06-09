@@ -295,6 +295,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const [showTableBtns, setShowTableBtns] = useState(false);
   const [hoverTableBtns, setHoverTableBtns] = useState(false);
   const [tableLinesHidden, setTableLinesHidden] = useState(false);
+  const lastKeyRef = useRef<string>("");
   const activeTableRef = useRef<HTMLTableElement | null>(null);
   const activeEditRef = useRef<{ td: HTMLElement; finish: () => void } | null>(null);
   const tableResizeObserverRef = useRef<ResizeObserver | null>(null);
@@ -1914,10 +1915,22 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           newSel?.removeAllRanges();
           newSel?.addRange(range);
           debouncedSave();
+          lastKeyRef.current = "";
           return;
         }
       }
     }
+    // Double-space → exit all inline formatting and return to normal
+    if (e.key === " " && lastKeyRef.current === " ") {
+      e.preventDefault();
+      document.execCommand("delete", false);
+      document.execCommand("removeFormat", false);
+      document.execCommand("insertText", false, " ");
+      lastKeyRef.current = "";
+      debouncedSave();
+      return;
+    }
+    lastKeyRef.current = e.key;
     if (e.ctrlKey || e.metaKey) {
       if (e.key === "b") { e.preventDefault(); execFmt("bold"); }
       else if (e.key === "i") { e.preventDefault(); execFmt("italic"); }
@@ -2872,6 +2885,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
               onClick={() => setCtxMenu(m => m ? { ...m, formatOpen: !m.formatOpen, alignOpen: false, bulletOpen: false, dividerOpen: false, linkOpen: false, drawOpen: false, highlightOpen: false, fontColorOpen: false, headingOpen: false } : null)} />
             {ctxMenu.formatOpen && (
               <div className="absolute left-full top-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 py-1.5 z-[10000] min-w-[180px]">
+                <CtxItem icon={<span className="w-3.5 h-3.5 flex items-center justify-center text-[10px] font-bold leading-none text-stone-500">T</span>} label="Normal" onClick={() => { execFmt("removeFormat"); restoreSelection(); setCtxMenu(null); }} />
+                <div className="my-1 border-t border-stone-100" />
                 <CtxItem icon={<Bold className="w-3.5 h-3.5"/>}          label="Bold"          shortcut="Ctrl+B" onClick={() => execFmt("bold")} />
                 <CtxItem icon={<span className="w-3.5 h-3.5 flex items-center justify-center text-[10px] font-black tracking-tight leading-none">AA</span>} label="All Caps" onClick={execAllCaps} />
                 <CtxItem icon={<Italic className="w-3.5 h-3.5"/>}        label="Italic"        shortcut="Ctrl+I" onClick={() => execFmt("italic")} />
