@@ -63,9 +63,9 @@ export function GlassmorphismCard() {
             <button key={s} onClick={() => setFontSize(s)}
               style={{
                 height: 20, padding: "0 6px", fontSize: 9, fontWeight: 600, borderRadius: 2,
-                border: fontSize === s ? "1.5px solid #000" : "1px solid #ddd",
-                background: fontSize === s ? "#000" : "#fafafa",
-                color: fontSize === s ? "#fff" : "#666",
+                border: fontSize === s ? "1.5px solid #c2c2c2" : "1px solid #ddd",
+                background: fontSize === s ? "#c2c2c2" : "#fafafa",
+                color: fontSize === s ? "#333" : "#666",
                 cursor: "pointer", transition: "all 0.1s",
               }}>{s}</button>
           ))}
@@ -74,13 +74,13 @@ export function GlassmorphismCard() {
         {/* Mode toggle */}
         <div style={{ padding: "7px 12px", borderBottom: "1px solid #e8e8e8", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.12em", textTransform: "uppercase", color: "#999" }}>Apply to</span>
-          <div style={{ display: "flex", border: "1px solid #000", borderRadius: 2, overflow: "hidden" }}>
+          <div style={{ display: "flex", border: "1px solid #c2c2c2", borderRadius: 2, overflow: "hidden" }}>
             {(["all", "selected"] as const).map(m => (
               <button key={m} onClick={() => setMode(m)}
                 style={{
                   padding: "2px 8px", fontSize: 9, fontWeight: 700, border: "none", cursor: "pointer",
-                  background: mode === m ? "#000" : "#fff",
-                  color: mode === m ? "#fff" : "#000",
+                  background: mode === m ? "#c2c2c2" : "#fff",
+                  color: mode === m ? "#333" : "#888",
                   textTransform: "capitalize", letterSpacing: "0.05em",
                 }}>{m}</button>
             ))}
@@ -108,13 +108,13 @@ export function GlassmorphismCard() {
                   display: "flex", alignItems: "center", width: "100%",
                   padding: "7px 12px",
                   borderBottom: i < filtered.length - 1 ? "1px solid #f0f0f0" : "none",
-                  background: sel ? "#000" : "transparent",
+                  background: sel ? "#c2c2c2" : "transparent",
                   border: "none", cursor: "pointer", textAlign: "left",
                   transition: "background 0.1s",
                 }}>
-                <span style={{ fontSize: 9, color: sel ? "#666" : "#bbb", width: 16, flexShrink: 0, fontVariantNumeric: "tabular-nums" }}>{String(FONTS.indexOf(f) + 1).padStart(2, "0")}</span>
-                <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: sel ? "#888" : "#aaa", width: 76, flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f}</span>
-                <span style={{ fontFamily: f, fontSize: 15, color: sel ? "#fff" : "#222", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Abc</span>
+                <span style={{ fontSize: 9, color: sel ? "#555" : "#bbb", width: 16, flexShrink: 0, fontVariantNumeric: "tabular-nums" }}>{String(FONTS.indexOf(f) + 1).padStart(2, "0")}</span>
+                <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: "0.05em", textTransform: "uppercase", color: sel ? "#444" : "#aaa", width: 76, flexShrink: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f}</span>
+                <span style={{ fontFamily: f, fontSize: 15, color: sel ? "#222" : "#222", flex: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>Abc</span>
               </button>
             );
           })}

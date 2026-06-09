@@ -68,9 +68,9 @@ export function DarkLuxuryCard() {
             <button key={s} onClick={() => setFontSize(s)}
               style={{
                 height: 18, padding: "0 5px", fontSize: 9,
-                border: fontSize === s ? "1px solid #666" : "1px solid #222",
-                background: fontSize === s ? "#222" : "transparent",
-                color: fontSize === s ? "#ccc" : "#444",
+                border: fontSize === s ? "1px solid #c2c2c2" : "1px solid #222",
+                background: fontSize === s ? "#c2c2c2" : "transparent",
+                color: fontSize === s ? "#222" : "#444",
                 borderRadius: 2, cursor: "pointer", fontFamily: "monospace",
               }}>{s}</button>
           ))}
@@ -82,9 +82,9 @@ export function DarkLuxuryCard() {
             <button key={m} onClick={() => setMode(m)}
               style={{
                 padding: "2px 7px", fontSize: 8, fontWeight: 700, letterSpacing: "0.08em",
-                border: "1px solid", borderColor: mode === m ? "#aaa" : "#222",
-                background: mode === m ? "#222" : "transparent",
-                color: mode === m ? "#ccc" : "#444",
+                border: "1px solid", borderColor: mode === m ? "#c2c2c2" : "#222",
+                background: mode === m ? "#c2c2c2" : "transparent",
+                color: mode === m ? "#222" : "#444",
                 borderRadius: 2, cursor: "pointer", textTransform: "uppercase",
               }}>{m}</button>
           ))}
@@ -113,12 +113,12 @@ export function DarkLuxuryCard() {
                 onMouseLeave={() => setHoveredFont(null)}
                 style={{
                   display: "flex", alignItems: "center", width: "100%", padding: "5px 10px",
-                  background: sel ? "#1c1c1c" : hov ? "#141414" : "transparent",
+                  background: sel ? "#c2c2c2" : hov ? "#141414" : "transparent",
                   border: "none", borderBottom: "1px solid #141414", cursor: "pointer", textAlign: "left",
                 }}>
-                <span style={{ fontSize: 8, color: sel ? "#888" : "#333", width: 16, flexShrink: 0 }}>{sel ? "●" : "○"}</span>
-                <span style={{ fontSize: 10, color: sel ? "#ddd" : hov ? "#aaa" : "#555", flex: 1, fontFamily: "'Courier New', monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f}</span>
-                <span style={{ fontFamily: f, fontSize: 13, color: sel ? "#fff" : hov ? "#888" : "#2a2a2a" }}>Aa</span>
+                <span style={{ fontSize: 8, color: sel ? "#444" : "#333", width: 16, flexShrink: 0 }}>{sel ? "●" : "○"}</span>
+                <span style={{ fontSize: 10, color: sel ? "#222" : hov ? "#aaa" : "#555", flex: 1, fontFamily: "'Courier New', monospace", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{f}</span>
+                <span style={{ fontFamily: f, fontSize: 13, color: sel ? "#111" : hov ? "#888" : "#2a2a2a" }}>Aa</span>
               </button>
             );
           })}

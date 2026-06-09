@@ -58,8 +58,8 @@ export function CleanMinimalCard() {
               <button key={m} onClick={() => setMode(m)}
                 style={{
                   padding: "3px 7px", fontSize: 9, fontWeight: 600, border: "none", cursor: "pointer",
-                  background: mode === m ? "#111" : "transparent",
-                  color: mode === m ? "#fff" : "#aaa",
+                  background: mode === m ? "#c2c2c2" : "transparent",
+                  color: mode === m ? "#333" : "#aaa",
                   textTransform: "capitalize", letterSpacing: "0.02em",
                 }}>{m}</button>
             ))}
@@ -73,8 +73,8 @@ export function CleanMinimalCard() {
               style={{
                 height: 18, padding: "0 5px", fontSize: 9, fontWeight: 500,
                 borderRadius: 4, border: "none",
-                background: fontSize === s ? "#111" : "#f2f2f2",
-                color: fontSize === s ? "#fff" : "#888",
+                background: fontSize === s ? "#c2c2c2" : "#f2f2f2",
+                color: fontSize === s ? "#333" : "#888",
                 cursor: "pointer", transition: "all 0.1s",
               }}>{s}</button>
           ))}
@@ -100,13 +100,13 @@ export function CleanMinimalCard() {
                 <button key={f} onClick={() => setSelectedFont(f)}
                   style={{
                     padding: "7px 8px", borderRadius: 7,
-                    border: sel ? "1.5px solid #000" : "1.5px solid transparent",
-                    background: sel ? "#000" : "#f7f7f7",
+                    border: sel ? "1.5px solid #c2c2c2" : "1.5px solid transparent",
+                    background: sel ? "#c2c2c2" : "#f7f7f7",
                     cursor: "pointer", textAlign: "left", transition: "all 0.1s",
                     display: "flex", flexDirection: "column", gap: 2,
                   }}>
-                  <span style={{ fontFamily: f, fontSize: 16, color: sel ? "#fff" : "#111", lineHeight: 1, display: "block" }}>Ag</span>
-                  <span style={{ fontSize: 8, color: sel ? "#888" : "#bbb", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>{f}</span>
+                  <span style={{ fontFamily: f, fontSize: 16, color: sel ? "#222" : "#111", lineHeight: 1, display: "block" }}>Ag</span>
+                  <span style={{ fontSize: 8, color: sel ? "#555" : "#bbb", fontWeight: 500, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", display: "block" }}>{f}</span>
                 </button>
               );
             })}
