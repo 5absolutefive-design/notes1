@@ -2572,7 +2572,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             )}
           </div>
 
-          <div className="mx-3 border-t border-stone-100" />
+          <div className="border-t border-stone-100" />
           {/* Undo / Redo — same style as CtxItem, split 50/50 with divider */}
           <div className="flex">
             <button
