@@ -2776,16 +2776,16 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
               onClick={() => setCtxMenu(m => m ? { ...m, drawOpen: !m.drawOpen, formatOpen: false, alignOpen: false, bulletOpen: false, dividerOpen: false, linkOpen: false } : null)}
             />
             {ctxMenu.drawOpen && (
-              <div className="absolute left-full bottom-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 py-2 px-2 z-[10000] min-w-[210px]">
-                <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide px-1 mb-1.5">Choose a tool</p>
-                <div className="grid grid-cols-4 gap-1 mb-2">
+              <div className="absolute left-full bottom-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 py-2.5 px-2.5 z-[10000] min-w-[300px]">
+                <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide px-1 mb-2">Choose a tool</p>
+                <div className="grid grid-cols-4 gap-1.5 mb-2">
                   {DRAW_SHAPES.map(({ key, icon, label }) => (
                     <button key={key} title={label}
                       onClick={() => { setDrawTool(key as DrawTool); setCtxMenu(null); }}
-                      className={`flex flex-col items-center justify-center gap-0.5 h-12 rounded-lg border transition-colors text-xs font-medium
+                      className={`flex flex-col items-center justify-center gap-1 h-[68px] rounded-xl border transition-colors font-medium
                         ${drawTool === key ? "bg-indigo-100 border-indigo-400 text-indigo-700" : "border-stone-100 hover:bg-indigo-50 hover:border-indigo-200 text-stone-600 hover:text-indigo-700"}`}>
-                      <span className="text-base leading-none">{icon}</span>
-                      <span className="text-[9px]">{label}</span>
+                      <span className="text-2xl leading-none flex items-center justify-center [&_img]:w-7 [&_img]:h-7 [&_img]:object-contain">{icon}</span>
+                      <span className="text-[10px] font-semibold leading-tight text-center px-0.5 truncate w-full text-center">{label}</span>
                     </button>
                   ))}
                 </div>
