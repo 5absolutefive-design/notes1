@@ -290,6 +290,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const [graphBlocks, setGraphBlocks] = useState<GraphBlock[]>([]);
   const [graphEditor, setGraphEditor] = useState<{ id: string; data: { label: string; value: number }[]; title: string; type: GraphType; color: string } | null>(null);
   const graphDragRef = useRef<{ id: string; startMx: number; startMy: number; startBx: number; startBy: number } | null>(null);
+  const graphResizeRef = useRef<{ id: string; startMx: number; startMy: number; startW: number; startH: number; side: "r" | "b" | "br" } | null>(null);
   const voiceInputRef = useRef<HTMLInputElement>(null);
   const dragRef = useRef<{ id: string; startMx: number; startMy: number; startBx: number; startBy: number } | null>(null);
   const resizeRef = useRef<{ id: string; startMx: number; startW: number; startBx: number; side: "br" | "bl" | "tr" | "tl" } | null>(null);
@@ -388,6 +389,17 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           ? { ...g, x: startBx + e.clientX - startMx, y: startBy + e.clientY - startMy }
           : g));
       }
+      if (graphResizeRef.current) {
+        const { id, startMx, startMy, startW, startH, side } = graphResizeRef.current;
+        const dx = e.clientX - startMx;
+        const dy = e.clientY - startMy;
+        setGraphBlocks(prev => prev.map(g => {
+          if (g.id !== id) return g;
+          const newW = side === "b" ? g.width : Math.max(180, startW + dx);
+          const newH = side === "r" ? g.height : Math.max(120, startH + dy);
+          return { ...g, width: newW, height: newH };
+        }));
+      }
       if (dragRef.current) {
         const { id, startMx, startMy, startBx, startBy } = dragRef.current;
         setImageBlocks(prev => prev.map(b => b.id === id
@@ -424,6 +436,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
       dragRef.current = null;
       resizeRef.current = null;
       graphDragRef.current = null;
+      graphResizeRef.current = null;
       if (arrowDrawRef.current) {
         const container = scrollContainerRef.current;
         if (container) {
@@ -2397,7 +2410,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             return (
               <div key={g.id} style={{ position: "absolute", left: g.x, top: g.y, width: g.width, zIndex: 25, userSelect: "none" }}>
                 <div
-                  style={{ cursor: "default", background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: 10, boxShadow: "0 2px 12px rgba(0,0,0,0.09)", overflow: "hidden" }}
+                  style={{ cursor: "default", background: "#fff", border: "1.5px solid #e2e8f0", borderRadius: 10, boxShadow: "0 2px 12px rgba(0,0,0,0.09)", overflow: "hidden", position: "relative" }}
                 >
                   {/* Header */}
                   <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "8px 12px 4px", borderBottom: "1px solid #f1f0ee" }}>
@@ -2418,7 +2431,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                     </div>
                   </div>
                   {/* Chart */}
-                  <div style={{ padding: "8px 4px 8px 0", height: g.height }}>
+                  <div style={{ padding: "8px 4px 8px 0", height: g.height, position: "relative" }}>
                     <ResponsiveContainer width="100%" height="100%">
                       {g.type === "bar" ? (
                         <BarChart data={g.data} margin={{ top: 4, right: 8, bottom: 4, left: -10 }}>
@@ -2450,6 +2463,27 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                         </PieChart>
                       )}
                     </ResponsiveContainer>
+                  </div>
+                  {/* Resize handles */}
+                  {/* Right edge */}
+                  <div data-graph-btn="1"
+                    onMouseDown={e => { e.preventDefault(); e.stopPropagation(); graphResizeRef.current = { id: g.id, startMx: e.clientX, startMy: e.clientY, startW: g.width, startH: g.height, side: "r" }; }}
+                    style={{ position: "absolute", top: 0, right: 0, width: 6, height: "100%", cursor: "ew-resize", zIndex: 10, background: "transparent" }}
+                    title="Resize width"
+                  />
+                  {/* Bottom edge */}
+                  <div data-graph-btn="1"
+                    onMouseDown={e => { e.preventDefault(); e.stopPropagation(); graphResizeRef.current = { id: g.id, startMx: e.clientX, startMy: e.clientY, startW: g.width, startH: g.height, side: "b" }; }}
+                    style={{ position: "absolute", bottom: 0, left: 0, width: "100%", height: 6, cursor: "ns-resize", zIndex: 10, background: "transparent" }}
+                    title="Resize height"
+                  />
+                  {/* Bottom-right corner */}
+                  <div data-graph-btn="1"
+                    onMouseDown={e => { e.preventDefault(); e.stopPropagation(); graphResizeRef.current = { id: g.id, startMx: e.clientX, startMy: e.clientY, startW: g.width, startH: g.height, side: "br" }; }}
+                    style={{ position: "absolute", bottom: 0, right: 0, width: 14, height: 14, cursor: "nwse-resize", zIndex: 11, display: "flex", alignItems: "center", justifyContent: "center" }}
+                    title="Resize"
+                  >
+                    <svg width="8" height="8" viewBox="0 0 8 8" fill="none"><path d="M1 7L7 1M4 7L7 4M7 7L7 7" stroke="#94a3b8" strokeWidth="1.5" strokeLinecap="round"/></svg>
                   </div>
                 </div>
               </div>
