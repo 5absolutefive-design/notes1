@@ -2036,13 +2036,6 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 <button onMouseDown={e => { e.preventDefault(); tableAddCol(); }} title="Add column"
                   style={btnStyle("green")} onMouseEnter={hoverGreen} onMouseLeave={hoverReset}>+</button>
                 <button
-                  onMouseDown={e => { e.preventDefault(); tableToggleLines(); }}
-                  title={tableLinesHidden ? "Show table lines" : "Hide table lines"}
-                  style={{ ...btnStyle("green"), background: tableLinesHidden ? "#dbeafe" : "#fafaf8", color: tableLinesHidden ? "#2563eb" : "#374151", fontSize: 13 }}
-                  onMouseEnter={hoverBlue} onMouseLeave={e => { const t = e.currentTarget; t.style.background = tableLinesHidden ? "#dbeafe" : "#fafaf8"; t.style.color = tableLinesHidden ? "#2563eb" : "#374151"; }}>
-                  {tableLinesHidden ? "👁" : "👁"}
-                </button>
-                <button
                   onMouseDown={e => { e.preventDefault(); tableDeleteTable(); }}
                   title="Delete table"
                   style={{ ...btnStyle("red"), fontSize: 12 }}
