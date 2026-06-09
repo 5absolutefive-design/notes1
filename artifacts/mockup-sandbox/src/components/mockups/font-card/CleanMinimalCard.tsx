@@ -1,3 +1,5 @@
+import { useState } from "react";
+
 const FONTS = [
   "Inter", "Arial", "Arial Black", "Georgia", "Times New Roman",
   "Verdana", "Trebuchet MS", "Courier New", "Comic Sans MS",
@@ -5,8 +7,6 @@ const FONTS = [
 ];
 
 const SIZES = [10, 12, 14, 16, 18, 20, 24, 28, 32, 48, 72];
-
-import { useState } from "react";
 
 export function CleanMinimalCard() {
   const [fontSize, setFontSize] = useState(16);
