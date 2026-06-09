@@ -16,6 +16,9 @@ import codeIcon from "@assets/code_1780940574616.png";
 import bulbIcon from "@assets/idea-bulb-glow-svgrepo-com_1780940805368.png";
 import quoteIcon from "@assets/block-element-svgrepo-com_1780941287821.png";
 import lineChartIcon from "@assets/chart-diagram-double-graph-spline-svgrepo-com_1780985340846.svg";
+import barChartIcon from "@assets/bar-chart-diagram-graph-large-svgrepo-com_1780985481312.svg";
+import pieChartIcon from "@assets/chart-diagram-graph-pie-statistics-svgrepo-com_1780985481312.svg";
+import areaChartIcon from "@assets/chart-diagram-graph-spline-statistics-svgrepo-com_1780985481313.svg";
 import {
   Plus, ImagePlus, FolderKanban, X,
   Bold, Italic, Underline, Strikethrough, Highlighter,
@@ -3259,18 +3262,15 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
               <div className="absolute left-full bottom-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 py-2 px-2 z-[10000] min-w-[190px]">
                 <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide px-1 mb-1.5">Choose Chart Type</p>
                 {[
-                  { type: "bar"  as GraphType, label: "Bar Chart",  icon: "▬",  imgSrc: null,          color: "text-indigo-600",  bg: "hover:bg-indigo-50",  dot: "bg-indigo-500" },
-                  { type: "line" as GraphType, label: "Line Chart", icon: null, imgSrc: lineChartIcon, color: "text-stone-900",   bg: "hover:bg-emerald-50", dot: "bg-emerald-500" },
-                  { type: "area" as GraphType, label: "Area Chart", icon: "◿",  imgSrc: null,          color: "text-blue-600",    bg: "hover:bg-blue-50",    dot: "bg-blue-500" },
-                  { type: "pie"  as GraphType, label: "Pie Chart",  icon: "◔",  imgSrc: null,          color: "text-amber-600",   bg: "hover:bg-amber-50",   dot: "bg-amber-500" },
-                ].map(({ type, label, icon, imgSrc, color, bg, dot }) => (
+                  { type: "bar"  as GraphType, label: "Bar Chart",  imgSrc: barChartIcon,   bg: "hover:bg-indigo-50"  },
+                  { type: "line" as GraphType, label: "Line Chart", imgSrc: lineChartIcon,  bg: "hover:bg-emerald-50" },
+                  { type: "area" as GraphType, label: "Area Chart", imgSrc: areaChartIcon,  bg: "hover:bg-blue-50"    },
+                  { type: "pie"  as GraphType, label: "Pie Chart",  imgSrc: pieChartIcon,   bg: "hover:bg-amber-50"   },
+                ].map(({ type, label, imgSrc, bg }) => (
                   <button key={type} onClick={() => insertGraph(type)}
                     className={`w-full flex items-center gap-2.5 px-2 py-2 rounded-lg ${bg} text-stone-700 transition-colors text-left`}>
-                    {imgSrc
-                      ? <img src={imgSrc} alt={label} className="w-5 h-5 flex-shrink-0" />
-                      : <span className={`w-5 h-5 rounded-full ${dot} flex items-center justify-center text-white text-[11px] font-bold flex-shrink-0`}>{icon}</span>
-                    }
-                    <span className={`text-xs font-medium ${color}`}>{label}</span>
+                    <img src={imgSrc} alt={label} className="w-5 h-5 flex-shrink-0" />
+                    <span className="text-xs font-medium text-stone-900">{label}</span>
                   </button>
                 ))}
               </div>
