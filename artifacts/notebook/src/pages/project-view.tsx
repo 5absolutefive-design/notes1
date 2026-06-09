@@ -29,7 +29,7 @@ import {
 } from "lucide-react";
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area,
-  XAxis, YAxis, Tooltip, ResponsiveContainer, Legend,
+  XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, ReferenceLine,
 } from "recharts";
 import {
   ColTypePicker, SelectCellPopup, PriorityCellPopup, ProgressCellPopup,
@@ -2418,6 +2418,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           {graphBlocks.map(g => {
             const PIE_COLORS = ["#6366f1","#f59e0b","#10b981","#ef4444","#3b82f6","#ec4899","#8b5cf6","#14b8a6"];
             const MULTI_COLORS = ["#6366f1","#f59e0b","#10b981","#ef4444","#3b82f6","#ec4899","#8b5cf6","#14b8a6"];
+            const hasNegative = g.data.some(d => d.value < 0);
             let lineChartEl: React.ReactElement;
             if (g.series && g.series.length > 0) {
               const lineData = g.data.map((d, i) => {
@@ -2482,6 +2483,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                           <XAxis dataKey="label" tick={{ fontSize: 10 }} />
                           <YAxis tick={{ fontSize: 10 }} />
                           <Tooltip />
+                          {hasNegative && <ReferenceLine y={0} stroke="#94a3b8" strokeWidth={1.5} strokeDasharray="3 3" style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.18))" }} />}
                           <Bar dataKey="value" fill={g.color} radius={[3,3,0,0]} />
                         </BarChart>
                       ) : g.type === "line" ? lineChartEl : g.type === "area" ? (
@@ -2489,6 +2491,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                           <XAxis dataKey="label" tick={{ fontSize: 10 }} />
                           <YAxis tick={{ fontSize: 10 }} />
                           <Tooltip />
+                          {hasNegative && <ReferenceLine y={0} stroke="#94a3b8" strokeWidth={1.5} strokeDasharray="3 3" style={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.18))" }} />}
                           <Area type="monotone" dataKey="value" stroke={g.color} fill={g.color + "33"} strokeWidth={2} />
                         </AreaChart>
                       ) : (
