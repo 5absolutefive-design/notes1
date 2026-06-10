@@ -1499,7 +1499,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
 
   const insertDividerStyle = (style: string) => {
     const styles: Record<string, string> = {
-      single:   `border:none;border-top:1.5px solid #d6d3d1;margin:12px 0`,
+      single:   `border:none;border-top:1.5px solid #1c1917;margin:12px 0`,
       bold:     `border:none;border-top:4px solid #78716c;margin:12px 0`,
       thin:     `border:none;border-top:0.5px solid #e7e5e4;margin:12px 0`,
       double:   `border:none;border-top:3px double #a8a29e;margin:12px 0`,
@@ -3347,7 +3347,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide mb-2">Choose a divider style</p>
                 {[
                   { key: "thin",     label: "Thin Line",     preview: <div className="flex-1 border-t border-stone-300" /> },
-                  { key: "single",   label: "Single Line",   preview: <div className="flex-1 border-t-2 border-stone-400" /> },
+                  { key: "single",   label: "Single Line",   preview: <div className="flex-1 border-t-2 border-stone-900" /> },
                   { key: "bold",     label: "Bold Line",     preview: <div className="flex-1 border-t-4 border-stone-600" /> },
                   { key: "double",   label: "Double Line",   preview: <div className="flex-1" style={{ borderTop: "3px double #a8a29e" }} /> },
                   { key: "dashed",   label: "Dashed Line",   preview: <div className="flex-1 border-t-2 border-dashed border-stone-400" /> },
