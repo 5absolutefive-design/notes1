@@ -2251,7 +2251,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                     Change Cover
                   </button>
                   {showBannerPicker && (
-                    <div className="absolute bottom-10 right-0 w-80 bg-white rounded-xl shadow-2xl border border-stone-200 p-4 z-50">
+                    <div className="absolute top-full right-0 mt-1 w-80 bg-white rounded-xl shadow-2xl border border-stone-200 p-4 z-50">
                       <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-2">Gradients</p>
                       <div className="grid grid-cols-5 gap-1.5 mb-3">
                         {BANNER_GRADIENTS.map(g => (
