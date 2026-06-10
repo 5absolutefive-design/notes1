@@ -3761,32 +3761,49 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
               {/* Download */}
               <button
                 onClick={downloadProject}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-100 hover:border-indigo-200 transition-all group text-left"
+                className="w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl bg-gradient-to-br from-indigo-50 to-indigo-100/60 hover:from-indigo-100 hover:to-indigo-200/60 border border-indigo-200/70 hover:border-indigo-300 transition-all group text-left shadow-sm hover:shadow-md"
               >
-                <div className="w-9 h-9 rounded-lg bg-indigo-600 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
-                  <FileDown className="w-4.5 h-4.5 text-white" />
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center shadow-md group-hover:scale-105 group-hover:shadow-indigo-200 transition-all flex-shrink-0">
+                  <FileDown className="w-5 h-5 text-white" />
                 </div>
-                <div>
-                  <div className="text-sm font-bold text-indigo-700">Download Project</div>
-                  <div className="text-[11px] text-indigo-400 mt-0.5">Save as <span className="font-mono">.nbproject</span> file</div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[13px] font-bold text-indigo-800 leading-tight">Download Project</div>
+                  <div className="text-[10.5px] text-indigo-400 mt-0.5">Save as <span className="font-mono bg-indigo-100 px-1 rounded text-indigo-500">.nbproject</span></div>
                 </div>
+                <ChevronRight className="w-4 h-4 text-indigo-300 group-hover:text-indigo-500 transition-colors flex-shrink-0" />
               </button>
+
               {/* Upload */}
               <button
                 onClick={() => transferUploadRef.current?.click()}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 border border-emerald-100 hover:border-emerald-200 transition-all group text-left"
+                className="w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100/60 hover:from-emerald-100 hover:to-emerald-200/60 border border-emerald-200/70 hover:border-emerald-300 transition-all group text-left shadow-sm hover:shadow-md"
               >
-                <div className="w-9 h-9 rounded-lg bg-emerald-600 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
-                  <FileUp className="w-4.5 h-4.5 text-white" />
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-md group-hover:scale-105 group-hover:shadow-emerald-200 transition-all flex-shrink-0">
+                  <FileUp className="w-5 h-5 text-white" />
                 </div>
-                <div>
-                  <div className="text-sm font-bold text-emerald-700">Upload Project</div>
-                  <div className="text-[11px] text-emerald-400 mt-0.5">Restore from <span className="font-mono">.nbproject</span> file</div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[13px] font-bold text-emerald-800 leading-tight">Upload Project</div>
+                  <div className="text-[10.5px] text-emerald-400 mt-0.5">Restore from <span className="font-mono bg-emerald-100 px-1 rounded text-emerald-500">.nbproject</span></div>
                 </div>
+                <ChevronRight className="w-4 h-4 text-emerald-300 group-hover:text-emerald-500 transition-colors flex-shrink-0" />
               </button>
+
+              {/* Share — coming soon */}
+              <div className="w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl bg-stone-50 border border-stone-200/60 opacity-60 cursor-not-allowed text-left">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-stone-300 to-stone-400 flex items-center justify-center shadow flex-shrink-0">
+                  <Share2 className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[13px] font-bold text-stone-500 leading-tight">Share Project</span>
+                    <span className="text-[9px] font-bold uppercase tracking-widest bg-stone-200 text-stone-400 px-1.5 py-0.5 rounded-full">Soon</span>
+                  </div>
+                  <div className="text-[10.5px] text-stone-400 mt-0.5">Share via link or invite</div>
+                </div>
+              </div>
             </div>
             {/* Footer note */}
-            <div className="px-4 pb-3 text-[10px] text-stone-400 text-center">
+            <div className="px-4 pb-3.5 text-[10px] text-stone-400 text-center leading-relaxed">
               All content, images & audio are preserved in the file
             </div>
           </div>
