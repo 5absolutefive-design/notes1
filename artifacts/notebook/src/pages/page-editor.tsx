@@ -42,6 +42,83 @@ function A4Page({
     }, 600);
   }, [bookId, page.id, onContentChange]);
 
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key !== 'Backspace') return;
+
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return;
+
+    const range = selection.getRangeAt(0);
+    if (!range.collapsed) return;
+
+    // Walk up to find if cursor is inside an <li>
+    let node: Node | null = range.startContainer;
+    let li: HTMLElement | null = null;
+    while (node && node !== editorRef.current) {
+      if ((node as HTMLElement).nodeName === 'LI') {
+        li = node as HTMLElement;
+        break;
+      }
+      node = node.parentNode;
+    }
+    if (!li) return;
+
+    const list = li.parentElement;
+    if (!list) return;
+
+    // Only intercept for the FIRST list item
+    if (li !== list.firstElementChild) return;
+
+    // Check cursor is at the very beginning of the list item
+    const liRange = document.createRange();
+    liRange.selectNodeContents(li);
+    liRange.collapse(true);
+    if (range.compareBoundaryPoints(Range.START_TO_START, liRange) !== 0) return;
+
+    e.preventDefault();
+
+    const listParent = list.parentNode;
+    if (!listParent) return;
+
+    const isEmpty = li.textContent === '' || li.innerHTML === '<br>' || li.innerHTML === '';
+
+    if (isEmpty) {
+      // Remove the empty first item
+      if (list.children.length === 1) {
+        // Last item — remove the whole list
+        listParent.removeChild(list);
+      } else {
+        list.removeChild(li);
+        // Move cursor to start of new first item
+        const newFirst = list.firstElementChild as HTMLElement;
+        if (newFirst) {
+          const newRange = document.createRange();
+          newRange.selectNodeContents(newFirst);
+          newRange.collapse(true);
+          selection.removeAllRanges();
+          selection.addRange(newRange);
+        }
+      }
+    } else {
+      // Has content — convert first <li> to a plain <p> before the list
+      const p = document.createElement('p');
+      p.innerHTML = li.innerHTML;
+      listParent.insertBefore(p, list);
+      list.removeChild(li);
+      if (list.children.length === 0) {
+        listParent.removeChild(list);
+      }
+      // Place cursor at start of the new <p>
+      const newRange = document.createRange();
+      newRange.selectNodeContents(p);
+      newRange.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(newRange);
+    }
+
+    handleInput();
+  }, [handleInput]);
+
   return (
     <div className="relative flex-shrink-0 group/page" style={{ width: 794 }}>
       {/* Page number label */}
@@ -69,6 +146,7 @@ function A4Page({
           suppressContentEditableWarning
           spellCheck={false}
           onInput={handleInput}
+          onKeyDown={handleKeyDown}
           onCompositionStart={() => { isComposing.current = true; }}
           onCompositionEnd={() => { isComposing.current = false; handleInput(); }}
           className="outline-none w-full text-zinc-800 a4-editor"
