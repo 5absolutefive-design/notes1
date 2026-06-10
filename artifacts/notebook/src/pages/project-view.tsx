@@ -3175,9 +3175,9 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             <CtxItem icon={<Bold className="w-3.5 h-3.5"/>} label="Format" hasArrow
               onClick={() => setCtxMenu(m => m ? { ...m, ...CLOSE_ALL_SUBS, formatOpen: !m.formatOpen } : null)} />
             {ctxMenu.formatOpen && (
-              <div className="absolute left-full top-0 ml-1 bg-white rounded-2xl shadow-2xl border border-stone-200 py-2.5 z-[10000] w-[200px] overflow-hidden">
+              <div className="absolute left-full top-0 ml-1 bg-white rounded-2xl shadow-2xl border border-stone-200 py-2.5 z-[10000] w-[200px]">
                 {/* Header */}
-                <div className="px-3.5 pb-2 border-b border-stone-100">
+                <div className="px-3.5 pb-2 border-b border-stone-100 rounded-t-2xl overflow-hidden">
                   <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Format</p>
                 </div>
 
