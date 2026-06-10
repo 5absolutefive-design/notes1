@@ -271,7 +271,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const [ctxFontSearch, setCtxFontSearch] = useState("");
   const [ctxFontSize, setCtxFontSize] = useState(16);
   const [ctxSelectedFont, setCtxSelectedFont] = useState<string | null>("Inter");
-  const [ctxFontSizeMode, setCtxFontSizeMode] = useState<"all" | "selected">("selected");
+  const [ctxFontSizeMode, setCtxFontSizeMode] = useState<"all" | "selected">("all");
   const fontItemRef = useRef<HTMLDivElement>(null);
   const fontSubCardRef = useRef<HTMLDivElement>(null);
   // Independent floating font panel (detached from context menu)
