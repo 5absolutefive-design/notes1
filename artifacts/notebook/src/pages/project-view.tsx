@@ -1507,6 +1507,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
       dotted:   `border:none;border-top:2px dotted #a8a29e;margin:12px 0`,
       gradient: `border:none;height:1.5px;background:linear-gradient(to right,transparent,#a8a29e 30%,#a8a29e 70%,transparent);margin:12px 0`,
       colored:  `border:none;border-top:2px solid #6366f1;margin:12px 0`,
+      red:      `border:none;border-top:2px solid #ef4444;margin:12px 0`,
+      green:    `border:none;border-top:2px solid #22c55e;margin:12px 0`,
       shadow:   `border:none;border-top:1.5px solid #d6d3d1;box-shadow:0 3px 6px -2px rgba(0,0,0,0.12);margin:12px 0`,
     };
     insertHTML(`<br/><hr style="${styles[style] ?? styles.single}"/><br/>`);
@@ -3353,7 +3355,9 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                   { key: "dashed",   label: "Dashed Line",   preview: <div className="flex-1 border-t-2 border-dashed border-stone-400" /> },
                   { key: "dotted",   label: "Dot Line",      preview: <div className="flex-1 border-t-2 border-dotted border-stone-400" /> },
                   { key: "gradient", label: "Gradient Line", preview: <div className="flex-1 h-px" style={{ background: "linear-gradient(to right,transparent,#a8a29e,transparent)" }} /> },
-                  { key: "colored",  label: "Colored Line",  preview: <div className="flex-1 border-t-2 border-indigo-400" /> },
+                  { key: "colored",  label: "Blue Line",     preview: <div className="flex-1 border-t-2 border-indigo-400" /> },
+                  { key: "red",      label: "Red Line",      preview: <div className="flex-1 border-t-2 border-red-500" /> },
+                  { key: "green",    label: "Green Line",    preview: <div className="flex-1 border-t-2 border-green-500" /> },
                   { key: "shadow",   label: "Shadow Line",   preview: <div className="flex-1 border-t border-stone-300" style={{ boxShadow: "0 2px 4px -1px rgba(0,0,0,0.15)" }} /> },
                 ].map(({ key, label, preview }) => (
                   <button key={key} onClick={() => insertDividerStyle(key)}
