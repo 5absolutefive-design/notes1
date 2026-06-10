@@ -152,7 +152,7 @@ function A4Page({
           className="outline-none w-full text-zinc-800 a4-editor"
           style={{
             fontFamily: "Georgia, 'Times New Roman', serif",
-            fontSize: 15,
+            fontSize: 18,
             lineHeight: "1.9",
             minHeight: 931,
             whiteSpace: "pre-wrap",
