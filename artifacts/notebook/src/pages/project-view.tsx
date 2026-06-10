@@ -2998,7 +2998,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           style={{ left: ctxMenu.x, top: ctxMenu.y }}
           onMouseDown={e => e.stopPropagation()}
         >
-          {/* Undo / Redo / Clear — top 2nd row */}
+          {/* Undo / Clear / Redo — top 2nd row */}
           <div className="flex border-b border-stone-100">
             <button
               onMouseDown={e => { e.preventDefault(); universalUndo(); setCtxMenu(null); }}
@@ -3008,17 +3008,17 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             </button>
             <div className="w-px bg-stone-100 my-1" />
             <button
-              onMouseDown={e => { e.preventDefault(); universalRedo(); setCtxMenu(null); }}
-              title="Redo"
-              className="flex-1 flex items-center justify-center px-2 py-1 hover:bg-indigo-50 hover:text-indigo-700 text-stone-500 transition-colors">
-              <Redo2 className="w-3.5 h-3.5" />
-            </button>
-            <div className="w-px bg-stone-100 my-1" />
-            <button
               onMouseDown={e => { e.preventDefault(); setShowClearConfirm(true); setCtxMenu(null); }}
               title="Clear page"
               className="flex-1 flex items-center justify-center px-2 py-1 hover:bg-red-50 hover:text-red-500 text-stone-500 transition-colors">
               <Trash2 className="w-3.5 h-3.5" />
+            </button>
+            <div className="w-px bg-stone-100 my-1" />
+            <button
+              onMouseDown={e => { e.preventDefault(); universalRedo(); setCtxMenu(null); }}
+              title="Redo"
+              className="flex-1 flex items-center justify-center px-2 py-1 hover:bg-indigo-50 hover:text-indigo-700 text-stone-500 transition-colors">
+              <Redo2 className="w-3.5 h-3.5" />
             </button>
           </div>
 
