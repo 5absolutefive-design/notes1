@@ -3342,27 +3342,81 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             <CtxItem icon={<Minus className="w-3.5 h-3.5"/>} label="Divider Line" hasArrow
               onClick={() => setCtxMenu(m => m ? { ...m, ...CLOSE_ALL_SUBS, dividerOpen: !m.dividerOpen } : null)} />
             {ctxMenu.dividerOpen && (
-              <div className="absolute left-full bottom-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 py-2 px-3 z-[10000] min-w-[210px]">
-                <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide mb-2">Choose a divider style</p>
-                {[
-                  { key: "thin",     label: "Thin Line",     preview: <div className="flex-1 border-t border-stone-300" /> },
-                  { key: "single",   label: "Single Line",   preview: <div className="flex-1 border-t-2 border-stone-900" /> },
-                  { key: "bold",     label: "Bold Line",     preview: <div className="flex-1 border-t-4 border-stone-600" /> },
-                  { key: "double",   label: "Double Line",   preview: <div className="flex-1" style={{ borderTop: "3px double #a8a29e" }} /> },
-                  { key: "dashed",   label: "Dashed Line",   preview: <div className="flex-1 border-t-2 border-dashed border-stone-400" /> },
-                  { key: "dotted",   label: "Dot Line",      preview: <div className="flex-1 border-t-2 border-dotted border-stone-400" /> },
-                  { key: "gradient", label: "Gradient Line", preview: <div className="flex-1 h-px" style={{ background: "linear-gradient(to right,transparent,#a8a29e,transparent)" }} /> },
-                  { key: "colored",  label: "Blue Line",     preview: <div className="flex-1 border-t-2 border-indigo-400" /> },
-                  { key: "red",      label: "Red Line",      preview: <div className="flex-1 border-t-2 border-red-500" /> },
-                  { key: "green",    label: "Green Line",    preview: <div className="flex-1 border-t-2 border-green-500" /> },
-                  { key: "shadow",   label: "Shadow Line",   preview: <div className="flex-1 border-t border-stone-300" style={{ boxShadow: "0 2px 4px -1px rgba(0,0,0,0.15)" }} /> },
-                ].map(({ key, label, preview }) => (
-                  <button key={key} onClick={() => insertDividerStyle(key)}
-                    className="w-full flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-indigo-50 hover:text-indigo-700 text-stone-700 transition-colors text-left group">
-                    <div className="flex items-center w-14">{preview}</div>
-                    <span className="text-xs font-medium">{label}</span>
-                  </button>
-                ))}
+              <div className="absolute left-full bottom-0 ml-1 bg-white rounded-2xl shadow-2xl border border-stone-200 py-2.5 z-[10000] w-[220px] overflow-hidden">
+                {/* Header */}
+                <div className="px-3.5 pb-2 border-b border-stone-100">
+                  <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Divider Style</p>
+                </div>
+
+                {/* Special group */}
+                <div className="px-2 pt-2 pb-1">
+                  <p className="text-[9px] font-bold text-stone-300 uppercase tracking-widest px-1.5 mb-1">Special</p>
+                  {[
+                    { key: "gradient", label: "Gradient Line", preview: <div className="flex-1 h-[2px] rounded-full" style={{ background: "linear-gradient(to right,transparent,#94a3b8,transparent)" }} /> },
+                    { key: "shadow",   label: "Shadow Line",   preview: <div className="flex-1 h-px bg-stone-300 rounded-full" style={{ boxShadow: "0 2px 5px -1px rgba(0,0,0,0.18)" }} /> },
+                  ].map(({ key, label, preview }) => (
+                    <button key={key} onClick={() => insertDividerStyle(key)}
+                      className="w-full flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-violet-50 hover:text-violet-700 text-stone-600 transition-colors text-left group">
+                      <div className="flex items-center w-12 h-4">{preview}</div>
+                      <span className="text-[11px] font-medium">{label}</span>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="mx-3 border-t border-stone-100" />
+
+                {/* Line weight group */}
+                <div className="px-2 pt-1.5 pb-1">
+                  <p className="text-[9px] font-bold text-stone-300 uppercase tracking-widest px-1.5 mb-1">Line</p>
+                  {[
+                    { key: "thin",   label: "Thin Line",   preview: <div className="flex-1 border-t border-stone-300" /> },
+                    { key: "single", label: "Single Line", preview: <div className="flex-1 border-t-2 border-stone-700" /> },
+                    { key: "double", label: "Double Line", preview: <div className="flex-1" style={{ borderTop: "3px double #78716c" }} /> },
+                    { key: "bold",   label: "Bold Line",   preview: <div className="flex-1 border-t-4 border-stone-600" /> },
+                  ].map(({ key, label, preview }) => (
+                    <button key={key} onClick={() => insertDividerStyle(key)}
+                      className="w-full flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-indigo-50 hover:text-indigo-700 text-stone-600 transition-colors text-left group">
+                      <div className="flex items-center w-12 h-4">{preview}</div>
+                      <span className="text-[11px] font-medium">{label}</span>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="mx-3 border-t border-stone-100" />
+
+                {/* Pattern group */}
+                <div className="px-2 pt-1.5 pb-1">
+                  <p className="text-[9px] font-bold text-stone-300 uppercase tracking-widest px-1.5 mb-1">Pattern</p>
+                  {[
+                    { key: "dashed", label: "Dashed Line", preview: <div className="flex-1 border-t-2 border-dashed border-stone-400" /> },
+                    { key: "dotted", label: "Dot Line",    preview: <div className="flex-1 border-t-2 border-dotted border-stone-400" /> },
+                  ].map(({ key, label, preview }) => (
+                    <button key={key} onClick={() => insertDividerStyle(key)}
+                      className="w-full flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-indigo-50 hover:text-indigo-700 text-stone-600 transition-colors text-left group">
+                      <div className="flex items-center w-12 h-4">{preview}</div>
+                      <span className="text-[11px] font-medium">{label}</span>
+                    </button>
+                  ))}
+                </div>
+
+                <div className="mx-3 border-t border-stone-100" />
+
+                {/* Colored group */}
+                <div className="px-2 pt-1.5 pb-1">
+                  <p className="text-[9px] font-bold text-stone-300 uppercase tracking-widest px-1.5 mb-1">Colored</p>
+                  {[
+                    { key: "colored", label: "Blue Line",  preview: <div className="flex-1 border-t-2 border-indigo-400" />, hover: "hover:bg-indigo-50 hover:text-indigo-700", dot: "bg-indigo-400" },
+                    { key: "green",   label: "Green Line", preview: <div className="flex-1 border-t-2 border-emerald-500" />, hover: "hover:bg-emerald-50 hover:text-emerald-700", dot: "bg-emerald-500" },
+                    { key: "red",     label: "Red Line",   preview: <div className="flex-1 border-t-2 border-red-500" />, hover: "hover:bg-red-50 hover:text-red-600", dot: "bg-red-500" },
+                  ].map(({ key, label, preview, hover, dot }) => (
+                    <button key={key} onClick={() => insertDividerStyle(key)}
+                      className={`w-full flex items-center gap-3 px-2 py-1.5 rounded-lg ${hover} text-stone-600 transition-colors text-left group`}>
+                      <div className="flex items-center w-12 h-4">{preview}</div>
+                      <span className="text-[11px] font-medium">{label}</span>
+                      <span className={`ml-auto w-2 h-2 rounded-full ${dot} flex-shrink-0`} />
+                    </button>
+                  ))}
+                </div>
               </div>
             )}
           </div>
