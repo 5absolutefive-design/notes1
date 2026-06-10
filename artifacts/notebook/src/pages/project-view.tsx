@@ -3350,7 +3350,6 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
 
                 {/* Special group */}
                 <div className="px-2 pt-2 pb-1">
-                  <p className="text-[9px] font-bold text-stone-300 uppercase tracking-widest px-1.5 mb-1">Special</p>
                   {[
                     { key: "gradient", label: "Gradient Line", preview: <div className="flex-1 h-[2px] rounded-full" style={{ background: "linear-gradient(to right,transparent,#94a3b8,transparent)" }} /> },
                     { key: "shadow",   label: "Shadow Line",   preview: <div className="flex-1 h-px bg-stone-300 rounded-full" style={{ boxShadow: "0 2px 5px -1px rgba(0,0,0,0.18)" }} /> },
@@ -3367,7 +3366,6 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
 
                 {/* Line weight group */}
                 <div className="px-2 pt-1.5 pb-1">
-                  <p className="text-[9px] font-bold text-stone-300 uppercase tracking-widest px-1.5 mb-1">Line</p>
                   {[
                     { key: "thin",   label: "Thin Line",   preview: <div className="flex-1 border-t border-stone-300" /> },
                     { key: "single", label: "Single Line", preview: <div className="flex-1 border-t-2 border-stone-700" /> },
@@ -3386,7 +3384,6 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
 
                 {/* Pattern group */}
                 <div className="px-2 pt-1.5 pb-1">
-                  <p className="text-[9px] font-bold text-stone-300 uppercase tracking-widest px-1.5 mb-1">Pattern</p>
                   {[
                     { key: "dashed", label: "Dashed Line", preview: <div className="flex-1 border-t-2 border-dashed border-stone-400" /> },
                     { key: "dotted", label: "Dot Line",    preview: <div className="flex-1 border-t-2 border-dotted border-stone-400" /> },
@@ -3403,7 +3400,6 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
 
                 {/* Colored group */}
                 <div className="px-2 pt-1.5 pb-1">
-                  <p className="text-[9px] font-bold text-stone-300 uppercase tracking-widest px-1.5 mb-1">Colored</p>
                   {[
                     { key: "colored", label: "Blue Line",  preview: <div className="flex-1 border-t-2 border-indigo-400" />, hover: "hover:bg-indigo-50 hover:text-indigo-700", dot: "bg-indigo-400" },
                     { key: "green",   label: "Green Line", preview: <div className="flex-1 border-t-2 border-emerald-500" />, hover: "hover:bg-emerald-50 hover:text-emerald-700", dot: "bg-emerald-500" },
