@@ -26,7 +26,7 @@ import {
   AlignLeft, AlignCenter, AlignRight, List, ListOrdered,
   ChevronRight, Link, Mic, PenLine, Eraser, Table, Video,
   Copy, Scissors, Clipboard, Wrench, FileDown, FileUp, ArrowLeftRight, Undo2, Redo2, BarChart2,
-  Subscript, Superscript,
+  Subscript, Superscript, Trash2,
 } from "lucide-react";
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area,
@@ -292,6 +292,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const [showTransferCard, setShowTransferCard] = useState(false);
   const [lastTodoPos, setLastTodoPos] = useState<{ top: number; left: number } | null>(null);
   const [showTodoButtons, setShowTodoButtons] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [tableToolbar, setTableToolbar] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
   const [showTableBtns, setShowTableBtns] = useState(false);
   const [hoverTableBtns, setHoverTableBtns] = useState(false);
@@ -3238,20 +3239,27 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           </div>
 
           <div className="border-t border-stone-100" />
-          {/* Undo / Redo — same style as CtxItem, split 50/50 with divider */}
+          {/* Undo / Redo / Clear — 3 buttons in one row */}
           <div className="flex">
             <button
               onMouseDown={e => { e.preventDefault(); universalUndo(); setCtxMenu(null); }}
-              className="flex-1 flex items-center justify-center gap-2.5 px-3 py-1.5 hover:bg-indigo-50 hover:text-indigo-700 text-stone-700 transition-colors text-left text-xs font-medium">
+              className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 hover:bg-indigo-50 hover:text-indigo-700 text-stone-700 transition-colors text-xs font-medium">
               <Undo2 className="w-3.5 h-3.5 flex-shrink-0 text-stone-400" />
               <span>Undo</span>
             </button>
             <div className="w-px bg-stone-100 my-1" />
             <button
               onMouseDown={e => { e.preventDefault(); universalRedo(); setCtxMenu(null); }}
-              className="flex-1 flex items-center justify-center gap-2.5 px-3 py-1.5 hover:bg-indigo-50 hover:text-indigo-700 text-stone-700 transition-colors text-left text-xs font-medium">
+              className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 hover:bg-indigo-50 hover:text-indigo-700 text-stone-700 transition-colors text-xs font-medium">
               <Redo2 className="w-3.5 h-3.5 flex-shrink-0 text-stone-400" />
               <span>Redo</span>
+            </button>
+            <div className="w-px bg-stone-100 my-1" />
+            <button
+              onMouseDown={e => { e.preventDefault(); setShowClearConfirm(true); setCtxMenu(null); }}
+              className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 hover:bg-red-50 hover:text-red-600 text-stone-700 transition-colors text-xs font-medium">
+              <Trash2 className="w-3.5 h-3.5 flex-shrink-0 text-stone-400" />
+              <span>Clear</span>
             </button>
           </div>
 
@@ -3692,6 +3700,45 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             onClick={() => { setCtxMenu(null); setShowTransferCard(true); }}
           />
         </div>
+      )}
+
+      {/* ── Clear Page Confirm Dialog ── */}
+      {showClearConfirm && (
+        <>
+          <div className="fixed inset-0 z-[9990] bg-black/30" onClick={() => setShowClearConfirm(false)} />
+          <div className="fixed z-[9991] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl border border-stone-200 w-[280px] overflow-hidden">
+            <div className="px-5 pt-5 pb-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-9 h-9 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0">
+                  <Trash2 className="w-4 h-4 text-red-500" />
+                </div>
+                <div>
+                  <p className="text-sm font-bold text-stone-800">Clear All?</p>
+                  <p className="text-xs text-stone-400 mt-0.5">This will erase all content on this page.</p>
+                </div>
+              </div>
+              <div className="flex gap-2 mt-4">
+                <button
+                  onClick={() => setShowClearConfirm(false)}
+                  className="flex-1 py-2 rounded-lg border border-stone-200 text-xs font-semibold text-stone-600 hover:bg-stone-50 transition-colors">
+                  No
+                </button>
+                <button
+                  onClick={() => {
+                    if (editorRef.current) {
+                      pushHistoryRef.current();
+                      editorRef.current.innerHTML = "";
+                      saveContent();
+                    }
+                    setShowClearConfirm(false);
+                  }}
+                  className="flex-1 py-2 rounded-lg bg-red-500 text-xs font-semibold text-white hover:bg-red-600 transition-colors">
+                  Yes, Clear
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
       )}
 
       {/* ── Project Transfer Card ── */}
