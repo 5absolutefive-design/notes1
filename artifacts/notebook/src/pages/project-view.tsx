@@ -167,6 +167,16 @@ interface ImageBlock {
   locked: boolean;
 }
 
+interface VideoBlock {
+  id: string;
+  src: string;
+  name: string;
+  x: number;
+  y: number;
+  width: number;
+  locked: boolean;
+}
+
 type GraphType = "bar" | "line" | "pie" | "area";
 interface GraphSeries {
   name: string;
@@ -303,6 +313,11 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const tableResizeObserverRef = useRef<ResizeObserver | null>(null);
   const [imageBlocks, setImageBlocks] = useState<ImageBlock[]>([]);
   const imgInputRef = useRef<HTMLInputElement>(null);
+  const [videoBlocks, setVideoBlocks] = useState<VideoBlock[]>([]);
+  const videoInputRef = useRef<HTMLInputElement>(null);
+  const videoBlocksRef = useRef<VideoBlock[]>([]);
+  const videoDragRef = useRef<{ id: string; startMx: number; startMy: number; startBx: number; startBy: number } | null>(null);
+  const videoResizeRef = useRef<{ id: string; startMx: number; startW: number; startBx: number; side: "br" | "bl" } | null>(null);
   const [graphBlocks, setGraphBlocks] = useState<GraphBlock[]>([]);
   const [graphEditor, setGraphEditor] = useState<{ id: string; data: { label: string; value: number }[]; title: string; type: GraphType; color: string; series: GraphSeries[] } | null>(null);
   const graphDragRef = useRef<{ id: string; startMx: number; startMy: number; startBx: number; startBy: number } | null>(null);
@@ -331,7 +346,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   // ── Universal undo/redo history
   const arrowsRef = useRef<ArrowShape[]>([]);
   const imageBlocksRef = useRef<ImageBlock[]>([]);
-  type HistorySnap = { html: string; arrows: ArrowShape[]; imageBlocks: ImageBlock[] };
+  type HistorySnap = { html: string; arrows: ArrowShape[]; imageBlocks: ImageBlock[]; videoBlocks: VideoBlock[] };
   const historyRef = useRef<HistorySnap[]>([]);
   const historyIndexRef = useRef<number>(-1);
   const isRestoringRef = useRef(false);
@@ -352,6 +367,22 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     if (!activeId) return;
     localStorage.setItem(`nb_project_imgs_${activeId}`, JSON.stringify(imageBlocks));
   }, [imageBlocks, activeId]);
+
+  // ── Load / save video blocks per project
+  useEffect(() => {
+    if (!activeId) { setVideoBlocks([]); return; }
+    try {
+      const raw = localStorage.getItem(`nb_project_vids_${activeId}`);
+      setVideoBlocks(raw ? JSON.parse(raw) : []);
+    } catch { setVideoBlocks([]); }
+  }, [activeId]);
+
+  useEffect(() => {
+    if (!activeId) return;
+    try {
+      localStorage.setItem(`nb_project_vids_${activeId}`, JSON.stringify(videoBlocks));
+    } catch { /* storage full */ }
+  }, [videoBlocks, activeId]);
 
   // ── Sync drawToolRef
   useEffect(() => { drawToolRef.current = drawTool; }, [drawTool]);
@@ -388,6 +419,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   // ── Keep refs in sync with latest state (for use inside stale closures)
   useEffect(() => { arrowsRef.current = arrows; }, [arrows]);
   useEffect(() => { imageBlocksRef.current = imageBlocks; }, [imageBlocks]);
+  useEffect(() => { videoBlocksRef.current = videoBlocks; }, [videoBlocks]);
 
   // ── Escape key exits draw mode
   useEffect(() => {
@@ -425,18 +457,35 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
       if (resizeRef.current) {
         const { id, startMx, startW, startBx, side } = resizeRef.current;
         if (side === "bl" || side === "tl") {
-          // Left handle: right edge stays fixed, left edge + x moves
-          const delta = startMx - e.clientX; // drag left = positive = grow
+          const delta = startMx - e.clientX;
           const newW = Math.max(80, startW + delta);
           const safeBx = isNaN(startBx) ? 0 : startBx;
           const rightEdge = safeBx + startW;
           const newX = rightEdge - newW;
           setImageBlocks(prev => prev.map(b => b.id === id ? { ...b, width: newW, x: newX } : b));
         } else {
-          // Right handle: left edge stays fixed, right edge moves
-          const delta = e.clientX - startMx; // drag right = positive = grow
+          const delta = e.clientX - startMx;
           const newW = Math.max(80, startW + delta);
           setImageBlocks(prev => prev.map(b => b.id === id ? { ...b, width: newW } : b));
+        }
+      }
+      if (videoDragRef.current) {
+        const { id, startMx, startMy, startBx, startBy } = videoDragRef.current;
+        setVideoBlocks(prev => prev.map(b => b.id === id
+          ? { ...b, x: startBx + e.clientX - startMx, y: startBy + e.clientY - startMy }
+          : b));
+      }
+      if (videoResizeRef.current) {
+        const { id, startMx, startW, startBx, side } = videoResizeRef.current;
+        if (side === "bl") {
+          const delta = startMx - e.clientX;
+          const newW = Math.max(160, startW + delta);
+          const rightEdge = (isNaN(startBx) ? 0 : startBx) + startW;
+          setVideoBlocks(prev => prev.map(b => b.id === id ? { ...b, width: newW, x: rightEdge - newW } : b));
+        } else {
+          const delta = e.clientX - startMx;
+          const newW = Math.max(160, startW + delta);
+          setVideoBlocks(prev => prev.map(b => b.id === id ? { ...b, width: newW } : b));
         }
       }
       if (arrowDrawRef.current) {
@@ -453,6 +502,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
       resizeRef.current = null;
       graphDragRef.current = null;
       graphResizeRef.current = null;
+      videoDragRef.current = null;
+      videoResizeRef.current = null;
       if (arrowDrawRef.current) {
         const container = scrollContainerRef.current;
         if (container) {
@@ -540,13 +591,14 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   }, [saveContent]);
 
   // ── Universal history push (call after any meaningful state change)
-  const pushHistory = useCallback((opts?: { html?: string; arrows?: ArrowShape[]; imageBlocks?: ImageBlock[] }) => {
+  const pushHistory = useCallback((opts?: { html?: string; arrows?: ArrowShape[]; imageBlocks?: ImageBlock[]; videoBlocks?: VideoBlock[] }) => {
     if (isRestoringRef.current) return;
     const html = opts?.html ?? editorRef.current?.innerHTML ?? "";
     const arrs = opts?.arrows ?? arrowsRef.current;
     const imgs = opts?.imageBlocks ?? imageBlocksRef.current;
+    const vids = opts?.videoBlocks ?? videoBlocksRef.current;
     historyRef.current = historyRef.current.slice(0, historyIndexRef.current + 1);
-    historyRef.current.push({ html, arrows: [...arrs], imageBlocks: [...imgs] });
+    historyRef.current.push({ html, arrows: [...arrs], imageBlocks: [...imgs], videoBlocks: [...vids] });
     if (historyRef.current.length > 60) historyRef.current.shift();
     historyIndexRef.current = historyRef.current.length - 1;
   }, []);
@@ -561,6 +613,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     if (editorRef.current) editorRef.current.innerHTML = snap.html;
     setArrows(snap.arrows);
     setImageBlocks(snap.imageBlocks);
+    setVideoBlocks(snap.videoBlocks ?? []);
     isRestoringRef.current = false;
     if (activeId) {
       setProjects(prev => {
@@ -580,6 +633,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     if (editorRef.current) editorRef.current.innerHTML = snap.html;
     setArrows(snap.arrows);
     setImageBlocks(snap.imageBlocks);
+    setVideoBlocks(snap.videoBlocks ?? []);
     isRestoringRef.current = false;
     if (activeId) {
       setProjects(prev => {
@@ -1549,6 +1603,29 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     } catch { /* ignore */ }
   };
 
+  const handleVideoFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    if (file.size > 50 * 1024 * 1024) {
+      alert("Video too large (max 50 MB). Please use a smaller file.");
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const src = ev.target?.result as string;
+      const scrollTop = scrollContainerRef.current?.scrollTop ?? 0;
+      const containerW = scrollContainerRef.current?.clientWidth ?? 700;
+      const blockW = Math.min(400, containerW - 96);
+      const id = `vid_${Date.now()}`;
+      const newBlock: VideoBlock = { id, src, name: file.name, locked: false, width: blockW, x: (containerW - blockW) / 2, y: scrollTop + 120 };
+      const newBlocks = [...videoBlocksRef.current, newBlock];
+      setVideoBlocks(newBlocks);
+      pushHistory({ videoBlocks: newBlocks });
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleVoiceFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     e.target.value = "";
@@ -2398,6 +2475,9 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           {/* Hidden voice file input */}
           <input ref={voiceInputRef} type="file" accept="audio/*" className="hidden" onChange={handleVoiceFile} />
 
+          {/* Hidden video file input */}
+          <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={handleVideoFile} />
+
           {/* Hidden transfer upload input */}
           <input ref={transferUploadRef} type="file" accept=".nbproject,application/json" className="hidden"
             onChange={e => { const f = e.target.files?.[0]; if (f) uploadProject(f); e.target.value = ""; }} />
@@ -2437,6 +2517,74 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 style={{ pointerEvents: "none" }} />
             </svg>
           )}
+
+          {videoBlocks.map(blk => (
+            <div
+              key={blk.id}
+              style={{ position: "absolute", left: blk.x, top: blk.y, width: blk.width, userSelect: "none", zIndex: 21 }}
+            >
+              <div
+                style={{
+                  position: "relative",
+                  cursor: blk.locked ? "default" : "grab",
+                  border: "2px solid #e2e8f0",
+                  borderRadius: 10,
+                  overflow: "visible",
+                  background: "#0f0f0f",
+                  boxShadow: "0 4px 20px rgba(0,0,0,0.22)",
+                }}
+                onMouseDown={e => {
+                  if (blk.locked) return;
+                  const tgt = e.target as HTMLElement;
+                  if (tgt.closest("[data-vid-btn]") || tgt.closest("[data-vid-resize]")) return;
+                  if (tgt.tagName === "VIDEO") return;
+                  e.preventDefault();
+                  videoDragRef.current = { id: blk.id, startMx: e.clientX, startMy: e.clientY, startBx: blk.x, startBy: blk.y };
+                }}
+              >
+                {/* Filename bar */}
+                <div style={{ padding: "6px 10px", background: "#1a1a2e", borderRadius: "8px 8px 0 0", display: "flex", alignItems: "center", gap: 6 }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="#8b5cf6"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+                  <span style={{ fontSize: 9, fontWeight: 700, color: "#a78bfa", letterSpacing: "0.05em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>{blk.name}</span>
+                </div>
+                {/* Video element */}
+                <video
+                  controls
+                  src={blk.src}
+                  style={{ display: "block", width: "100%", borderRadius: "0 0 8px 8px", maxHeight: 320, background: "#000" }}
+                />
+                {/* × Delete */}
+                {!blk.locked && (
+                  <button data-vid-btn="1"
+                    onClick={() => { const f = videoBlocks.filter(b => b.id !== blk.id); setVideoBlocks(f); pushHistory({ videoBlocks: f }); }}
+                    style={{ position: "absolute", top: -10, left: -10, width: 22, height: 22, borderRadius: "50%", background: "#ef4444", border: "2px solid #fff", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.18)", zIndex: 30, lineHeight: 1, padding: 0 }}
+                    title="Delete video">×</button>
+                )}
+                {/* Lock */}
+                <button data-vid-btn="1"
+                  onClick={() => setVideoBlocks(prev => prev.map(b => b.id === blk.id ? { ...b, locked: !b.locked } : b))}
+                  style={{ position: "absolute", top: -10, right: -10, width: 22, height: 22, borderRadius: "50%", background: blk.locked ? "#6366f1" : "#94a3b8", border: "2px solid #fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.18)", zIndex: 30, padding: 0 }}
+                  title={blk.locked ? "Unlock" : "Lock position"}>
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="white">
+                    {blk.locked
+                      ? <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                      : <path d="M12 1C9.24 1 7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2h-1V6c0-2.76-2.24-5-5-5zm0 2c1.66 0 3 1.34 3 3v2H9V6c0-1.66 1.34-3 3-3zm0 11c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z" opacity=".4"/>}
+                  </svg>
+                </button>
+                {/* Width label */}
+                <div style={{ position: "absolute", bottom: -20, left: 0, fontSize: 10, color: "#94a3b8", fontFamily: "monospace", pointerEvents: "none" }}>{Math.round(blk.width)}px</div>
+                {/* Resize handles */}
+                {!blk.locked && (
+                  <>
+                    <div data-vid-resize="1" onMouseDown={e => { e.preventDefault(); e.stopPropagation(); videoResizeRef.current = { id: blk.id, startMx: e.clientX, startW: blk.width, startBx: blk.x, side: "bl" }; }}
+                      style={{ position: "absolute", bottom: -5, left: -5, width: 10, height: 10, background: "#8b5cf6", border: "2px solid #fff", borderRadius: 2, zIndex: 30, cursor: "sw-resize" }} />
+                    <div data-vid-resize="1" onMouseDown={e => { e.preventDefault(); e.stopPropagation(); videoResizeRef.current = { id: blk.id, startMx: e.clientX, startW: blk.width, startBx: blk.x, side: "br" }; }}
+                      style={{ position: "absolute", bottom: -5, right: -5, width: 10, height: 10, background: "#8b5cf6", border: "2px solid #fff", borderRadius: 2, zIndex: 30, cursor: "se-resize" }} />
+                  </>
+                )}
+              </div>
+            </div>
+          ))}
 
           {imageBlocks.map(blk => (
             <div
@@ -3515,15 +3663,16 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                     <div className="text-[10px] text-stone-400">Record audio</div>
                   </div>
                 </button>
-                <div className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg text-left opacity-50 cursor-not-allowed select-none">
+                <button onClick={() => { setCtxMenu(null); videoInputRef.current?.click(); }}
+                  className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-violet-50 text-left transition-colors">
                   <span className="w-6 h-6 rounded-md bg-violet-100 flex items-center justify-center flex-shrink-0">
                     <Video className="w-3.5 h-3.5 text-violet-500" />
                   </span>
                   <div>
                     <div className="text-xs font-semibold text-stone-700">Video</div>
-                    <div className="text-[10px] text-stone-400">Coming soon</div>
+                    <div className="text-[10px] text-stone-400">Floating video block</div>
                   </div>
-                </div>
+                </button>
               </div>
             )}
           </div>
