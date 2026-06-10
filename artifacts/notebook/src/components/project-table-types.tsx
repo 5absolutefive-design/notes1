@@ -262,7 +262,6 @@ export function applyColType(
     td.dataset.cellType = type;
   });
 
-  updateThTypeIcon(th, type);
   save?.();
 }
 
@@ -273,9 +272,7 @@ export function hydrateTables(editor: HTMLElement) {
     ths.forEach((th, colIdx) => {
       const thEl = th as HTMLElement;
       const type = thEl.dataset.colType as ColType | undefined;
-      if (!type) return;
-      updateThTypeIcon(thEl, type);
-      if (type === "text") return;
+      if (!type || type === "text") return;
       const opts = getColOptions(thEl);
       const tbody = table.querySelector("tbody");
       if (!tbody) return;
