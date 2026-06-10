@@ -198,6 +198,36 @@ export function makeCellInner(type: ColType, val: string, options?: SelectOption
   }
 }
 
+// ── Update the type icon shown on the right side of a th ─────────
+export function updateThTypeIcon(th: HTMLElement, type: ColType) {
+  th.querySelector("[data-type-icon]")?.remove();
+
+  const colDef = COL_TYPES.find(c => c.type === type);
+  if (!colDef) return;
+
+  th.style.position = "relative";
+
+  const span = document.createElement("span");
+  span.dataset.typeIcon = "1";
+  span.contentEditable = "false";
+  span.style.cssText =
+    "position:absolute;right:5px;top:50%;transform:translateY(-50%);" +
+    "pointer-events:none;user-select:none;line-height:1;display:flex;align-items:center";
+
+  if (type === "text") {
+    const img = document.createElement("img");
+    img.src = "/text-icon.png";
+    img.style.cssText = "width:12px;height:12px;object-fit:contain;opacity:0.45";
+    span.appendChild(img);
+  } else {
+    span.style.fontSize = "12px";
+    span.style.opacity = "0.5";
+    span.textContent = colDef.icon;
+  }
+
+  th.appendChild(span);
+}
+
 // ── Apply column type to all cells in the column ─────────────────
 export function applyColType(
   th: HTMLElement,
@@ -227,6 +257,7 @@ export function applyColType(
     td.dataset.cellType = type;
   });
 
+  updateThTypeIcon(th, type);
   save?.();
 }
 
@@ -237,7 +268,9 @@ export function hydrateTables(editor: HTMLElement) {
     ths.forEach((th, colIdx) => {
       const thEl = th as HTMLElement;
       const type = thEl.dataset.colType as ColType | undefined;
-      if (!type || type === "text") return;
+      if (!type) return;
+      updateThTypeIcon(thEl, type);
+      if (type === "text") return;
       const opts = getColOptions(thEl);
       const tbody = table.querySelector("tbody");
       if (!tbody) return;
