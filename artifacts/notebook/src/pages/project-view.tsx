@@ -3692,29 +3692,11 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
 
           {/* Project Transfer */}
           <div className="my-1 border-t border-stone-100" />
-          <CtxSection label="Project Transfer" />
-          <div className="flex border-t border-stone-100">
-            <button
-              onMouseDown={e => { e.preventDefault(); setCtxMenu(null); setShowTransferCard(true); }}
-              title="Download"
-              className="flex-1 flex items-center justify-center px-2 py-1 hover:bg-indigo-50 hover:text-indigo-700 text-stone-500 transition-colors">
-              <FileDown className="w-3.5 h-3.5" />
-            </button>
-            <div className="w-px bg-stone-100 my-1" />
-            <button
-              disabled
-              title="Share (coming soon)"
-              className="flex-1 flex items-center justify-center px-2 py-1 text-stone-300 cursor-not-allowed">
-              <Share2 className="w-3.5 h-3.5" />
-            </button>
-            <div className="w-px bg-stone-100 my-1" />
-            <button
-              onMouseDown={e => { e.preventDefault(); setCtxMenu(null); setShowTransferCard(true); }}
-              title="Upload"
-              className="flex-1 flex items-center justify-center px-2 py-1 hover:bg-indigo-50 hover:text-indigo-700 text-stone-500 transition-colors">
-              <FileUp className="w-3.5 h-3.5" />
-            </button>
-          </div>
+          <CtxItem
+            icon={<ArrowLeftRight className="w-3.5 h-3.5 text-indigo-500" />}
+            label="Project Transfer"
+            onClick={() => { setCtxMenu(null); setShowTransferCard(true); }}
+          />
         </div>
       )}
 
