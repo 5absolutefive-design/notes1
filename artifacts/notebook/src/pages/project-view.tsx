@@ -3335,7 +3335,23 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                   <span className="text-sm font-semibold text-stone-500 w-6 text-center">1.</span>
                   <span>Number List</span>
                 </button>
-                <div className="grid grid-cols-4 gap-1 mt-1">
+                <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide px-1 mt-1.5 mb-1">Color</p>
+                <div className="grid grid-cols-4 gap-1">
+                  {[
+                    { char: "🟢", label: "Green" },
+                    { char: "🔵", label: "Blue" },
+                    { char: "🔴", label: "Red" },
+                    { char: "⚪", label: "White" },
+                  ].map(({ char, label }) => (
+                    <button key={char} title={label}
+                      onClick={() => insertCustomBullet(char)}
+                      className="flex items-center justify-center h-8 w-full rounded-lg hover:bg-indigo-50 text-base transition-colors border border-stone-100 hover:border-indigo-200">
+                      {char}
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide px-1 mt-2 mb-1">Symbols</p>
+                <div className="grid grid-cols-4 gap-1">
                   {[
                     { char: "●", label: "Disc" },
                     { char: "◎", label: "Ring" },
