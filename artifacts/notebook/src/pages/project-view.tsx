@@ -3734,22 +3734,22 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           <div className="col-span-2 text-[10px] font-bold text-stone-400 uppercase tracking-widest px-1 pb-1">Choose Type</div>
           <button onMouseDown={e => { e.preventDefault(); insertCalloutBlock("info"); setCalloutPickerPos(null); }}
             className="col-span-2 flex items-center gap-2.5 px-2 py-1.5 rounded hover:bg-stone-100 transition-colors text-left">
-            <span className="text-sm w-5 text-center">ℹ️</span>
+            <span className="text-sm w-5 text-center text-stone-800 font-bold">{'ℹ\uFE0E'}</span>
             <span className="text-xs font-medium text-stone-800">Info</span>
           </button>
           <button onMouseDown={e => { e.preventDefault(); insertCalloutBlock("warning"); setCalloutPickerPos(null); }}
             className="col-span-2 flex items-center gap-2.5 px-2 py-1.5 rounded hover:bg-stone-100 transition-colors text-left">
-            <span className="text-sm w-5 text-center">⚠️</span>
+            <span className="text-sm w-5 text-center text-stone-800 font-bold">{'⚠\uFE0E'}</span>
             <span className="text-xs font-medium text-stone-800">Warning</span>
           </button>
           <button onMouseDown={e => { e.preventDefault(); insertCalloutBlock("success"); setCalloutPickerPos(null); }}
             className="col-span-2 flex items-center gap-2.5 px-2 py-1.5 rounded hover:bg-stone-100 transition-colors text-left">
-            <span className="text-sm w-5 text-center">✅</span>
+            <span className="text-sm w-5 text-center text-stone-800 font-bold">✓</span>
             <span className="text-xs font-medium text-stone-800">Success</span>
           </button>
           <button onMouseDown={e => { e.preventDefault(); insertCalloutBlock("error"); setCalloutPickerPos(null); }}
             className="col-span-2 flex items-center gap-2.5 px-2 py-1.5 rounded hover:bg-stone-100 transition-colors text-left">
-            <span className="text-sm w-5 text-center">❌</span>
+            <span className="text-sm w-5 text-center text-stone-800 font-bold">✕</span>
             <span className="text-xs font-medium text-stone-800">Error</span>
           </button>
         </div>
