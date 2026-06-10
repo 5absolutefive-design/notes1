@@ -3243,21 +3243,21 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           <div className="flex">
             <button
               onMouseDown={e => { e.preventDefault(); universalUndo(); setCtxMenu(null); }}
-              className="flex-1 flex items-center justify-center gap-1.5 px-2 py-0.5 hover:bg-indigo-50 hover:text-indigo-700 text-stone-700 transition-colors text-xs font-medium">
-              <Undo2 className="w-3.5 h-3.5 flex-shrink-0 text-stone-400" />
+              className="flex-1 flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 hover:bg-indigo-50 hover:text-indigo-700 text-stone-700 transition-colors text-xs font-medium">
+              <Undo2 className="w-3.5 h-3.5 text-stone-400" />
               <span>Undo</span>
             </button>
             <div className="w-px bg-stone-100 my-1" />
             <button
               onMouseDown={e => { e.preventDefault(); universalRedo(); setCtxMenu(null); }}
-              className="flex-1 flex items-center justify-center gap-1.5 px-2 py-0.5 hover:bg-indigo-50 hover:text-indigo-700 text-stone-700 transition-colors text-xs font-medium">
-              <Redo2 className="w-3.5 h-3.5 flex-shrink-0 text-stone-400" />
+              className="flex-1 flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 hover:bg-indigo-50 hover:text-indigo-700 text-stone-700 transition-colors text-xs font-medium">
+              <Redo2 className="w-3.5 h-3.5 text-stone-400" />
               <span>Redo</span>
             </button>
             <div className="w-px bg-stone-100 my-1" />
             <button
               onMouseDown={e => { e.preventDefault(); setShowClearConfirm(true); setCtxMenu(null); }}
-              className="flex-1 flex items-center justify-center gap-1.5 px-2 py-0.5 hover:bg-red-50 hover:text-red-600 text-stone-700 transition-colors text-xs font-medium">
+              className="flex-1 flex flex-col items-center justify-center gap-0.5 px-2 py-1.5 hover:bg-red-50 hover:text-red-600 text-stone-700 transition-colors text-xs font-medium">
               <Trash2 className="w-3.5 h-3.5 flex-shrink-0 text-stone-400" />
               <span>Clear</span>
             </button>
