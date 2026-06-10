@@ -1499,12 +1499,18 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
 
   const insertDividerStyle = (style: string) => {
     const styles: Record<string, string> = {
-      single:  `border:none;border-top:1.5px solid #d6d3d1;margin:12px 0`,
-      bold:    `border:none;border-top:4px solid #78716c;margin:12px 0`,
-      thin:    `border:none;border-top:0.5px solid #e7e5e4;margin:12px 0`,
-      double:  `border:none;border-top:3px double #a8a29e;margin:12px 0`,
-      dashed:  `border:none;border-top:2px dashed #a8a29e;margin:12px 0`,
-      dotted:  `border:none;border-top:2px dotted #a8a29e;margin:12px 0`,
+      single:   `border:none;border-top:1.5px solid #d6d3d1;margin:12px 0`,
+      bold:     `border:none;border-top:4px solid #78716c;margin:12px 0`,
+      thin:     `border:none;border-top:0.5px solid #e7e5e4;margin:12px 0`,
+      double:   `border:none;border-top:3px double #a8a29e;margin:12px 0`,
+      dashed:   `border:none;border-top:2px dashed #a8a29e;margin:12px 0`,
+      dotted:   `border:none;border-top:2px dotted #a8a29e;margin:12px 0`,
+      gradient: `border:none;height:1.5px;background:linear-gradient(to right,transparent,#a8a29e 30%,#a8a29e 70%,transparent);margin:12px 0`,
+      colored:  `border:none;border-top:2px solid #6366f1;margin:12px 0`,
+      shadow:   `border:none;border-top:1.5px solid #d6d3d1;box-shadow:0 3px 6px -2px rgba(0,0,0,0.12);margin:12px 0`,
+      wave:     `border:none;height:10px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='10'%3E%3Cpath d='M0 5 Q5 0 10 5 Q15 10 20 5' stroke='%23a8a29e' stroke-width='2' fill='none'/%3E%3C/svg%3E");background-repeat:repeat-x;background-position:center;margin:12px 0`,
+      zigzag:   `border:none;height:10px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='10'%3E%3Cpolyline points='0,5 5,0 10,5 15,10 20,5' stroke='%23a8a29e' stroke-width='2' fill='none'/%3E%3C/svg%3E");background-repeat:repeat-x;background-position:center;margin:12px 0`,
+      stars:    `border:none;height:14px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='14'%3E%3Ctext y='11' font-size='10' fill='%23a8a29e'%3E✦%3C/text%3E%3C/svg%3E");background-repeat:repeat-x;background-position:center;margin:12px 0`,
     };
     insertHTML(`<br/><hr style="${styles[style] ?? styles.single}"/><br/>`);
     setCtxMenu(null);
@@ -3340,19 +3346,25 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             <CtxItem icon={<Minus className="w-3.5 h-3.5"/>} label="Divider Line" hasArrow
               onClick={() => setCtxMenu(m => m ? { ...m, ...CLOSE_ALL_SUBS, dividerOpen: !m.dividerOpen } : null)} />
             {ctxMenu.dividerOpen && (
-              <div className="absolute left-full bottom-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 py-2 px-3 z-[10000] min-w-[200px]">
+              <div className="absolute left-full bottom-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 py-2 px-3 z-[10000] min-w-[210px]">
                 <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide mb-2">Choose a divider style</p>
                 {[
-                  { key: "single", label: "Single Line",  preview: <div className="flex-1 border-t-2 border-stone-300" /> },
-                  { key: "bold",   label: "Bold Line",    preview: <div className="flex-1 border-t-4 border-stone-500" /> },
-                  { key: "thin",   label: "Thin Line",    preview: <div className="flex-1 border-t border-stone-300" /> },
-                  { key: "double", label: "Double Line",  preview: <div className="flex-1" style={{ borderTop: "3px double #a8a29e" }} /> },
-                  { key: "dashed", label: "Dashed Line",  preview: <div className="flex-1 border-t-2 border-dashed border-stone-400" /> },
-                  { key: "dotted", label: "Dot Line",     preview: <div className="flex-1 border-t-2 border-dotted border-stone-400" /> },
+                  { key: "thin",     label: "Thin Line",     preview: <div className="flex-1 border-t border-stone-300" /> },
+                  { key: "single",   label: "Single Line",   preview: <div className="flex-1 border-t-2 border-stone-400" /> },
+                  { key: "bold",     label: "Bold Line",     preview: <div className="flex-1 border-t-4 border-stone-600" /> },
+                  { key: "double",   label: "Double Line",   preview: <div className="flex-1" style={{ borderTop: "3px double #a8a29e" }} /> },
+                  { key: "dashed",   label: "Dashed Line",   preview: <div className="flex-1 border-t-2 border-dashed border-stone-400" /> },
+                  { key: "dotted",   label: "Dot Line",      preview: <div className="flex-1 border-t-2 border-dotted border-stone-400" /> },
+                  { key: "gradient", label: "Gradient Line", preview: <div className="flex-1 h-px" style={{ background: "linear-gradient(to right,transparent,#a8a29e,transparent)" }} /> },
+                  { key: "colored",  label: "Colored Line",  preview: <div className="flex-1 border-t-2 border-indigo-400" /> },
+                  { key: "shadow",   label: "Shadow Line",   preview: <div className="flex-1 border-t border-stone-300" style={{ boxShadow: "0 2px 4px -1px rgba(0,0,0,0.15)" }} /> },
+                  { key: "wave",     label: "Wave Line",     preview: <div className="flex-1 h-2.5" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='10'%3E%3Cpath d='M0 5 Q5 0 10 5 Q15 10 20 5' stroke='%23a8a29e' stroke-width='2' fill='none'/%3E%3C/svg%3E\")", backgroundRepeat: "repeat-x", backgroundPosition: "center" }} /> },
+                  { key: "zigzag",   label: "Zigzag Line",   preview: <div className="flex-1 h-2.5" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='10'%3E%3Cpolyline points='0,5 5,0 10,5 15,10 20,5' stroke='%23a8a29e' stroke-width='2' fill='none'/%3E%3C/svg%3E\")", backgroundRepeat: "repeat-x", backgroundPosition: "center" }} /> },
+                  { key: "stars",    label: "Stars Line",    preview: <div className="flex-1 h-3.5" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='14'%3E%3Ctext y='11' font-size='10' fill='%23a8a29e'%3E✦%3C/text%3E%3C/svg%3E\")", backgroundRepeat: "repeat-x", backgroundPosition: "center" }} /> },
                 ].map(({ key, label, preview }) => (
                   <button key={key} onClick={() => insertDividerStyle(key)}
-                    className="w-full flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-indigo-50 hover:text-indigo-700 text-stone-700 transition-colors text-left group">
-                    <div className="flex items-center w-12">{preview}</div>
+                    className="w-full flex items-center gap-3 px-2 py-1.5 rounded-lg hover:bg-indigo-50 hover:text-indigo-700 text-stone-700 transition-colors text-left group">
+                    <div className="flex items-center w-14">{preview}</div>
                     <span className="text-xs font-medium">{label}</span>
                   </button>
                 ))}
