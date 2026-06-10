@@ -3731,26 +3731,26 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           style={{ top: calloutPickerPos.top, left: calloutPickerPos.left, minWidth: 200 }}
           onMouseDown={e => e.stopPropagation()}
         >
-          <div className="col-span-2 text-[10px] font-bold text-stone-500 uppercase tracking-widest px-1 pb-1">Choose Type</div>
+          <div className="col-span-2 text-[10px] font-bold text-stone-400 uppercase tracking-widest px-1 pb-1">Choose Type</div>
           <button onMouseDown={e => { e.preventDefault(); insertCalloutBlock("info"); setCalloutPickerPos(null); }}
-            className="flex flex-col items-center gap-1 px-3 py-3 rounded border border-stone-300 bg-white hover:bg-stone-50 transition-colors">
-            <span className="text-xl">ℹ️</span>
-            <span className="text-[11px] font-semibold text-stone-800">Info</span>
+            className="col-span-2 flex items-center gap-2.5 px-2 py-1.5 rounded hover:bg-stone-100 transition-colors text-left">
+            <span className="text-sm w-5 text-center">ℹ️</span>
+            <span className="text-xs font-medium text-stone-800">Info</span>
           </button>
           <button onMouseDown={e => { e.preventDefault(); insertCalloutBlock("warning"); setCalloutPickerPos(null); }}
-            className="flex flex-col items-center gap-1 px-3 py-3 rounded border border-stone-300 bg-white hover:bg-stone-50 transition-colors">
-            <span className="text-xl">⚠️</span>
-            <span className="text-[11px] font-semibold text-stone-800">Warning</span>
+            className="col-span-2 flex items-center gap-2.5 px-2 py-1.5 rounded hover:bg-stone-100 transition-colors text-left">
+            <span className="text-sm w-5 text-center">⚠️</span>
+            <span className="text-xs font-medium text-stone-800">Warning</span>
           </button>
           <button onMouseDown={e => { e.preventDefault(); insertCalloutBlock("success"); setCalloutPickerPos(null); }}
-            className="flex flex-col items-center gap-1 px-3 py-3 rounded border border-stone-300 bg-white hover:bg-stone-50 transition-colors">
-            <span className="text-xl">✅</span>
-            <span className="text-[11px] font-semibold text-stone-800">Success</span>
+            className="col-span-2 flex items-center gap-2.5 px-2 py-1.5 rounded hover:bg-stone-100 transition-colors text-left">
+            <span className="text-sm w-5 text-center">✅</span>
+            <span className="text-xs font-medium text-stone-800">Success</span>
           </button>
           <button onMouseDown={e => { e.preventDefault(); insertCalloutBlock("error"); setCalloutPickerPos(null); }}
-            className="flex flex-col items-center gap-1 px-3 py-3 rounded border border-stone-300 bg-white hover:bg-stone-50 transition-colors">
-            <span className="text-xl">❌</span>
-            <span className="text-[11px] font-semibold text-stone-800">Error</span>
+            className="col-span-2 flex items-center gap-2.5 px-2 py-1.5 rounded hover:bg-stone-100 transition-colors text-left">
+            <span className="text-sm w-5 text-center">❌</span>
+            <span className="text-xs font-medium text-stone-800">Error</span>
           </button>
         </div>
       )}
