@@ -127,7 +127,7 @@ const FONT_COLORS = [
 ];
 
 const FONTS_CTX = [
-  "Inter", "Arial", "Arial Black", "Roboto", "Lato", "Poppins", "Merriweather",
+  "Inter", "Arial", "Arial Black", "Roboto", "Lato", "Poppins", "Merriweather", "Algerian",
 ];
 
 interface ContextMenuState {
@@ -3743,6 +3743,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
 
       {/* Editor styles */}
       <style>{`
+        @font-face { font-family: "Algerian"; src: url("/Algerian-Regular.ttf") format("truetype"); font-weight: normal; font-style: normal; }
         .hide-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
         .hide-scrollbar::-webkit-scrollbar { display: none; }
         [data-placeholder]:empty:before { content: attr(data-placeholder); color: #c0bdb8; pointer-events: none; }
