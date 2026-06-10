@@ -105,21 +105,23 @@ export function setColOptions(th: HTMLElement, options: SelectOption[]) {
 }
 
 // ── Badge HTML ───────────────────────────────────────────────────
+const F = "font-family:Inter,sans-serif";
+
 export function makeBadgeHtml(label: string, color: keyof typeof SELECT_COLORS): string {
   const c = SELECT_COLORS[color] ?? SELECT_COLORS.gray;
-  return `<span style="display:inline-flex;align-items:center;padding:2px 9px;border-radius:12px;background:${c.bg};color:${c.text};border:1px solid ${c.border};font-size:12px;font-weight:500;white-space:nowrap;line-height:18px;max-width:100%;overflow:hidden;text-overflow:ellipsis">${label}</span>`;
+  return `<span style="display:inline-flex;align-items:center;padding:2px 9px;border-radius:12px;background:${c.bg};color:${c.text};border:1px solid ${c.border};font-size:12px;font-weight:500;white-space:nowrap;line-height:18px;max-width:100%;overflow:hidden;text-overflow:ellipsis;${F}">${label}</span>`;
 }
 
 export function makeStatusBadgeHtml(label: string): string {
   const s = STATUS_OPTIONS.find(o => o.label === label);
-  if (!s) return `<span style="color:#9ca3af;font-size:13px">—</span>`;
-  return `<span style="display:inline-flex;align-items:center;padding:2px 9px;border-radius:12px;background:${s.bg};color:${s.hex};border:1px solid ${s.border};font-size:12px;font-weight:500;white-space:nowrap;line-height:18px">${s.label}</span>`;
+  if (!s) return `<span style="color:#9ca3af;font-size:13px;${F}">—</span>`;
+  return `<span style="display:inline-flex;align-items:center;padding:2px 9px;border-radius:12px;background:${s.bg};color:${s.hex};border:1px solid ${s.border};font-size:12px;font-weight:500;white-space:nowrap;line-height:18px;${F}">${s.label}</span>`;
 }
 
 export function makePriorityBadgeHtml(label: string): string {
   const pl = PRIORITY_LEVELS.find(p => p.label === label);
-  if (!pl) return `<span style="color:#9ca3af;font-size:13px">—</span>`;
-  return `<span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:12px;background:${pl.bg};color:${pl.hex};border:1px solid ${pl.border};font-size:12px;font-weight:600;white-space:nowrap;line-height:18px">${pl.label}</span>`;
+  if (!pl) return `<span style="color:#9ca3af;font-size:13px;${F}">—</span>`;
+  return `<span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:12px;background:${pl.bg};color:${pl.hex};border:1px solid ${pl.border};font-size:12px;font-weight:600;white-space:nowrap;line-height:18px;${F}">${pl.label}</span>`;
 }
 
 // ── Cell inner HTML by type ──────────────────────────────────────
@@ -130,13 +132,13 @@ export function makeCellInner(type: ColType, val: string, options?: SelectOption
 
     case "number": {
       const display = val && val !== "0" ? val : "0";
-      return `<span data-ncell="1" style="display:block;width:100%;text-align:right;font-size:13px;color:${val && val !== "0" ? "#1f2937" : "#9ca3af"};user-select:none">${display}</span>`;
+      return `<span data-ncell="1" style="display:block;width:100%;text-align:right;font-size:13px;color:${val && val !== "0" ? "#1f2937" : "#9ca3af"};user-select:none;${F}">${display}</span>`;
     }
 
     case "currency": {
       const n = parseFloat(val) || 0;
       const fmt = `$${n.toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-      return `<span data-ncell="1" data-ntype="currency" style="display:block;width:100%;text-align:right;font-size:13px;color:${val && parseFloat(val) !== 0 ? "#1f2937" : "#9ca3af"};user-select:none">${fmt}</span>`;
+      return `<span data-ncell="1" data-ntype="currency" style="display:block;width:100%;text-align:right;font-size:13px;color:${val && parseFloat(val) !== 0 ? "#1f2937" : "#9ca3af"};user-select:none;${F}">${fmt}</span>`;
     }
 
     case "check": {
@@ -145,22 +147,22 @@ export function makeCellInner(type: ColType, val: string, options?: SelectOption
     }
 
     case "date":
-      return `<input data-datecell="1" type="date" value="${val || ""}" style="border:none;outline:none;background:transparent;width:100%;font-size:13px;color:${val ? "#1f2937" : "#9ca3af"};cursor:pointer;font-family:inherit;padding:0" />`;
+      return `<input data-datecell="1" type="date" value="${val || ""}" style="border:none;outline:none;background:transparent;width:100%;font-size:13px;color:${val ? "#1f2937" : "#9ca3af"};cursor:pointer;font-family:Inter,sans-serif;padding:0" />`;
 
     case "url":
-      return `<span data-textcell="url" style="display:block;font-size:13px;color:${val ? "#2563eb" : "#9ca3af"};text-decoration:${val ? "underline" : "none"};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:text;user-select:none">${val || "Add URL..."}</span>`;
+      return `<span data-textcell="url" style="display:block;font-size:13px;color:${val ? "#2563eb" : "#9ca3af"};text-decoration:${val ? "underline" : "none"};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:text;user-select:none;${F}">${val || "Add URL..."}</span>`;
 
     case "email":
-      return `<span data-textcell="email" style="display:block;font-size:13px;color:${val ? "#1f2937" : "#9ca3af"};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:text;user-select:none">${val || "Add email..."}</span>`;
+      return `<span data-textcell="email" style="display:block;font-size:13px;color:${val ? "#1f2937" : "#9ca3af"};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:text;user-select:none;${F}">${val || "Add email..."}</span>`;
 
     case "phone":
-      return `<span data-textcell="phone" style="display:block;font-size:13px;color:${val ? "#1f2937" : "#9ca3af"};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:text;user-select:none">${val || "Add phone..."}</span>`;
+      return `<span data-textcell="phone" style="display:block;font-size:13px;color:${val ? "#1f2937" : "#9ca3af"};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:text;user-select:none;${F}">${val || "Add phone..."}</span>`;
 
     case "person": {
       const initial = val ? val.trim().charAt(0).toUpperCase() : "";
-      return `<span data-textcell="person" style="display:flex;align-items:center;gap:6px;cursor:text;user-select:none">${val
-        ? `<span style="width:22px;height:22px;border-radius:50%;background:#6366f1;color:white;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${initial}</span><span style="font-size:13px;color:#1f2937">${val}</span>`
-        : `<span style="font-size:13px;color:#9ca3af">Assign...</span>`
+      return `<span data-textcell="person" style="display:flex;align-items:center;gap:6px;cursor:text;user-select:none;${F}">${val
+        ? `<span style="width:22px;height:22px;border-radius:50%;background:#6366f1;color:white;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;${F}">${initial}</span><span style="font-size:13px;color:#1f2937;${F}">${val}</span>`
+        : `<span style="font-size:13px;color:#9ca3af;${F}">Assign...</span>`
       }</span>`;
     }
 
@@ -173,22 +175,22 @@ export function makeCellInner(type: ColType, val: string, options?: SelectOption
 
     case "progress": {
       const pct = Math.min(100, Math.max(0, parseInt(val) || 0));
-      return `<span data-progresscell="1" style="display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;width:100%"><span style="flex:1;height:7px;border-radius:4px;background:#f3f4f6;overflow:hidden"><span style="display:block;height:100%;width:${pct}%;background:${pct >= 50 ? "#22c55e" : "#f97316"};border-radius:4px"></span></span><span style="font-size:11px;color:#6b7280;min-width:28px;text-align:right">${pct}%</span></span>`;
+      return `<span data-progresscell="1" style="display:flex;align-items:center;gap:6px;cursor:pointer;user-select:none;width:100%"><span style="flex:1;height:7px;border-radius:4px;background:#f3f4f6;overflow:hidden"><span style="display:block;height:100%;width:${pct}%;background:${pct >= 50 ? "#22c55e" : "#f97316"};border-radius:4px"></span></span><span style="font-size:11px;color:#6b7280;min-width:28px;text-align:right;${F}">${pct}%</span></span>`;
     }
 
     case "select": {
-      return `<span data-selectcell="1" style="display:block;cursor:pointer;user-select:none;min-height:20px">${val ? makeStatusBadgeHtml(val) : '<span style="color:#9ca3af;font-size:13px">—</span>'}</span>`;
+      return `<span data-selectcell="1" style="display:block;cursor:pointer;user-select:none;min-height:20px">${val ? makeStatusBadgeHtml(val) : `<span style="color:#9ca3af;font-size:13px;${F}">—</span>`}</span>`;
     }
 
     case "priority": {
-      return `<span data-prioritycell="1" style="display:block;cursor:pointer;user-select:none;min-height:20px">${val ? makePriorityBadgeHtml(val) : '<span style="color:#9ca3af;font-size:13px">—</span>'}</span>`;
+      return `<span data-prioritycell="1" style="display:block;cursor:pointer;user-select:none;min-height:20px">${val ? makePriorityBadgeHtml(val) : `<span style="color:#9ca3af;font-size:13px;${F}">—</span>`}</span>`;
     }
 
     case "multi": {
       const opts = options || [];
       const ids = val ? val.split(",").filter(Boolean) : [];
       const selected = ids.map(id => opts.find(o => o.id === id)).filter(Boolean) as SelectOption[];
-      return `<span data-multicell="1" style="display:flex;flex-wrap:wrap;gap:2px;cursor:pointer;user-select:none;min-height:20px">${selected.length ? selected.map(o => makeBadgeHtml(o.label, o.color)).join("") : '<span style="color:#9ca3af;font-size:13px">—</span>'}</span>`;
+      return `<span data-multicell="1" style="display:flex;flex-wrap:wrap;gap:2px;cursor:pointer;user-select:none;min-height:20px">${selected.length ? selected.map(o => makeBadgeHtml(o.label, o.color)).join("") : `<span style="color:#9ca3af;font-size:13px;${F}">—</span>`}</span>`;
     }
 
     default:
@@ -642,7 +644,7 @@ export function InlineEditPopup({ td, th, rect, type, onClose, onSave }: InlineE
         min={type === "progress" ? "0" : undefined}
         max={type === "progress" ? "100" : undefined}
         className="w-full px-2.5 py-1.5 text-sm focus:outline-none"
-        style={{ fontFamily: "inherit" }}
+        style={{ fontFamily: "Inter, sans-serif" }}
       />
     </div>,
     document.body
