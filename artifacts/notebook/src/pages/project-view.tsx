@@ -3138,7 +3138,6 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             )}
           </div>
 
-          <div className="my-1 border-t border-stone-100" />
           {/* Font → side sub-card */}
           <div className="relative" ref={fontItemRef}>
             <CtxItem icon={<span className="w-3.5 h-3.5 flex items-center justify-center text-[11px] font-bold leading-none">Aa</span>} label="Font" hasArrow
@@ -3248,7 +3247,6 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
               </div>
             )}
           </div>
-          <div className="my-1 border-t border-stone-100" />
           {/* Align button → side sub-card */}
           <div className="relative">
             <CtxItem icon={<AlignLeft className="w-3.5 h-3.5"/>} label="Align" hasArrow
