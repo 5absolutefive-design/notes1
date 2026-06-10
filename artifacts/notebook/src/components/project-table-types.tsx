@@ -326,7 +326,9 @@ export function ColTypePicker({ th, rect, onClose, onTypeChange, onDeleteCol, on
                   ? "bg-indigo-50 border-indigo-400 text-indigo-700"
                   : "border-stone-100 hover:bg-stone-50 hover:border-stone-300 text-stone-600"}`}
             >
-              <span className="text-sm leading-none">{icon}</span>
+              {type === "text"
+                ? <img src="/text-icon.png" alt="Text" className="w-4 h-4 leading-none" style={{ objectFit: "contain" }} />
+                : <span className="text-sm leading-none">{icon}</span>}
               <span>{label}</span>
             </button>
           ))}
