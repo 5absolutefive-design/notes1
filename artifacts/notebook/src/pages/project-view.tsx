@@ -1156,19 +1156,29 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   };
 
   const applyCtxFontName = (name: string, fromPanel = false) => {
-    restoreSelection();
     void fromPanel;
+    if (ctxFontSizeMode === "all") {
+      if (editorRef.current) {
+        editorRef.current.style.fontFamily = name;
+        // Strip inline font-family from ALL descendants so pasted text also gets the new font
+        editorRef.current.querySelectorAll<HTMLElement>("*").forEach(el => {
+          if (el.style.fontFamily) el.style.fontFamily = "";
+        });
+        debouncedSave();
+      }
+      return;
+    }
+    // "selected" mode
+    restoreSelection();
     const sel = window.getSelection();
     if (!sel || sel.rangeCount === 0) return;
     if (sel.isCollapsed) {
-      // No selection — apply to whole editor
       if (editorRef.current) {
         editorRef.current.style.fontFamily = name;
         debouncedSave();
       }
       return;
     }
-    // Use marker trick: wrap with execCommand then replace <font> with <span style>
     document.execCommand("fontName", false, "__FONT_MARKER__");
     const fontEls = editorRef.current?.querySelectorAll('font[face="__FONT_MARKER__"]');
     fontEls?.forEach(el => {
@@ -1181,13 +1191,18 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   };
 
   const applyCtxFontSize = (size: number, fromPanel = false) => {
+    void fromPanel;
     setCtxFontSize(size);
     if (ctxFontSizeMode === "all") {
       if (editorRef.current) {
         editorRef.current.style.fontSize = `${size}px`;
         if (activeId) localStorage.setItem(`nb_proj_fs_${activeId}`, String(size));
+        // Strip inline font-size from ALL descendants so pasted text also gets the new size
+        editorRef.current.querySelectorAll<HTMLElement>("*").forEach(el => {
+          if (el.style.fontSize) el.style.fontSize = "";
+        });
+        debouncedSave();
       }
-      debouncedSave();
     } else {
       restoreSelection();
       const sel = window.getSelection();
