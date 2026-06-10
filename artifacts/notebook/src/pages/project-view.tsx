@@ -4060,7 +4060,7 @@ function DrawShapeEl({ shape, isPreview, eraserMode, onRemove }: {
 // ── Helper components ─────────────────────────────────────────────
 function CtxSection({ label }: { label: string }) {
   return (
-    <div className="px-3 pt-0.5 pb-0">
+    <div className="px-3 py-0">
       <span className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">{label}</span>
     </div>
   );
