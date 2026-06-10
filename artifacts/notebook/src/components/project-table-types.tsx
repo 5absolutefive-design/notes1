@@ -198,9 +198,13 @@ export function makeCellInner(type: ColType, val: string, options?: SelectOption
   }
 }
 
-// ── Update the type icon shown on the right side of a th ─────────
+// ── Update the type icon shown on the left side of a th ──────────
 export function updateThTypeIcon(th: HTMLElement, type: ColType) {
-  th.querySelector("[data-type-icon]")?.remove();
+  const old = th.querySelector("[data-type-icon]");
+  if (old) {
+    old.remove();
+    th.style.paddingLeft = "";
+  }
 
   const colDef = COL_TYPES.find(c => c.type === type);
   if (!colDef) return;
@@ -211,7 +215,7 @@ export function updateThTypeIcon(th: HTMLElement, type: ColType) {
   span.dataset.typeIcon = "1";
   span.contentEditable = "false";
   span.style.cssText =
-    "position:absolute;right:5px;top:50%;transform:translateY(-50%);" +
+    "position:absolute;left:6px;top:50%;transform:translateY(-50%);" +
     "pointer-events:none;user-select:none;line-height:1;display:flex;align-items:center";
 
   if (type === "text") {
@@ -225,7 +229,8 @@ export function updateThTypeIcon(th: HTMLElement, type: ColType) {
     span.textContent = colDef.icon;
   }
 
-  th.appendChild(span);
+  th.insertBefore(span, th.firstChild);
+  th.style.paddingLeft = "26px";
 }
 
 // ── Apply column type to all cells in the column ─────────────────
