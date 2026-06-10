@@ -286,3 +286,10 @@
   outline: none !important;
   caret-color: #374151;
 }
+input[data-datecell="1"]::-webkit-calendar-picker-indicator {
+  display: none;
+}
+input[data-datecell="1"] {
+  -webkit-appearance: none;
+  appearance: none;
+}
