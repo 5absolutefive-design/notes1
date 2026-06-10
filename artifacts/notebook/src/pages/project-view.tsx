@@ -1155,6 +1155,20 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     highlightOpen: false, fontColorOpen: false, headingOpen: false,
   };
 
+  // Ensure editor is focused and selection is active before applying formatting
+  const ensureSelection = (): Selection | null => {
+    const cur = window.getSelection();
+    // If current selection is valid and non-collapsed, use it as-is
+    if (cur && cur.rangeCount > 0 && !cur.isCollapsed) {
+      savedRangeRef.current = cur.getRangeAt(0).cloneRange();
+      return cur;
+    }
+    // Otherwise restore saved range
+    restoreSelection();
+    const restored = window.getSelection();
+    return (restored && restored.rangeCount > 0) ? restored : null;
+  };
+
   const applyCtxFontName = (name: string, fromPanel = false) => {
     void fromPanel;
     if (ctxFontSizeMode === "all") {
@@ -1168,9 +1182,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
       }
       return;
     }
-    // "selected" mode
-    restoreSelection();
-    const sel = window.getSelection();
+    // "selected" mode — ensure we have a valid selection
+    const sel = ensureSelection();
     if (!sel || sel.rangeCount === 0) return;
     if (sel.isCollapsed) {
       if (editorRef.current) {
@@ -1204,8 +1217,8 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
         debouncedSave();
       }
     } else {
-      restoreSelection();
-      const sel = window.getSelection();
+      // "selected" mode — ensure we have a valid selection
+      const sel = ensureSelection();
       if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
       document.execCommand("fontSize", false, "7");
       const fontEls = editorRef.current?.querySelectorAll('font[size="7"]');
@@ -3072,7 +3085,11 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           {/* Font → side sub-card */}
           <div className="relative" ref={fontItemRef}>
             <CtxItem icon={<span className="w-3.5 h-3.5 flex items-center justify-center text-[11px] font-bold leading-none">Aa</span>} label="Font" hasArrow
-              onClick={() => setCtxMenu(m => m ? { ...m, ...CLOSE_ALL_SUBS, fontOpen: !m.fontOpen } : null)} />
+              onClick={() => {
+                const sel = window.getSelection();
+                if (sel && sel.rangeCount > 0) savedRangeRef.current = sel.getRangeAt(0).cloneRange();
+                setCtxMenu(m => m ? { ...m, ...CLOSE_ALL_SUBS, fontOpen: !m.fontOpen } : null);
+              }} />
             {ctxMenu.fontOpen && (
               <div ref={fontSubCardRef} className="fixed z-[10001]" style={{ minWidth: 220, top: 0, left: 0 }}
                 onMouseDown={e => e.stopPropagation()}>
