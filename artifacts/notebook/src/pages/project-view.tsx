@@ -3001,86 +3001,112 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             <CtxItem icon={<Bold className="w-3.5 h-3.5"/>} label="Format" hasArrow
               onClick={() => setCtxMenu(m => m ? { ...m, ...CLOSE_ALL_SUBS, formatOpen: !m.formatOpen } : null)} />
             {ctxMenu.formatOpen && (
-              <div className="absolute left-full top-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 py-1.5 z-[10000] min-w-[180px]">
-                <CtxItem icon={<span className="w-3.5 h-3.5 flex items-center justify-center text-[10px] font-bold leading-none text-stone-500">T</span>} label="Normal" onClick={() => { execFmt("removeFormat"); restoreSelection(); setCtxMenu(null); }} />
-                <div className="my-1 border-t border-stone-100" />
-                <CtxItem icon={<Bold className="w-3.5 h-3.5"/>}          label="Bold"          shortcut="Ctrl+B" active={ctxMenu.boldActive}      onClick={() => execFmt("bold")} />
-                <CtxItem icon={<span className="w-3.5 h-3.5 flex items-center justify-center text-[10px] font-black tracking-tight leading-none">AA</span>} label="All Caps" onClick={execAllCaps} />
-                <CtxItem icon={<Italic className="w-3.5 h-3.5"/>}        label="Italic"        shortcut="Ctrl+I" active={ctxMenu.italicActive}    onClick={() => execFmt("italic")} />
-                <CtxItem icon={<Underline className="w-3.5 h-3.5"/>}     label="Underline"     shortcut="Ctrl+U" active={ctxMenu.underlineActive} onClick={() => execFmt("underline")} />
-                <CtxItem icon={<Strikethrough className="w-3.5 h-3.5"/>} label="Strikethrough"                   active={ctxMenu.strikeActive}    onClick={() => execFmt("strikeThrough")} />
-                <CtxItem icon={<Subscript className="w-3.5 h-3.5"/>}    label="Subscript"    shortcut="X₂" active={ctxMenu.subActive} onClick={() => {
-                  restoreSelection();
-                  const wasActive = document.queryCommandState("subscript");
-                  document.execCommand("subscript", false);
-                  // If removing the format, escape cursor to normal mode
-                  // If applying, exitSubSupFormat handles it (no-op when no selection = keeps format mode)
-                  setTimeout(wasActive ? breakFormatAfterApply : exitSubSupFormat, 0);
-                  debouncedSave();
-                  setCtxMenu(null);
-                }} />
-                <CtxItem icon={<Superscript className="w-3.5 h-3.5"/>}  label="Superscript"  shortcut="X²" active={ctxMenu.supActive} onClick={() => {
-                  restoreSelection();
-                  const wasActive = document.queryCommandState("superscript");
-                  document.execCommand("superscript", false);
-                  setTimeout(wasActive ? breakFormatAfterApply : exitSubSupFormat, 0);
-                  debouncedSave();
-                  setCtxMenu(null);
-                }} />
-                {/* Font Colour */}
-                <div className="relative">
-                  <CtxItem icon={<span className="w-3.5 h-3.5 flex items-center justify-center text-[11px] font-bold" style={{ color: "#ef4444" }}>A</span>} label="Font Colour" hasArrow
-                    onClick={() => setCtxMenu(m => m ? { ...m, ...CLOSE_ALL_SUBS, formatOpen: true, fontColorOpen: !m.fontColorOpen } : null)} />
-                  {ctxMenu.fontColorOpen && (
-                    <div className="absolute left-full top-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 p-2.5 z-[10001]" style={{ minWidth: 140 }}>
-                      <div className="flex flex-wrap gap-1.5">
-                        {FONT_COLORS.map(fc => (
-                          <button key={fc.color} title={fc.label}
-                            onMouseDown={e => { e.preventDefault(); execFmt("foreColor", fc.color); }}
+              <div className="absolute left-full top-0 ml-1 bg-white rounded-2xl shadow-2xl border border-stone-200 py-2.5 z-[10000] w-[200px] overflow-hidden">
+                {/* Header */}
+                <div className="px-3.5 pb-2 border-b border-stone-100">
+                  <p className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Format</p>
+                </div>
+
+                {/* Normal / All Caps */}
+                <div className="px-2 pt-2 pb-1">
+                  <CtxItem icon={<span className="w-3.5 h-3.5 flex items-center justify-center text-[10px] font-bold leading-none text-stone-500">T</span>} label="Normal" onClick={() => { execFmt("removeFormat"); restoreSelection(); setCtxMenu(null); }} />
+                  <CtxItem icon={<span className="w-3.5 h-3.5 flex items-center justify-center text-[10px] font-black tracking-tight leading-none">AA</span>} label="All Caps" onClick={execAllCaps} />
+                </div>
+
+                <div className="mx-3 border-t border-stone-100" />
+
+                {/* Bold / Italic / Underline / Strikethrough */}
+                <div className="px-2 pt-1.5 pb-1">
+                  <CtxItem icon={<Bold className="w-3.5 h-3.5"/>}          label="Bold"          shortcut="Ctrl+B" active={ctxMenu.boldActive}      onClick={() => execFmt("bold")} />
+                  <CtxItem icon={<Italic className="w-3.5 h-3.5"/>}        label="Italic"        shortcut="Ctrl+I" active={ctxMenu.italicActive}    onClick={() => execFmt("italic")} />
+                  <CtxItem icon={<Underline className="w-3.5 h-3.5"/>}     label="Underline"     shortcut="Ctrl+U" active={ctxMenu.underlineActive} onClick={() => execFmt("underline")} />
+                  <CtxItem icon={<Strikethrough className="w-3.5 h-3.5"/>} label="Strikethrough"                   active={ctxMenu.strikeActive}    onClick={() => execFmt("strikeThrough")} />
+                </div>
+
+                <div className="mx-3 border-t border-stone-100" />
+
+                {/* Sub / Sup */}
+                <div className="px-2 pt-1.5 pb-1">
+                  <CtxItem icon={<Subscript className="w-3.5 h-3.5"/>}   label="Subscript"   shortcut="X₂" active={ctxMenu.subActive} onClick={() => {
+                    restoreSelection();
+                    const wasActive = document.queryCommandState("subscript");
+                    document.execCommand("subscript", false);
+                    setTimeout(wasActive ? breakFormatAfterApply : exitSubSupFormat, 0);
+                    debouncedSave();
+                    setCtxMenu(null);
+                  }} />
+                  <CtxItem icon={<Superscript className="w-3.5 h-3.5"/>} label="Superscript" shortcut="X²" active={ctxMenu.supActive} onClick={() => {
+                    restoreSelection();
+                    const wasActive = document.queryCommandState("superscript");
+                    document.execCommand("superscript", false);
+                    setTimeout(wasActive ? breakFormatAfterApply : exitSubSupFormat, 0);
+                    debouncedSave();
+                    setCtxMenu(null);
+                  }} />
+                </div>
+
+                <div className="mx-3 border-t border-stone-100" />
+
+                {/* Font Colour / Highlight */}
+                <div className="px-2 pt-1.5 pb-1">
+                  <div className="relative">
+                    <CtxItem icon={<span className="w-3.5 h-3.5 flex items-center justify-center text-[11px] font-bold" style={{ color: "#ef4444" }}>A</span>} label="Font Colour" hasArrow
+                      onClick={() => setCtxMenu(m => m ? { ...m, ...CLOSE_ALL_SUBS, formatOpen: true, fontColorOpen: !m.fontColorOpen } : null)} />
+                    {ctxMenu.fontColorOpen && (
+                      <div className="absolute left-full top-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 p-2.5 z-[10001]" style={{ minWidth: 140 }}>
+                        <div className="flex flex-wrap gap-1.5">
+                          {FONT_COLORS.map(fc => (
+                            <button key={fc.color} title={fc.label}
+                              onMouseDown={e => { e.preventDefault(); execFmt("foreColor", fc.color); }}
+                              className="w-6 h-6 rounded-full border-2 border-white shadow hover:scale-110 transition-transform"
+                              style={{ backgroundColor: fc.color }} />
+                          ))}
+                          <button title="Remove colour"
+                            onMouseDown={e => { e.preventDefault(); execFmt("removeFormat"); }}
+                            className="w-6 h-6 rounded-full border-2 border-stone-300 flex items-center justify-center hover:scale-110 transition-transform">
+                            <X className="w-3 h-3 text-stone-400" />
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="relative">
+                    <CtxItem icon={<Highlighter className="w-3.5 h-3.5"/>} label="Highlight" hasArrow
+                      onClick={() => setCtxMenu(m => m ? { ...m, ...CLOSE_ALL_SUBS, formatOpen: true, highlightOpen: !m.highlightOpen } : null)} />
+                    {ctxMenu.highlightOpen && (
+                      <div className="absolute left-full top-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 p-2.5 flex gap-1.5 z-[10001]">
+                        {HIGHLIGHT_COLORS.map(hc => (
+                          <button key={hc.color} title={hc.label}
+                            onMouseDown={e => { e.preventDefault(); execFmt("hiliteColor", hc.color); }}
                             className="w-6 h-6 rounded-full border-2 border-white shadow hover:scale-110 transition-transform"
-                            style={{ backgroundColor: fc.color }} />
+                            style={{ backgroundColor: hc.color }} />
                         ))}
-                        <button title="Remove colour"
-                          onMouseDown={e => { e.preventDefault(); execFmt("removeFormat"); }}
+                        <button title="Remove"
+                          onMouseDown={e => { e.preventDefault(); execFmt("hiliteColor", "transparent"); }}
                           className="w-6 h-6 rounded-full border-2 border-stone-300 flex items-center justify-center hover:scale-110 transition-transform">
                           <X className="w-3 h-3 text-stone-400" />
                         </button>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
-                {/* Highlight */}
-                <div className="relative">
-                  <CtxItem icon={<Highlighter className="w-3.5 h-3.5"/>} label="Highlight" hasArrow
-                    onClick={() => setCtxMenu(m => m ? { ...m, ...CLOSE_ALL_SUBS, formatOpen: true, highlightOpen: !m.highlightOpen } : null)} />
-                  {ctxMenu.highlightOpen && (
-                    <div className="absolute left-full top-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 p-2.5 flex gap-1.5 z-[10001]">
-                      {HIGHLIGHT_COLORS.map(hc => (
-                        <button key={hc.color} title={hc.label}
-                          onMouseDown={e => { e.preventDefault(); execFmt("hiliteColor", hc.color); }}
-                          className="w-6 h-6 rounded-full border-2 border-white shadow hover:scale-110 transition-transform"
-                          style={{ backgroundColor: hc.color }} />
-                      ))}
-                      <button title="Remove"
-                        onMouseDown={e => { e.preventDefault(); execFmt("hiliteColor", "transparent"); }}
-                        className="w-6 h-6 rounded-full border-2 border-stone-300 flex items-center justify-center hover:scale-110 transition-transform">
-                        <X className="w-3 h-3 text-stone-400" />
-                      </button>
-                    </div>
-                  )}
-                </div>
+
+                <div className="mx-3 border-t border-stone-100" />
+
                 {/* Heading */}
-                <div className="relative">
-                  <CtxItem icon={<Heading1 className="w-3.5 h-3.5"/>} label="Heading" hasArrow
-                    onClick={() => setCtxMenu(m => m ? { ...m, ...CLOSE_ALL_SUBS, formatOpen: true, headingOpen: !m.headingOpen } : null)} />
-                  {ctxMenu.headingOpen && (
-                    <div className="absolute left-full top-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 py-1.5 z-[10001] min-w-[130px]">
-                      <CtxItem icon={<Heading1 className="w-3.5 h-3.5"/>} label="Heading 1" onClick={() => execFmt("formatBlock", "h1")} />
-                      <CtxItem icon={<Heading2 className="w-3.5 h-3.5"/>} label="Heading 2" onClick={() => execFmt("formatBlock", "h2")} />
-                      <CtxItem icon={<Heading3 className="w-3.5 h-3.5"/>} label="Heading 3" onClick={() => execFmt("formatBlock", "h3")} />
-                      <CtxItem icon={<AlignLeft className="w-3.5 h-3.5"/>} label="Paragraph" onClick={() => execFmt("formatBlock", "p")} />
-                    </div>
-                  )}
+                <div className="px-2 pt-1.5 pb-1">
+                  <div className="relative">
+                    <CtxItem icon={<Heading1 className="w-3.5 h-3.5"/>} label="Heading" hasArrow
+                      onClick={() => setCtxMenu(m => m ? { ...m, ...CLOSE_ALL_SUBS, formatOpen: true, headingOpen: !m.headingOpen } : null)} />
+                    {ctxMenu.headingOpen && (
+                      <div className="absolute left-full top-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 py-1.5 z-[10001] min-w-[130px]">
+                        <CtxItem icon={<Heading1 className="w-3.5 h-3.5"/>} label="Heading 1" onClick={() => execFmt("formatBlock", "h1")} />
+                        <CtxItem icon={<Heading2 className="w-3.5 h-3.5"/>} label="Heading 2" onClick={() => execFmt("formatBlock", "h2")} />
+                        <CtxItem icon={<Heading3 className="w-3.5 h-3.5"/>} label="Heading 3" onClick={() => execFmt("formatBlock", "h3")} />
+                        <CtxItem icon={<AlignLeft className="w-3.5 h-3.5"/>} label="Paragraph" onClick={() => execFmt("formatBlock", "p")} />
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             )}
