@@ -1155,18 +1155,42 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     highlightOpen: false, fontColorOpen: false, headingOpen: false,
   };
 
-  // Ensure editor is focused and selection is active before applying formatting
-  const ensureSelection = (): Selection | null => {
-    const cur = window.getSelection();
-    // If current selection is valid and non-collapsed, use it as-is
-    if (cur && cur.rangeCount > 0 && !cur.isCollapsed) {
-      savedRangeRef.current = cur.getRangeAt(0).cloneRange();
-      return cur;
+  // Apply a style (fontFamily or fontSize) directly to a range using DOM Range API
+  // This avoids execCommand quirks and correctly handles cross-element selections
+  const applyStyleToRange = (range: Range, prop: "fontFamily" | "fontSize", value: string) => {
+    if (range.collapsed) return;
+    const fragment = range.extractContents();
+    const span = document.createElement("span");
+    span.style[prop] = value;
+    span.appendChild(fragment);
+    range.insertNode(span);
+    // Restore selection to cover the newly inserted span
+    const sel = window.getSelection();
+    if (sel) {
+      const newRange = document.createRange();
+      newRange.selectNodeContents(span);
+      sel.removeAllRanges();
+      sel.addRange(newRange);
+      savedRangeRef.current = newRange.cloneRange();
     }
-    // Otherwise restore saved range
+  };
+
+  // Get a valid non-collapsed range — uses current selection if valid, else restores saved
+  const getActiveRange = (): Range | null => {
+    const cur = window.getSelection();
+    if (cur && cur.rangeCount > 0 && !cur.isCollapsed) {
+      const r = cur.getRangeAt(0).cloneRange();
+      savedRangeRef.current = r.cloneRange();
+      return r;
+    }
+    // Try restoring saved range
+    if (!savedRangeRef.current || savedRangeRef.current.collapsed) return null;
     restoreSelection();
     const restored = window.getSelection();
-    return (restored && restored.rangeCount > 0) ? restored : null;
+    if (restored && restored.rangeCount > 0 && !restored.isCollapsed) {
+      return restored.getRangeAt(0).cloneRange();
+    }
+    return null;
   };
 
   const applyCtxFontName = (name: string, fromPanel = false) => {
@@ -1174,7 +1198,6 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     if (ctxFontSizeMode === "all") {
       if (editorRef.current) {
         editorRef.current.style.fontFamily = name;
-        // Strip inline font-family from ALL descendants so pasted text also gets the new font
         editorRef.current.querySelectorAll<HTMLElement>("*").forEach(el => {
           if (el.style.fontFamily) el.style.fontFamily = "";
         });
@@ -1182,24 +1205,11 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
       }
       return;
     }
-    // "selected" mode — ensure we have a valid selection
-    const sel = ensureSelection();
-    if (!sel || sel.rangeCount === 0) return;
-    if (sel.isCollapsed) {
-      if (editorRef.current) {
-        editorRef.current.style.fontFamily = name;
-        debouncedSave();
-      }
-      return;
-    }
-    document.execCommand("fontName", false, "__FONT_MARKER__");
-    const fontEls = editorRef.current?.querySelectorAll('font[face="__FONT_MARKER__"]');
-    fontEls?.forEach(el => {
-      const span = document.createElement("span");
-      span.style.fontFamily = name;
-      span.innerHTML = el.innerHTML;
-      el.replaceWith(span);
-    });
+    // "selected" mode — only apply if there is a real selection
+    const range = getActiveRange();
+    if (!range) return; // Bug #1 fix: no selection → do nothing
+    editorRef.current?.focus({ preventScroll: true });
+    applyStyleToRange(range, "fontFamily", name);
     debouncedSave();
   };
 
@@ -1210,24 +1220,17 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
       if (editorRef.current) {
         editorRef.current.style.fontSize = `${size}px`;
         if (activeId) localStorage.setItem(`nb_proj_fs_${activeId}`, String(size));
-        // Strip inline font-size from ALL descendants so pasted text also gets the new size
         editorRef.current.querySelectorAll<HTMLElement>("*").forEach(el => {
           if (el.style.fontSize) el.style.fontSize = "";
         });
         debouncedSave();
       }
     } else {
-      // "selected" mode — ensure we have a valid selection
-      const sel = ensureSelection();
-      if (!sel || sel.rangeCount === 0 || sel.isCollapsed) return;
-      document.execCommand("fontSize", false, "7");
-      const fontEls = editorRef.current?.querySelectorAll('font[size="7"]');
-      fontEls?.forEach(el => {
-        const span = document.createElement("span");
-        span.style.fontSize = `${size}px`;
-        span.innerHTML = el.innerHTML;
-        el.replaceWith(span);
-      });
+      // "selected" mode — only apply if there is a real selection
+      const range = getActiveRange();
+      if (!range) return; // Bug #1 fix: no selection → do nothing
+      editorRef.current?.focus({ preventScroll: true });
+      applyStyleToRange(range, "fontSize", `${size}px`);
       debouncedSave();
     }
   };
