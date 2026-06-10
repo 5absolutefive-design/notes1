@@ -127,10 +127,7 @@ const FONT_COLORS = [
 ];
 
 const FONTS_CTX = [
-  "Inter", "Arial", "Arial Black", "Georgia", "Times New Roman",
-  "Verdana", "Trebuchet MS", "Courier New", "Comic Sans MS",
-  "Roboto", "Lato", "Poppins", "Nunito", "Merriweather",
-  "Myriad Pro", "Poppins Light", "Impact", "Palatino",
+  "Inter", "Arial", "Arial Black", "Roboto", "Lato", "Poppins", "Merriweather",
 ];
 
 interface ContextMenuState {
