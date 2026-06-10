@@ -2239,7 +2239,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           {/* Banner + emoji overlap wrapper */}
           <div className="relative" ref={pdfContentRef}>
             {/* Banner */}
-            <div className="relative h-44 w-full group" style={bannerStyle}>
+            <div className="relative h-56 w-full group" style={bannerStyle}>
               <div className="absolute inset-0 bg-black/10" />
               <div className="absolute bottom-3 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
                 <div className="relative" ref={bannerPickerRef}>
@@ -2270,8 +2270,9 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                         ))}
                       </div>
                       <button onClick={() => bannerUploadRef.current?.click()}
-                        className="w-full flex items-center justify-center gap-2 py-2 rounded-lg border-2 border-dashed border-stone-300 text-xs text-stone-500 hover:border-indigo-400 hover:text-indigo-600 transition-all">
-                        <ImagePlus className="w-3.5 h-3.5" />Upload Image
+                        className="w-full flex flex-col items-center justify-center gap-1 py-2.5 rounded-lg border-2 border-dashed border-stone-300 text-xs text-stone-500 hover:border-indigo-400 hover:text-indigo-600 transition-all">
+                        <span className="flex items-center gap-1.5"><ImagePlus className="w-3.5 h-3.5" />Upload Image</span>
+                        <span className="text-[10px] text-stone-400">Recommended: 1500 × 224 px</span>
                       </button>
                       <input ref={bannerUploadRef} type="file" accept="image/*" className="hidden" onChange={handleBannerUpload} />
                     </div>
