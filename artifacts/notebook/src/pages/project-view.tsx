@@ -3761,10 +3761,10 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
               {/* Download */}
               <button
                 onClick={downloadProject}
-                className="w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl bg-gradient-to-br from-indigo-50 to-indigo-100/60 hover:from-indigo-100 hover:to-indigo-200/60 border border-indigo-200/70 hover:border-indigo-300 transition-all group text-left shadow-sm hover:shadow-md"
+                className="w-full flex items-center gap-3 px-3.5 py-2 rounded-2xl bg-gradient-to-br from-indigo-50 to-indigo-100/60 hover:from-indigo-100 hover:to-indigo-200/60 border border-indigo-200/70 hover:border-indigo-300 transition-all group text-left shadow-sm hover:shadow-md"
               >
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center shadow-md group-hover:scale-105 group-hover:shadow-indigo-200 transition-all flex-shrink-0">
-                  <FileDown className="w-5 h-5 text-white" />
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center shadow-md group-hover:scale-105 transition-all flex-shrink-0">
+                  <FileDown className="w-4 h-4 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-[13px] font-bold text-indigo-800 leading-tight">Download Project</div>
@@ -3776,10 +3776,10 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
               {/* Upload */}
               <button
                 onClick={() => transferUploadRef.current?.click()}
-                className="w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100/60 hover:from-emerald-100 hover:to-emerald-200/60 border border-emerald-200/70 hover:border-emerald-300 transition-all group text-left shadow-sm hover:shadow-md"
+                className="w-full flex items-center gap-3 px-3.5 py-2 rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100/60 hover:from-emerald-100 hover:to-emerald-200/60 border border-emerald-200/70 hover:border-emerald-300 transition-all group text-left shadow-sm hover:shadow-md"
               >
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-md group-hover:scale-105 group-hover:shadow-emerald-200 transition-all flex-shrink-0">
-                  <FileUp className="w-5 h-5 text-white" />
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center shadow-md group-hover:scale-105 transition-all flex-shrink-0">
+                  <FileUp className="w-4 h-4 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-[13px] font-bold text-emerald-800 leading-tight">Upload Project</div>
@@ -3789,9 +3789,9 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
               </button>
 
               {/* Share — coming soon */}
-              <div className="w-full flex items-center gap-3.5 px-4 py-3.5 rounded-2xl bg-stone-50 border border-stone-200/60 opacity-60 cursor-not-allowed text-left">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-stone-300 to-stone-400 flex items-center justify-center shadow flex-shrink-0">
-                  <Share2 className="w-5 h-5 text-white" />
+              <div className="w-full flex items-center gap-3 px-3.5 py-2 rounded-2xl bg-stone-50 border border-stone-200/60 opacity-60 cursor-not-allowed text-left">
+                <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-stone-300 to-stone-400 flex items-center justify-center shadow flex-shrink-0">
+                  <Share2 className="w-4 h-4 text-white" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
