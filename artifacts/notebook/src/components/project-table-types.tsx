@@ -907,6 +907,8 @@ interface IDCellPopupProps {
 
 export function IDCellPopup({ td, rect, onClose, onSave }: IDCellPopupProps) {
   const [value, setValue] = useState(td.dataset.cellVal || "");
+  const valueRef = useRef(value);
+  valueRef.current = value;
   const inputRef = useRef<HTMLInputElement>(null);
   const popRef = useRef<HTMLDivElement>(null);
 
@@ -924,12 +926,15 @@ export function IDCellPopup({ td, rect, onClose, onSave }: IDCellPopupProps) {
   useEffect(() => {
     inputRef.current?.focus();
     inputRef.current?.select();
+  }, []);
+
+  useEffect(() => {
     const handler = (e: MouseEvent) => {
-      if (popRef.current && !popRef.current.contains(e.target as Node)) commit(value);
+      if (popRef.current && !popRef.current.contains(e.target as Node)) commit(valueRef.current);
     };
     document.addEventListener("mousedown", handler, true);
     return () => document.removeEventListener("mousedown", handler, true);
-  }, [value]);
+  }, []);
 
   return createPortal(
     <div
