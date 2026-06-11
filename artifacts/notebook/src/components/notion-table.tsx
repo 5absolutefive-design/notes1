@@ -250,7 +250,7 @@ export function NotionTable({ content, onChange }: { content: string; onChange: 
     const rowCount = data.rows.length + 1;
     data.columns.forEach(c => {
       if (c.type === "checkbox") row[c.id] = false;
-      if (c.type === "time") row[c.id] = "5:13 PM";
+      if (c.type === "time") row[c.id] = "";
       if (c.type === "id") row[c.id] = `ID-${String(rowCount).padStart(3, "0")}`;
     });
     update(d => ({ ...d, rows: [...d.rows, row] }));

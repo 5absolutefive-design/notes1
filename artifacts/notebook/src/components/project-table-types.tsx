@@ -293,8 +293,7 @@ export function applyColType(
     if (!td) return;
     let currentVal = td.dataset.cellVal || "";
     if (type === "time" && !currentVal) {
-      currentVal = "5:13 PM";
-      td.dataset.cellVal = currentVal;
+      currentVal = "";
     }
     if (type === "id" && !currentVal) {
       currentVal = "";
