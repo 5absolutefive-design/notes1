@@ -424,6 +424,10 @@ export function ColTypePicker({ th, rect, onClose, onTypeChange, onDeleteCol, on
                 ? <img src="/progress-bar-icon.png" alt="% Bar" className="w-4 h-4 leading-none" style={{ objectFit: "contain", opacity: 0.7 }} />
                 : type === "person"
                 ? <img src="/person-icon.png" alt="Person" className="w-4 h-4 leading-none" style={{ objectFit: "contain", opacity: 0.7 }} />
+                : type === "time"
+                ? <img src="/time-icon.png" alt="Time" className="w-4 h-4 leading-none" style={{ objectFit: "contain", opacity: 0.7 }} />
+                : type === "id"
+                ? <img src="/id-icon.png" alt="ID" className="w-4 h-4 leading-none" style={{ objectFit: "contain", opacity: 0.7 }} />
                 : <span className="text-sm leading-none">{icon}</span>}
               <span>{label}</span>
             </button>
