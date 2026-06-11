@@ -250,7 +250,7 @@ export function NotionTable({ content, onChange }: { content: string; onChange: 
     const rowCount = data.rows.length + 1;
     data.columns.forEach(c => {
       if (c.type === "checkbox") row[c.id] = false;
-      if (c.type === "time") row[c.id] = new Date().toISOString();
+      if (c.type === "time") row[c.id] = "5:13 PM";
       if (c.type === "id") row[c.id] = `ID-${String(rowCount).padStart(3, "0")}`;
     });
     update(d => ({ ...d, rows: [...d.rows, row] }));
@@ -452,13 +452,13 @@ export function NotionTable({ content, onChange }: { content: string; onChange: 
                     }
 
                     if (col.type === "time") {
-                      const display = val
-                        ? new Date(val).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })
-                        : "—";
+                      const hasVal = val != null && val !== "";
                       return (
                         <td key={col.id} style={tdBase(col, row)}>
                           <div style={{ padding: "0 8px", display: "flex", alignItems: "center", height: h }}>
-                            <span style={{ fontSize: 12, color: val ? "#6b7280" : "#d1d5db", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{display}</span>
+                            <span style={{ fontSize: 12, color: hasVal ? "#1f2937" : "#d8d8d4", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", letterSpacing: hasVal ? "normal" : "0.01em" }}>
+                              {hasVal ? val : "00:00 PM"}
+                            </span>
                           </div>
                           <ColHandle onStart={e => startColResize(col.id, e)} />
                           <RowHandle onStart={e => startRowResize(row.id, e)} />

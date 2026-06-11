@@ -199,7 +199,8 @@ export function makeCellInner(type: ColType, val: string, options?: SelectOption
     case "time": {
       const [timePart, colorPart] = val ? val.split("|") : ["", ""];
       const color = colorPart || "#1f2937";
-      return `<span data-timecell="1" style="display:block;font-size:13px;color:${val ? color : "#c4c4c0"};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;user-select:none;cursor:pointer;${F}">${timePart || "12:00 AM"}</span>`;
+      const isEmpty = !timePart;
+      return `<span data-timecell="1" style="display:block;font-size:13px;color:${isEmpty ? "#d8d8d4" : color};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;user-select:none;cursor:pointer;letter-spacing:${isEmpty ? "0.01em" : "normal"};${F}">${timePart || "00:00 PM"}</span>`;
     }
 
     case "id": {
@@ -292,9 +293,7 @@ export function applyColType(
     if (!td) return;
     let currentVal = td.dataset.cellVal || "";
     if (type === "time" && !currentVal) {
-      const now = new Date();
-      const h = now.getHours(); const m = now.getMinutes();
-      currentVal = `${h % 12 || 12}:${String(m).padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`;
+      currentVal = "5:13 PM";
       td.dataset.cellVal = currentVal;
     }
     if (type === "id" && !currentVal) {
