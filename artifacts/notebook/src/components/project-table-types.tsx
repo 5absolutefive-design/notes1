@@ -757,18 +757,20 @@ export function TimeCellPopup({ td, rect, onClose, onSave }: TimeCellPopupProps)
       style={{ position: "fixed", top, left, zIndex: 99999, width: 200 }}
       className="bg-white rounded-xl shadow-2xl border border-stone-200 p-3"
     >
-      {/* Color circles */}
-      <div className="flex items-center gap-2 mb-3">
-        {TIME_COLORS.map(c => (
-          <button
-            key={c.hex}
-            onClick={() => setSelectedColor(c.hex)}
-            title={c.label}
-            style={{ background: c.hex }}
-            className={`w-[7px] h-[7px] rounded-full transition-all ${selectedColor === c.hex ? "ring-2 ring-offset-1 ring-stone-400 scale-110" : "opacity-70 hover:opacity-100"}`}
-          />
-        ))}
-        <span className="ml-auto text-[10px] font-bold text-stone-400 uppercase tracking-widest">Set Time</span>
+      {/* Header row */}
+      <div className="flex items-center justify-between mb-3">
+        <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Set Time</span>
+        <div className="flex items-center gap-1.5">
+          {TIME_COLORS.map(c => (
+            <button
+              key={c.hex}
+              onClick={() => setSelectedColor(c.hex)}
+              title={c.label}
+              style={{ background: c.hex }}
+              className={`w-[7px] h-[7px] rounded-full transition-all ${selectedColor === c.hex ? "ring-2 ring-offset-1 ring-stone-400 scale-110" : "opacity-70 hover:opacity-100"}`}
+            />
+          ))}
+        </div>
       </div>
 
       <div className="flex items-center justify-center gap-1.5">
@@ -814,8 +816,6 @@ export function TimeCellPopup({ td, rect, onClose, onSave }: TimeCellPopupProps)
           >PM</button>
         </div>
       </div>
-
-      <div className="mt-1.5 text-center text-[10px] text-stone-300">scroll ↕ to change</div>
 
       <button
         onClick={commit}
