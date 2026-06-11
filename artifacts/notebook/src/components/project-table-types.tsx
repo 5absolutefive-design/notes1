@@ -765,7 +765,7 @@ export function TimeCellPopup({ td, rect, onClose, onSave }: TimeCellPopupProps)
             onClick={() => setSelectedColor(c.hex)}
             title={c.label}
             style={{ background: c.hex }}
-            className={`w-5 h-5 rounded-full transition-all ${selectedColor === c.hex ? "ring-2 ring-offset-1 ring-stone-400 scale-110" : "opacity-70 hover:opacity-100"}`}
+            className={`w-[7px] h-[7px] rounded-full transition-all ${selectedColor === c.hex ? "ring-2 ring-offset-1 ring-stone-400 scale-110" : "opacity-70 hover:opacity-100"}`}
           />
         ))}
         <span className="ml-auto text-[10px] font-bold text-stone-400 uppercase tracking-widest">Set Time</span>
