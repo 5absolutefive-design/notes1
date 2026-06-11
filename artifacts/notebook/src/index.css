@@ -285,6 +285,8 @@
 [contenteditable] td[contenteditable="true"] {
   outline: none !important;
   caret-color: #374151;
+  font-family: Inter, sans-serif;
+  font-size: 13px;
 }
 input[data-datecell="1"]::-webkit-calendar-picker-indicator {
   display: none;
