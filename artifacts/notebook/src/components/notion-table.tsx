@@ -3,7 +3,7 @@ import { createPortal } from "react-dom";
 import { Plus, Trash2, Hash, Type, CheckSquare, Calendar, Tag, X, Check, ChevronDown, ArrowUp, ArrowDown } from "lucide-react";
 
 // ── Types ─────────────────────────────────────────────────────────
-type ColType = "text" | "number" | "select" | "checkbox" | "date";
+type ColType = "text" | "number" | "select" | "checkbox" | "date" | "time" | "id";
 type NumFmt = "plain" | "currency" | "percent";
 
 interface SelectOpt { id: string; label: string; color: keyof typeof SELECT_COLORS; }
@@ -32,6 +32,8 @@ const COL_TYPE_META: Record<ColType, { label: string; icon: React.ReactNode }> =
   select:   { label: "Select",   icon: <Tag style={{ width: 12, height: 12 }} /> },
   checkbox: { label: "Checkbox", icon: <CheckSquare style={{ width: 12, height: 12 }} /> },
   date:     { label: "Date",     icon: <Calendar style={{ width: 12, height: 12 }} /> },
+  time:     { label: "Time",     icon: <span style={{ fontSize: 11, fontWeight: 700 }}>⏱</span> },
+  id:       { label: "ID",       icon: <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: -0.5 }}>ID</span> },
 };
 
 const mBtn: React.CSSProperties = {
@@ -245,7 +247,12 @@ export function NotionTable({ content, onChange }: { content: string; onChange: 
   const addRow = () => {
     const id = `r${Date.now()}`;
     const row: RowData = { id };
-    data.columns.forEach(c => { if (c.type === "checkbox") row[c.id] = false; });
+    const rowCount = data.rows.length + 1;
+    data.columns.forEach(c => {
+      if (c.type === "checkbox") row[c.id] = false;
+      if (c.type === "time") row[c.id] = new Date().toISOString();
+      if (c.type === "id") row[c.id] = `ID-${String(rowCount).padStart(3, "0")}`;
+    });
     update(d => ({ ...d, rows: [...d.rows, row] }));
   };
   const deleteRow = (rowId: string) => update(d => ({ ...d, rows: d.rows.filter(r => r.id !== rowId) }));
@@ -437,6 +444,36 @@ export function NotionTable({ content, onChange }: { content: string; onChange: 
                           onClick={e => { if (activeResize.current) return; const rect = (e.currentTarget as HTMLElement).getBoundingClientRect(); setSelectMenu({ rowId: row.id, colId: col.id, rect }); setSelectSearch(""); }}>
                           <div style={{ padding: "0 8px", display: "flex", alignItems: "center", height: h }}>
                             {selected ? <SelectBadge label={selected.label} color={selected.color} /> : <span style={{ fontSize: 12, color: "#d1d5db" }}>—</span>}
+                          </div>
+                          <ColHandle onStart={e => startColResize(col.id, e)} />
+                          <RowHandle onStart={e => startRowResize(row.id, e)} />
+                        </td>
+                      );
+                    }
+
+                    if (col.type === "time") {
+                      const display = val
+                        ? new Date(val).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })
+                        : "—";
+                      return (
+                        <td key={col.id} style={tdBase(col, row)}>
+                          <div style={{ padding: "0 8px", display: "flex", alignItems: "center", height: h }}>
+                            <span style={{ fontSize: 12, color: val ? "#6b7280" : "#d1d5db", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{display}</span>
+                          </div>
+                          <ColHandle onStart={e => startColResize(col.id, e)} />
+                          <RowHandle onStart={e => startRowResize(row.id, e)} />
+                        </td>
+                      );
+                    }
+
+                    if (col.type === "id") {
+                      return (
+                        <td key={col.id} style={tdBase(col, row)}>
+                          <div style={{ padding: "0 8px", display: "flex", alignItems: "center", height: h }}>
+                            {val
+                              ? <span style={{ display: "inline-flex", alignItems: "center", padding: "1px 7px", borderRadius: 8, background: "#f1f5f9", color: "#64748b", border: "1px solid #e2e8f0", fontSize: 11, fontWeight: 600, fontFamily: "monospace", whiteSpace: "nowrap" }}>{val}</span>
+                              : <span style={{ fontSize: 12, color: "#d1d5db" }}>—</span>
+                            }
                           </div>
                           <ColHandle onStart={e => startColResize(col.id, e)} />
                           <RowHandle onStart={e => startRowResize(row.id, e)} />

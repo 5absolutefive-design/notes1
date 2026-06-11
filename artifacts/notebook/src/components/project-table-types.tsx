@@ -5,7 +5,8 @@ import { createPortal } from "react-dom";
 export type ColType =
   | "text" | "number" | "select" | "multi" | "check"
   | "date" | "url" | "email" | "phone" | "rating"
-  | "progress" | "person" | "currency" | "priority";
+  | "progress" | "person" | "currency" | "priority"
+  | "time" | "id";
 
 export interface SelectOption {
   id: string;
@@ -72,6 +73,8 @@ export const COL_TYPES: { type: ColType; icon: string; label: string }[] = [
   { type: "progress", icon: "▓",  label: "% Bar"    },
   { type: "person",   icon: "👤", label: "Person"   },
   { type: "currency", icon: "$",  label: "Currency" },
+  { type: "time",     icon: "⏱",  label: "Time"     },
+  { type: "id",       icon: "ID", label: "ID"       },
 ];
 
 // ── DOM helpers ──────────────────────────────────────────────────
@@ -193,6 +196,17 @@ export function makeCellInner(type: ColType, val: string, options?: SelectOption
       return `<span data-multicell="1" style="display:flex;flex-wrap:wrap;gap:2px;cursor:pointer;user-select:none;min-height:20px">${selected.length ? selected.map(o => makeBadgeHtml(o.label, o.color)).join("") : `<span style="color:#9ca3af;font-size:13px;${F}">—</span>`}</span>`;
     }
 
+    case "time": {
+      const display = val
+        ? new Date(val).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })
+        : "—";
+      return `<span style="display:block;font-size:12px;color:${val ? "#6b7280" : "#9ca3af"};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;user-select:none;${F}">${display}</span>`;
+    }
+
+    case "id": {
+      return `<span style="display:inline-flex;align-items:center;padding:1px 7px;border-radius:8px;background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;font-size:11px;font-weight:600;font-family:monospace,sans-serif;user-select:none;white-space:nowrap">${val || "—"}</span>`;
+    }
+
     default:
       return val || "<br/>";
   }
@@ -273,10 +287,20 @@ export function applyColType(
   const tbody = table.querySelector("tbody");
   if (!tbody) return;
 
+  let idCounter = 1;
   Array.from(tbody.rows).forEach(row => {
     const td = row.cells[idx] as HTMLElement | undefined;
     if (!td) return;
-    const currentVal = td.dataset.cellVal || "";
+    let currentVal = td.dataset.cellVal || "";
+    if (type === "time" && !currentVal) {
+      currentVal = new Date().toISOString();
+      td.dataset.cellVal = currentVal;
+    }
+    if (type === "id" && !currentVal) {
+      currentVal = `ID-${String(idCounter).padStart(3, "0")}`;
+      td.dataset.cellVal = currentVal;
+    }
+    idCounter++;
     if (type === "text") {
       td.contentEditable = "true";
       td.innerHTML = currentVal || "<br/>";

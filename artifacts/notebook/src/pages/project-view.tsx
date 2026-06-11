@@ -1424,10 +1424,25 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     const colCount = table.rows[0]?.cells.length ?? 4;
     const tr = document.createElement("tr");
     const linedTdStyle = `padding:7px 12px;border:none;border-bottom:1px solid #e2e0db;width:100%;display:block;font-size:13px;color:#1f2937;min-height:32px`;
+    const ths = table.querySelectorAll("thead th");
+    const rowIndex = tbody.rows.length + 1;
     for (let i = 0; i < colCount; i++) {
       const td = document.createElement("td");
-      td.setAttribute("style", isLined ? linedTdStyle : TD_STYLE);
-      td.setAttribute("contenteditable", "true"); td.innerHTML = "<br/>";
+      const th = ths[i] as HTMLElement | undefined;
+      const colType = th?.dataset.colType as ColType | undefined;
+      if (!isLined && (colType === "time" || colType === "id")) {
+        const autoVal = colType === "time"
+          ? new Date().toISOString()
+          : `ID-${String(rowIndex).padStart(3, "0")}`;
+        td.setAttribute("style", TD_STYLE);
+        td.setAttribute("contenteditable", "false");
+        td.dataset.cellVal = autoVal;
+        td.dataset.cellType = colType;
+        td.innerHTML = makeCellInner(colType, autoVal);
+      } else {
+        td.setAttribute("style", isLined ? linedTdStyle : TD_STYLE);
+        td.setAttribute("contenteditable", "true"); td.innerHTML = "<br/>";
+      }
       tr.appendChild(td);
     }
     tbody.appendChild(tr); saveContent(); updateTableToolbar();
@@ -1866,6 +1881,9 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             setPriorityCellPopup(null);
             return;
           }
+
+          // time and id are read-only / auto-generated — ignore clicks
+          if (type === "time" || type === "id") return;
 
           // number/currency/url/email/phone/person handled in mousedown
 
