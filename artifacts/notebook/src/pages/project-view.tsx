@@ -3796,23 +3796,17 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 </button>
                 <button onClick={() => { setCtxMenu(null); voiceInputRef.current?.click(); }}
                   className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-rose-50 text-stone-700 text-left transition-colors">
-                  <span className="w-6 h-6 rounded-md bg-rose-100 flex items-center justify-center flex-shrink-0">
-                    <Mic className="w-3.5 h-3.5 text-rose-500" />
+                  <span className="w-6 h-6 flex items-center justify-center flex-shrink-0">
+                    <img src="/voice-icon.png" alt="Voice" className="w-4 h-4 object-contain" />
                   </span>
-                  <div>
-                    <div className="text-xs font-semibold text-stone-700">Voice</div>
-                    <div className="text-[10px] text-stone-400">Record audio</div>
-                  </div>
+                  <div className="text-xs font-semibold text-stone-700">Voice</div>
                 </button>
                 <button onClick={() => { setCtxMenu(null); videoInputRef.current?.click(); }}
                   className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-violet-50 text-left transition-colors">
-                  <span className="w-6 h-6 rounded-md bg-violet-100 flex items-center justify-center flex-shrink-0">
-                    <Video className="w-3.5 h-3.5 text-violet-500" />
+                  <span className="w-6 h-6 flex items-center justify-center flex-shrink-0">
+                    <img src="/video-icon.png" alt="Video" className="w-4 h-4 object-contain" />
                   </span>
-                  <div>
-                    <div className="text-xs font-semibold text-stone-700">Video</div>
-                    <div className="text-[10px] text-stone-400">Floating video block</div>
-                  </div>
+                  <div className="text-xs font-semibold text-stone-700">Video</div>
                 </button>
               </div>
             )}
