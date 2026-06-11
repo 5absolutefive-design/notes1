@@ -916,6 +916,94 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
 
   // ── Paste handler — strips background-color and color from external content
   const handleEditorPaste = (e: React.ClipboardEvent) => {
+    // ── Excel / TSV paste into a project table cell ──────────────────
+    const sel = window.getSelection();
+    const selNode = sel?.anchorNode;
+    const selEl = selNode instanceof HTMLElement ? selNode : selNode?.parentElement;
+    const activeTd = (e.target as HTMLElement).closest?.("td") as HTMLElement | null
+      ?? selEl?.closest("td") as HTMLElement | null;
+
+    if (activeTd && !activeTd.closest("[data-lined]")) {
+      const table = activeTd.closest("table") as HTMLTableElement | null;
+      if (table) {
+        const plain = e.clipboardData.getData("text/plain");
+        const hasTab = plain.includes("\t");
+        const rows = plain.split(/\r?\n/).filter(r => r.length > 0);
+        const isMultiRow = rows.length > 1;
+        if (hasTab || isMultiRow) {
+          e.preventDefault();
+          const cells2d = rows.map(r => r.split("\t").map(c => c.trim()));
+          const tbody = table.querySelector("tbody") as HTMLTableSectionElement | null;
+          const thead = table.querySelector("thead") as HTMLTableSectionElement | null;
+          if (!tbody || !thead) return;
+
+          // Find start col index
+          const startRow = activeTd.parentElement as HTMLTableRowElement;
+          const isHeaderRow = startRow.parentElement?.tagName === "THEAD";
+          const startColIdx = Array.from(startRow.cells).indexOf(activeTd as HTMLTableCellElement);
+          const startRowIdx = isHeaderRow ? 0 : Math.max(0, Array.from(tbody.rows).indexOf(startRow));
+
+          const ths = Array.from(thead.querySelectorAll("th")) as HTMLElement[];
+          const pasteColCount = Math.max(...cells2d.map(r => r.length));
+          const neededCols = startColIdx + pasteColCount;
+
+          // Add missing columns
+          while (ths.length < neededCols) {
+            const th = document.createElement("th");
+            th.setAttribute("style", TH_STYLE);
+            th.setAttribute("contenteditable", "true");
+            th.textContent = `Column ${ths.length + 1}`;
+            thead.rows[0].appendChild(th);
+            ths.push(th);
+            Array.from(tbody.rows).forEach(row => {
+              const td = document.createElement("td");
+              td.setAttribute("style", TD_STYLE);
+              td.setAttribute("contenteditable", "true");
+              td.innerHTML = "<br/>";
+              row.appendChild(td);
+            });
+          }
+
+          // Add missing rows & fill values
+          for (let ri = 0; ri < cells2d.length; ri++) {
+            const targetRow = startRowIdx + ri;
+            while (tbody.rows.length <= targetRow) {
+              const tr = document.createElement("tr");
+              for (let ci = 0; ci < ths.length; ci++) {
+                const td = document.createElement("td");
+                td.setAttribute("style", TD_STYLE);
+                td.setAttribute("contenteditable", "true");
+                td.innerHTML = "<br/>";
+                tr.appendChild(td);
+              }
+              tbody.appendChild(tr);
+            }
+            const row = tbody.rows[targetRow];
+            for (let ci = 0; ci < cells2d[ri].length; ci++) {
+              const colIdx = startColIdx + ci;
+              if (colIdx >= row.cells.length) continue;
+              const td = row.cells[colIdx] as HTMLElement;
+              const val = cells2d[ri][ci];
+              const th = ths[colIdx];
+              const colType = (th?.dataset.colType as ColType) || "text";
+              td.dataset.cellVal = val;
+              if (colType !== "text") {
+                td.contentEditable = "false";
+                td.innerHTML = makeCellInner(colType, val);
+              } else {
+                td.contentEditable = "true";
+                td.innerHTML = val || "<br/>";
+              }
+            }
+          }
+          saveContent();
+          updateTableToolbar();
+          return;
+        }
+      }
+    }
+
+    // ── Default paste (non-table or single cell) ─────────────────────
     e.preventDefault();
     const html = e.clipboardData.getData("text/html");
     if (html) {
@@ -925,7 +1013,6 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
         el.style.removeProperty("background-color");
         el.style.removeProperty("background");
         el.style.removeProperty("color");
-        // also remove via attribute if set directly
         if (el.style.length === 0) el.removeAttribute("style");
       });
       document.execCommand("insertHTML", false, div.innerHTML);
