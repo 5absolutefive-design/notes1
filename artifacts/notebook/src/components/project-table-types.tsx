@@ -896,3 +896,60 @@ export function InlineEditPopup({ td, th, rect, type, onClose, onSave }: InlineE
     document.body
   );
 }
+
+// ── IDCellPopup ────────────────────────────────────────────────────
+interface IDCellPopupProps {
+  td: HTMLElement;
+  rect: DOMRect;
+  onClose: () => void;
+  onSave: () => void;
+}
+
+export function IDCellPopup({ td, rect, onClose, onSave }: IDCellPopupProps) {
+  const [value, setValue] = useState(td.dataset.cellVal || "");
+  const inputRef = useRef<HTMLInputElement>(null);
+  const popRef = useRef<HTMLDivElement>(null);
+
+  let top = rect.bottom + 4;
+  const left = Math.min(rect.left, window.innerWidth - 160);
+  if (top + 60 > window.innerHeight) top = Math.max(8, rect.top - 60);
+
+  const commit = (val: string) => {
+    td.dataset.cellVal = val;
+    td.innerHTML = makeCellInner("id", val);
+    onSave();
+    onClose();
+  };
+
+  useEffect(() => {
+    inputRef.current?.focus();
+    inputRef.current?.select();
+    const handler = (e: MouseEvent) => {
+      if (popRef.current && !popRef.current.contains(e.target as Node)) commit(value);
+    };
+    document.addEventListener("mousedown", handler, true);
+    return () => document.removeEventListener("mousedown", handler, true);
+  }, [value]);
+
+  return createPortal(
+    <div
+      ref={popRef}
+      onMouseDown={e => e.stopPropagation()}
+      style={{ position: "fixed", top, left, zIndex: 99999, width: 160 }}
+      className="bg-white rounded-lg shadow-xl border border-stone-200 overflow-hidden flex items-center"
+    >
+      <span className="pl-2.5 pr-1 text-sm text-stone-400 select-none shrink-0">ID -</span>
+      <input
+        ref={inputRef}
+        type="text"
+        value={value}
+        onChange={e => setValue(e.target.value)}
+        onKeyDown={e => { if (e.key === "Enter") { commit(value); } if (e.key === "Escape") onClose(); }}
+        placeholder="number"
+        className="flex-1 py-1.5 pr-2.5 text-sm focus:outline-none min-w-0"
+        style={{ fontFamily: "Inter, sans-serif" }}
+      />
+    </div>,
+    document.body
+  );
+}

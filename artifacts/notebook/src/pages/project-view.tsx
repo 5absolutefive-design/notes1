@@ -33,7 +33,7 @@ import {
   XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, ReferenceLine,
 } from "recharts";
 import {
-  ColTypePicker, SelectCellPopup, PriorityCellPopup, ProgressCellPopup, TimeCellPopup,
+  ColTypePicker, SelectCellPopup, PriorityCellPopup, ProgressCellPopup, TimeCellPopup, IDCellPopup,
   applyColType, hydrateTables, makeCellInner, getColType, getColOptions,
   getColIndex, findTh,
   type ColType,
@@ -332,6 +332,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const [priorityCellPopup, setPriorityCellPopup] = useState<{ td: HTMLElement; rect: DOMRect } | null>(null);
   const [progressCellPopup, setProgressCellPopup] = useState<{ td: HTMLElement; rect: DOMRect } | null>(null);
   const [timeCellPopup, setTimeCellPopup] = useState<{ td: HTMLElement; rect: DOMRect } | null>(null);
+  const [idCellPopup, setIdCellPopup] = useState<{ td: HTMLElement; rect: DOMRect } | null>(null);
 
   const [selPopup, setSelPopup] = useState<{ x: number; y: number } | null>(null);
   const selPopupRef = useRef<HTMLDivElement>(null);
@@ -1731,7 +1732,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
       const th = findTh(td);
       if (th) {
         const type = getColType(th);
-        if (["number", "currency", "url", "email", "phone", "person", "id"].includes(type)) {
+        if (["number", "currency", "url", "email", "phone", "person"].includes(type)) {
           // If already editing this cell, let browser handle normally (allows text select/copy)
           if (td.dataset.editing === "1") return;
           e.preventDefault();
@@ -1892,6 +1893,16 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             return;
           }
 
+          if (type === "id") {
+            const rect = td.getBoundingClientRect();
+            setIdCellPopup({ td, rect });
+            setColTypePopup(null);
+            setSelectCellPopup(null);
+            setPriorityCellPopup(null);
+            setProgressCellPopup(null);
+            setTimeCellPopup(null);
+            return;
+          }
 
           // number/currency/url/email/phone/person handled in mousedown
 
@@ -3073,6 +3084,16 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           td={timeCellPopup.td}
           rect={timeCellPopup.rect}
           onClose={() => setTimeCellPopup(null)}
+          onSave={saveContent}
+        />
+      )}
+
+      {/* ── ID cell popup ── */}
+      {idCellPopup && (
+        <IDCellPopup
+          td={idCellPopup.td}
+          rect={idCellPopup.rect}
+          onClose={() => setIdCellPopup(null)}
           onSave={saveContent}
         />
       )}
