@@ -238,6 +238,11 @@ export function updateThTypeIcon(th: HTMLElement, type: ColType) {
     img.src = "/date-icon.png";
     img.style.cssText = "width:12px;height:12px;object-fit:contain;opacity:0.45";
     span.appendChild(img);
+  } else if (type === "url") {
+    const img = document.createElement("img");
+    img.src = "/url-icon.png";
+    img.style.cssText = "width:12px;height:12px;object-fit:contain;opacity:0.45";
+    span.appendChild(img);
   } else {
     span.style.fontSize = "12px";
     span.style.opacity = "0.5";
@@ -384,6 +389,8 @@ export function ColTypePicker({ th, rect, onClose, onTypeChange, onDeleteCol, on
                 ? <img src="/priority-icon.png" alt="Priority" className="w-4 h-4 leading-none" style={{ objectFit: "contain", opacity: 0.7 }} />
                 : type === "date"
                 ? <img src="/date-icon.png" alt="Date" className="w-4 h-4 leading-none" style={{ objectFit: "contain", opacity: 0.7 }} />
+                : type === "url"
+                ? <img src="/url-icon.png" alt="URL" className="w-4 h-4 leading-none" style={{ objectFit: "contain", opacity: 0.7 }} />
                 : <span className="text-sm leading-none">{icon}</span>}
               <span>{label}</span>
             </button>
