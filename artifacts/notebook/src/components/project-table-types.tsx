@@ -197,10 +197,7 @@ export function makeCellInner(type: ColType, val: string, options?: SelectOption
     }
 
     case "time": {
-      const display = val
-        ? new Date(val).toLocaleString("en-US", { month: "short", day: "numeric", year: "numeric", hour: "2-digit", minute: "2-digit" })
-        : "—";
-      return `<span style="display:block;font-size:12px;color:${val ? "#6b7280" : "#9ca3af"};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;user-select:none;${F}">${display}</span>`;
+      return `<span data-timecell="1" style="display:block;font-size:13px;color:${val ? "#1f2937" : "#9ca3af"};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;user-select:none;cursor:pointer;${F}">${val || "Set time..."}</span>`;
     }
 
     case "id": {
@@ -293,7 +290,9 @@ export function applyColType(
     if (!td) return;
     let currentVal = td.dataset.cellVal || "";
     if (type === "time" && !currentVal) {
-      currentVal = new Date().toISOString();
+      const now = new Date();
+      const h = now.getHours(); const m = now.getMinutes();
+      currentVal = `${h % 12 || 12}:${String(m).padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`;
       td.dataset.cellVal = currentVal;
     }
     if (type === "id" && !currentVal) {
@@ -681,6 +680,108 @@ interface InlineEditPopupProps {
   type: ColType;
   onClose: () => void;
   onSave: () => void;
+}
+
+// ════════════════════════════════════════════════════════════════
+// ── TimeCellPopup — hour / minute / AM-PM picker ─────────────────
+// ════════════════════════════════════════════════════════════════
+interface TimeCellPopupProps {
+  td: HTMLElement;
+  rect: DOMRect;
+  onClose: () => void;
+  onSave: () => void;
+}
+
+export function TimeCellPopup({ td, rect, onClose, onSave }: TimeCellPopupProps) {
+  const parseTime = (val: string) => {
+    const m = val.match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (m) return { hour: parseInt(m[1]), minute: parseInt(m[2]), ampm: m[3].toUpperCase() as "AM" | "PM" };
+    const now = new Date();
+    const h = now.getHours();
+    return { hour: h % 12 || 12, minute: now.getMinutes(), ampm: (h >= 12 ? "PM" : "AM") as "AM" | "PM" };
+  };
+
+  const parsed = parseTime(td.dataset.cellVal || "");
+  const [hour, setHour] = useState(parsed.hour);
+  const [minute, setMinute] = useState(parsed.minute);
+  const [ampm, setAmpm] = useState<"AM" | "PM">(parsed.ampm);
+  const popRef = useRef<HTMLDivElement>(null);
+
+  let top = rect.bottom + 4;
+  const left = Math.min(rect.left, window.innerWidth - 196);
+  if (top + 200 > window.innerHeight) top = Math.max(8, rect.top - 200);
+
+  const commit = () => {
+    const val = `${hour}:${String(minute).padStart(2, "0")} ${ampm}`;
+    td.dataset.cellVal = val;
+    td.innerHTML = makeCellInner("time", val);
+    onSave();
+    onClose();
+  };
+
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (popRef.current && !popRef.current.contains(e.target as Node)) commit();
+    };
+    document.addEventListener("mousedown", handler, true);
+    return () => document.removeEventListener("mousedown", handler, true);
+  }, [hour, minute, ampm]);
+
+  const spinBtn = "text-stone-400 hover:text-stone-700 px-2 py-0.5 text-xs leading-none transition-colors";
+
+  return createPortal(
+    <div
+      ref={popRef}
+      onMouseDown={e => e.stopPropagation()}
+      style={{ position: "fixed", top, left, zIndex: 99999, width: 192 }}
+      className="bg-white rounded-xl shadow-2xl border border-stone-200 p-3"
+    >
+      <div className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-2.5">TIME</div>
+      <div className="flex items-center justify-center gap-2">
+        {/* Hour spinner */}
+        <div className="flex flex-col items-center">
+          <button className={spinBtn} onClick={() => setHour(h => h === 12 ? 1 : h + 1)}>▲</button>
+          <span className="text-xl font-semibold text-stone-800 w-9 text-center tabular-nums">
+            {String(hour).padStart(2, "0")}
+          </span>
+          <button className={spinBtn} onClick={() => setHour(h => h === 1 ? 12 : h - 1)}>▼</button>
+        </div>
+
+        <span className="text-xl font-bold text-stone-300 pb-0.5">:</span>
+
+        {/* Minute spinner */}
+        <div className="flex flex-col items-center">
+          <button className={spinBtn} onClick={() => setMinute(m => (m + 1) % 60)}>▲</button>
+          <span className="text-xl font-semibold text-stone-800 w-9 text-center tabular-nums">
+            {String(minute).padStart(2, "0")}
+          </span>
+          <button className={spinBtn} onClick={() => setMinute(m => m === 0 ? 59 : m - 1)}>▼</button>
+        </div>
+
+        {/* AM / PM toggle */}
+        <div className="flex flex-col gap-1 ml-1">
+          <button
+            onClick={() => setAmpm("AM")}
+            className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-colors
+              ${ampm === "AM" ? "bg-indigo-50 border-indigo-400 text-indigo-700" : "border-stone-100 text-stone-400 hover:bg-stone-50 hover:border-stone-300"}`}
+          >AM</button>
+          <button
+            onClick={() => setAmpm("PM")}
+            className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-colors
+              ${ampm === "PM" ? "bg-indigo-50 border-indigo-400 text-indigo-700" : "border-stone-100 text-stone-400 hover:bg-stone-50 hover:border-stone-300"}`}
+          >PM</button>
+        </div>
+      </div>
+
+      <button
+        onClick={commit}
+        className="mt-3 w-full py-1.5 text-xs font-semibold text-white bg-indigo-500 hover:bg-indigo-600 rounded-lg transition-colors"
+      >
+        Set Time
+      </button>
+    </div>,
+    document.body
+  );
 }
 
 export function InlineEditPopup({ td, th, rect, type, onClose, onSave }: InlineEditPopupProps) {

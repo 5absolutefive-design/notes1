@@ -33,7 +33,7 @@ import {
   XAxis, YAxis, Tooltip, ResponsiveContainer, Legend, ReferenceLine,
 } from "recharts";
 import {
-  ColTypePicker, SelectCellPopup, PriorityCellPopup, ProgressCellPopup,
+  ColTypePicker, SelectCellPopup, PriorityCellPopup, ProgressCellPopup, TimeCellPopup,
   applyColType, hydrateTables, makeCellInner, getColType, getColOptions,
   getColIndex, findTh,
   type ColType,
@@ -331,6 +331,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const [selectCellPopup, setSelectCellPopup] = useState<{ td: HTMLElement; th: HTMLElement; rect: DOMRect; multi: boolean } | null>(null);
   const [priorityCellPopup, setPriorityCellPopup] = useState<{ td: HTMLElement; rect: DOMRect } | null>(null);
   const [progressCellPopup, setProgressCellPopup] = useState<{ td: HTMLElement; rect: DOMRect } | null>(null);
+  const [timeCellPopup, setTimeCellPopup] = useState<{ td: HTMLElement; rect: DOMRect } | null>(null);
 
   const [selPopup, setSelPopup] = useState<{ x: number; y: number } | null>(null);
   const selPopupRef = useRef<HTMLDivElement>(null);
@@ -1431,8 +1432,9 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
       const th = ths[i] as HTMLElement | undefined;
       const colType = th?.dataset.colType as ColType | undefined;
       if (!isLined && (colType === "time" || colType === "id")) {
+        const now = new Date(); const h = now.getHours();
         const autoVal = colType === "time"
-          ? new Date().toISOString()
+          ? `${h % 12 || 12}:${String(now.getMinutes()).padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`
           : `ID-${String(rowIndex).padStart(3, "0")}`;
         td.setAttribute("style", TD_STYLE);
         td.setAttribute("contenteditable", "false");
@@ -1882,8 +1884,18 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             return;
           }
 
-          // time and id are read-only / auto-generated — ignore clicks
-          if (type === "time" || type === "id") return;
+          if (type === "time") {
+            const rect = td.getBoundingClientRect();
+            setTimeCellPopup({ td, rect });
+            setColTypePopup(null);
+            setSelectCellPopup(null);
+            setPriorityCellPopup(null);
+            setProgressCellPopup(null);
+            return;
+          }
+
+          // id is read-only / auto-generated — ignore clicks
+          if (type === "id") return;
 
           // number/currency/url/email/phone/person handled in mousedown
 
@@ -3055,6 +3067,16 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
           td={progressCellPopup.td}
           rect={progressCellPopup.rect}
           onClose={() => setProgressCellPopup(null)}
+          onSave={saveContent}
+        />
+      )}
+
+      {/* ── Time cell popup ── */}
+      {timeCellPopup && (
+        <TimeCellPopup
+          td={timeCellPopup.td}
+          rect={timeCellPopup.rect}
+          onClose={() => setTimeCellPopup(null)}
           onSave={saveContent}
         />
       )}
