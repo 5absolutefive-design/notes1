@@ -428,7 +428,7 @@ export function ColTypePicker({ th, rect, onClose, onTypeChange, onDeleteCol, on
                 ? <img src="/time-icon.png" alt="Time" className="w-4 h-4 leading-none" style={{ objectFit: "contain", opacity: 0.7 }} />
                 : type === "id"
                 ? <img src="/id-icon.png" alt="ID" className="w-4 h-4 leading-none" style={{ objectFit: "contain", opacity: 0.7 }} />
-                : <span className="text-sm leading-none">{icon}</span>}
+                : <span className="w-4 h-4 flex items-center justify-center text-sm leading-none">{icon}</span>}
               <span>{label}</span>
             </button>
           ))}
