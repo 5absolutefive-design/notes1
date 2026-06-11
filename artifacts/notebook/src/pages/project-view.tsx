@@ -1431,11 +1431,9 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
       const td = document.createElement("td");
       const th = ths[i] as HTMLElement | undefined;
       const colType = th?.dataset.colType as ColType | undefined;
-      if (!isLined && (colType === "time" || colType === "id")) {
+      if (!isLined && colType === "time") {
         const now = new Date(); const h = now.getHours();
-        const autoVal = colType === "time"
-          ? `${h % 12 || 12}:${String(now.getMinutes()).padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`
-          : `ID-${String(rowIndex).padStart(3, "0")}`;
+        const autoVal = `${h % 12 || 12}:${String(now.getMinutes()).padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`;
         td.setAttribute("style", TD_STYLE);
         td.setAttribute("contenteditable", "false");
         td.dataset.cellVal = autoVal;
@@ -1733,7 +1731,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
       const th = findTh(td);
       if (th) {
         const type = getColType(th);
-        if (["number", "currency", "url", "email", "phone", "person"].includes(type)) {
+        if (["number", "currency", "url", "email", "phone", "person", "id"].includes(type)) {
           // If already editing this cell, let browser handle normally (allows text select/copy)
           if (td.dataset.editing === "1") return;
           e.preventDefault();
@@ -1894,8 +1892,6 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             return;
           }
 
-          // id is read-only / auto-generated — ignore clicks
-          if (type === "id") return;
 
           // number/currency/url/email/phone/person handled in mousedown
 

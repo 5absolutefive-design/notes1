@@ -203,7 +203,7 @@ export function makeCellInner(type: ColType, val: string, options?: SelectOption
     }
 
     case "id": {
-      return `<span style="display:inline-flex;align-items:center;padding:1px 7px;border-radius:8px;background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0;font-size:11px;font-weight:600;font-family:monospace,sans-serif;user-select:none;white-space:nowrap">${val || "—"}</span>`;
+      return `<span style="display:inline-flex;align-items:center;gap:2px;font-size:13px;color:${val ? "#1f2937" : "#c4c4c0"};white-space:nowrap;cursor:text;user-select:none;${F}"><span style="color:#94a3b8;font-size:13px;${F}">ID - </span>${val || ""}</span>`;
     }
 
     default:
@@ -298,8 +298,7 @@ export function applyColType(
       td.dataset.cellVal = currentVal;
     }
     if (type === "id" && !currentVal) {
-      currentVal = `ID-${String(idCounter).padStart(3, "0")}`;
-      td.dataset.cellVal = currentVal;
+      currentVal = "";
     }
     idCounter++;
     if (type === "text") {
