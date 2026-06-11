@@ -197,7 +197,7 @@ export function makeCellInner(type: ColType, val: string, options?: SelectOption
     }
 
     case "time": {
-      return `<span data-timecell="1" style="display:block;font-size:13px;color:${val ? "#1f2937" : "#9ca3af"};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;user-select:none;cursor:pointer;${F}">${val || "Set time..."}</span>`;
+      return `<span data-timecell="1" style="display:block;font-size:13px;color:${val ? "#1f2937" : "#c4c4c0"};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;user-select:none;cursor:pointer;${F}">${val || "12:00 AM"}</span>`;
     }
 
     case "id": {
@@ -727,55 +727,75 @@ export function TimeCellPopup({ td, rect, onClose, onSave }: TimeCellPopupProps)
     return () => document.removeEventListener("mousedown", handler, true);
   }, [hour, minute, ampm]);
 
-  const spinBtn = "text-stone-400 hover:text-stone-700 px-2 py-0.5 text-xs leading-none transition-colors";
+  const spinBtn = "text-stone-300 hover:text-stone-600 px-2 py-0.5 text-[10px] leading-none transition-colors select-none";
+
+  const onWheelHour = (e: React.WheelEvent) => {
+    e.preventDefault();
+    setHour(h => e.deltaY < 0 ? (h === 12 ? 1 : h + 1) : (h === 1 ? 12 : h - 1));
+  };
+  const onWheelMinute = (e: React.WheelEvent) => {
+    e.preventDefault();
+    setMinute(m => e.deltaY < 0 ? (m + 1) % 60 : (m === 0 ? 59 : m - 1));
+  };
 
   return createPortal(
     <div
       ref={popRef}
       onMouseDown={e => e.stopPropagation()}
-      style={{ position: "fixed", top, left, zIndex: 99999, width: 192 }}
+      style={{ position: "fixed", top, left, zIndex: 99999, width: 200 }}
       className="bg-white rounded-xl shadow-2xl border border-stone-200 p-3"
     >
-      <div className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-2.5">TIME</div>
-      <div className="flex items-center justify-center gap-2">
+      <div className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-3">Set Time</div>
+
+      <div className="flex items-center justify-center gap-1.5">
         {/* Hour spinner */}
-        <div className="flex flex-col items-center">
+        <div
+          className="flex flex-col items-center bg-stone-50 rounded-lg px-2 py-1 cursor-ns-resize"
+          onWheel={onWheelHour}
+          title="Scroll to change hour"
+        >
           <button className={spinBtn} onClick={() => setHour(h => h === 12 ? 1 : h + 1)}>▲</button>
-          <span className="text-xl font-semibold text-stone-800 w-9 text-center tabular-nums">
+          <span className="text-2xl font-semibold text-stone-800 w-10 text-center tabular-nums leading-tight py-0.5">
             {String(hour).padStart(2, "0")}
           </span>
           <button className={spinBtn} onClick={() => setHour(h => h === 1 ? 12 : h - 1)}>▼</button>
         </div>
 
-        <span className="text-xl font-bold text-stone-300 pb-0.5">:</span>
+        <span className="text-2xl font-bold text-stone-300 mb-0.5">:</span>
 
         {/* Minute spinner */}
-        <div className="flex flex-col items-center">
+        <div
+          className="flex flex-col items-center bg-stone-50 rounded-lg px-2 py-1 cursor-ns-resize"
+          onWheel={onWheelMinute}
+          title="Scroll to change minute"
+        >
           <button className={spinBtn} onClick={() => setMinute(m => (m + 1) % 60)}>▲</button>
-          <span className="text-xl font-semibold text-stone-800 w-9 text-center tabular-nums">
+          <span className="text-2xl font-semibold text-stone-800 w-10 text-center tabular-nums leading-tight py-0.5">
             {String(minute).padStart(2, "0")}
           </span>
           <button className={spinBtn} onClick={() => setMinute(m => m === 0 ? 59 : m - 1)}>▼</button>
         </div>
 
         {/* AM / PM toggle */}
-        <div className="flex flex-col gap-1 ml-1">
+        <div className="flex flex-col gap-1 ml-1.5">
           <button
             onClick={() => setAmpm("AM")}
-            className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-colors
+            className={`px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition-colors
               ${ampm === "AM" ? "bg-indigo-50 border-indigo-400 text-indigo-700" : "border-stone-100 text-stone-400 hover:bg-stone-50 hover:border-stone-300"}`}
           >AM</button>
           <button
             onClick={() => setAmpm("PM")}
-            className={`px-2.5 py-1 text-xs font-semibold rounded-lg border transition-colors
+            className={`px-2.5 py-1.5 text-xs font-semibold rounded-lg border transition-colors
               ${ampm === "PM" ? "bg-indigo-50 border-indigo-400 text-indigo-700" : "border-stone-100 text-stone-400 hover:bg-stone-50 hover:border-stone-300"}`}
           >PM</button>
         </div>
       </div>
 
+      <div className="mt-1.5 text-center text-[10px] text-stone-300">scroll ↕ to change</div>
+
       <button
         onClick={commit}
-        className="mt-3 w-full py-1.5 text-xs font-semibold text-white bg-indigo-500 hover:bg-indigo-600 rounded-lg transition-colors"
+        className="mt-2.5 w-full py-1.5 text-xs font-semibold text-white bg-indigo-500 hover:bg-indigo-600 rounded-lg transition-colors"
       >
         Set Time
       </button>
