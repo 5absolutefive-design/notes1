@@ -3790,12 +3790,9 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 <button onClick={() => { setCtxMenu(null); imgInputRef.current?.click(); }}
                   className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-indigo-50 text-stone-700 text-left transition-colors">
                   <span className="w-6 h-6 rounded-md bg-indigo-100 flex items-center justify-center flex-shrink-0">
-                    <ImagePlus className="w-3.5 h-3.5 text-indigo-600" />
+                    <img src="/image-icon.png" alt="Image" className="w-3.5 h-3.5 object-contain" style={{ filter: "invert(33%) sepia(80%) saturate(500%) hue-rotate(210deg)" }} />
                   </span>
-                  <div>
-                    <div className="text-xs font-semibold text-stone-700">Image</div>
-                    <div className="text-[10px] text-stone-400">Upload a photo</div>
-                  </div>
+                  <div className="text-xs font-semibold text-stone-700">Image</div>
                 </button>
                 <button onClick={() => { setCtxMenu(null); voiceInputRef.current?.click(); }}
                   className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-rose-50 text-stone-700 text-left transition-colors">
