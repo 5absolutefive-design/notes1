@@ -197,7 +197,9 @@ export function makeCellInner(type: ColType, val: string, options?: SelectOption
     }
 
     case "time": {
-      return `<span data-timecell="1" style="display:block;font-size:13px;color:${val ? "#1f2937" : "#c4c4c0"};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;user-select:none;cursor:pointer;${F}">${val || "12:00 AM"}</span>`;
+      const [timePart, colorPart] = val ? val.split("|") : ["", ""];
+      const color = colorPart || "#1f2937";
+      return `<span data-timecell="1" style="display:block;font-size:13px;color:${val ? color : "#c4c4c0"};white-space:nowrap;overflow:hidden;text-overflow:ellipsis;user-select:none;cursor:pointer;${F}">${timePart || "12:00 AM"}</span>`;
     }
 
     case "id": {
@@ -701,10 +703,20 @@ export function TimeCellPopup({ td, rect, onClose, onSave }: TimeCellPopupProps)
     return { hour: h % 12 || 12, minute: now.getMinutes(), ampm: (h >= 12 ? "PM" : "AM") as "AM" | "PM" };
   };
 
-  const parsed = parseTime(td.dataset.cellVal || "");
+  const rawVal = td.dataset.cellVal || "";
+  const [rawTime, rawColor] = rawVal ? rawVal.split("|") : ["", ""];
+  const parsed = parseTime(rawTime);
   const [hour, setHour] = useState(parsed.hour);
   const [minute, setMinute] = useState(parsed.minute);
   const [ampm, setAmpm] = useState<"AM" | "PM">(parsed.ampm);
+
+  const TIME_COLORS = [
+    { hex: "#ef4444", label: "Red"   },
+    { hex: "#3b82f6", label: "Blue"  },
+    { hex: "#22c55e", label: "Green" },
+    { hex: "#1f2937", label: "Black" },
+  ];
+  const [selectedColor, setSelectedColor] = useState(rawColor || "#1f2937");
   const popRef = useRef<HTMLDivElement>(null);
 
   let top = rect.bottom + 4;
@@ -712,7 +724,7 @@ export function TimeCellPopup({ td, rect, onClose, onSave }: TimeCellPopupProps)
   if (top + 200 > window.innerHeight) top = Math.max(8, rect.top - 200);
 
   const commit = () => {
-    const val = `${hour}:${String(minute).padStart(2, "0")} ${ampm}`;
+    const val = `${hour}:${String(minute).padStart(2, "0")} ${ampm}|${selectedColor}`;
     td.dataset.cellVal = val;
     td.innerHTML = makeCellInner("time", val);
     onSave();
@@ -745,7 +757,19 @@ export function TimeCellPopup({ td, rect, onClose, onSave }: TimeCellPopupProps)
       style={{ position: "fixed", top, left, zIndex: 99999, width: 200 }}
       className="bg-white rounded-xl shadow-2xl border border-stone-200 p-3"
     >
-      <div className="text-[10px] font-bold text-stone-400 uppercase tracking-widest mb-3">Set Time</div>
+      {/* Color circles */}
+      <div className="flex items-center gap-2 mb-3">
+        {TIME_COLORS.map(c => (
+          <button
+            key={c.hex}
+            onClick={() => setSelectedColor(c.hex)}
+            title={c.label}
+            style={{ background: c.hex }}
+            className={`w-5 h-5 rounded-full transition-all ${selectedColor === c.hex ? "ring-2 ring-offset-1 ring-stone-400 scale-110" : "opacity-70 hover:opacity-100"}`}
+          />
+        ))}
+        <span className="ml-auto text-[10px] font-bold text-stone-400 uppercase tracking-widest">Set Time</span>
+      </div>
 
       <div className="flex items-center justify-center gap-1.5">
         {/* Hour spinner */}
@@ -795,7 +819,7 @@ export function TimeCellPopup({ td, rect, onClose, onSave }: TimeCellPopupProps)
 
       <button
         onClick={commit}
-        className="mt-2.5 w-full py-1.5 text-xs font-semibold text-white bg-indigo-500 hover:bg-indigo-600 rounded-lg transition-colors"
+        className="mt-2.5 w-full py-1.5 text-xs font-semibold text-stone-600 bg-stone-100 hover:bg-stone-200 rounded-lg transition-colors"
       >
         Set Time
       </button>
