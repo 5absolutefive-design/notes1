@@ -31,6 +31,12 @@ import barChartIcon from "@assets/bar-chart-diagram-graph-large-svgrepo-com_1780
 import pieChartIcon from "@assets/chart-diagram-graph-pie-statistics-svgrepo-com_1780985481312.svg";
 import areaChartIcon from "@assets/chart-diagram-graph-spline-statistics-svgrepo-com_1780985481313.svg";
 import { store, type Book, type Page } from "@/lib/store";
+import {
+  ColTypePicker, SelectCellPopup, PriorityCellPopup, ProgressCellPopup, TimeCellPopup, IDCellPopup,
+  applyColType, hydrateTables, makeCellInner, getColType, getColOptions,
+  getColIndex, findTh,
+  type ColType,
+} from "@/components/project-table-types";
 
 // ── Constants ────────────────────────────────────────────────────
 
@@ -120,6 +126,14 @@ interface GraphBlock {
   title: string;
   color: string;
   data: { label: string; value: number }[];
+}
+
+interface ImageBlock {
+  id: string; src: string; x: number; y: number; width: number; locked: boolean;
+}
+
+interface VideoBlock {
+  id: string; src: string; name: string; x: number; y: number; width: number; locked: boolean;
 }
 
 interface ContextMenuState {
@@ -378,6 +392,16 @@ function A4Page({
   const videoInputRef = useRef<HTMLInputElement>(null);
   const graphDragRef  = useRef<{ id: string; startMx: number; startMy: number; startBx: number; startBy: number } | null>(null);
   const graphResizeRef = useRef<{ id: string; startMx: number; startMy: number; startW: number; startH: number } | null>(null);
+  const dragRef = useRef<{ id: string; startMx: number; startMy: number; startBx: number; startBy: number } | null>(null);
+  const resizeRef = useRef<{ id: string; startMx: number; startW: number; startBx: number; side: "br"|"bl" } | null>(null);
+  const videoDragRef = useRef<{ id: string; startMx: number; startMy: number; startBx: number; startBy: number } | null>(null);
+  const videoResizeRef = useRef<{ id: string; startMx: number; startW: number; startBx: number; side: "br"|"bl" } | null>(null);
+  const imageBlocksRef = useRef<ImageBlock[]>([]);
+  const videoBlocksRef = useRef<VideoBlock[]>([]);
+  const activeEditRef = useRef<{ td: HTMLElement; finish: () => void } | null>(null);
+  const activeTableRef = useRef<HTMLTableElement | null>(null);
+  const tableResizeObserverRef = useRef<ResizeObserver | null>(null);
+  const lastKeyRef = useRef<string>("");
 
   const [ctxMenu, setCtxMenu] = useState<ContextMenuState | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -394,12 +418,31 @@ function A4Page({
   const [drawingArrow, setDrawingArrow] = useState<ArrowShape | null>(null);
   const [eraserPos, setEraserPos] = useState<{ x: number; y: number } | null>(null);
   const [graphBlocks, setGraphBlocks] = useState<GraphBlock[]>([]);
+  const [imageBlocks, setImageBlocks] = useState<ImageBlock[]>([]);
+  const [videoBlocks, setVideoBlocks] = useState<VideoBlock[]>([]);
+  const [colTypePopup, setColTypePopup] = useState<{ th: HTMLElement; rect: DOMRect } | null>(null);
+  const [selectCellPopup, setSelectCellPopup] = useState<{ td: HTMLElement; th: HTMLElement; rect: DOMRect; multi: boolean } | null>(null);
+  const [priorityCellPopup, setPriorityCellPopup] = useState<{ td: HTMLElement; rect: DOMRect } | null>(null);
+  const [progressCellPopup, setProgressCellPopup] = useState<{ td: HTMLElement; rect: DOMRect } | null>(null);
+  const [timeCellPopup, setTimeCellPopup] = useState<{ td: HTMLElement; rect: DOMRect } | null>(null);
+  const [idCellPopup, setIdCellPopup] = useState<{ td: HTMLElement; rect: DOMRect } | null>(null);
+  const [tableToolbar, setTableToolbar] = useState<{ top: number; left: number; width: number; height: number } | null>(null);
+  const [showTableBtns, setShowTableBtns] = useState(false);
+  const [hoverTableBtns, setHoverTableBtns] = useState(false);
+  const [tableLinesHidden, setTableLinesHidden] = useState(false);
+  const [lastTodoPos, setLastTodoPos] = useState<{ top: number; left: number } | null>(null);
+  const [showTodoButtons, setShowTodoButtons] = useState(false);
+
+  // ── Sync refs with latest state
+  useEffect(() => { imageBlocksRef.current = imageBlocks; }, [imageBlocks]);
+  useEffect(() => { videoBlocksRef.current = videoBlocks; }, [videoBlocks]);
 
   // ── Init editor content
   useEffect(() => {
     if (editorRef.current && editorRef.current.innerHTML !== page.content) {
       editorRef.current.innerHTML = page.content;
       lastSaved.current = page.content;
+      hydrateTables(editorRef.current);
     }
   }, [page.id]);
 
@@ -435,7 +478,7 @@ function A4Page({
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
-  // ── Document-level mouse handlers for draw & graph drag/resize
+  // ── Document-level mouse handlers for draw & graph/image/video drag/resize
   useEffect(() => {
     const onMove = (e: MouseEvent) => {
       if (graphDragRef.current) {
@@ -445,6 +488,34 @@ function A4Page({
       if (graphResizeRef.current) {
         const { id, startMx, startMy, startW, startH } = graphResizeRef.current;
         setGraphBlocks(prev => prev.map(g => g.id === id ? { ...g, width: Math.max(180, startW + e.clientX - startMx), height: Math.max(120, startH + e.clientY - startMy) } : g));
+      }
+      if (dragRef.current) {
+        const { id, startMx, startMy, startBx, startBy } = dragRef.current;
+        setImageBlocks(prev => prev.map(b => b.id === id ? { ...b, x: startBx + e.clientX - startMx, y: startBy + e.clientY - startMy } : b));
+      }
+      if (resizeRef.current) {
+        const { id, startMx, startW, startBx, side } = resizeRef.current;
+        const dx = e.clientX - startMx;
+        if (side === "br") {
+          setImageBlocks(prev => prev.map(b => b.id === id ? { ...b, width: Math.max(80, startW + dx) } : b));
+        } else {
+          const newW = Math.max(80, startW - dx);
+          setImageBlocks(prev => prev.map(b => b.id === id ? { ...b, width: newW, x: startBx + (startW - newW) } : b));
+        }
+      }
+      if (videoDragRef.current) {
+        const { id, startMx, startMy, startBx, startBy } = videoDragRef.current;
+        setVideoBlocks(prev => prev.map(b => b.id === id ? { ...b, x: startBx + e.clientX - startMx, y: startBy + e.clientY - startMy } : b));
+      }
+      if (videoResizeRef.current) {
+        const { id, startMx, startW, startBx, side } = videoResizeRef.current;
+        const dx = e.clientX - startMx;
+        if (side === "br") {
+          setVideoBlocks(prev => prev.map(b => b.id === id ? { ...b, width: Math.max(120, startW + dx) } : b));
+        } else {
+          const newW = Math.max(120, startW - dx);
+          setVideoBlocks(prev => prev.map(b => b.id === id ? { ...b, width: newW, x: startBx + (startW - newW) } : b));
+        }
       }
       if (arrowDrawRef.current) {
         const svg = paperRef.current?.querySelector("svg");
@@ -456,6 +527,22 @@ function A4Page({
     const onUp = (e: MouseEvent) => {
       graphDragRef.current = null;
       graphResizeRef.current = null;
+      if (dragRef.current) {
+        dragRef.current = null;
+        localStorage.setItem(`nb_page_imgs_${page.id}`, JSON.stringify(imageBlocksRef.current));
+      }
+      if (resizeRef.current) {
+        resizeRef.current = null;
+        localStorage.setItem(`nb_page_imgs_${page.id}`, JSON.stringify(imageBlocksRef.current));
+      }
+      if (videoDragRef.current) {
+        videoDragRef.current = null;
+        localStorage.setItem(`nb_page_vids_${page.id}`, JSON.stringify(videoBlocksRef.current));
+      }
+      if (videoResizeRef.current) {
+        videoResizeRef.current = null;
+        localStorage.setItem(`nb_page_vids_${page.id}`, JSON.stringify(videoBlocksRef.current));
+      }
       if (arrowDrawRef.current) {
         const svg = paperRef.current?.querySelector("svg");
         if (svg) {
@@ -475,7 +562,35 @@ function A4Page({
     document.addEventListener("mousemove", onMove);
     document.addEventListener("mouseup", onUp);
     return () => { document.removeEventListener("mousemove", onMove); document.removeEventListener("mouseup", onUp); };
-  }, []);
+  }, [page.id]);
+
+  // ── Load/save imageBlocks per page
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(`nb_page_imgs_${page.id}`);
+      const parsed = raw ? JSON.parse(raw) : [];
+      setImageBlocks(parsed);
+      imageBlocksRef.current = parsed;
+    } catch { setImageBlocks([]); }
+  }, [page.id]);
+
+  useEffect(() => {
+    localStorage.setItem(`nb_page_imgs_${page.id}`, JSON.stringify(imageBlocks));
+  }, [imageBlocks, page.id]);
+
+  // ── Load/save videoBlocks per page
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(`nb_page_vids_${page.id}`);
+      const parsed = raw ? JSON.parse(raw) : [];
+      setVideoBlocks(parsed);
+      videoBlocksRef.current = parsed;
+    } catch { setVideoBlocks([]); }
+  }, [page.id]);
+
+  useEffect(() => {
+    localStorage.setItem(`nb_page_vids_${page.id}`, JSON.stringify(videoBlocks));
+  }, [videoBlocks, page.id]);
 
   // ── Close context menu / callout on outside click
   useEffect(() => {
@@ -564,6 +679,22 @@ function A4Page({
     if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     saveTimerRef.current = setTimeout(saveContent, 600);
   }, [saveContent]);
+
+  // ── Date input change listener in tables (needs debouncedSave defined first)
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    const handler = (e: Event) => {
+      const input = e.target as HTMLInputElement;
+      if (input.type !== "date" && input.type !== "time") return;
+      const td = input.closest("td") as HTMLElement | null;
+      if (!td) return;
+      td.dataset.cellVal = input.value;
+      debouncedSave();
+    };
+    editor.addEventListener("change", handler);
+    return () => editor.removeEventListener("change", handler);
+  }, [debouncedSave]);
 
   const handleInput = useCallback(() => {
     if (!editorRef.current || isComposing.current) return;
@@ -931,16 +1062,543 @@ function A4Page({
     setCtxMenu(null);
   };
 
-  // ── Media insertion (inline in editor)
-  const handleImageFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // ── Table toolbar position tracker
+  const updateTableToolbar = useCallback(() => {
+    const table = activeTableRef.current;
+    const paper = paperRef.current;
+    if (!table || !paper) { setTableToolbar(null); return; }
+    const tr = table.getBoundingClientRect();
+    const pr = paper.getBoundingClientRect();
+    setTableToolbar({ top: tr.top - pr.top, left: tr.left - pr.left, width: tr.width, height: tr.height });
+    if (tableResizeObserverRef.current) tableResizeObserverRef.current.disconnect();
+    const obs = new ResizeObserver(() => {
+      const t = activeTableRef.current; const p = paperRef.current;
+      if (!t || !p) return;
+      const tr2 = t.getBoundingClientRect(); const pr2 = p.getBoundingClientRect();
+      setTableToolbar({ top: tr2.top - pr2.top, left: tr2.left - pr2.left, width: tr2.width, height: tr2.height });
+    });
+    obs.observe(table);
+    tableResizeObserverRef.current = obs;
+  }, []);
+
+  // ── Table border drag-to-resize
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    const THRESHOLD = 6;
+    type ColState = { table: HTMLTableElement; colIdx: number; startX: number; startWidths: number[] };
+    type RowState = { row: HTMLTableRowElement; startY: number; startH: number };
+    let colState: ColState | null = null;
+    let rowState: RowState | null = null;
+    function getCellAt(e: MouseEvent): HTMLTableCellElement | null {
+      let el = e.target as Element | null;
+      while (el && el !== editor) {
+        if (el.tagName === "TD" || el.tagName === "TH") return el as HTMLTableCellElement;
+        el = el.parentElement;
+      }
+      return null;
+    }
+    function getResizeEdge(e: MouseEvent, cell: HTMLTableCellElement): "col" | "row" | null {
+      const r = cell.getBoundingClientRect();
+      if (Math.abs(e.clientX - r.right)  <= THRESHOLD) return "col";
+      if (Math.abs(e.clientY - r.bottom) <= THRESHOLD) return "row";
+      return null;
+    }
+    function onMouseMove(e: MouseEvent) {
+      if (colState) {
+        const dx = e.clientX - colState.startX;
+        for (let i = 0; i < colState.table.rows.length; i++) {
+          const cell = colState.table.rows[i].cells[colState.colIdx];
+          if (cell) cell.style.width = Math.max(40, colState.startWidths[i] + dx) + "px";
+        }
+        return;
+      }
+      if (rowState) {
+        const dy = e.clientY - rowState.startY;
+        const newH = Math.max(24, rowState.startH + dy);
+        rowState.row.style.height = newH + "px";
+        Array.from(rowState.row.cells).forEach(c => { c.style.height = newH + "px"; });
+        return;
+      }
+      const cell = getCellAt(e);
+      if (!cell) { (editor as HTMLElement).style.cursor = ""; return; }
+      const edge = getResizeEdge(e, cell);
+      (editor as HTMLElement).style.cursor = edge === "col" ? "col-resize" : edge === "row" ? "row-resize" : "";
+    }
+    function onMouseDown(e: MouseEvent) {
+      const cell = getCellAt(e);
+      if (!cell) return;
+      const edge = getResizeEdge(e, cell);
+      if (!edge) return;
+      e.preventDefault(); e.stopPropagation();
+      document.body.style.userSelect = "none";
+      if (edge === "col") {
+        const table = cell.closest("table") as HTMLTableElement;
+        const cells = Array.from(cell.parentElement!.children) as HTMLTableCellElement[];
+        const colIdx = cells.indexOf(cell);
+        const totalCols = cells.length;
+        for (let i = 0; i < table.rows.length; i++) {
+          for (let j = 0; j < totalCols; j++) {
+            const c = table.rows[i].cells[j];
+            if (c) c.style.width = c.getBoundingClientRect().width + "px";
+          }
+        }
+        table.style.width = "auto";
+        const startWidths: number[] = [];
+        for (let i = 0; i < table.rows.length; i++) {
+          const c = table.rows[i].cells[colIdx];
+          startWidths.push(c ? c.getBoundingClientRect().width : 120);
+        }
+        colState = { table, colIdx, startX: e.clientX, startWidths };
+        document.body.style.cursor = "col-resize";
+      } else {
+        const row = cell.parentElement as HTMLTableRowElement;
+        rowState = { row, startY: e.clientY, startH: row.getBoundingClientRect().height };
+        document.body.style.cursor = "row-resize";
+      }
+    }
+    function onMouseUp() {
+      if (colState || rowState) {
+        colState = null; rowState = null;
+        document.body.style.userSelect = ""; document.body.style.cursor = "";
+        (editor as HTMLElement).style.cursor = "";
+        if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+        saveTimerRef.current = setTimeout(saveContent, 400);
+      }
+    }
+    editor.addEventListener("mousemove", onMouseMove);
+    editor.addEventListener("mousedown", onMouseDown);
+    window.addEventListener("mousemove", onMouseMove);
+    window.addEventListener("mouseup", onMouseUp);
+    return () => {
+      editor.removeEventListener("mousemove", onMouseMove);
+      editor.removeEventListener("mousedown", onMouseDown);
+      window.removeEventListener("mousemove", onMouseMove);
+      window.removeEventListener("mouseup", onMouseUp);
+    };
+  }, [saveContent]);
+
+  // ── Table row/col add/remove/toggle/delete
+  const TH_STYLE = `background:#f9fafb;padding:6px 10px;text-align:left;font-size:12px;font-weight:600;color:#374151;border:1.5px solid #b0b7c3;border-top:none;border-bottom:3px double #b0b7c3;min-width:120px`;
+  const TD_STYLE = `padding:6px 10px;border:1.5px solid #b0b7c3;min-width:120px;font-size:13px;color:#1f2937`;
+
+  const tableAddRow = () => {
+    const table = activeTableRef.current; if (!table) return;
+    const tbody = table.querySelector("tbody"); if (!tbody) return;
+    const isLined = table.dataset.lined === "true";
+    const colCount = table.rows[0]?.cells.length ?? 4;
+    const tr = document.createElement("tr");
+    const linedTdStyle = `padding:7px 12px;border:none;border-bottom:1px solid #e2e0db;width:100%;display:block;font-size:13px;color:#1f2937;min-height:32px`;
+    const ths = table.querySelectorAll("thead th");
+    for (let i = 0; i < colCount; i++) {
+      const td = document.createElement("td");
+      const th = ths[i] as HTMLElement | undefined;
+      const colType = th?.dataset.colType as ColType | undefined;
+      if (!isLined && colType === "time") {
+        const now = new Date(); const h = now.getHours();
+        const autoVal = `${h % 12 || 12}:${String(now.getMinutes()).padStart(2, "0")} ${h >= 12 ? "PM" : "AM"}`;
+        td.setAttribute("style", TD_STYLE); td.setAttribute("contenteditable", "false");
+        td.dataset.cellVal = autoVal; td.dataset.cellType = colType;
+        td.innerHTML = makeCellInner(colType, autoVal);
+      } else {
+        td.setAttribute("style", isLined ? linedTdStyle : TD_STYLE);
+        td.setAttribute("contenteditable", "true"); td.innerHTML = "<br/>";
+      }
+      tr.appendChild(td);
+    }
+    tbody.appendChild(tr); saveContent(); updateTableToolbar();
+  };
+
+  const tableRemoveRow = () => {
+    const table = activeTableRef.current; if (!table) return;
+    const tbody = table.querySelector("tbody"); if (!tbody || tbody.rows.length === 0) return;
+    tbody.removeChild(tbody.rows[tbody.rows.length - 1]); saveContent(); updateTableToolbar();
+  };
+
+  const tableAddCol = () => {
+    const table = activeTableRef.current; if (!table) return;
+    for (let i = 0; i < table.rows.length; i++) {
+      const row = table.rows[i];
+      const isHead = row.parentElement?.tagName === "THEAD";
+      const cell = document.createElement(isHead ? "th" : "td");
+      cell.setAttribute("style", isHead ? TH_STYLE : TD_STYLE);
+      cell.setAttribute("contenteditable", "true");
+      cell.innerHTML = isHead ? `Column ${row.cells.length + 1}` : "<br/>";
+      row.appendChild(cell);
+    }
+    saveContent(); updateTableToolbar();
+  };
+
+  const tableRemoveCol = () => {
+    const table = activeTableRef.current; if (!table) return;
+    for (let i = 0; i < table.rows.length; i++) {
+      const row = table.rows[i];
+      if (row.cells.length > 1) row.removeChild(row.cells[row.cells.length - 1]);
+    }
+    saveContent(); updateTableToolbar();
+  };
+
+  const tableToggleLines = () => {
+    const table = activeTableRef.current; if (!table) return;
+    const hidden = table.dataset.linesHidden === "true";
+    if (hidden) {
+      const origTable = table.dataset.originalStyle;
+      if (origTable !== undefined) table.setAttribute("style", origTable);
+      delete table.dataset.originalStyle;
+      Array.from(table.querySelectorAll("th, td")).forEach(cell => {
+        const el = cell as HTMLElement;
+        const orig = el.dataset.originalStyle;
+        if (orig !== undefined) { el.setAttribute("style", orig); delete el.dataset.originalStyle; }
+        else el.setAttribute("style", el.tagName === "TH" ? TH_STYLE : TD_STYLE);
+      });
+      table.dataset.linesHidden = "false"; setTableLinesHidden(false);
+    } else {
+      table.dataset.originalStyle = table.getAttribute("style") || "";
+      Array.from(table.querySelectorAll("th, td")).forEach(cell => {
+        const el = cell as HTMLElement;
+        el.dataset.originalStyle = el.getAttribute("style") || "";
+        el.style.setProperty("border-top", "1px solid transparent", "important");
+        el.style.setProperty("border-bottom", "1px solid transparent", "important");
+        el.style.setProperty("border-left", "1px solid transparent", "important");
+        el.style.setProperty("border-right", "1px solid transparent", "important");
+        el.style.setProperty("border-color", "transparent", "important");
+        if (el.tagName === "TH") el.style.setProperty("background-color", "white", "important");
+      });
+      table.style.setProperty("border-color", "transparent", "important");
+      table.style.setProperty("border-left", "1px solid transparent", "important");
+      table.dataset.linesHidden = "true"; setTableLinesHidden(true);
+    }
+    saveContent();
+  };
+
+  const tableDeleteTable = () => {
+    const table = activeTableRef.current; if (!table) return;
+    const parent = table.parentElement;
+    if (parent) { const br = document.createElement("br"); parent.replaceChild(br, table); }
+    activeTableRef.current = null; setTableToolbar(null); setTableLinesHidden(false);
+    if (tableResizeObserverRef.current) { tableResizeObserverRef.current.disconnect(); tableResizeObserverRef.current = null; }
+    saveContent();
+  };
+
+  // ── Column type helpers
+  const handleColTypeChange = (th: HTMLElement, type: ColType) => {
+    applyColType(th, type, undefined, saveContent);
+    setColTypePopup(null);
+  };
+
+  const handleSortCol = (th: HTMLElement, dir: "asc" | "desc") => {
+    const table = th.closest("table"); if (!table) return;
+    const idx = getColIndex(th);
+    const tbody = table.querySelector("tbody"); if (!tbody) return;
+    const rows = Array.from(tbody.rows) as HTMLTableRowElement[];
+    rows.sort((a, b) => {
+      const av = (a.cells[idx] as HTMLElement)?.dataset.cellVal || a.cells[idx]?.textContent || "";
+      const bv = (b.cells[idx] as HTMLElement)?.dataset.cellVal || b.cells[idx]?.textContent || "";
+      const cmp = av.localeCompare(bv, undefined, { numeric: true });
+      return dir === "asc" ? cmp : -cmp;
+    });
+    rows.forEach(r => tbody.appendChild(r));
+    saveContent();
+  };
+
+  const handleDeleteColFromPicker = (th: HTMLElement) => {
+    const table = th.closest("table"); if (!table) return;
+    const idx = getColIndex(th);
+    for (let i = 0; i < table.rows.length; i++) {
+      const row = table.rows[i];
+      if (row.cells.length > 1) row.removeChild(row.cells[idx]);
+    }
+    saveContent(); updateTableToolbar();
+  };
+
+  const startDirectEdit = useCallback((td: HTMLElement, th: HTMLElement, type: ColType) => {
+    if (activeEditRef.current && activeEditRef.current.td !== td) {
+      activeEditRef.current.finish(); activeEditRef.current = null;
+    }
+    if (td.dataset.editing === "1") return;
+    td.dataset.editing = "1";
+    const rawVal = td.dataset.cellVal || "";
+    td.contentEditable = "true"; td.textContent = rawVal; td.focus();
+    const sel = window.getSelection(); const range = document.createRange();
+    if (td.firstChild) { range.setStart(td.firstChild, (td.textContent?.length ?? 0)); range.collapse(true); }
+    else { range.setStart(td, 0); range.collapse(true); }
+    sel?.removeAllRanges(); sel?.addRange(range);
+    const finish = () => {
+      if (activeEditRef.current?.td === td) activeEditRef.current = null;
+      td.removeEventListener("keydown", onKeyDown);
+      td.removeEventListener("beforeinput", onBeforeInput as EventListener);
+      td.removeEventListener("input", onInput);
+      const newVal = type === "progress"
+        ? String(Math.min(100, Math.max(0, parseInt(td.textContent || "0") || 0)))
+        : (td.textContent || "").trim();
+      td.dataset.cellVal = newVal; td.contentEditable = "false"; delete td.dataset.editing;
+      const opts = getColOptions(th, type as ColType);
+      td.innerHTML = makeCellInner(type, newVal, opts);
+      saveContent();
+    };
+    const isNumeric = type === "number" || type === "currency";
+    const onKeyDown = (e: KeyboardEvent) => { if (e.key === "Enter" || e.key === "Escape") { e.preventDefault(); finish(); } };
+    const onBeforeInput = (e: InputEvent) => { if (!isNumeric) return; const data = e.data ?? ""; if (data && !/^[-\d.]*$/.test(data)) e.preventDefault(); };
+    const onInput = () => {
+      if (!isNumeric) return;
+      const current = td.textContent || ""; const filtered = current.replace(/[^-\d.]/g, "");
+      if (filtered !== current) {
+        td.textContent = filtered;
+        const sel = window.getSelection(); const r = document.createRange();
+        const node = td.firstChild;
+        if (node) { r.setStart(node, filtered.length); r.collapse(true); }
+        else { r.setStart(td, 0); r.collapse(true); }
+        sel?.removeAllRanges(); sel?.addRange(r);
+      }
+    };
+    activeEditRef.current = { td, finish };
+    td.addEventListener("blur", finish, { once: true });
+    td.addEventListener("keydown", onKeyDown);
+    td.addEventListener("beforeinput", onBeforeInput as EventListener);
+    td.addEventListener("input", onInput);
+  }, [saveContent]);
+
+  // ── MouseDown on editor: intercept th + typed td clicks
+  const handleEditorMouseDown = (e: React.MouseEvent) => {
+    if (drawTool) return;
+    const target = e.target as HTMLElement;
+
+    // Sticky note drag handle
+    if ((target as HTMLElement).closest('[data-drag-btn]')) {
+      e.preventDefault(); e.stopPropagation();
+      const note = (target as HTMLElement).closest('[data-sticky-note]') as HTMLElement | null;
+      const editor = editorRef.current;
+      if (!note || !editor) return;
+      const startMouseX = e.clientX; const startMouseY = e.clientY;
+      let dragging = false; let startLeft = 0; let startTop = 0;
+      const onMove = (ev: MouseEvent) => {
+        const dx = ev.clientX - startMouseX; const dy = ev.clientY - startMouseY;
+        if (!dragging && Math.sqrt(dx * dx + dy * dy) < 4) return;
+        if (!dragging) {
+          dragging = true;
+          if (note.style.position !== 'absolute') {
+            const noteRect = note.getBoundingClientRect();
+            const editorRect = editor.getBoundingClientRect();
+            note.style.position = 'absolute';
+            note.style.left = `${noteRect.left - editorRect.left}px`;
+            note.style.top = `${noteRect.top - editorRect.top}px`;
+            note.style.margin = '0'; note.style.display = 'inline-block';
+          }
+          startLeft = parseFloat(note.style.left) || 0;
+          startTop = parseFloat(note.style.top) || 0;
+          note.style.cursor = 'grabbing'; note.style.zIndex = '100';
+        }
+        note.style.left = `${startLeft + ev.clientX - startMouseX}px`;
+        note.style.top = `${Math.max(0, startTop + ev.clientY - startMouseY)}px`;
+      };
+      const onUp = () => {
+        note.style.cursor = '';
+        if (dragging) { note.style.zIndex = ''; debouncedSave(); }
+        document.removeEventListener('mousemove', onMove);
+        document.removeEventListener('mouseup', onUp);
+      };
+      document.addEventListener('mousemove', onMove);
+      document.addEventListener('mouseup', onUp);
+      return;
+    }
+
+    // Typed td cells: prevent browser focus dance, start edit immediately
+    const td = target.closest("td") as HTMLElement | null;
+    if (td && editorRef.current?.contains(td) && !td.closest("[data-lined]")) {
+      const th = findTh(td);
+      if (th) {
+        const type = getColType(th);
+        if (["number", "currency", "url", "email", "phone", "person"].includes(type)) {
+          if (td.dataset.editing === "1") return;
+          e.preventDefault();
+          setColTypePopup(null); setSelectCellPopup(null); setPriorityCellPopup(null); setProgressCellPopup(null);
+          startDirectEdit(td, th, type as ColType);
+          return;
+        }
+      }
+    }
+
+    const th = target.closest("th") as HTMLElement | null;
+    if (th && editorRef.current?.contains(th) && !th.closest("[data-lined]")) {
+      e.preventDefault();
+      const rect = th.getBoundingClientRect();
+      setColTypePopup({ th, rect });
+      setSelectCellPopup(null);
+    }
+  };
+
+  // ── Click handler for editor (typed cells, remove btn, etc.)
+  const handleEditorClick = (e: React.MouseEvent) => {
+    const target = e.target as HTMLElement;
+
+    // Typed td cell interactions
+    const td = target.closest("td") as HTMLElement | null;
+    if (td && editorRef.current?.contains(td) && !td.closest("[data-lined]")) {
+      const th = findTh(td);
+      if (th) {
+        const type = getColType(th);
+        if (type !== "text") {
+          e.preventDefault(); e.stopPropagation();
+          if (type === "check") {
+            const current = td.dataset.cellVal === "true";
+            td.dataset.cellVal = String(!current);
+            td.innerHTML = makeCellInner("check", td.dataset.cellVal);
+            debouncedSave(); return;
+          }
+          if (type === "rating") {
+            const star = (target as HTMLElement).closest("[data-star]") as HTMLElement | null;
+            if (star) { td.dataset.cellVal = star.dataset.star || "0"; td.innerHTML = makeCellInner("rating", td.dataset.cellVal); debouncedSave(); }
+            return;
+          }
+          if (type === "priority") {
+            const rect = td.getBoundingClientRect();
+            setPriorityCellPopup({ td, rect }); setColTypePopup(null); setSelectCellPopup(null); return;
+          }
+          if (type === "select" || type === "multi") {
+            const rect = td.getBoundingClientRect();
+            setSelectCellPopup({ td, th, rect, multi: type === "multi" }); setColTypePopup(null); setPriorityCellPopup(null); return;
+          }
+          if (type === "progress") {
+            const rect = td.getBoundingClientRect();
+            setProgressCellPopup({ td, rect }); setColTypePopup(null); setSelectCellPopup(null); setPriorityCellPopup(null); return;
+          }
+          if (type === "time") {
+            const rect = td.getBoundingClientRect();
+            setTimeCellPopup({ td, rect }); setColTypePopup(null); setSelectCellPopup(null); setPriorityCellPopup(null); setProgressCellPopup(null); return;
+          }
+          if (type === "id") {
+            const rect = td.getBoundingClientRect();
+            setIdCellPopup({ td, rect }); setColTypePopup(null); setSelectCellPopup(null); setPriorityCellPopup(null); setProgressCellPopup(null); setTimeCellPopup(null); return;
+          }
+          return;
+        }
+      }
+    }
+
+    // Remove button clicked → delete the parent block
+    const removeButton = target.closest('[data-remove-btn]');
+    if (removeButton) {
+      e.preventDefault(); e.stopPropagation();
+      const block = removeButton.closest('[data-quote-block],[data-link-block],[data-voice-block]');
+      if (block) { block.remove(); debouncedSave(); }
+      return;
+    }
+
+    // Link block clicked → open the URL
+    const linkBlock = target.closest('[data-link-block]') as HTMLElement | null;
+    if (linkBlock && !target.closest('[data-link-url]') && !target.closest('[data-remove-btn]')) {
+      const urlEl = linkBlock.querySelector('[data-link-url]');
+      const url = urlEl?.textContent?.trim() ?? "";
+      if (url && url !== "Paste link here…") window.open(url, "_blank");
+      return;
+    }
+
+    // Clicking on empty editor space → add paragraphs to reach click position
+    if (target === editorRef.current) {
+      const editor = editorRef.current; if (!editor) return;
+      editor.focus();
+      const editorRect = editor.getBoundingClientRect();
+      const clickY = e.clientY;
+      let lastBottom = editorRect.top;
+      const children = Array.from(editor.childNodes);
+      for (const child of children) {
+        if (child.nodeType === Node.ELEMENT_NODE) {
+          const rect = (child as Element).getBoundingClientRect();
+          if (rect.bottom > lastBottom) lastBottom = rect.bottom;
+        }
+      }
+      const lineHeight = 26;
+      const gap = clickY - lastBottom;
+      if (gap > lineHeight / 2) {
+        const linesToAdd = Math.max(1, Math.round(gap / lineHeight));
+        let html = "";
+        for (let i = 0; i < linesToAdd; i++) html += "<p><br></p>";
+        const range = document.createRange();
+        range.selectNodeContents(editor); range.collapse(false);
+        const sel = window.getSelection(); sel?.removeAllRanges(); sel?.addRange(range);
+        document.execCommand("insertHTML", false, html);
+        debouncedSave();
+      } else {
+        const range = document.createRange();
+        range.selectNodeContents(editor); range.collapse(false);
+        window.getSelection()?.removeAllRanges(); window.getSelection()?.addRange(range);
+      }
+    }
+  };
+
+  // ── Todo inline +/- helpers
+  const appendTodoAtEnd = useCallback(() => {
+    const editor = editorRef.current; if (!editor) return;
+    const wrapper = document.createElement("div");
+    wrapper.innerHTML = newTodoHTML();
+    const todoEl = wrapper.firstChild as HTMLElement;
+    const todos = editor.querySelectorAll('[data-todo-item="1"]');
+    if (todos.length > 0) {
+      const lastTodo = todos[todos.length - 1] as HTMLElement;
+      lastTodo.insertAdjacentElement("afterend", todoEl);
+    } else {
+      editor.appendChild(todoEl);
+    }
+    saveContent();
+  }, [saveContent]);
+
+  const removeLastTodoItem = useCallback((count: number) => {
+    if (!editorRef.current) return;
+    const items = editorRef.current.querySelectorAll('[data-todo-item="1"]');
+    const toRemove = Array.from(items).slice(-count);
+    toRemove.forEach(el => el.remove());
+    saveContent();
+  }, [saveContent]);
+
+  // ── Track position of last todo item for inline +/- buttons
+  const updateLastTodoPos = useCallback(() => {
+    const editor = editorRef.current; const paper = paperRef.current;
+    if (!editor || !paper) { setLastTodoPos(null); return; }
+    const todos = editor.querySelectorAll('[data-todo-item="1"]');
+    if (todos.length === 0) { setLastTodoPos(null); return; }
+    const lastTodo = todos[todos.length - 1] as HTMLElement;
+    const todoRect = lastTodo.getBoundingClientRect();
+    const paperRect = paper.getBoundingClientRect();
+    setLastTodoPos({ top: todoRect.top - paperRect.top + (todoRect.height / 2), left: todoRect.left - paperRect.left });
+  }, []);
+
+  useEffect(() => {
+    const editor = editorRef.current; if (!editor) return;
+    const observer = new MutationObserver(updateLastTodoPos);
+    observer.observe(editor, { childList: true, subtree: true, characterData: true });
+    updateLastTodoPos();
+    return () => observer.disconnect();
+  }, [updateLastTodoPos, page.id]);
+
+  // ── Image & Video media insertion as floating blocks
+  const compressImage = (file: File, maxWidth = 900): Promise<string> =>
+    new Promise((resolve, reject) => {
+      const img = new Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        const scale = Math.min(1, maxWidth / img.width);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext("2d")!.drawImage(img, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url);
+        resolve(canvas.toDataURL("image/jpeg", 0.85));
+      };
+      img.onerror = reject;
+      img.src = url;
+    });
+
+  const handleImageFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; e.target.value = "";
     if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const src = ev.target?.result as string;
-      insertHTML(`<br/><div contenteditable="false" style="display:inline-block;max-width:100%;margin:6px 0"><img src="${src}" style="max-width:100%;border-radius:6px;display:block" /></div><br/>`);
-    };
-    reader.readAsDataURL(file);
+    try {
+      const src = await compressImage(file);
+      const paperW = paperRef.current?.clientWidth ?? 794;
+      const blockW = Math.min(375, paperW - 96);
+      const id = `img_${Date.now()}`;
+      const newBlock: ImageBlock = { id, src, locked: false, width: blockW, x: (paperW - blockW) / 2, y: 120 };
+      setImageBlocks(prev => [...prev, newBlock]);
+    } catch { /* ignore */ }
   };
 
   const handleVoiceFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -961,7 +1619,11 @@ function A4Page({
     const reader = new FileReader();
     reader.onload = (ev) => {
       const src = ev.target?.result as string;
-      insertHTML(`<br/><div contenteditable="false" style="margin:6px 0"><video controls src="${src}" style="max-width:100%;border-radius:6px;display:block"></video></div><br/>`);
+      const paperW = paperRef.current?.clientWidth ?? 794;
+      const blockW = Math.min(400, paperW - 96);
+      const id = `vid_${Date.now()}`;
+      const newBlock: VideoBlock = { id, src, name: file.name, locked: false, width: blockW, x: (paperW - blockW) / 2, y: 120 };
+      setVideoBlocks(prev => [...prev, newBlock]);
     };
     reader.readAsDataURL(file);
   };
@@ -1064,7 +1726,52 @@ function A4Page({
 
   // ── Render
   return (
-    <div className="relative flex-shrink-0 group/page" style={{ width: 794 }}>
+    <div
+      className="relative flex-shrink-0 group/page"
+      style={{ width: 794 }}
+      onMouseMove={(e) => {
+        const paper = paperRef.current;
+        const paperRect = paper?.getBoundingClientRect();
+        if (!paperRect) return;
+        const mx = e.clientX - paperRect.left;
+        const my = e.clientY - paperRect.top;
+        if (lastTodoPos) {
+          const dx = mx - lastTodoPos.left;
+          const dy = my - lastTodoPos.top;
+          setShowTodoButtons(Math.abs(dx) < 80 && Math.abs(dy) < 40);
+        }
+        const tbl = (e.target as Element).closest("table") as HTMLTableElement | null;
+        if (tbl && editorRef.current?.contains(tbl)) {
+          if (tbl !== activeTableRef.current) {
+            activeTableRef.current = tbl; updateTableToolbar();
+            setTableLinesHidden(tbl.dataset.linesHidden === "true");
+          }
+          setShowTableBtns(true);
+        } else {
+          const editor = editorRef.current;
+          const nearTable = editor ? Array.from(editor.querySelectorAll("table")).find(t => {
+            const tr = t.getBoundingClientRect();
+            const tx = tr.left - paperRect.left;
+            const ty = tr.top - paperRect.top;
+            const inRowZone = mx >= tx - 12 && mx <= tx + 60 && my >= ty + tr.height - 12 && my <= ty + tr.height + 60;
+            const inColZone = mx >= tx + tr.width - 12 && mx <= tx + tr.width + 60 && my >= ty - 12 && my <= ty + 60;
+            return inRowZone || inColZone;
+          }) as HTMLTableElement | undefined : undefined;
+          if (nearTable) {
+            if (nearTable !== activeTableRef.current) { activeTableRef.current = nearTable; updateTableToolbar(); setTableLinesHidden(nearTable.dataset.linesHidden === "true"); }
+            setShowTableBtns(true);
+          } else {
+            setShowTableBtns(false);
+          }
+        }
+      }}
+      onMouseLeave={() => {
+        setShowTodoButtons(false);
+        setTableToolbar(null);
+        activeTableRef.current = null;
+        if (tableResizeObserverRef.current) { tableResizeObserverRef.current.disconnect(); tableResizeObserverRef.current = null; }
+      }}
+    >
       {/* Page number */}
       <div className="absolute -left-14 top-6 text-zinc-500 text-xs font-medium select-none text-right w-10">
         {index + 1}
@@ -1136,6 +1843,8 @@ function A4Page({
           onCompositionStart={() => { isComposing.current = true; }}
           onCompositionEnd={() => { isComposing.current = false; handleInput(); }}
           onContextMenu={handleContextMenu}
+          onMouseDown={handleEditorMouseDown}
+          onClick={handleEditorClick}
           className="outline-none w-full text-zinc-800 a4-editor"
           style={{
             fontFamily: "Georgia, 'Times New Roman', serif",
@@ -1155,6 +1864,156 @@ function A4Page({
         <input ref={imgInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageFile} />
         <input ref={voiceInputRef} type="file" accept="audio/*" className="hidden" onChange={handleVoiceFile} />
         <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={handleVideoFile} />
+
+        {/* ── Floating video blocks ── */}
+        {videoBlocks.map(blk => (
+          <div key={blk.id} style={{ position: "absolute", left: blk.x, top: blk.y, width: blk.width, userSelect: "none", zIndex: 21 }}>
+            <div
+              style={{ position: "relative", cursor: blk.locked ? "default" : "grab", border: "2px solid #e2e8f0", borderRadius: 10, overflow: "visible", background: "#0f0f0f", boxShadow: "0 4px 20px rgba(0,0,0,0.22)" }}
+              onMouseDown={e => {
+                if (blk.locked) return;
+                const tgt = e.target as HTMLElement;
+                if (tgt.closest("[data-vid-btn]") || tgt.closest("[data-vid-resize]")) return;
+                if (tgt.tagName === "VIDEO") return;
+                e.preventDefault();
+                videoDragRef.current = { id: blk.id, startMx: e.clientX, startMy: e.clientY, startBx: blk.x, startBy: blk.y };
+              }}
+            >
+              <div style={{ padding: "6px 10px", background: "#1a1a2e", borderRadius: "8px 8px 0 0", display: "flex", alignItems: "center", gap: 6 }}>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="#8b5cf6"><path d="M17 10.5V7c0-.55-.45-1-1-1H4c-.55 0-1 .45-1 1v10c0 .55.45 1 1 1h12c.55 0 1-.45 1-1v-3.5l4 4v-11l-4 4z"/></svg>
+                <span style={{ fontSize: 9, fontWeight: 700, color: "#a78bfa", letterSpacing: "0.05em", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>{blk.name}</span>
+              </div>
+              <video controls src={blk.src} style={{ display: "block", width: "100%", borderRadius: "0 0 8px 8px", maxHeight: 320, background: "#000" }} />
+              {!blk.locked && (
+                <button data-vid-btn="1"
+                  onClick={() => { const f = videoBlocks.filter(b => b.id !== blk.id); setVideoBlocks(f); }}
+                  style={{ position: "absolute", top: -10, left: -10, width: 22, height: 22, borderRadius: "50%", background: "#ef4444", border: "2px solid #fff", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.18)", zIndex: 30, lineHeight: 1, padding: 0 }}
+                  title="Delete video">×</button>
+              )}
+              <button data-vid-btn="1"
+                onClick={() => setVideoBlocks(prev => prev.map(b => b.id === blk.id ? { ...b, locked: !b.locked } : b))}
+                style={{ position: "absolute", top: -10, right: -10, width: 22, height: 22, borderRadius: "50%", background: blk.locked ? "#6366f1" : "#94a3b8", border: "2px solid #fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.18)", zIndex: 30, padding: 0 }}
+                title={blk.locked ? "Unlock" : "Lock position"}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="white">
+                  {blk.locked
+                    ? <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                    : <path d="M12 1C9.24 1 7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2h-1V6c0-2.76-2.24-5-5-5zm0 2c1.66 0 3 1.34 3 3v2H9V6c0-1.66 1.34-3 3-3zm0 11c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z" opacity=".4"/>}
+                </svg>
+              </button>
+              <div style={{ position: "absolute", bottom: -20, left: 0, fontSize: 10, color: "#94a3b8", fontFamily: "monospace", pointerEvents: "none" }}>{Math.round(blk.width)}px</div>
+              {!blk.locked && (
+                <>
+                  <div data-vid-resize="1" onMouseDown={e => { e.preventDefault(); e.stopPropagation(); videoResizeRef.current = { id: blk.id, startMx: e.clientX, startW: blk.width, startBx: blk.x, side: "bl" }; }}
+                    style={{ position: "absolute", bottom: -5, left: -5, width: 10, height: 10, background: "#8b5cf6", border: "2px solid #fff", borderRadius: 2, zIndex: 30, cursor: "sw-resize" }} />
+                  <div data-vid-resize="1" onMouseDown={e => { e.preventDefault(); e.stopPropagation(); videoResizeRef.current = { id: blk.id, startMx: e.clientX, startW: blk.width, startBx: blk.x, side: "br" }; }}
+                    style={{ position: "absolute", bottom: -5, right: -5, width: 10, height: 10, background: "#8b5cf6", border: "2px solid #fff", borderRadius: 2, zIndex: 30, cursor: "se-resize" }} />
+                </>
+              )}
+            </div>
+          </div>
+        ))}
+
+        {/* ── Floating image blocks ── */}
+        {imageBlocks.map(blk => (
+          <div key={blk.id} style={{ position: "absolute", left: blk.x, top: blk.y, width: blk.width, userSelect: "none", zIndex: 20 }}>
+            <div
+              style={{ position: "relative", cursor: blk.locked ? "default" : "grab", border: "2px solid #e2e8f0", borderRadius: 8, overflow: "visible", background: "#fff", boxShadow: "0 2px 12px rgba(0,0,0,0.10)" }}
+              onMouseDown={e => {
+                if (blk.locked) return;
+                const tgt = e.target as HTMLElement;
+                if (tgt.closest("[data-img-btn]") || tgt.closest("[data-resize-handle]")) return;
+                e.preventDefault();
+                dragRef.current = { id: blk.id, startMx: e.clientX, startMy: e.clientY, startBx: blk.x, startBy: blk.y };
+              }}
+            >
+              <img src={blk.src} alt="" draggable={false} style={{ display: "block", width: "100%", borderRadius: 6, pointerEvents: "none" }} />
+              {!blk.locked && (
+                <button data-img-btn="1"
+                  onClick={() => { const f = imageBlocks.filter(b => b.id !== blk.id); setImageBlocks(f); }}
+                  style={{ position: "absolute", top: -10, left: -10, width: 22, height: 22, borderRadius: "50%", background: "#ef4444", border: "2px solid #fff", color: "#fff", fontSize: 13, fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.18)", zIndex: 30, lineHeight: 1, padding: 0 }}
+                  title="Delete image">×</button>
+              )}
+              <button data-img-btn="1"
+                onClick={() => setImageBlocks(prev => prev.map(b => b.id === blk.id ? { ...b, locked: !b.locked } : b))}
+                style={{ position: "absolute", top: -10, right: -10, width: 22, height: 22, borderRadius: "50%", background: blk.locked ? "#6366f1" : "#94a3b8", border: "2px solid #fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 1px 4px rgba(0,0,0,0.18)", zIndex: 30, padding: 0, transition: "opacity 0.2s" }}
+                title={blk.locked ? "Unlock" : "Lock position"}>
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="white">
+                  {blk.locked
+                    ? <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                    : <path d="M12 1C9.24 1 7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2h-1V6c0-2.76-2.24-5-5-5zm0 2c1.66 0 3 1.34 3 3v2H9V6c0-1.66 1.34-3 3-3zm0 11c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2z" opacity=".4"/>}
+                </svg>
+              </button>
+              <div style={{ position: "absolute", bottom: -20, left: 0, fontSize: 10, color: "#94a3b8", fontFamily: "monospace", pointerEvents: "none" }}>{Math.round(blk.width)}px</div>
+              {!blk.locked && [
+                { side: "bl" as const, style: { bottom: -5, left: -5, cursor: "sw-resize" } },
+                { side: "br" as const, style: { bottom: -5, right: -5, cursor: "se-resize" } },
+              ].map(({ side, style }) => (
+                <div key={side} data-resize-handle="1"
+                  onMouseDown={e => { e.preventDefault(); e.stopPropagation(); resizeRef.current = { id: blk.id, startMx: e.clientX, startW: blk.width, startBx: blk.x, side }; }}
+                  style={{ position: "absolute", width: 10, height: 10, background: "#ef4444", border: "2px solid #fff", borderRadius: 2, zIndex: 30, ...style }} />
+              ))}
+            </div>
+          </div>
+        ))}
+
+        {/* ── Todo inline +/- buttons ── */}
+        {lastTodoPos && (
+          <div
+            onMouseEnter={() => setShowTodoButtons(true)}
+            onMouseLeave={() => setShowTodoButtons(false)}
+            style={{ position: "absolute", top: lastTodoPos.top, left: lastTodoPos.left - 30, transform: "translateY(-50%)", display: "flex", flexDirection: "column", gap: 4, zIndex: 200, pointerEvents: "auto", opacity: showTodoButtons ? 1 : 0, transition: "opacity 0.15s ease" }}
+          >
+            <button
+              onMouseDown={e => { e.preventDefault(); removeLastTodoItem(1); }}
+              title="Remove last item"
+              style={{ width: 20, height: 20, borderRadius: 4, border: "1px solid #e7e5e4", background: "#fafaf8", color: "#374151", fontSize: 12, fontWeight: 700, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#fee2e2"; (e.currentTarget as HTMLButtonElement).style.color = "#dc2626"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "#fafaf8"; (e.currentTarget as HTMLButtonElement).style.color = "#374151"; }}
+            >−</button>
+            <button
+              onMouseDown={e => { e.preventDefault(); appendTodoAtEnd(); }}
+              title="Add new item"
+              style={{ width: 20, height: 20, borderRadius: 4, border: "1px solid #e7e5e4", background: "#fafaf8", color: "#374151", fontSize: 12, fontWeight: 700, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}
+              onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "#dcfce7"; (e.currentTarget as HTMLButtonElement).style.color = "#16a34a"; }}
+              onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "#fafaf8"; (e.currentTarget as HTMLButtonElement).style.color = "#374151"; }}
+            >+</button>
+          </div>
+        )}
+
+        {/* ── Table +/- row & column buttons ── */}
+        {tableToolbar && (() => {
+          const isLined = activeTableRef.current?.dataset.lined === "true";
+          const btnStyle = (): React.CSSProperties => ({ width: 16, height: 16, borderRadius: 0, border: "1px solid #000", background: "#fafaf8", color: "#374151", fontSize: 13, fontWeight: 700, lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer", opacity: 0.3 });
+          const hoverRed = (e: React.MouseEvent<HTMLButtonElement>) => { const t = e.currentTarget; t.style.background = "#fee2e2"; t.style.color = "#dc2626"; };
+          const hoverGreen = (e: React.MouseEvent<HTMLButtonElement>) => { const t = e.currentTarget; t.style.background = "#dcfce7"; t.style.color = "#16a34a"; };
+          const hoverReset = (e: React.MouseEvent<HTMLButtonElement>) => { const t = e.currentTarget; t.style.background = "#fafaf8"; t.style.color = "#374151"; };
+          const hoverOrange = (e: React.MouseEvent<HTMLButtonElement>) => { const t = e.currentTarget; t.style.background = "#fee2e2"; t.style.color = "#dc2626"; };
+          const rowBtns = (
+            <div
+              onMouseEnter={() => setHoverTableBtns(true)}
+              onMouseLeave={() => setHoverTableBtns(false)}
+              style={{ position: "absolute", top: isLined ? tableToolbar.top + 8 : tableToolbar.top + tableToolbar.height + 2, left: isLined ? tableToolbar.left - 30 : tableToolbar.left + 4, display: "flex", flexDirection: isLined ? "column" : "row", gap: 4, zIndex: 200, pointerEvents: "auto", opacity: showTableBtns || hoverTableBtns ? 1 : 0, padding: 12, margin: -12 }}>
+              {isLined && (
+                <button onMouseDown={e => { e.preventDefault(); tableDeleteTable(); }} title="Delete lined table"
+                  style={{ ...btnStyle(), fontSize: 12 }} onMouseEnter={hoverOrange} onMouseLeave={hoverReset}>✕</button>
+              )}
+              <button onMouseDown={e => { e.preventDefault(); tableRemoveRow(); }} title="Remove last row" style={btnStyle()} onMouseEnter={hoverRed} onMouseLeave={hoverReset}>−</button>
+              <button onMouseDown={e => { e.preventDefault(); tableAddRow(); }} title="Add row" style={btnStyle()} onMouseEnter={hoverGreen} onMouseLeave={hoverReset}>+</button>
+            </div>
+          );
+          const hoverBlue = (e: React.MouseEvent<HTMLButtonElement>) => { const t = e.currentTarget; t.style.background = "#dbeafe"; t.style.color = "#2563eb"; };
+          const colBtns = !isLined && (
+            <div
+              onMouseEnter={() => setHoverTableBtns(true)}
+              onMouseLeave={() => setHoverTableBtns(false)}
+              style={{ position: "absolute", top: tableToolbar.top + 4, left: tableToolbar.left + tableToolbar.width + 2, display: "flex", flexDirection: "column", gap: 4, zIndex: 200, pointerEvents: "auto", opacity: showTableBtns || hoverTableBtns ? 1 : 0, padding: 12, margin: -12 }}>
+              <button onMouseDown={e => { e.preventDefault(); tableRemoveCol(); }} title="Remove last column" style={btnStyle()} onMouseEnter={hoverRed} onMouseLeave={hoverReset}>−</button>
+              <button onMouseDown={e => { e.preventDefault(); tableAddCol(); }} title="Add column" style={btnStyle()} onMouseEnter={hoverGreen} onMouseLeave={hoverReset}>+</button>
+              <button onMouseDown={e => { e.preventDefault(); tableDeleteTable(); }} title="Delete table" style={{ ...btnStyle(), fontSize: 12 }} onMouseEnter={hoverBlue} onMouseLeave={hoverReset}>✕</button>
+            </div>
+          );
+          return <>{rowBtns}{colBtns}</>;
+        })()}
       </div>
 
       {/* Draw mode banner */}
@@ -1727,6 +2586,71 @@ function A4Page({
             </button>
           ))}
         </div>
+      )}
+
+      {/* ── Column type picker popup ── */}
+      {colTypePopup && (
+        <ColTypePicker
+          th={colTypePopup.th}
+          rect={colTypePopup.rect}
+          onClose={() => setColTypePopup(null)}
+          onTypeChange={handleColTypeChange}
+          onDeleteCol={() => handleDeleteColFromPicker(colTypePopup.th)}
+          onSortAZ={() => handleSortCol(colTypePopup.th, "asc")}
+          onSortZA={() => handleSortCol(colTypePopup.th, "desc")}
+        />
+      )}
+
+      {/* ── Select / Multi cell popup ── */}
+      {selectCellPopup && (
+        <SelectCellPopup
+          td={selectCellPopup.td}
+          th={selectCellPopup.th}
+          rect={selectCellPopup.rect}
+          multi={selectCellPopup.multi}
+          onClose={() => setSelectCellPopup(null)}
+          onSave={saveContent}
+        />
+      )}
+
+      {/* ── Priority cell popup ── */}
+      {priorityCellPopup && (
+        <PriorityCellPopup
+          td={priorityCellPopup.td}
+          rect={priorityCellPopup.rect}
+          onClose={() => setPriorityCellPopup(null)}
+          onSave={saveContent}
+        />
+      )}
+
+      {/* ── Progress cell popup ── */}
+      {progressCellPopup && (
+        <ProgressCellPopup
+          td={progressCellPopup.td}
+          rect={progressCellPopup.rect}
+          onClose={() => setProgressCellPopup(null)}
+          onSave={saveContent}
+        />
+      )}
+
+      {/* ── Time cell popup ── */}
+      {timeCellPopup && (
+        <TimeCellPopup
+          td={timeCellPopup.td}
+          rect={timeCellPopup.rect}
+          onClose={() => setTimeCellPopup(null)}
+          onSave={saveContent}
+        />
+      )}
+
+      {/* ── ID cell popup ── */}
+      {idCellPopup && (
+        <IDCellPopup
+          td={idCellPopup.td}
+          rect={idCellPopup.rect}
+          onClose={() => setIdCellPopup(null)}
+          onSave={saveContent}
+        />
       )}
 
       {/* Clear page confirm */}
