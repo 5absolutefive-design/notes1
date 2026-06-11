@@ -3797,7 +3797,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 <button onClick={() => { setCtxMenu(null); voiceInputRef.current?.click(); }}
                   className="w-full flex items-center gap-2.5 px-2 py-2 rounded-lg hover:bg-rose-50 text-stone-700 text-left transition-colors">
                   <span className="w-6 h-6 flex items-center justify-center flex-shrink-0">
-                    <img src="/voice-icon.png" alt="Voice" className="w-4 h-4 object-contain" />
+                    <img src="/voice-icon.png" alt="Voice" className="w-5 h-5 object-contain" />
                   </span>
                   <div className="text-xs font-semibold text-stone-700">Voice</div>
                 </button>
