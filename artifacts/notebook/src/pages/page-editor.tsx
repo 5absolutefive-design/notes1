@@ -442,6 +442,8 @@ function A4Page({
   const [rightNote, setRightNote] = useState(() => localStorage.getItem(`nb_sidenote_${bookId}_${page.id}_right`) ?? "");
   const [pageNoteOpen, setPageNoteOpen] = useState(false);
   const [pageNote, setPageNote] = useState(() => localStorage.getItem(`nb_sidenote_${bookId}_${page.id}_page`) ?? "");
+  const [pageNoteRightOpen, setPageNoteRightOpen] = useState(false);
+  const [pageNoteRight, setPageNoteRight] = useState(() => localStorage.getItem(`nb_sidenote_${bookId}_${page.id}_page_right`) ?? "");
 
   // ── Sync refs with latest state
   useEffect(() => { imageBlocksRef.current = imageBlocks; }, [imageBlocks]);
@@ -1858,6 +1860,18 @@ function A4Page({
         </button>
       )}
 
+      {/* Right inner note toggle */}
+      {!rightOpen && (
+        <button
+          onClick={() => setPageNoteRightOpen(v => !v)}
+          className="absolute top-36 -right-8 z-20 flex flex-col items-center justify-center gap-0.5 w-7 h-14 rounded-r-lg bg-transparent hover:bg-white/10 transition-all opacity-0 group-hover/page:opacity-100"
+          style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.4))" }}
+          title="Toggle right inner note"
+        >
+          <img src={arrowCircleRightIcon} className="w-5 h-5 opacity-60" alt="" style={{ filter: "hue-rotate(120deg)" }} />
+        </button>
+      )}
+
       {/* A4 paper */}
       <div ref={paperRef} className="bg-white shadow-xl relative" style={{ minHeight: 1123, padding: "16px" }}>
 
@@ -1879,6 +1893,30 @@ function A4Page({
             <textarea
               value={pageNote}
               onChange={e => { const v = e.target.value; setPageNote(v); localStorage.setItem(`nb_sidenote_${bookId}_${page.id}_page`, v); }}
+              style={{ flex: 1, padding: 12, fontSize: 14, fontFamily: "Georgia, serif", color: "#1a3a1a", background: "transparent", border: "none", outline: "none", resize: "none", lineHeight: 1.8, minHeight: 1080 }}
+              placeholder="Inner notes…"
+            />
+          </div>
+        </div>
+
+        {/* ── RIGHT INNER NOTE PANEL (floating overlay on right of page) ── */}
+        <div style={{
+          position: "absolute", top: 0, right: 0, bottom: 0, zIndex: 40,
+          width: pageNoteRightOpen ? 300 : 0,
+          transition: "width 0.35s cubic-bezier(0.4,0,0.2,1)",
+          overflow: "hidden",
+          pointerEvents: pageNoteRightOpen ? "auto" : "none",
+        }}>
+          <div style={{ width: 300, minHeight: "100%", background: "#f0fdf4", borderLeft: "2px solid #86efac", display: "flex", flexDirection: "column" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 10px", background: "#dcfce7", borderBottom: "1px solid #86efac", position: "sticky", top: 0, zIndex: 10 }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: "#166534", display: "flex", alignItems: "center", gap: 6 }}>📝 Inner Note</span>
+              <button onClick={() => setPageNoteRightOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", padding: 2, display: "flex", alignItems: "center" }} title="Close right inner note">
+                <img src={arrowCircleLeftCloseIcon} style={{ width: 16, height: 16 }} alt="close" />
+              </button>
+            </div>
+            <textarea
+              value={pageNoteRight}
+              onChange={e => { const v = e.target.value; setPageNoteRight(v); localStorage.setItem(`nb_sidenote_${bookId}_${page.id}_page_right`, v); }}
               style={{ flex: 1, padding: 12, fontSize: 14, fontFamily: "Georgia, serif", color: "#1a3a1a", background: "transparent", border: "none", outline: "none", resize: "none", lineHeight: 1.8, minHeight: 1080 }}
               placeholder="Inner notes…"
             />
