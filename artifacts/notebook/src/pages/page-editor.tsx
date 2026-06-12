@@ -1815,19 +1815,23 @@ function A4Page({
       {/* Left side note toggle */}
       <button
         onClick={() => setLeftOpen(o => !o)}
-        className="absolute top-20 -left-7 z-20 flex items-center justify-center w-6 h-14 rounded-l-lg bg-amber-100 hover:bg-amber-200 border border-r-0 border-amber-300 text-amber-700 transition-all opacity-0 group-hover/page:opacity-100 shadow-sm"
+        className="absolute top-20 -left-8 z-20 flex flex-col items-center justify-center gap-0.5 w-7 h-14 rounded-l-lg bg-transparent hover:bg-white/10 transition-all opacity-0 group-hover/page:opacity-100"
+        style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.4))" }}
         title="Toggle left note"
       >
-        {leftOpen ? <ChevronRight className="w-3 h-3" /> : <ChevronLeft className="w-3 h-3" />}
+        <span className="text-sm leading-none">📝</span>
+        <span className="text-white text-xs leading-none font-bold">{leftOpen ? "›" : "‹"}</span>
       </button>
 
       {/* Right side note toggle */}
       <button
         onClick={() => setRightOpen(o => !o)}
-        className="absolute top-20 -right-7 z-20 flex items-center justify-center w-6 h-14 rounded-r-lg bg-sky-100 hover:bg-sky-200 border border-l-0 border-sky-300 text-sky-700 transition-all opacity-0 group-hover/page:opacity-100 shadow-sm"
+        className="absolute top-20 -right-8 z-20 flex flex-col items-center justify-center gap-0.5 w-7 h-14 rounded-r-lg bg-transparent hover:bg-white/10 transition-all opacity-0 group-hover/page:opacity-100"
+        style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.4))" }}
         title="Toggle right note"
       >
-        {rightOpen ? <ChevronLeft className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
+        <span className="text-sm leading-none">📝</span>
+        <span className="text-white text-xs leading-none font-bold">{rightOpen ? "‹" : "›"}</span>
       </button>
 
       {/* A4 paper */}
