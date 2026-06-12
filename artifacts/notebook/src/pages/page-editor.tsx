@@ -10,6 +10,7 @@ import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area,
   XAxis, YAxis, Tooltip, ResponsiveContainer,
 } from "recharts";
+import arrowCircleLeftIcon from "@assets/arrow-circle-broken-left-svgrepo-com_1781232885093.png";
 import cylinderIcon from "@assets/3d-cylinder-3d-design-3d-shape-cylinder-geometric-geometry-svg_1780973962135.svg";
 import cubeIcon from "@assets/3d-cube-3d-design-3d-shape-cube-geometric-geometry-3-svgrepo-c_1780974626332.svg";
 import octahedronIcon from "@assets/3d-design-3d-octahedron-3d-shape-geometric-geometry-octahedron_1780974626332.svg";
@@ -1819,7 +1820,7 @@ function A4Page({
         style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.4))" }}
         title="Toggle left note"
       >
-        <span className="text-sm leading-none">📝</span>
+        <img src={arrowCircleLeftIcon} className="w-5 h-5 opacity-80" alt="" />
         <span className="text-white text-xs leading-none font-bold">{leftOpen ? "›" : "‹"}</span>
       </button>
 
