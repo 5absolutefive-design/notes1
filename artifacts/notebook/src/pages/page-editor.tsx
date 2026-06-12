@@ -440,6 +440,8 @@ function A4Page({
   const [rightOpen, setRightOpen] = useState(false);
   const [leftNote, setLeftNote] = useState(() => localStorage.getItem(`nb_sidenote_${bookId}_${page.id}_left`) ?? "");
   const [rightNote, setRightNote] = useState(() => localStorage.getItem(`nb_sidenote_${bookId}_${page.id}_right`) ?? "");
+  const [pageNoteOpen, setPageNoteOpen] = useState(false);
+  const [pageNote, setPageNote] = useState(() => localStorage.getItem(`nb_sidenote_${bookId}_${page.id}_page`) ?? "");
 
   // ── Sync refs with latest state
   useEffect(() => { imageBlocksRef.current = imageBlocks; }, [imageBlocks]);
@@ -1832,6 +1834,18 @@ function A4Page({
         </button>
       )}
 
+      {/* Page overlay note toggle */}
+      {!leftOpen && (
+        <button
+          onClick={() => setPageNoteOpen(v => !v)}
+          className="absolute top-36 -left-8 z-20 flex flex-col items-center justify-center gap-0.5 w-7 h-14 rounded-l-lg bg-transparent hover:bg-white/10 transition-all opacity-0 group-hover/page:opacity-100"
+          style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.4))" }}
+          title="Toggle page note"
+        >
+          <img src={arrowCircleLeftIcon} className="w-5 h-5 opacity-60" alt="" style={{ filter: "hue-rotate(120deg)" }} />
+        </button>
+      )}
+
       {/* Right side note toggle */}
       {!rightOpen && (
         <button
@@ -1846,6 +1860,24 @@ function A4Page({
 
       {/* A4 paper */}
       <div ref={paperRef} className="bg-white shadow-xl relative" style={{ minHeight: 1123, padding: "16px" }}>
+
+        {/* Page overlay note */}
+        {pageNoteOpen && (
+          <div style={{ position: "absolute", top: 16, left: 16, right: 16, zIndex: 50, pointerEvents: "auto" }}>
+            <div style={{ background: "#f0fdf4", border: "2px solid #86efac", borderRadius: 10, boxShadow: "0 4px 24px rgba(0,0,0,0.13)", overflow: "hidden" }}>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 10px", background: "#dcfce7", borderBottom: "1px solid #86efac" }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: "#166534", display: "flex", alignItems: "center", gap: 6 }}>📝 Page Note</span>
+                <button onClick={() => setPageNoteOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", padding: 2, display: "flex", alignItems: "center", opacity: 0.7, fontSize: 14, color: "#166534" }} title="Close">✕</button>
+              </div>
+              <textarea
+                value={pageNote}
+                onChange={e => { const v = e.target.value; setPageNote(v); localStorage.setItem(`nb_sidenote_${bookId}_${page.id}_page`, v); }}
+                style={{ width: "100%", minHeight: 120, maxHeight: 300, padding: "10px 12px", fontSize: 14, fontFamily: "Georgia, serif", color: "#1a2e1a", background: "transparent", border: "none", outline: "none", resize: "vertical", lineHeight: 1.7, boxSizing: "border-box" }}
+                placeholder="Page notes…"
+              />
+            </div>
+          </div>
+        )}
 
         {/* Draw SVG overlay */}
         <svg
