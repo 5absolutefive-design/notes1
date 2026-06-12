@@ -19,6 +19,7 @@ import arrowCircleCloseIcon from "@assets/arrow-circle-broken-left-svgrepo-com_(
 import arrowThinRightBottomIcon from "@assets/arrow-thin-right-bottom-svgrepo-com_(1)_1781238046098.png";
 import arrowThinRightBottomIcon2 from "@assets/arrow-thin-right-bottom-svgrepo-com_(2)_1781238185617.png";
 import arrowCircleBrokenLeft2Icon from "@assets/arrow-circle-broken-left-svgrepo-com_(2)_1781238301037.png";
+import arrowCircleBrokenRight2Icon from "@assets/arrow-circle-broken-left-svgrepo-com_(1)_1781238389662.png";
 import arrowCircleRightIcon from "@assets/arrow-circle-broken-left-svgrepo-com_(3)_1781233231019.png";
 import arrowCircleLeftCloseIcon from "@assets/arrow-circle-broken-left-svgrepo-com_(2)_1781233449327.png";
 import cylinderIcon from "@assets/3d-cylinder-3d-design-3d-shape-cylinder-geometric-geometry-svg_1780973962135.svg";
@@ -1918,7 +1919,7 @@ function A4Page({
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 10px", background: "#dcfce7", borderBottom: "1px solid #86efac", position: "sticky", top: 0, zIndex: 10 }}>
               <span style={{ fontSize: 12, fontWeight: 600, color: "#166534", display: "flex", alignItems: "center", gap: 6 }}>📝 Inner Note</span>
               <button onClick={() => setPageNoteRightOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", padding: 2, display: "flex", alignItems: "center" }} title="Close right inner note">
-                <img src={arrowCircleLeftCloseIcon} style={{ width: 16, height: 16 }} alt="close" />
+                <img src={arrowCircleBrokenRight2Icon} style={{ width: 16, height: 16 }} alt="close" />
               </button>
             </div>
             <textarea
