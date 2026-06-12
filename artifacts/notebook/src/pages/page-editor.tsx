@@ -432,6 +432,10 @@ function A4Page({
   const [tableLinesHidden, setTableLinesHidden] = useState(false);
   const [lastTodoPos, setLastTodoPos] = useState<{ top: number; left: number } | null>(null);
   const [showTodoButtons, setShowTodoButtons] = useState(false);
+  const [leftOpen, setLeftOpen] = useState(false);
+  const [rightOpen, setRightOpen] = useState(false);
+  const [leftNote, setLeftNote] = useState(() => localStorage.getItem(`nb_sidenote_${bookId}_${page.id}_left`) ?? "");
+  const [rightNote, setRightNote] = useState(() => localStorage.getItem(`nb_sidenote_${bookId}_${page.id}_right`) ?? "");
 
   // ── Sync refs with latest state
   useEffect(() => { imageBlocksRef.current = imageBlocks; }, [imageBlocks]);
@@ -1726,10 +1730,32 @@ function A4Page({
 
   // ── Render
   return (
-    <div
-      className="relative flex-shrink-0 group/page"
-      style={{ width: 794 }}
-      onMouseMove={(e) => {
+    <div className="flex-shrink-0 group/page flex items-start">
+
+      {/* ── LEFT SIDE PANEL ── */}
+      <div style={{ width: leftOpen ? 300 : 0, transition: "width 0.35s cubic-bezier(0.4,0,0.2,1)", overflow: "hidden", flexShrink: 0 }}>
+        <div style={{ width: 300, minHeight: 1123 }} className="bg-amber-50 border-r-2 border-amber-200 flex flex-col">
+          <div className="flex items-center justify-between px-3 py-2 border-b border-amber-200 bg-amber-100/70 sticky top-0 z-10">
+            <span className="text-xs font-semibold text-amber-800 flex items-center gap-1.5">📝 Left Note</span>
+            <button onClick={() => setLeftOpen(false)} className="text-amber-500 hover:text-amber-800 p-0.5 rounded transition-colors">
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+          <textarea
+            value={leftNote}
+            onChange={e => { const v = e.target.value; setLeftNote(v); localStorage.setItem(`nb_sidenote_${bookId}_${page.id}_left`, v); }}
+            className="flex-1 p-3 text-sm text-stone-700 bg-transparent resize-none outline-none leading-relaxed"
+            placeholder="Side notes…"
+            style={{ minHeight: 1080, fontFamily: "Georgia, serif" }}
+          />
+        </div>
+      </div>
+
+      {/* ── PAPER WRAPPER ── */}
+      <div
+        className="relative flex-shrink-0"
+        style={{ width: 794 }}
+        onMouseMove={(e) => {
         const paper = paperRef.current;
         const paperRect = paper?.getBoundingClientRect();
         if (!paperRect) return;
@@ -1784,6 +1810,24 @@ function A4Page({
         title="Delete page"
       >
         <Trash2 className="w-3.5 h-3.5" />
+      </button>
+
+      {/* Left side note toggle */}
+      <button
+        onClick={() => setLeftOpen(o => !o)}
+        className="absolute top-20 -left-7 z-20 flex items-center justify-center w-6 h-14 rounded-l-lg bg-amber-100 hover:bg-amber-200 border border-r-0 border-amber-300 text-amber-700 transition-all opacity-0 group-hover/page:opacity-100 shadow-sm"
+        title="Toggle left note"
+      >
+        {leftOpen ? <ChevronRight className="w-3 h-3" /> : <ChevronLeft className="w-3 h-3" />}
+      </button>
+
+      {/* Right side note toggle */}
+      <button
+        onClick={() => setRightOpen(o => !o)}
+        className="absolute top-20 -right-7 z-20 flex items-center justify-center w-6 h-14 rounded-r-lg bg-sky-100 hover:bg-sky-200 border border-l-0 border-sky-300 text-sky-700 transition-all opacity-0 group-hover/page:opacity-100 shadow-sm"
+        title="Toggle right note"
+      >
+        {rightOpen ? <ChevronLeft className="w-3 h-3" /> : <ChevronRight className="w-3 h-3" />}
       </button>
 
       {/* A4 paper */}
@@ -2675,6 +2719,27 @@ function A4Page({
           </div>
         </>
       )}
+      </div>{/* end paper wrapper */}
+
+      {/* ── RIGHT SIDE PANEL ── */}
+      <div style={{ width: rightOpen ? 300 : 0, transition: "width 0.35s cubic-bezier(0.4,0,0.2,1)", overflow: "hidden", flexShrink: 0 }}>
+        <div style={{ width: 300, minHeight: 1123 }} className="bg-sky-50 border-l-2 border-sky-200 flex flex-col">
+          <div className="flex items-center justify-between px-3 py-2 border-b border-sky-200 bg-sky-100/70 sticky top-0 z-10">
+            <span className="text-xs font-semibold text-sky-800 flex items-center gap-1.5">📝 Right Note</span>
+            <button onClick={() => setRightOpen(false)} className="text-sky-500 hover:text-sky-800 p-0.5 rounded transition-colors">
+              <X className="w-3 h-3" />
+            </button>
+          </div>
+          <textarea
+            value={rightNote}
+            onChange={e => { const v = e.target.value; setRightNote(v); localStorage.setItem(`nb_sidenote_${bookId}_${page.id}_right`, v); }}
+            className="flex-1 p-3 text-sm text-stone-700 bg-transparent resize-none outline-none leading-relaxed"
+            placeholder="Side notes…"
+            style={{ minHeight: 1080, fontFamily: "Georgia, serif" }}
+          />
+        </div>
+      </div>
+
     </div>
   );
 }
