@@ -2689,7 +2689,21 @@ export default function PageEditor() {
   const [book, setBook] = useState<Book | null>(() => store.getBook(bId) ?? null);
   const [pages, setPages] = useState<Page[]>(() => store.listPages(bId));
   const [saveStatus, setSaveStatus] = useState<"saved"|"saving">("saved");
+  const [zoom, setZoom] = useState(1);
   const savingCountRef = useRef(0);
+  const pagesAreaRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = pagesAreaRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey) return;
+      e.preventDefault();
+      setZoom(z => Math.min(3, Math.max(0.25, parseFloat((z - e.deltaY * 0.001).toFixed(3)))));
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
 
   const refresh = useCallback(() => {
     setBook(store.getBook(bId) ?? null);
@@ -2736,21 +2750,33 @@ export default function PageEditor() {
         <div className="flex items-center gap-3">
           <span className="text-xs text-zinc-500">{saveStatus === "saving" ? "Saving…" : "Saved"}</span>
           <span className="text-xs text-zinc-600">{pages.length} {pages.length === 1 ? "page" : "pages"}</span>
+          <button
+            onClick={() => setZoom(1)}
+            className="text-xs text-zinc-400 hover:text-zinc-200 transition-colors tabular-nums"
+            title="Reset zoom (Ctrl+Scroll to zoom)"
+          >
+            {Math.round(zoom * 100)}%
+          </button>
         </div>
       </div>
 
       {/* All pages stacked */}
-      <div className="flex-1 flex flex-col items-center py-10 px-20 gap-8">
-        {pages.map((page, idx) => (
-          <A4Page key={page.id} page={page} index={idx} bookId={bId}
-            onDelete={handleDelete} onContentChange={handleContentChange}
-            isSaving={saveStatus === "saving"} />
-        ))}
-        <div style={{ width: 794 }} className="flex-shrink-0 pb-10">
-          <button onClick={handleAddPage}
-            className="w-full flex items-center justify-center gap-2 py-5 border-2 border-dashed border-zinc-500 hover:border-zinc-300 text-zinc-500 hover:text-zinc-300 transition-all rounded text-sm font-medium">
-            <Plus className="w-4 h-4" />New Page
-          </button>
+      <div ref={pagesAreaRef} className="flex-1 overflow-auto">
+        <div
+          className="flex flex-col items-center py-10 px-20 gap-8"
+          style={{ transform: `scale(${zoom})`, transformOrigin: "top center" }}
+        >
+          {pages.map((page, idx) => (
+            <A4Page key={page.id} page={page} index={idx} bookId={bId}
+              onDelete={handleDelete} onContentChange={handleContentChange}
+              isSaving={saveStatus === "saving"} />
+          ))}
+          <div style={{ width: 794 }} className="flex-shrink-0 pb-10">
+            <button onClick={handleAddPage}
+              className="w-full flex items-center justify-center gap-2 py-5 border-2 border-dashed border-zinc-500 hover:border-zinc-300 text-zinc-500 hover:text-zinc-300 transition-all rounded text-sm font-medium">
+              <Plus className="w-4 h-4" />New Page
+            </button>
+          </div>
         </div>
       </div>
     </div>
