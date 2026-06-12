@@ -1799,7 +1799,7 @@ function A4Page({
       }}
     >
       {/* Page number */}
-      <div className="absolute -left-10 top-6 text-zinc-500 text-xs font-medium select-none text-right w-10">
+      <div className="absolute -left-14 top-6 text-zinc-500 text-xs font-medium select-none text-right w-10">
         {index + 1}
       </div>
 
