@@ -1804,7 +1804,7 @@ function A4Page({
     >
       {/* Page number */}
       <div className="absolute -left-24 top-6 text-zinc-500 text-base font-medium select-none text-right w-10">
-        {index + 1}
+        {String(index + 1).padStart(3, "0")}
       </div>
 
       {/* Delete page button */}
