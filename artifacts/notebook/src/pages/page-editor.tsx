@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import arrowCircleLeftIcon from "@assets/arrow-circle-broken-left-svgrepo-com_1781232885093.png";
 import arrowInRightIcon from "@assets/arrow-in-right-385-svgrepo-com_(1)_1781237294114.png";
+import arrowInRightIcon2 from "@assets/arrow-in-right-385-svgrepo-com_1781237534373.png";
 import arrowCircleCloseIcon from "@assets/arrow-circle-broken-left-svgrepo-com_(1)_1781233113625.png";
 import arrowCircleRightIcon from "@assets/arrow-circle-broken-left-svgrepo-com_(3)_1781233231019.png";
 import arrowCircleLeftCloseIcon from "@assets/arrow-circle-broken-left-svgrepo-com_(2)_1781233449327.png";
@@ -1845,7 +1846,7 @@ function A4Page({
           style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.4))" }}
           title="Toggle page note"
         >
-          <img src={arrowCircleLeftIcon} className="w-5 h-5 opacity-60" alt="" style={{ filter: "hue-rotate(120deg)" }} />
+          <img src={arrowInRightIcon2} className="w-5 h-5 opacity-60" alt="" style={{ filter: "hue-rotate(120deg)" }} />
         </button>
       )}
 
