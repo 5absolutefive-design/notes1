@@ -13,6 +13,7 @@ import {
 import arrowCircleLeftIcon from "@assets/arrow-circle-broken-left-svgrepo-com_1781232885093.png";
 import arrowCircleCloseIcon from "@assets/arrow-circle-broken-left-svgrepo-com_(1)_1781233113625.png";
 import arrowCircleRightIcon from "@assets/arrow-circle-broken-left-svgrepo-com_(3)_1781233231019.png";
+import arrowCircleLeftCloseIcon from "@assets/arrow-circle-broken-left-svgrepo-com_(2)_1781233449327.png";
 import cylinderIcon from "@assets/3d-cylinder-3d-design-3d-shape-cylinder-geometric-geometry-svg_1780973962135.svg";
 import cubeIcon from "@assets/3d-cube-3d-design-3d-shape-cube-geometric-geometry-3-svgrepo-c_1780974626332.svg";
 import octahedronIcon from "@assets/3d-design-3d-octahedron-3d-shape-geometric-geometry-octahedron_1780974626332.svg";
@@ -2727,7 +2728,7 @@ function A4Page({
           <div className="flex items-center justify-between px-3 py-2 border-b border-sky-200 bg-sky-100/70 sticky top-0 z-10">
             <span className="text-xs font-semibold text-sky-800 flex items-center gap-1.5">📝 Right Note</span>
             <button onClick={() => setRightOpen(false)} className="p-0.5 rounded transition-opacity hover:opacity-70" title="Close right note">
-              <img src={arrowCircleCloseIcon} className="w-4 h-4" alt="close" />
+              <img src={arrowCircleLeftCloseIcon} className="w-4 h-4" alt="close" />
             </button>
           </div>
           <textarea
