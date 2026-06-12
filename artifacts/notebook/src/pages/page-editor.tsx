@@ -417,6 +417,7 @@ function A4Page({
 
   const [ctxMenu, setCtxMenu] = useState<ContextMenuState | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [calloutPickerPos, setCalloutPickerPos] = useState<{ top: number; left: number } | null>(null);
   const [ctxTableHover, setCtxTableHover] = useState<{ r: number; c: number } | null>(null);
   const [ctxTableCustomRows, setCtxTableCustomRows] = useState("");
@@ -1823,13 +1824,35 @@ function A4Page({
 
       {/* Delete page button */}
       {!leftOpen && !rightOpen && (
-        <button
-          onClick={() => onDelete(page.id)}
-          className="absolute top-6 opacity-0 group-hover/page:opacity-100 transition-opacity p-1.5 text-zinc-500 hover:text-red-400 rounded" style={{ right: -90 }}
-          title="Delete page"
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-        </button>
+        <div className="absolute" style={{ right: -90, top: 24 }}>
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="opacity-0 group-hover/page:opacity-100 transition-opacity p-1.5 text-zinc-500 hover:text-red-400 rounded"
+            title="Delete page"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+          </button>
+          {showDeleteConfirm && (
+            <div style={{
+              position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)",
+              background: "#fff", border: "1px solid #e5e7eb", borderRadius: 10,
+              boxShadow: "0 4px 20px rgba(0,0,0,0.15)", padding: "12px 14px",
+              zIndex: 100, minWidth: 140, textAlign: "center"
+            }}>
+              <p style={{ fontSize: 12, fontWeight: 600, color: "#374151", marginBottom: 10 }}>Delete this page?</p>
+              <div style={{ display: "flex", gap: 8, justifyContent: "center" }}>
+                <button
+                  onClick={() => { onDelete(page.id); setShowDeleteConfirm(false); }}
+                  style={{ padding: "4px 14px", fontSize: 12, fontWeight: 600, background: "#ef4444", color: "#fff", border: "none", borderRadius: 6, cursor: "pointer" }}
+                >Yes</button>
+                <button
+                  onClick={() => setShowDeleteConfirm(false)}
+                  style={{ padding: "4px 14px", fontSize: 12, fontWeight: 600, background: "#f3f4f6", color: "#374151", border: "none", borderRadius: 6, cursor: "pointer" }}
+                >No</button>
+              </div>
+            </div>
+          )}
+        </div>
       )}
 
       {/* Left side note toggle */}
