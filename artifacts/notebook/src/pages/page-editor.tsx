@@ -1994,6 +1994,8 @@ function A4Page({
             position: "relative",
             zIndex: drawTool ? 0 : 1,
             pointerEvents: drawTool && drawTool !== "eraser" ? "none" : "auto",
+            paddingLeft: 8,
+            paddingRight: 8,
           }}
           data-placeholder="Start writing..."
         />
