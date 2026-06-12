@@ -11,6 +11,7 @@ import {
   XAxis, YAxis, Tooltip, ResponsiveContainer,
 } from "recharts";
 import arrowCircleLeftIcon from "@assets/arrow-circle-broken-left-svgrepo-com_1781232885093.png";
+import arrowCircleCloseIcon from "@assets/arrow-circle-broken-left-svgrepo-com_(1)_1781233113625.png";
 import cylinderIcon from "@assets/3d-cylinder-3d-design-3d-shape-cylinder-geometric-geometry-svg_1780973962135.svg";
 import cubeIcon from "@assets/3d-cube-3d-design-3d-shape-cube-geometric-geometry-3-svgrepo-c_1780974626332.svg";
 import octahedronIcon from "@assets/3d-design-3d-octahedron-3d-shape-geometric-geometry-octahedron_1780974626332.svg";
@@ -1738,8 +1739,8 @@ function A4Page({
         <div style={{ width: 300, minHeight: 1123 }} className="bg-amber-50 border-r-2 border-amber-200 flex flex-col">
           <div className="flex items-center justify-between px-3 py-2 border-b border-amber-200 bg-amber-100/70 sticky top-0 z-10">
             <span className="text-xs font-semibold text-amber-800 flex items-center gap-1.5">📝 Left Note</span>
-            <button onClick={() => setLeftOpen(false)} className="text-amber-500 hover:text-amber-800 p-0.5 rounded transition-colors">
-              <X className="w-3 h-3" />
+            <button onClick={() => setLeftOpen(false)} className="p-0.5 rounded transition-opacity hover:opacity-70" title="Close left note">
+              <img src={arrowCircleCloseIcon} className="w-4 h-4" alt="close" />
             </button>
           </div>
           <textarea
@@ -1814,14 +1815,16 @@ function A4Page({
       </button>
 
       {/* Left side note toggle */}
-      <button
-        onClick={() => setLeftOpen(o => !o)}
-        className="absolute top-20 -left-8 z-20 flex flex-col items-center justify-center gap-0.5 w-7 h-14 rounded-l-lg bg-transparent hover:bg-white/10 transition-all opacity-0 group-hover/page:opacity-100"
-        style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.4))" }}
-        title="Toggle left note"
-      >
-        <img src={arrowCircleLeftIcon} className="w-5 h-5 opacity-80" alt="" />
-      </button>
+      {!leftOpen && (
+        <button
+          onClick={() => setLeftOpen(true)}
+          className="absolute top-20 -left-8 z-20 flex flex-col items-center justify-center gap-0.5 w-7 h-14 rounded-l-lg bg-transparent hover:bg-white/10 transition-all opacity-0 group-hover/page:opacity-100"
+          style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.4))" }}
+          title="Open left note"
+        >
+          <img src={arrowCircleLeftIcon} className="w-5 h-5 opacity-80" alt="" />
+        </button>
+      )}
 
       {/* Right side note toggle */}
       <button
