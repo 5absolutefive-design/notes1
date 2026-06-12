@@ -1882,12 +1882,12 @@ function A4Page({
         {/* ── INNER NOTE PANEL (floating overlay on left of page) ── */}
         <div style={{
           position: "absolute", top: 0, left: 0, bottom: 0, zIndex: 40,
-          width: pageNoteOpen ? 300 : 0,
+          width: pageNoteOpen ? 600 : 0,
           transition: "width 0.35s cubic-bezier(0.4,0,0.2,1)",
           overflow: "hidden",
           pointerEvents: pageNoteOpen ? "auto" : "none",
         }}>
-          <div style={{ width: 300, minHeight: "100%", background: "#f0fdf4", borderRight: "2px solid #86efac", display: "flex", flexDirection: "column" }}>
+          <div style={{ width: 600, minHeight: "100%", background: "#f0fdf4", borderRight: "2px solid #86efac", display: "flex", flexDirection: "column" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 10px", background: "#dcfce7", borderBottom: "1px solid #86efac", position: "sticky", top: 0, zIndex: 10 }}>
               <span style={{ fontSize: 12, fontWeight: 600, color: "#166534", display: "flex", alignItems: "center", gap: 6 }}>📝 Inner Note</span>
               <button onClick={() => setPageNoteOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", padding: 2, display: "flex", alignItems: "center" }} title="Close inner note">
@@ -1906,12 +1906,12 @@ function A4Page({
         {/* ── RIGHT INNER NOTE PANEL (floating overlay on right of page) ── */}
         <div style={{
           position: "absolute", top: 0, right: 0, bottom: 0, zIndex: 40,
-          width: pageNoteRightOpen ? 300 : 0,
+          width: pageNoteRightOpen ? 600 : 0,
           transition: "width 0.35s cubic-bezier(0.4,0,0.2,1)",
           overflow: "hidden",
           pointerEvents: pageNoteRightOpen ? "auto" : "none",
         }}>
-          <div style={{ width: 300, minHeight: "100%", background: "#f0fdf4", borderLeft: "2px solid #86efac", display: "flex", flexDirection: "column" }}>
+          <div style={{ width: 600, minHeight: "100%", background: "#f0fdf4", borderLeft: "2px solid #86efac", display: "flex", flexDirection: "column" }}>
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 10px", background: "#dcfce7", borderBottom: "1px solid #86efac", position: "sticky", top: 0, zIndex: 10 }}>
               <span style={{ fontSize: 12, fontWeight: 600, color: "#166534", display: "flex", alignItems: "center", gap: 6 }}>📝 Inner Note</span>
               <button onClick={() => setPageNoteRightOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", padding: 2, display: "flex", alignItems: "center" }} title="Close right inner note">
