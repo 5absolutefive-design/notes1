@@ -1821,7 +1821,6 @@ function A4Page({
         title="Toggle left note"
       >
         <img src={arrowCircleLeftIcon} className="w-5 h-5 opacity-80" alt="" />
-        <span className="text-white text-xs leading-none font-bold">{leftOpen ? "›" : "‹"}</span>
       </button>
 
       {/* Right side note toggle */}
