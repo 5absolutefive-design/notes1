@@ -1807,6 +1807,15 @@ function A4Page({
         {index + 1}
       </div>
 
+      {/* Delete page button */}
+      <button
+        onClick={() => onDelete(page.id)}
+        className="absolute -right-10 top-6 opacity-0 group-hover/page:opacity-100 transition-opacity p-1.5 text-zinc-500 hover:text-red-400 rounded"
+        title="Delete page"
+      >
+        <Trash2 className="w-3.5 h-3.5" />
+      </button>
+
       {/* Left side note toggle */}
       {!leftOpen && (
         <button
