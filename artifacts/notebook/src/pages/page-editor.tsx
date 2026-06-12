@@ -1803,18 +1803,22 @@ function A4Page({
       }}
     >
       {/* Page number */}
-      <div className="absolute -left-24 top-6 text-zinc-500 text-base font-medium select-none text-right w-10">
-        {String(index + 1).padStart(3, "0")}
-      </div>
+      {!leftOpen && !rightOpen && (
+        <div className="absolute -left-24 top-6 text-zinc-500 text-base font-medium select-none text-right w-10">
+          {String(index + 1).padStart(3, "0")}
+        </div>
+      )}
 
       {/* Delete page button */}
-      <button
-        onClick={() => onDelete(page.id)}
-        className="absolute top-6 opacity-0 group-hover/page:opacity-100 transition-opacity p-1.5 text-zinc-500 hover:text-red-400 rounded" style={{ right: -90 }}
-        title="Delete page"
-      >
-        <Trash2 className="w-3.5 h-3.5" />
-      </button>
+      {!leftOpen && !rightOpen && (
+        <button
+          onClick={() => onDelete(page.id)}
+          className="absolute top-6 opacity-0 group-hover/page:opacity-100 transition-opacity p-1.5 text-zinc-500 hover:text-red-400 rounded" style={{ right: -90 }}
+          title="Delete page"
+        >
+          <Trash2 className="w-3.5 h-3.5" />
+        </button>
+      )}
 
       {/* Left side note toggle */}
       {!leftOpen && (
