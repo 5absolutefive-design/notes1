@@ -12,6 +12,7 @@ import {
 } from "recharts";
 import arrowCircleLeftIcon from "@assets/arrow-circle-broken-left-svgrepo-com_1781232885093.png";
 import arrowCircleCloseIcon from "@assets/arrow-circle-broken-left-svgrepo-com_(1)_1781233113625.png";
+import arrowCircleRightIcon from "@assets/arrow-circle-broken-left-svgrepo-com_(3)_1781233231019.png";
 import cylinderIcon from "@assets/3d-cylinder-3d-design-3d-shape-cylinder-geometric-geometry-svg_1780973962135.svg";
 import cubeIcon from "@assets/3d-cube-3d-design-3d-shape-cube-geometric-geometry-3-svgrepo-c_1780974626332.svg";
 import octahedronIcon from "@assets/3d-design-3d-octahedron-3d-shape-geometric-geometry-octahedron_1780974626332.svg";
@@ -1827,15 +1828,16 @@ function A4Page({
       )}
 
       {/* Right side note toggle */}
-      <button
-        onClick={() => setRightOpen(o => !o)}
-        className="absolute top-20 -right-8 z-20 flex flex-col items-center justify-center gap-0.5 w-7 h-14 rounded-r-lg bg-transparent hover:bg-white/10 transition-all opacity-0 group-hover/page:opacity-100"
-        style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.4))" }}
-        title="Toggle right note"
-      >
-        <span className="text-sm leading-none">📝</span>
-        <span className="text-white text-xs leading-none font-bold">{rightOpen ? "‹" : "›"}</span>
-      </button>
+      {!rightOpen && (
+        <button
+          onClick={() => setRightOpen(true)}
+          className="absolute top-20 -right-8 z-20 flex flex-col items-center justify-center gap-0.5 w-7 h-14 rounded-r-lg bg-transparent hover:bg-white/10 transition-all opacity-0 group-hover/page:opacity-100"
+          style={{ filter: "drop-shadow(0 2px 4px rgba(0,0,0,0.4))" }}
+          title="Open right note"
+        >
+          <img src={arrowCircleRightIcon} className="w-5 h-5 opacity-80" alt="" />
+        </button>
+      )}
 
       {/* A4 paper */}
       <div ref={paperRef} className="bg-white shadow-xl relative" style={{ minHeight: 1123, padding: "16px" }}>
@@ -2733,8 +2735,8 @@ function A4Page({
         <div style={{ width: 300, minHeight: 1123 }} className="bg-sky-50 border-l-2 border-sky-200 flex flex-col">
           <div className="flex items-center justify-between px-3 py-2 border-b border-sky-200 bg-sky-100/70 sticky top-0 z-10">
             <span className="text-xs font-semibold text-sky-800 flex items-center gap-1.5">📝 Right Note</span>
-            <button onClick={() => setRightOpen(false)} className="text-sky-500 hover:text-sky-800 p-0.5 rounded transition-colors">
-              <X className="w-3 h-3" />
+            <button onClick={() => setRightOpen(false)} className="p-0.5 rounded transition-opacity hover:opacity-70" title="Close right note">
+              <img src={arrowCircleCloseIcon} className="w-4 h-4" alt="close" />
             </button>
           </div>
           <textarea
