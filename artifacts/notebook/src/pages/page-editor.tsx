@@ -2903,7 +2903,7 @@ export default function PageEditor() {
   return (
     <div className="min-h-screen flex flex-col" style={{ background: "#5a5a5a" }}>
       {/* Top bar */}
-      <div className="sticky top-0 z-10 shrink-0 flex items-center justify-between px-4 py-2 border-b border-black/20" style={{ background: "#4a4a4a" }}>
+      <div className="sticky top-0 z-10 shrink-0 flex items-center justify-between px-4 border-b border-black/20" style={{ background: "#4a4a4a", paddingTop: "5px", paddingBottom: "5px" }}>
         <div className="flex items-center gap-2">
           <button onClick={() => setLocation("/")}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded text-zinc-300 hover:text-white hover:bg-white/10 transition-colors text-sm font-medium">
