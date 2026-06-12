@@ -1757,25 +1757,6 @@ function A4Page({
         </div>
       </div>
 
-      {/* ── INNER NOTE PANEL (slides in between left panel and page) ── */}
-      <div style={{ width: pageNoteOpen ? 300 : 0, transition: "width 0.35s cubic-bezier(0.4,0,0.2,1)", overflow: "hidden", flexShrink: 0 }}>
-        <div style={{ width: 300, minHeight: 1123 }} className="bg-green-50 border-r-2 border-green-200 flex flex-col">
-          <div className="flex items-center justify-between px-3 py-2 border-b border-green-200 bg-green-100/70 sticky top-0 z-10">
-            <span className="text-xs font-semibold text-green-800 flex items-center gap-1.5">📝 Inner Note</span>
-            <button onClick={() => setPageNoteOpen(false)} className="p-0.5 rounded transition-opacity hover:opacity-70" title="Close inner note">
-              <img src={arrowCircleCloseIcon} className="w-4 h-4" alt="close" />
-            </button>
-          </div>
-          <textarea
-            value={pageNote}
-            onChange={e => { const v = e.target.value; setPageNote(v); localStorage.setItem(`nb_sidenote_${bookId}_${page.id}_page`, v); }}
-            className="flex-1 p-3 text-sm text-stone-700 bg-transparent resize-none outline-none leading-relaxed"
-            placeholder="Inner notes…"
-            style={{ minHeight: 1080, fontFamily: "Georgia, serif" }}
-          />
-        </div>
-      </div>
-
       {/* ── PAPER WRAPPER ── */}
       <div
         className="relative flex-shrink-0"
@@ -1879,6 +1860,30 @@ function A4Page({
 
       {/* A4 paper */}
       <div ref={paperRef} className="bg-white shadow-xl relative" style={{ minHeight: 1123, padding: "16px" }}>
+
+        {/* ── INNER NOTE PANEL (floating overlay on left of page) ── */}
+        <div style={{
+          position: "absolute", top: 0, left: 0, bottom: 0, zIndex: 40,
+          width: pageNoteOpen ? 300 : 0,
+          transition: "width 0.35s cubic-bezier(0.4,0,0.2,1)",
+          overflow: "hidden",
+          pointerEvents: pageNoteOpen ? "auto" : "none",
+        }}>
+          <div style={{ width: 300, minHeight: "100%", background: "#f0fdf4", borderRight: "2px solid #86efac", display: "flex", flexDirection: "column" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "6px 10px", background: "#dcfce7", borderBottom: "1px solid #86efac", position: "sticky", top: 0, zIndex: 10 }}>
+              <span style={{ fontSize: 12, fontWeight: 600, color: "#166534", display: "flex", alignItems: "center", gap: 6 }}>📝 Inner Note</span>
+              <button onClick={() => setPageNoteOpen(false)} style={{ background: "none", border: "none", cursor: "pointer", padding: 2, display: "flex", alignItems: "center" }} title="Close inner note">
+                <img src={arrowCircleCloseIcon} style={{ width: 16, height: 16 }} alt="close" />
+              </button>
+            </div>
+            <textarea
+              value={pageNote}
+              onChange={e => { const v = e.target.value; setPageNote(v); localStorage.setItem(`nb_sidenote_${bookId}_${page.id}_page`, v); }}
+              style={{ flex: 1, padding: 12, fontSize: 14, fontFamily: "Georgia, serif", color: "#1a3a1a", background: "transparent", border: "none", outline: "none", resize: "none", lineHeight: 1.8, minHeight: 1080 }}
+              placeholder="Inner notes…"
+            />
+          </div>
+        </div>
 
         {/* Draw SVG overlay */}
         <svg
