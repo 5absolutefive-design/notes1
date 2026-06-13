@@ -2046,6 +2046,7 @@ function A4Page({
             pointerEvents: drawTool && drawTool !== "eraser" ? "none" : "auto",
             paddingLeft: 8,
             paddingRight: 8,
+            paddingBottom: 16,
           }}
           data-placeholder="Start writing..."
         />
