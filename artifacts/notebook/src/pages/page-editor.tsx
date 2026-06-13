@@ -396,6 +396,7 @@ function A4Page({
   const saveTimerRef  = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastSaved    = useRef(page.content);
   const isComposing  = useRef(false);
+  const suppressOverflowRef = useRef(false);
   const historyRef   = useRef<{ html: string }[]>([]);
   const historyIndexRef = useRef(-1);
   const arrowDrawRef = useRef<{ startX: number; startY: number; type: string } | null>(null);
@@ -739,8 +740,26 @@ function A4Page({
 
   const handleInput = useCallback(() => {
     if (!editorRef.current || isComposing.current) return;
+
+    const editor = editorRef.current;
+    // A4 content area = 1091px (paper 1123 - 16px top/bottom padding)
+    // If content scrollHeight exceeds that, undo last change and move to next page
+    if (editor.scrollHeight > editor.clientHeight + 2) {
+      if (!suppressOverflowRef.current) {
+        suppressOverflowRef.current = true;
+        document.execCommand("undo");
+        // After undo, scrollHeight should be back within bounds
+        requestAnimationFrame(() => {
+          suppressOverflowRef.current = false;
+          saveContent();
+          onRequestNextPage();
+        });
+        return;
+      }
+    }
+
     debouncedSave();
-  }, [debouncedSave]);
+  }, [debouncedSave, saveContent, onRequestNextPage]);
 
   // ── Selection helpers
   const restoreSelection = () => {
@@ -1727,18 +1746,18 @@ function A4Page({
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
     // ── Auto next-page when Enter is pressed at the bottom of the A4 page
     if (e.key === "Enter" && !e.ctrlKey && !e.metaKey && !e.altKey) {
-      const paper = paperRef.current;
       const editor = editorRef.current;
-      if (paper && editor) {
+      if (editor) {
         const sel = window.getSelection();
         if (sel && sel.rangeCount > 0) {
           const range = sel.getRangeAt(0);
           const cursorRect = range.getBoundingClientRect();
-          const paperRect = paper.getBoundingClientRect();
-          // A4 content bottom = paper top + 1123px height − 16px bottom padding
-          const contentBottom = paperRect.top + 1123 - 16;
-          // Trigger if cursor bottom is within 38px (≈ 1 line) of the page boundary
-          if (cursorRect.bottom >= contentBottom - 38) {
+          const editorRect = editor.getBoundingClientRect();
+          // Each line = 18px font × 1.9 line-height = 34.2px
+          const LINE_HEIGHT_PX = 18 * 1.9;
+          const MAX_LINES = 32;
+          const currentLine = Math.ceil((cursorRect.bottom - editorRect.top) / LINE_HEIGHT_PX);
+          if (currentLine >= MAX_LINES) {
             e.preventDefault();
             saveContent();
             onRequestNextPage();
