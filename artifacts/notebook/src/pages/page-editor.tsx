@@ -743,8 +743,10 @@ function A4Page({
 
     const editor = editorRef.current;
     // A4 content area = 1091px (paper 1123 - 16px top/bottom padding)
-    // If content scrollHeight exceeds that, undo last change and move to next page
-    if (editor.scrollHeight > editor.clientHeight + 2) {
+    // Line height = 18px * 1.9 = 34.2px. 32 lines ≈ 1094px which is ~3px over
+    // clientHeight. Use a tolerance just under one full line (20px) so line 32
+    // can be fully written, but a 33rd line triggers the overflow handler.
+    if (editor.scrollHeight > editor.clientHeight + 20) {
       if (!suppressOverflowRef.current) {
         suppressOverflowRef.current = true;
         document.execCommand("undo");
