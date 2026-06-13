@@ -981,10 +981,11 @@ function A4Page({
   const insertTodo = () => insertHTML(`<p><br></p>` + newTodoHTML() + `<br/>`);
 
   const insertTableWithSize = (numRows: number, numCols: number) => {
+    const clampedCols = Math.min(numCols, 6);
     const thStyle = `background:#f9fafb;padding:6px 10px;text-align:left;font-size:12px;font-weight:600;color:#374151;border:1.5px solid #b0b7c3;border-top:none;border-bottom:3px double #b0b7c3;min-width:120px`;
     const tdStyle = `padding:6px 10px;border:1.5px solid #b0b7c3;min-width:120px;font-size:13px;color:#1f2937`;
-    const ths = Array.from({ length: numCols }, (_, i) => `<th style="${thStyle}" contenteditable="true">Column ${i + 1}</th>`).join("");
-    const tdRow = Array.from({ length: numCols }, () => `<td style="${tdStyle}" contenteditable="true"><br/></td>`).join("");
+    const ths = Array.from({ length: clampedCols }, (_, i) => `<th style="${thStyle}" contenteditable="true">Column ${i + 1}</th>`).join("");
+    const tdRow = Array.from({ length: clampedCols }, () => `<td style="${tdStyle}" contenteditable="true"><br/></td>`).join("");
     const rows = Array.from({ length: numRows }, () => `<tr>${tdRow}</tr>`).join("");
     insertHTML(`<br/><table style="border-collapse:collapse;width:100%;margin:8px 0;border-left:1.5px solid #b0b7c3"><thead><tr>${ths}</tr></thead><tbody>${rows}</tbody></table><br/>`);
     setCtxTableHover(null); setCtxTableCustomRows(""); setCtxTableCustomCols("");
@@ -1308,6 +1309,8 @@ function A4Page({
 
   const tableAddCol = () => {
     const table = activeTableRef.current; if (!table) return;
+    const currentCols = table.rows[0]?.cells.length ?? 0;
+    if (currentCols >= 6) return;
     for (let i = 0; i < table.rows.length; i++) {
       const row = table.rows[i];
       const isHead = row.parentElement?.tagName === "THEAD";
@@ -2525,9 +2528,9 @@ function A4Page({
                 <div className="text-[11px] font-semibold text-stone-400 mb-2 text-center">
                   {ctxTableHover ? `${ctxTableHover.r} × ${ctxTableHover.c} Table` : "Hover to pick size"}
                 </div>
-                <div className="grid gap-[2px]" style={{ gridTemplateColumns: "repeat(10, 1fr)" }} onMouseLeave={() => setCtxTableHover(null)}>
+                <div className="grid gap-[2px]" style={{ gridTemplateColumns: "repeat(6, 1fr)" }} onMouseLeave={() => setCtxTableHover(null)}>
                   {Array.from({ length: 10 }, (_, ri) =>
-                    Array.from({ length: 10 }, (_, ci) => {
+                    Array.from({ length: 6 }, (_, ci) => {
                       const r = ri + 1, c = ci + 1;
                       const isHi = ctxTableHover ? r <= ctxTableHover.r && c <= ctxTableHover.c : false;
                       return (
@@ -2539,24 +2542,24 @@ function A4Page({
                     })
                   )}
                 </div>
-                <div className="text-[10px] text-stone-400 text-center mt-1.5">Max 10 × 10 (grid)</div>
+                <div className="text-[10px] text-stone-400 text-center mt-1.5">Max 10 × 6 (grid)</div>
                 <div className="mt-3 pt-3 border-t border-stone-100">
                   <div className="text-[11px] font-semibold text-stone-400 mb-2 text-center">Custom</div>
                   <div className="flex items-center gap-1.5 justify-center">
                     <span className="text-[11px] text-stone-400">Rows</span>
                     <input type="number" min={1} value={ctxTableCustomRows} placeholder="—"
                       onChange={e => setCtxTableCustomRows(e.target.value)}
-                      onKeyDown={e => { if (e.key === "Enter") { const r = parseInt(ctxTableCustomRows), c = parseInt(ctxTableCustomCols); if (!isNaN(r) && !isNaN(c) && r >= 1 && c >= 1) insertTableWithSize(Math.min(r, 999), Math.min(c, 200)); }}}
+                      onKeyDown={e => { if (e.key === "Enter") { const r = parseInt(ctxTableCustomRows), c = parseInt(ctxTableCustomCols); if (!isNaN(r) && !isNaN(c) && r >= 1 && c >= 1) insertTableWithSize(Math.min(r, 999), Math.min(c, 6)); }}}
                       className="w-14 h-6 text-center text-[12px] border border-stone-300 rounded bg-white focus:outline-none focus:border-orange-400" />
                     <span className="text-[11px] text-stone-400">Cols</span>
-                    <input type="number" min={1} max={200} value={ctxTableCustomCols} placeholder="—"
+                    <input type="number" min={1} max={6} value={ctxTableCustomCols} placeholder="—"
                       onChange={e => setCtxTableCustomCols(e.target.value)}
-                      onKeyDown={e => { if (e.key === "Enter") { const r = parseInt(ctxTableCustomRows), c = parseInt(ctxTableCustomCols); if (!isNaN(r) && !isNaN(c) && r >= 1 && c >= 1) insertTableWithSize(Math.min(r, 999), Math.min(c, 200)); }}}
+                      onKeyDown={e => { if (e.key === "Enter") { const r = parseInt(ctxTableCustomRows), c = parseInt(ctxTableCustomCols); if (!isNaN(r) && !isNaN(c) && r >= 1 && c >= 1) insertTableWithSize(Math.min(r, 999), Math.min(c, 6)); }}}
                       className="w-14 h-6 text-center text-[12px] border border-stone-300 rounded bg-white focus:outline-none focus:border-orange-400" />
-                    <button onClick={() => { const r = parseInt(ctxTableCustomRows), c = parseInt(ctxTableCustomCols); if (!isNaN(r) && !isNaN(c) && r >= 1 && c >= 1) insertTableWithSize(Math.min(r, 999), Math.min(c, 200)); }}
+                    <button onClick={() => { const r = parseInt(ctxTableCustomRows), c = parseInt(ctxTableCustomCols); if (!isNaN(r) && !isNaN(c) && r >= 1 && c >= 1) insertTableWithSize(Math.min(r, 999), Math.min(c, 6)); }}
                       className="h-6 px-2.5 text-[11px] font-semibold rounded bg-orange-400 text-white hover:bg-orange-500 transition-colors">Apply</button>
                   </div>
-                  <div className="text-[10px] text-stone-400 text-center mt-1.5">Rows: unlimited · Cols: max 200</div>
+                  <div className="text-[10px] text-stone-400 text-center mt-1.5">Rows: unlimited · Cols: max 6</div>
                 </div>
               </div>
             )}
