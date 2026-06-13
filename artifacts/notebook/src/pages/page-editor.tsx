@@ -5,7 +5,7 @@ import {
   ChevronLeft, Plus, Trash2, Bold, Italic, Underline, Strikethrough, Highlighter,
   CheckSquare, Minus, Heading1, Heading2, Heading3,
   AlignLeft, AlignCenter, AlignRight, List, ChevronRight, Link, PenLine, Eraser,
-  Table, Undo2, Redo2, BarChart2, Subscript, Superscript, ImagePlus, X, Wrench,
+  Table, Undo2, Redo2, BarChart2, Subscript, Superscript, ImagePlus, X, Wrench, FileDown,
 } from "lucide-react";
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area,
@@ -1047,6 +1047,36 @@ function A4Page({
       `style="outline:none;color:${cfg.color};font-size:13px;text-decoration:underline;word-break:break-all;display:block;cursor:text"></span>` +
       `</div></div><br/>`
     );
+  };
+
+  const downloadAsPDF = () => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    setCtxMenu(null);
+    const html = editor.innerHTML;
+    const w = window.open("", "_blank", "width=900,height=700");
+    if (!w) return;
+    w.document.write(`<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Page</title><style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Georgia,serif;background:#fff;color:#1a1a1a}
+.paper{width:794px;min-height:1123px;padding:60px 72px;margin:0 auto;font-size:13px;line-height:1.7}
+audio,video,input{display:none!important}
+table{border-collapse:collapse;width:100%;margin:8px 0}
+td,th{border:1.5px solid #b0b7c3;padding:6px 10px;font-size:12px}
+th{background:#f9fafb;font-weight:600}
+img{max-width:100%;display:block}
+h1{font-size:22px;font-weight:700;margin:12px 0 6px}
+h2{font-size:18px;font-weight:700;margin:10px 0 5px}
+h3{font-size:15px;font-weight:600;margin:8px 0 4px}
+@media print{body{margin:0}.paper{width:100%;padding:18mm 20mm}@page{size:A4;margin:0}}
+</style></head>
+<body><div class="paper">${html}</div>
+<script>
+document.querySelectorAll("audio,video,input,button").forEach(el=>el.remove());
+setTimeout(()=>{window.print();},400);
+<\/script></body></html>`);
+    w.document.close();
   };
 
   const insertBorderBlock = () => {
@@ -2852,6 +2882,10 @@ function A4Page({
               </div>
             )}
           </div>
+
+          <div className="my-1 border-t border-stone-100" />
+          <CtxItem icon={<FileDown className="w-3.5 h-3.5 text-rose-500"/>} label="Download PDF"
+            onClick={() => { downloadAsPDF(); }} />
         </div>
       , document.body)}
 
