@@ -742,19 +742,27 @@ function A4Page({
     if (!editorRef.current || isComposing.current) return;
 
     const editor = editorRef.current;
-    // A4 content area = 1091px (paper 1123 - 16px top/bottom padding)
-    // Line height = 18px * 1.9 = 34.2px. 32 lines ≈ 1094px which is ~3px over
-    // clientHeight. Use a tolerance just under one full line (20px) so line 32
-    // can be fully written, but a 33rd line triggers the overflow handler.
-    if (editor.scrollHeight > editor.clientHeight + 20) {
+    // Fixed threshold based on A4 paper geometry:
+    //   paper height 1123px - 32px padding = 1091px content area
+    //   line height = 18px × 1.9 = 34.2px → 32 lines ≈ 1094px
+    //   threshold sits between line 32 (~1094px) and line 33 (~1128px)
+    // Using a fixed value avoids relying on clientHeight which can be 0
+    // during early renders or when the editor is off-screen.
+    const OVERFLOW_THRESHOLD = 1115;
+    if (editor.scrollHeight > OVERFLOW_THRESHOLD) {
       if (!suppressOverflowRef.current) {
         suppressOverflowRef.current = true;
         document.execCommand("undo");
-        // After undo, scrollHeight should be back within bounds
         requestAnimationFrame(() => {
           suppressOverflowRef.current = false;
           saveContent();
-          onRequestNextPage();
+          // Only navigate to the next page if undo actually brought the content
+          // back within the limit. If the page already had overflowing content
+          // before this keystroke, undo won't help and we must NOT redirect —
+          // the user should be able to stay on the page and delete content.
+          if (editorRef.current && editorRef.current.scrollHeight <= OVERFLOW_THRESHOLD) {
+            onRequestNextPage();
+          }
         });
         return;
       }
