@@ -397,6 +397,7 @@ function A4Page({
   const lastSaved    = useRef(page.content);
   const isComposing  = useRef(false);
   const suppressOverflowRef = useRef(false);
+  const lastGoodHTMLRef = useRef(page.content);
   const historyRef   = useRef<{ html: string }[]>([]);
   const historyIndexRef = useRef(-1);
   const arrowDrawRef = useRef<{ startX: number; startY: number; type: string } | null>(null);
@@ -469,6 +470,7 @@ function A4Page({
     if (editorRef.current && editorRef.current.innerHTML !== page.content) {
       editorRef.current.innerHTML = page.content;
       lastSaved.current = page.content;
+      lastGoodHTMLRef.current = page.content;
       hydrateTables(editorRef.current);
     }
   }, [page.id]);
@@ -740,35 +742,54 @@ function A4Page({
 
   const handleInput = useCallback(() => {
     if (!editorRef.current || isComposing.current) return;
+    if (suppressOverflowRef.current) return;
 
     const editor = editorRef.current;
-    // Fixed threshold based on A4 paper geometry:
-    //   paper height 1123px - 32px padding = 1091px content area
-    //   line height = 18px × 1.9 = 34.2px → 32 lines ≈ 1094px
-    //   threshold sits between line 32 (~1094px) and line 33 (~1128px)
-    // Using a fixed value avoids relying on clientHeight which can be 0
-    // during early renders or when the editor is off-screen.
-    const OVERFLOW_THRESHOLD = 1115;
-    if (editor.scrollHeight > OVERFLOW_THRESHOLD) {
-      if (!suppressOverflowRef.current) {
-        suppressOverflowRef.current = true;
-        document.execCommand("undo");
-        requestAnimationFrame(() => {
-          suppressOverflowRef.current = false;
-          saveContent();
-          // Only navigate to the next page if undo actually brought the content
-          // back within the limit. If the page already had overflowing content
-          // before this keystroke, undo won't help and we must NOT redirect —
-          // the user should be able to stay on the page and delete content.
-          if (editorRef.current && editorRef.current.scrollHeight <= OVERFLOW_THRESHOLD) {
-            onRequestNextPage();
-          }
-        });
-        return;
-      }
+
+    // Use clientHeight when it is reliable (editor is fully rendered and visible).
+    // Fall back to a geometry-based constant when clientHeight is 0 or tiny
+    // (e.g. the editor hasn't mounted yet or is currently off-screen).
+    // A4 paper 1123px − 32px padding = 1091px content area.
+    // 32 lines × (18px × 1.9) = 1094px, 33 lines = 1128px → threshold at 1111px.
+    const reliableClientH = editor.clientHeight > 200 ? editor.clientHeight : 1091;
+    const OVERFLOW_THRESHOLD = reliableClientH + 20;
+
+    if (editor.scrollHeight <= OVERFLOW_THRESHOLD) {
+      // Content fits — record this as a known-good state and save normally.
+      lastGoodHTMLRef.current = editor.innerHTML;
+      debouncedSave();
+      return;
     }
 
-    debouncedSave();
+    // ── Content overflowed ──
+    suppressOverflowRef.current = true;
+
+    // Restore the last known-good HTML directly (no execCommand("undo") which
+    // can remove entire undo batches and cause the editor to appear frozen).
+    const goodHTML = lastGoodHTMLRef.current;
+    editor.innerHTML = goodHTML;
+
+    // Move cursor to the end of the restored content so the user can keep
+    // interacting without having to click again.
+    const sel = window.getSelection();
+    if (sel) {
+      const range = document.createRange();
+      range.selectNodeContents(editor);
+      range.collapse(false);
+      sel.removeAllRanges();
+      sel.addRange(range);
+    }
+
+    requestAnimationFrame(() => {
+      suppressOverflowRef.current = false;
+      saveContent();
+      // Only navigate to the next page when restoring actually brought the
+      // content back within limits. If the page was already overflowing before
+      // this keystroke the restore won't help, so stay on the page.
+      if (editorRef.current && editorRef.current.scrollHeight <= OVERFLOW_THRESHOLD) {
+        onRequestNextPage();
+      }
+    });
   }, [debouncedSave, saveContent, onRequestNextPage]);
 
   // ── Selection helpers
