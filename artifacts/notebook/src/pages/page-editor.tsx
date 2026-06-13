@@ -424,6 +424,7 @@ function A4Page({
 
   const [ctxMenu, setCtxMenu] = useState<ContextMenuState | null>(null);
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [showDeleteTableConfirm, setShowDeleteTableConfirm] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [calloutPickerPos, setCalloutPickerPos] = useState<{ top: number; left: number } | null>(null);
   const [ctxTableHover, setCtxTableHover] = useState<{ r: number; c: number } | null>(null);
@@ -2278,7 +2279,7 @@ function A4Page({
               onMouseLeave={() => setHoverTableBtns(false)}
               style={{ position: "absolute", top: tableToolbar.top + tableToolbar.height + 2, left: tableToolbar.left + 4, display: "flex", flexDirection: "row", gap: 4, zIndex: 200, pointerEvents: "auto", opacity: showTableBtns || hoverTableBtns ? 1 : 0, padding: 12, margin: -12 }}>
               {isLined && (
-                <button onMouseDown={e => { e.preventDefault(); tableDeleteTable(); }} title="Delete lined table"
+                <button onMouseDown={e => { e.preventDefault(); setShowDeleteTableConfirm(true); }} title="Delete lined table"
                   style={{ ...btnStyle(), fontSize: 12 }} onMouseEnter={hoverOrange} onMouseLeave={hoverReset}>✕</button>
               )}
               <button onMouseDown={e => { e.preventDefault(); tableRemoveRow(); }} title="Remove last row" style={btnStyle()} onMouseEnter={hoverRed} onMouseLeave={hoverReset}>−</button>
@@ -2293,7 +2294,7 @@ function A4Page({
               style={{ position: "absolute", top: tableToolbar.top + 4, left: tableToolbar.left + tableToolbar.width + 2, display: "flex", flexDirection: "column", gap: 4, zIndex: 200, pointerEvents: "auto", opacity: showTableBtns || hoverTableBtns ? 1 : 0, padding: 12, margin: -12 }}>
               <button onMouseDown={e => { e.preventDefault(); tableRemoveCol(); }} title="Remove last column" style={btnStyle()} onMouseEnter={hoverRed} onMouseLeave={hoverReset}>−</button>
               <button onMouseDown={e => { e.preventDefault(); tableAddCol(); }} title="Add column" style={btnStyle()} onMouseEnter={hoverGreen} onMouseLeave={hoverReset}>+</button>
-              <button onMouseDown={e => { e.preventDefault(); tableDeleteTable(); }} title="Delete table" style={{ ...btnStyle(), fontSize: 12 }} onMouseEnter={hoverBlue} onMouseLeave={hoverReset}>✕</button>
+              <button onMouseDown={e => { e.preventDefault(); setShowDeleteTableConfirm(true); }} title="Delete table" style={{ ...btnStyle(), fontSize: 12 }} onMouseEnter={hoverBlue} onMouseLeave={hoverReset}>✕</button>
             </div>
           );
           return <>{rowBtns}{colBtns}</>;
@@ -2955,6 +2956,24 @@ function A4Page({
                 setShowClearConfirm(false);
               }}
                 className="flex-1 py-2.5 text-xs font-semibold text-red-500 hover:bg-red-50 transition-colors">Clear</button>
+            </div>
+          </div>
+        </>
+      )}
+      {showDeleteTableConfirm && (
+        <>
+          <div className="fixed inset-0 z-[9990] bg-black/30" onClick={() => setShowDeleteTableConfirm(false)} />
+          <div className="fixed z-[9991] left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-white rounded-2xl shadow-2xl border border-stone-200 w-[260px] overflow-hidden">
+            <div className="px-5 pt-5 pb-4">
+              <h3 className="text-sm font-semibold text-stone-800 mb-1">Delete this table?</h3>
+              <p className="text-xs text-stone-500">The table will be permanently removed.</p>
+            </div>
+            <div className="flex border-t border-stone-100">
+              <button onClick={() => setShowDeleteTableConfirm(false)}
+                className="flex-1 py-2.5 text-xs font-medium text-stone-600 hover:bg-stone-50 transition-colors">No</button>
+              <div className="w-px bg-stone-100" />
+              <button onClick={() => { tableDeleteTable(); setShowDeleteTableConfirm(false); }}
+                className="flex-1 py-2.5 text-xs font-semibold text-red-500 hover:bg-red-50 transition-colors">Yes</button>
             </div>
           </div>
         </>
