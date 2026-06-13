@@ -2272,31 +2272,22 @@ function A4Page({
           const hoverGreen = (e: React.MouseEvent<HTMLButtonElement>) => { const t = e.currentTarget; t.style.background = "#dcfce7"; t.style.color = "#16a34a"; };
           const hoverReset = (e: React.MouseEvent<HTMLButtonElement>) => { const t = e.currentTarget; t.style.background = "#f0ede8"; t.style.color = "#374151"; };
           const hoverOrange = (e: React.MouseEvent<HTMLButtonElement>) => { const t = e.currentTarget; t.style.background = "#fee2e2"; t.style.color = "#dc2626"; };
-          const rowBtns = (
+          const hoverBlue = (e: React.MouseEvent<HTMLButtonElement>) => { const t = e.currentTarget; t.style.background = "#dbeafe"; t.style.color = "#2563eb"; };
+          const allBtns = (
             <div
               onMouseEnter={() => setHoverTableBtns(true)}
               onMouseLeave={() => setHoverTableBtns(false)}
-              style={{ position: "absolute", top: isLined ? tableToolbar.top + 8 : tableToolbar.top + tableToolbar.height + 2, left: isLined ? tableToolbar.left - 30 : tableToolbar.left + 4, display: "flex", flexDirection: isLined ? "column" : "row", gap: 4, zIndex: 200, pointerEvents: "auto", opacity: showTableBtns || hoverTableBtns ? 1 : 0, padding: 12, margin: -12 }}>
-              {isLined && (
-                <button onMouseDown={e => { e.preventDefault(); tableDeleteTable(); }} title="Delete lined table"
-                  style={{ ...btnStyle(), fontSize: 12 }} onMouseEnter={hoverOrange} onMouseLeave={hoverReset}>✕</button>
-              )}
+              style={{ position: "absolute", top: tableToolbar.top + tableToolbar.height + 2, left: tableToolbar.left + 4, display: "flex", flexDirection: "row", gap: 4, zIndex: 200, pointerEvents: "auto", opacity: showTableBtns || hoverTableBtns ? 1 : 0, padding: 12, margin: -12 }}>
               <button onMouseDown={e => { e.preventDefault(); tableRemoveRow(); }} title="Remove last row" style={btnStyle()} onMouseEnter={hoverRed} onMouseLeave={hoverReset}>−</button>
               <button onMouseDown={e => { e.preventDefault(); tableAddRow(); }} title="Add row" style={btnStyle()} onMouseEnter={hoverGreen} onMouseLeave={hoverReset}>+</button>
-            </div>
-          );
-          const hoverBlue = (e: React.MouseEvent<HTMLButtonElement>) => { const t = e.currentTarget; t.style.background = "#dbeafe"; t.style.color = "#2563eb"; };
-          const colBtns = !isLined && (
-            <div
-              onMouseEnter={() => setHoverTableBtns(true)}
-              onMouseLeave={() => setHoverTableBtns(false)}
-              style={{ position: "absolute", top: tableToolbar.top + 4, left: tableToolbar.left + tableToolbar.width + 2, display: "flex", flexDirection: "column", gap: 4, zIndex: 200, pointerEvents: "auto", opacity: showTableBtns || hoverTableBtns ? 1 : 0, padding: 12, margin: -12 }}>
-              <button onMouseDown={e => { e.preventDefault(); tableRemoveCol(); }} title="Remove last column" style={btnStyle()} onMouseEnter={hoverRed} onMouseLeave={hoverReset}>−</button>
-              <button onMouseDown={e => { e.preventDefault(); tableAddCol(); }} title="Add column" style={btnStyle()} onMouseEnter={hoverGreen} onMouseLeave={hoverReset}>+</button>
+              {!isLined && (<>
+                <button onMouseDown={e => { e.preventDefault(); tableRemoveCol(); }} title="Remove last column" style={btnStyle()} onMouseEnter={hoverRed} onMouseLeave={hoverReset}>−</button>
+                <button onMouseDown={e => { e.preventDefault(); tableAddCol(); }} title="Add column" style={btnStyle()} onMouseEnter={hoverGreen} onMouseLeave={hoverReset}>+</button>
+              </>)}
               <button onMouseDown={e => { e.preventDefault(); tableDeleteTable(); }} title="Delete table" style={{ ...btnStyle(), fontSize: 12 }} onMouseEnter={hoverBlue} onMouseLeave={hoverReset}>✕</button>
             </div>
           );
-          return <>{rowBtns}{colBtns}</>;
+          return <>{allBtns}</>;
         })()}
       </div>
 
