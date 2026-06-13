@@ -379,12 +379,15 @@ function CtxItem({ icon, label, shortcut, hasArrow, active, onClick }: {
 
 function A4Page({
   page, index, bookId, onDelete, onContentChange, isSaving, onRegisterOpenTools,
+  onRequestNextPage, onRegisterFocusAtStart,
 }: {
   page: Page; index: number; bookId: number;
   onDelete: (pageId: number) => void;
   onContentChange: (pageId: number, html: string) => void;
   isSaving: boolean;
   onRegisterOpenTools: (fn: (x: number, y: number) => void) => void;
+  onRequestNextPage: () => void;
+  onRegisterFocusAtStart: (fn: () => void) => void;
 }) {
   const editorRef    = useRef<HTMLDivElement>(null);
   const paperRef     = useRef<HTMLDivElement>(null);
@@ -491,6 +494,21 @@ function A4Page({
   useEffect(() => {
     localStorage.setItem(`nb_page_graphs_${page.id}`, JSON.stringify(graphBlocks));
   }, [graphBlocks, page.id]);
+
+  // ── Register focusAtStart for auto next-page navigation
+  useEffect(() => {
+    onRegisterFocusAtStart(() => {
+      const editor = editorRef.current;
+      if (!editor) return;
+      editor.focus();
+      const range = document.createRange();
+      range.setStart(editor, 0);
+      range.collapse(true);
+      const sel = window.getSelection();
+      sel?.removeAllRanges();
+      sel?.addRange(range);
+    });
+  }, [onRegisterFocusAtStart]);
 
   // ── Escape key exits draw mode
   useEffect(() => {
@@ -1707,6 +1725,29 @@ function A4Page({
 
   // ── Backspace handler (existing logic)
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLDivElement>) => {
+    // ── Auto next-page when Enter is pressed at the bottom of the A4 page
+    if (e.key === "Enter" && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      const paper = paperRef.current;
+      const editor = editorRef.current;
+      if (paper && editor) {
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0) {
+          const range = sel.getRangeAt(0);
+          const cursorRect = range.getBoundingClientRect();
+          const paperRect = paper.getBoundingClientRect();
+          // A4 content bottom = paper top + 1123px height − 16px bottom padding
+          const contentBottom = paperRect.top + 1123 - 16;
+          // Trigger if cursor bottom is within 38px (≈ 1 line) of the page boundary
+          if (cursorRect.bottom >= contentBottom - 38) {
+            e.preventDefault();
+            saveContent();
+            onRequestNextPage();
+            return;
+          }
+        }
+      }
+    }
+
     if (e.key !== "Backspace") return;
     const selection = window.getSelection();
     if (!selection || selection.rangeCount === 0) return;
@@ -1749,7 +1790,7 @@ function A4Page({
 
   // ── Render
   return (
-    <div className="flex-shrink-0 group/page flex items-start">
+    <div data-page-id={page.id} className="flex-shrink-0 group/page flex items-start">
 
       {/* ── LEFT SIDE PANEL ── */}
       <div style={{ width: leftOpen ? 300 : 0, transition: "width 0.35s cubic-bezier(0.4,0,0.2,1)", overflow: "hidden", flexShrink: 0 }}>
@@ -1905,8 +1946,8 @@ function A4Page({
         </button>
       )}
 
-      {/* A4 paper */}
-      <div ref={paperRef} className="bg-white shadow-xl relative" style={{ minHeight: 1123, padding: "16px" }}>
+      {/* A4 paper — fixed height, content does not grow beyond one page */}
+      <div ref={paperRef} className="bg-white shadow-xl relative" style={{ height: 1123, overflow: "hidden", padding: "16px" }}>
 
         {/* ── INNER NOTE PANEL (floating overlay on left of page) ── */}
         <div style={{
@@ -2902,6 +2943,7 @@ export default function PageEditor() {
   const savingCountRef = useRef(0);
   const pagesAreaRef = useRef<HTMLDivElement>(null);
   const activeOpenToolsRef = useRef<((x: number, y: number) => void) | null>(null);
+  const focusAtStartFnsRef = useRef<Map<number, () => void>>(new Map());
 
   useEffect(() => {
     const el = pagesAreaRef.current;
@@ -2943,6 +2985,25 @@ export default function PageEditor() {
     setTimeout(() => { window.scrollTo({ top: document.body.scrollHeight, behavior: "smooth" }); }, 50);
   };
 
+  const handleRequestNextPage = useCallback((currentPageIdx: number) => {
+    const currentPages = store.listPages(bId);
+    let nextPage = currentPages[currentPageIdx + 1];
+    if (!nextPage) {
+      nextPage = store.createPage(bId, { title: `Page ${currentPages.length + 1}`, content: "" });
+      setPages(store.listPages(bId));
+    }
+    const nextPageId = nextPage.id;
+    setTimeout(() => {
+      const focusFn = focusAtStartFnsRef.current.get(nextPageId);
+      if (focusFn) {
+        focusFn();
+        // Scroll the next page into view
+        const el = document.querySelector(`[data-page-id="${nextPageId}"]`);
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    }, 80);
+  }, [bId]);
+
   if (!book) return <Redirect to="/" />;
 
   return (
@@ -2980,7 +3041,9 @@ export default function PageEditor() {
             <A4Page key={page.id} page={page} index={idx} bookId={bId}
               onDelete={handleDelete} onContentChange={handleContentChange}
               isSaving={saveStatus === "saving"}
-              onRegisterOpenTools={(fn) => { activeOpenToolsRef.current = fn; }} />
+              onRegisterOpenTools={(fn) => { activeOpenToolsRef.current = fn; }}
+              onRequestNextPage={() => handleRequestNextPage(idx)}
+              onRegisterFocusAtStart={(fn) => { focusAtStartFnsRef.current.set(page.id, fn); }} />
           ))}
           <div style={{ width: 794 }} className="flex-shrink-0 pb-10">
             <button onClick={handleAddPage}
