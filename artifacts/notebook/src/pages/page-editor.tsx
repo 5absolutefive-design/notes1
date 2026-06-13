@@ -2276,7 +2276,7 @@ function A4Page({
             <div
               onMouseEnter={() => setHoverTableBtns(true)}
               onMouseLeave={() => setHoverTableBtns(false)}
-              style={{ position: "absolute", top: isLined ? tableToolbar.top + 8 : tableToolbar.top + tableToolbar.height + 2, left: isLined ? tableToolbar.left - 30 : tableToolbar.left + 4, display: "flex", flexDirection: isLined ? "column" : "row", gap: 4, zIndex: 200, pointerEvents: "auto", opacity: showTableBtns || hoverTableBtns ? 1 : 0, padding: 12, margin: -12 }}>
+              style={{ position: "absolute", top: tableToolbar.top + tableToolbar.height + 2, left: tableToolbar.left + 4, display: "flex", flexDirection: "row", gap: 4, zIndex: 200, pointerEvents: "auto", opacity: showTableBtns || hoverTableBtns ? 1 : 0, padding: 12, margin: -12 }}>
               {isLined && (
                 <button onMouseDown={e => { e.preventDefault(); tableDeleteTable(); }} title="Delete lined table"
                   style={{ ...btnStyle(), fontSize: 12 }} onMouseEnter={hoverOrange} onMouseLeave={hoverReset}>✕</button>
