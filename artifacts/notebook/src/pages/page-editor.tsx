@@ -1,10 +1,11 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useParams, useLocation, Redirect } from "wouter";
 import {
   ChevronLeft, Plus, Trash2, Bold, Italic, Underline, Strikethrough, Highlighter,
   CheckSquare, Minus, Heading1, Heading2, Heading3,
   AlignLeft, AlignCenter, AlignRight, List, ChevronRight, Link, PenLine, Eraser,
-  Table, Undo2, Redo2, BarChart2, Subscript, Superscript, ImagePlus, X,
+  Table, Undo2, Redo2, BarChart2, Subscript, Superscript, ImagePlus, X, Wrench,
 } from "lucide-react";
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area,
@@ -377,12 +378,13 @@ function CtxItem({ icon, label, shortcut, hasArrow, active, onClick }: {
 // ── A4Page ───────────────────────────────────────────────────────
 
 function A4Page({
-  page, index, bookId, onDelete, onContentChange, isSaving,
+  page, index, bookId, onDelete, onContentChange, isSaving, onRegisterOpenTools,
 }: {
   page: Page; index: number; bookId: number;
   onDelete: (pageId: number) => void;
   onContentChange: (pageId: number, html: string) => void;
   isSaving: boolean;
+  onRegisterOpenTools: (fn: (x: number, y: number) => void) => void;
 }) {
   const editorRef    = useRef<HTMLDivElement>(null);
   const paperRef     = useRef<HTMLDivElement>(null);
@@ -2010,6 +2012,27 @@ function A4Page({
           onContextMenu={handleContextMenu}
           onMouseDown={handleEditorMouseDown}
           onClick={handleEditorClick}
+          onFocus={() => {
+            onRegisterOpenTools((x, y) => {
+              const sel = window.getSelection();
+              savedRangeRef.current = (sel && sel.rangeCount > 0) ? sel.getRangeAt(0).cloneRange() : null;
+              setCtxMenu({
+                x, y,
+                formatOpen: false, alignOpen: false, bulletOpen: false,
+                highlightOpen: false, fontColorOpen: false, headingOpen: false,
+                dividerOpen: false, linkOpen: false, todoOpen: false,
+                todoCount: 1, todoRemoveCount: 1,
+                drawOpen: false, graphOpen: false, tableOpen: false,
+                fontOpen: false, blockOpen: false, mediaOpen: false,
+                subActive: document.queryCommandState("subscript"),
+                supActive: document.queryCommandState("superscript"),
+                boldActive: document.queryCommandState("bold"),
+                italicActive: document.queryCommandState("italic"),
+                underlineActive: document.queryCommandState("underline"),
+                strikeActive: document.queryCommandState("strikeThrough"),
+              });
+            });
+          }}
           className="outline-none w-full text-zinc-800 a4-editor"
           style={{
             fontFamily: "Georgia, 'Times New Roman', serif",
@@ -2195,8 +2218,8 @@ function A4Page({
         </div>
       )}
 
-      {/* ── Context Menu ── */}
-      {ctxMenu && (
+      {/* ── Context Menu (portal → renders directly in document.body, bypasses all CSS transforms) ── */}
+      {ctxMenu && createPortal(
         <div
           ref={ctxMenuRef}
           className="fixed z-[9999] bg-white rounded-xl shadow-2xl border border-stone-200 py-1.5 min-w-[210px]"
@@ -2734,10 +2757,10 @@ function A4Page({
             )}
           </div>
         </div>
-      )}
+      , document.body)}
 
-      {/* Callout variant picker */}
-      {calloutPickerPos && (
+      {/* Callout variant picker (portal) */}
+      {calloutPickerPos && createPortal(
         <div ref={calloutPickerRef} className="fixed z-[10002] bg-white rounded-xl shadow-2xl border border-stone-200 py-1.5 px-1 min-w-[140px]"
           style={{ top: calloutPickerPos.top, left: calloutPickerPos.left }}>
           {[
@@ -2753,7 +2776,7 @@ function A4Page({
             </button>
           ))}
         </div>
-      )}
+      , document.body)}
 
       {/* ── Column type picker popup ── */}
       {colTypePopup && (
@@ -2880,6 +2903,7 @@ export default function PageEditor() {
   const [zoom, setZoom] = useState(1);
   const savingCountRef = useRef(0);
   const pagesAreaRef = useRef<HTMLDivElement>(null);
+  const activeOpenToolsRef = useRef<((x: number, y: number) => void) | null>(null);
 
   useEffect(() => {
     const el = pagesAreaRef.current;
@@ -2957,7 +2981,8 @@ export default function PageEditor() {
           {pages.map((page, idx) => (
             <A4Page key={page.id} page={page} index={idx} bookId={bId}
               onDelete={handleDelete} onContentChange={handleContentChange}
-              isSaving={saveStatus === "saving"} />
+              isSaving={saveStatus === "saving"}
+              onRegisterOpenTools={(fn) => { activeOpenToolsRef.current = fn; }} />
           ))}
           <div style={{ width: 794 }} className="flex-shrink-0 pb-10">
             <button onClick={handleAddPage}
@@ -2967,6 +2992,23 @@ export default function PageEditor() {
           </div>
         </div>
       </div>
+
+      {/* ── Floating Tools Button (fixed to viewport, works from any page) ── */}
+      <button
+        title="Open Tools (works on any page)"
+        onClick={() => {
+          if (activeOpenToolsRef.current) {
+            const x = window.innerWidth - 240;
+            const y = Math.max(60, window.innerHeight / 2 - 200);
+            activeOpenToolsRef.current(x, y);
+          }
+        }}
+        className="fixed bottom-8 right-8 z-[9990] flex items-center gap-2 px-4 py-3 bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white rounded-2xl shadow-2xl transition-all text-sm font-semibold select-none"
+        style={{ boxShadow: "0 8px 32px rgba(99,102,241,0.45)" }}
+      >
+        <Wrench className="w-4 h-4" />
+        <span>Tools</span>
+      </button>
     </div>
   );
 }
