@@ -986,8 +986,8 @@ function A4Page({
 
   const insertTableWithSize = (numRows: number, numCols: number) => {
     const clampedCols = Math.min(numCols, 6);
-    const thStyle = `background:#f9fafb;padding:6px 10px;text-align:left;font-size:12px;font-weight:600;color:#374151;border:1.5px solid #b0b7c3;border-top:none;border-bottom:3px double #b0b7c3;min-width:120px`;
-    const tdStyle = `padding:6px 10px;border:1.5px solid #b0b7c3;min-width:120px;font-size:13px;color:#1f2937`;
+    const thStyle = `background:#f9fafb;padding:6px 10px;text-align:left;font-size:16px;font-weight:600;color:#374151;border:1.5px solid #b0b7c3;border-top:none;border-bottom:3px double #b0b7c3;min-width:120px;font-family:Inter,sans-serif`;
+    const tdStyle = `padding:6px 10px;border:1.5px solid #b0b7c3;min-width:120px;font-size:16px;color:#1f2937;font-family:Inter,sans-serif`;
     const ths = Array.from({ length: clampedCols }, (_, i) => `<th style="${thStyle}" contenteditable="true">Column ${i + 1}</th>`).join("");
     const tdRow = Array.from({ length: clampedCols }, () => `<td style="${tdStyle}" contenteditable="true"><br/></td>`).join("");
     const rows = Array.from({ length: numRows }, () => `<tr>${tdRow}</tr>`).join("");
@@ -996,8 +996,8 @@ function A4Page({
   };
 
   const insertLined = () => {
-    const thStyle = `background:#f5f5f3;padding:8px 12px;text-align:left;font-size:13px;font-weight:600;color:#374151;border:none;border-bottom:2px solid #b0b7c3;width:100%;display:block`;
-    const tdStyle = `padding:7px 12px;border:none;border-bottom:1px solid #e2e0db;width:100%;display:block;font-size:13px;color:#1f2937;min-height:32px`;
+    const thStyle = `background:#f5f5f3;padding:8px 12px;text-align:left;font-size:16px;font-weight:600;color:#374151;border:none;border-bottom:2px solid #b0b7c3;width:100%;display:block;font-family:Inter,sans-serif`;
+    const tdStyle = `padding:7px 12px;border:none;border-bottom:1px solid #e2e0db;width:100%;display:block;font-size:16px;color:#1f2937;min-height:32px;font-family:Inter,sans-serif`;
     const th = `<th style="${thStyle}" contenteditable="true">Header</th>`;
     const tds = [1,2,3].map(() => `<tr><td style="${tdStyle}" contenteditable="true"><br/></td></tr>`).join("");
     insertHTML(`<br/><table data-lined="true" style="border-collapse:collapse;width:100%;margin:8px 0;border:1.5px solid #b0b7c3;border-radius:6px;overflow:hidden"><thead><tr>${th}</tr></thead><tbody>${tds}</tbody></table><br/>`);
@@ -1068,7 +1068,7 @@ function A4Page({
     // Build a fully isolated HTML document that mirrors the paper's styling exactly
     const cleanHTML = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
 *{box-sizing:border-box;margin:0;padding:0;background-image:none!important}
-body{font-family:Georgia,'Times New Roman',serif;background:#fff;color:#222;width:${paperWidth}px}
+body{font-family:Inter,sans-serif;background:#fff;color:#222;width:${paperWidth}px}
 .page{
   width:${paperWidth}px;
   padding:${paperPadding}px;
@@ -1078,6 +1078,7 @@ body{font-family:Georgia,'Times New Roman',serif;background:#fff;color:#222;widt
   color:#222;
   white-space:pre-wrap;
   word-break:break-word;
+  font-family:Inter,sans-serif;
 }
 h1{font-size:26px;font-weight:700;margin:14px 0 6px}
 h2{font-size:22px;font-weight:700;margin:12px 0 5px}
@@ -1086,15 +1087,15 @@ b,strong{font-weight:700}
 i,em{font-style:italic}
 u{text-decoration:underline}
 table{border-collapse:collapse;width:100%;margin:8px 0}
-td,th{border:1.5px solid #b0b7c3;padding:6px 10px;font-size:14px;background:#fff}
+td,th{border:1.5px solid #b0b7c3;padding:6px 10px;font-size:16px;font-family:Inter,sans-serif;background:#fff}
 th{background:#f9fafb;font-weight:600}
 img{max-width:100%;display:block}
 ul,ol{padding-left:20px;margin:6px 0}
 li{margin:2px 0}
 hr{border:none;border-top:1px solid #ccc;margin:10px 0}
 a{color:#2563eb}
-[data-lined="true"] td{border:none;border-bottom:1px solid #e2e0db;background:#fff}
-[data-lined="true"] th{display:none}
+[data-lined="true"] td{border:none;border-bottom:1px solid #e2e0db;background:#fff;font-size:16px;font-family:Inter,sans-serif}
+[data-lined="true"] th{font-size:16px;font-family:Inter,sans-serif}
 </style></head><body><div class="page">${clone.innerHTML}</div></body></html>`;
 
     // Render inside an isolated same-origin iframe to fully escape app CSS
@@ -1390,8 +1391,8 @@ a{color:#2563eb}
   }, [saveContent]);
 
   // ── Table row/col add/remove/toggle/delete
-  const TH_STYLE = `background:#f9fafb;padding:6px 10px;text-align:left;font-size:12px;font-weight:600;color:#374151;border:1.5px solid #b0b7c3;border-top:none;border-bottom:3px double #b0b7c3;min-width:120px`;
-  const TD_STYLE = `padding:6px 10px;border:1.5px solid #b0b7c3;min-width:120px;font-size:13px;color:#1f2937`;
+  const TH_STYLE = `background:#f9fafb;padding:6px 10px;text-align:left;font-size:16px;font-weight:600;color:#374151;border:1.5px solid #b0b7c3;border-top:none;border-bottom:3px double #b0b7c3;min-width:120px;font-family:Inter,sans-serif`;
+  const TD_STYLE = `padding:6px 10px;border:1.5px solid #b0b7c3;min-width:120px;font-size:16px;color:#1f2937;font-family:Inter,sans-serif`;
 
   const tableAddRow = () => {
     const table = activeTableRef.current; if (!table) return;
@@ -1399,7 +1400,7 @@ a{color:#2563eb}
     const isLined = table.dataset.lined === "true";
     const colCount = table.rows[0]?.cells.length ?? 4;
     const tr = document.createElement("tr");
-    const linedTdStyle = `padding:7px 12px;border:none;border-bottom:1px solid #e2e0db;width:100%;display:block;font-size:13px;color:#1f2937;min-height:32px`;
+    const linedTdStyle = `padding:7px 12px;border:none;border-bottom:1px solid #e2e0db;width:100%;display:block;font-size:16px;color:#1f2937;min-height:32px;font-family:Inter,sans-serif`;
     const ths = table.querySelectorAll("thead th");
     for (let i = 0; i < colCount; i++) {
       const td = document.createElement("td");
@@ -2248,7 +2249,7 @@ a{color:#2563eb}
           }}
           className="outline-none w-full text-zinc-800 a4-editor"
           style={{
-            fontFamily: "Georgia, 'Times New Roman', serif",
+            fontFamily: "Inter, sans-serif",
             fontSize: 18,
             lineHeight: "1.9",
             minHeight: 1091,
