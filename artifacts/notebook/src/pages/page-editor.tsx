@@ -1120,13 +1120,12 @@ a{color:#2563eb}
       iframe.style.height = contentH + "px";
       await new Promise(r => setTimeout(r, 150));
 
-      // Render at 2× scale for sharp text (effectively 192 DPI instead of 96 DPI)
-      const SCALE = 2;
+      // Render at 2× pixel density for sharp text (dom-to-image-more scale option)
       const fullCanvas = await domtoimage.toCanvas(target, {
         bgcolor: "#ffffff",
         width: paperWidth,
         height: target.scrollHeight,
-        style: { transform: `scale(${SCALE})`, transformOrigin: "top left" },
+        scale: 2,
       }) as HTMLCanvasElement;
 
       // A4 dimensions in PDF points
@@ -1226,10 +1225,9 @@ hr{border:none;border-top:1px solid #ccc;margin:10px 0}a{color:#2563eb}
         iframe.style.height = contentH + "px";
         await new Promise(r => setTimeout(r, 150));
 
-        const SCALE = 2;
         const fullCanvas = await domtoimage.toCanvas(target, {
           bgcolor: "#ffffff", width: paperWidth, height: target.scrollHeight,
-          style: { transform: `scale(${SCALE})`, transformOrigin: "top left" },
+          scale: 2,
         }) as HTMLCanvasElement;
 
         const canvasW = fullCanvas.width;
