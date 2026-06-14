@@ -1060,20 +1060,33 @@ function A4Page({
     const clone = editor.cloneNode(true) as HTMLElement;
     clone.querySelectorAll("audio,video,input,button,[data-remove-btn],canvas,svg").forEach(el => el.remove());
 
-    // Build a fully isolated HTML document — no Tailwind, no oklch, no app CSS
+    // Match the exact paper dimensions and styles from the app
+    const paperEl = paperRef.current;
+    const paperWidth = paperEl?.clientWidth || 794;
+    const paperPadding = 16; // matches style={{ padding: "16px" }} on the paper div
+
+    // Build a fully isolated HTML document that mirrors the paper's styling exactly
     const cleanHTML = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
 *{box-sizing:border-box;margin:0;padding:0;background-image:none!important}
-body{font-family:Georgia,serif;background:#fff;color:#1a1a1a;width:794px}
-.page{width:794px;padding:60px 72px;font-size:13px;line-height:1.7;background:#fff;color:#1a1a1a}
-h1{font-size:22px;font-weight:700;margin:14px 0 6px}
-h2{font-size:18px;font-weight:700;margin:12px 0 5px}
-h3{font-size:15px;font-weight:600;margin:10px 0 4px}
-p{margin:4px 0}
+body{font-family:Georgia,'Times New Roman',serif;background:#fff;color:#222;width:${paperWidth}px}
+.page{
+  width:${paperWidth}px;
+  padding:${paperPadding}px;
+  font-size:18px;
+  line-height:1.9;
+  background:#fff;
+  color:#222;
+  white-space:pre-wrap;
+  word-break:break-word;
+}
+h1{font-size:26px;font-weight:700;margin:14px 0 6px}
+h2{font-size:22px;font-weight:700;margin:12px 0 5px}
+h3{font-size:18px;font-weight:600;margin:10px 0 4px}
 b,strong{font-weight:700}
 i,em{font-style:italic}
 u{text-decoration:underline}
 table{border-collapse:collapse;width:100%;margin:8px 0}
-td,th{border:1.5px solid #b0b7c3;padding:6px 10px;font-size:12px;background:#fff}
+td,th{border:1.5px solid #b0b7c3;padding:6px 10px;font-size:14px;background:#fff}
 th{background:#f9fafb;font-weight:600}
 img{max-width:100%;display:block}
 ul,ol{padding-left:20px;margin:6px 0}
@@ -1087,7 +1100,7 @@ a{color:#2563eb}
     // Render inside an isolated same-origin iframe to fully escape app CSS
     const iframe = document.createElement("iframe");
     // opacity:0 + pointer-events:none ensures full layout/rendering without visual display
-    iframe.style.cssText = "position:fixed;left:-9999px;top:0;width:794px;height:10000px;border:none;opacity:0;pointer-events:none";
+    iframe.style.cssText = `position:fixed;left:-9999px;top:0;width:${paperWidth}px;height:10000px;border:none;opacity:0;pointer-events:none`;
     document.body.appendChild(iframe);
 
     try {
@@ -1106,10 +1119,10 @@ a{color:#2563eb}
       iframe.style.height = contentH + "px";
       await new Promise(r => setTimeout(r, 150));
 
-      // Render to a full-resolution canvas
+      // Render to a full-resolution canvas at the exact paper width
       const fullCanvas = await domtoimage.toCanvas(target, {
         bgcolor: "#ffffff",
-        width: 794,
+        width: paperWidth,
         height: target.scrollHeight,
       }) as HTMLCanvasElement;
 
