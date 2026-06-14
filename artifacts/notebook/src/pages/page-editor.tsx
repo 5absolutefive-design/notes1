@@ -7,7 +7,7 @@ import {
   ChevronLeft, Plus, Trash2, Bold, Italic, Underline, Strikethrough, Highlighter,
   CheckSquare, Minus, Heading1, Heading2, Heading3,
   AlignLeft, AlignCenter, AlignRight, List, ChevronRight, Link, PenLine, Eraser,
-  Table, Undo2, Redo2, BarChart2, Subscript, Superscript, ImagePlus, X, Wrench, FileDown,
+  Table, Undo2, Redo2, BarChart2, Subscript, Superscript, ImagePlus, X, Wrench, FileDown, Camera,
 } from "lucide-react";
 import {
   BarChart, Bar, LineChart, Line, PieChart, Pie, Cell, AreaChart, Area,
@@ -1269,6 +1269,60 @@ hr{border:none;border-top:1px solid #ccc;margin:10px 0}a{color:#2563eb}
     }
 
     pdf.save(bookTitle + ".pdf");
+  };
+
+  const downloadScreenshotPDF = async () => {
+    setCtxMenu(null);
+    const paper = paperRef.current;
+    if (!paper) return;
+
+    // Temporarily expand paper to reveal full content (it normally clips at height:1123)
+    const origHeight = paper.style.height;
+    const origOverflow = paper.style.overflow;
+    paper.style.height = "auto";
+    paper.style.overflow = "visible";
+    await new Promise(r => setTimeout(r, 80)); // let browser reflow
+
+    try {
+      const paperWidth = paper.clientWidth || 794;
+      const fullCanvas = await domtoimage.toCanvas(paper, {
+        bgcolor: "#ffffff",
+        width: paperWidth,
+        height: paper.scrollHeight,
+        scale: 2,
+      }) as HTMLCanvasElement;
+
+      const A4_W = 595.28;
+      const A4_H = 841.89;
+      const canvasW = fullCanvas.width;
+      const canvasH = fullCanvas.height;
+      const a4HeightPx = Math.round(A4_H * (canvasW / A4_W));
+
+      const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+      let sliceY = 0;
+      let pageNum = 0;
+
+      while (sliceY < canvasH) {
+        const sliceH = Math.min(a4HeightPx, canvasH - sliceY);
+        const sliceCanvas = document.createElement("canvas");
+        sliceCanvas.width = canvasW;
+        sliceCanvas.height = a4HeightPx;
+        const ctx = sliceCanvas.getContext("2d")!;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvasW, a4HeightPx);
+        ctx.drawImage(fullCanvas, 0, sliceY, canvasW, sliceH, 0, 0, canvasW, sliceH);
+        const sliceData = sliceCanvas.toDataURL("image/png");
+        if (pageNum > 0) pdf.addPage();
+        pdf.addImage(sliceData, "PNG", 0, 0, A4_W, A4_H);
+        sliceY += a4HeightPx;
+        pageNum++;
+      }
+
+      pdf.save((page?.title?.trim() || "page") + "-screenshot.pdf");
+    } finally {
+      paper.style.height = origHeight;
+      paper.style.overflow = origOverflow;
+    }
   };
 
   const insertBorderBlock = () => {
@@ -3080,6 +3134,8 @@ hr{border:none;border-top:1px solid #ccc;margin:10px 0}a{color:#2563eb}
             onClick={() => { downloadAsPDF(); }} />
           <CtxItem icon={<FileDown className="w-3.5 h-3.5 text-violet-500"/>} label="Download All Pages PDF"
             onClick={() => { downloadAllAsPDF(); }} />
+          <CtxItem icon={<Camera className="w-3.5 h-3.5 text-emerald-500"/>} label="Screenshot PDF"
+            onClick={() => { downloadScreenshotPDF(); }} />
         </div>
       , document.body)}
 
