@@ -1,5 +1,5 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
-import html2canvas from "html2canvas";
+import domtoimage from "dom-to-image-more";
 import { jsPDF } from "jspdf";
 import { createPortal } from "react-dom";
 import { useParams, useLocation, Redirect } from "wouter";
@@ -1072,21 +1072,23 @@ function A4Page({
     document.body.appendChild(container);
 
     try {
-      const canvas = await html2canvas(container, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff",
-        width: 794,
-        windowWidth: 794,
+      // Measure container dimensions before rendering
+      const contentW = container.scrollWidth || 794;
+      const contentH = container.scrollHeight || 1123;
+
+      const imgData = await domtoimage.toJpeg(container, {
+        quality: 0.95,
+        bgcolor: "#ffffff",
+        width: contentW,
+        height: contentH,
+        style: { transform: "none" },
       });
 
-      const imgData = canvas.toDataURL("image/jpeg", 0.95);
       const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
-
       const pageW = pdf.internal.pageSize.getWidth();
       const pageH = pdf.internal.pageSize.getHeight();
       const imgW = pageW;
-      const imgH = (canvas.height / canvas.width) * imgW;
+      const imgH = (contentH / contentW) * imgW;
 
       let yOffset = 0;
       let remaining = imgH;
