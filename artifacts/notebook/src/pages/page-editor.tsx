@@ -1056,32 +1056,61 @@ function A4Page({
     if (!editor) return;
     setCtxMenu(null);
 
-    // Build a hidden render container styled like an A4 page
-    const container = document.createElement("div");
-    container.style.cssText = [
-      "position:fixed", "left:-9999px", "top:0",
-      "width:794px", "background:#fff", "color:#1a1a1a",
-      "font-family:Georgia,serif", "font-size:13px", "line-height:1.7",
-      "padding:60px 72px", "box-sizing:border-box",
-    ].join(";");
-
-    // Clone the editor content, stripping interactive elements
+    // Clone and strip interactive/decorative elements
     const clone = editor.cloneNode(true) as HTMLElement;
-    clone.querySelectorAll("audio,video,input,button,[data-remove-btn]").forEach(el => el.remove());
-    container.appendChild(clone);
-    document.body.appendChild(container);
+    clone.querySelectorAll("audio,video,input,button,[data-remove-btn],canvas,svg").forEach(el => el.remove());
+
+    // Build a fully isolated HTML document — no Tailwind, no oklch, no app CSS
+    const cleanHTML = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>
+*{box-sizing:border-box;margin:0;padding:0;background-image:none!important}
+body{font-family:Georgia,serif;background:#fff;color:#1a1a1a;width:794px}
+.page{width:794px;padding:60px 72px;font-size:13px;line-height:1.7;background:#fff;color:#1a1a1a}
+h1{font-size:22px;font-weight:700;margin:14px 0 6px}
+h2{font-size:18px;font-weight:700;margin:12px 0 5px}
+h3{font-size:15px;font-weight:600;margin:10px 0 4px}
+p{margin:4px 0}
+b,strong{font-weight:700}
+i,em{font-style:italic}
+u{text-decoration:underline}
+table{border-collapse:collapse;width:100%;margin:8px 0}
+td,th{border:1.5px solid #b0b7c3;padding:6px 10px;font-size:12px;background:#fff}
+th{background:#f9fafb;font-weight:600}
+img{max-width:100%;display:block}
+ul,ol{padding-left:20px;margin:6px 0}
+li{margin:2px 0}
+hr{border:none;border-top:1px solid #ccc;margin:10px 0}
+a{color:#2563eb}
+[data-lined="true"] td{border:none;border-bottom:1px solid #e2e0db;background:#fff}
+[data-lined="true"] th{display:none}
+</style></head><body><div class="page">${clone.innerHTML}</div></body></html>`;
+
+    // Render inside an isolated same-origin iframe to fully escape app CSS
+    const iframe = document.createElement("iframe");
+    iframe.style.cssText = "position:fixed;left:-9999px;top:0;width:794px;height:10000px;border:none;visibility:hidden";
+    document.body.appendChild(iframe);
 
     try {
-      // Measure container dimensions before rendering
-      const contentW = container.scrollWidth || 794;
-      const contentH = container.scrollHeight || 1123;
+      await new Promise<void>(resolve => {
+        iframe.onload = () => resolve();
+        iframe.srcdoc = cleanHTML;
+      });
 
-      const imgData = await domtoimage.toJpeg(container, {
+      const iframeDoc = iframe.contentDocument!;
+      const iframeBody = iframeDoc.body;
+      const pageDiv = iframeBody.querySelector(".page") as HTMLElement;
+
+      const contentW = 794;
+      const contentH = pageDiv?.scrollHeight || iframeBody.scrollHeight;
+
+      iframe.style.height = contentH + "px";
+      // Allow layout to settle
+      await new Promise(r => setTimeout(r, 100));
+
+      const imgData = await domtoimage.toJpeg(pageDiv || iframeBody, {
         quality: 0.95,
         bgcolor: "#ffffff",
         width: contentW,
         height: contentH,
-        style: { transform: "none" },
       });
 
       const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
@@ -1092,7 +1121,6 @@ function A4Page({
 
       let yOffset = 0;
       let remaining = imgH;
-
       while (remaining > 0) {
         pdf.addImage(imgData, "JPEG", 0, -yOffset, imgW, imgH);
         remaining -= pageH;
@@ -1103,7 +1131,7 @@ function A4Page({
       const fileName = (page?.title?.trim() || "page") + ".pdf";
       pdf.save(fileName);
     } finally {
-      document.body.removeChild(container);
+      document.body.removeChild(iframe);
     }
   };
 
