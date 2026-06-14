@@ -1271,65 +1271,85 @@ hr{border:none;border-top:1px solid #ccc;margin:10px 0}a{color:#2563eb}
     pdf.save(bookTitle + ".pdf");
   };
 
-  const downloadScreenshotPDF = () => {
+  const downloadScreenshotPDF = async () => {
     setCtxMenu(null);
+    const paper = paperRef.current;
     const editor = editorRef.current;
-    if (!editor) return;
+    if (!paper || !editor) return;
 
-    // Clone content and prepare for print
-    const clone = editor.cloneNode(true) as HTMLElement;
-    // Replace date inputs with readable text
-    clone.querySelectorAll<HTMLInputElement>("input[data-datecell]").forEach(inp => {
-      const span = document.createElement("span");
-      span.style.cssText = "font-size:16px;font-family:Inter,sans-serif;color:#1f2937";
-      span.textContent = inp.value || "";
-      inp.replaceWith(span);
-    });
-    // Remove file inputs and remove-buttons only (keep visual content)
-    clone.querySelectorAll("input[type=file], [data-remove-btn]").forEach(el => el.remove());
+    // ── 1. Hide elements that cause rendering artifacts ──────────────
+    // The draw SVG overlay (position:absolute inset:0) renders as thick black lines in dom-to-image
+    // Note panels, remove-buttons, and other UI chrome should also be hidden
+    const toHide: HTMLElement[] = Array.from(
+      paper.querySelectorAll<HTMLElement>("[data-draw-layer], [data-remove-btn], button, [data-note-panel]")
+    );
+    toHide.forEach(el => { el.dataset._hiddenForPdf = "1"; el.style.visibility = "hidden"; });
 
-    const paperWidth = paperRef.current?.clientWidth || 794;
-    const title = page?.title?.trim() || "page";
+    // ── 2. Expand editor + paper to reveal all content ───────────────
+    const savedEditorMaxH   = editor.style.maxHeight;
+    const savedEditorH      = editor.style.minHeight;
+    const savedEditorOvfl   = editor.style.overflow;
+    const savedPaperH       = paper.style.height;
+    const savedPaperOvfl    = paper.style.overflow;
 
-    const printHTML = `<!DOCTYPE html><html><head><meta charset="utf-8">
-<title>${title}</title>
-<style>
-  @page { size: A4; margin: 0; }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; padding: 20px 24px;
-    font-family: Inter, sans-serif;
-    font-size: 18px; line-height: 1.9;
-    color: #1f2937;
-    max-width: ${paperWidth}px;
-    background: #fff;
-  }
-  h1{font-size:26px;font-weight:700;margin:14px 0 6px}
-  h2{font-size:22px;font-weight:700;margin:12px 0 5px}
-  h3{font-size:18px;font-weight:600;margin:10px 0 4px}
-  b,strong{font-weight:700} i,em{font-style:italic} u{text-decoration:underline}
-  table{border-collapse:collapse;width:100%;margin:8px 0}
-  td,th{border:1.5px solid #b0b7c3;padding:6px 10px;font-size:16px;font-family:Inter,sans-serif}
-  th{background:#f9fafb;font-weight:600}
-  img{max-width:100%;display:block}
-  ul,ol{padding-left:20px;margin:6px 0} li{margin:2px 0}
-  hr{border:none;border-top:1px solid #ccc;margin:10px 0}
-  [data-lined="true"] td{border:none;border-bottom:1px solid #e2e0db}
-  [data-lined="true"] th{display:none}
-  audio,video,canvas,svg,[data-arrows-layer]{display:none!important}
-  input[type=checkbox]{accent-color:#3b82f6}
-</style>
-</head><body>${clone.innerHTML}</body></html>`;
+    editor.style.maxHeight  = "none";
+    editor.style.minHeight  = "0";
+    editor.style.overflow   = "visible";
+    paper.style.height      = "auto";
+    paper.style.overflow    = "visible";
 
-    const win = window.open("", "_blank", "width=900,height=1200,scrollbars=yes");
-    if (!win) return;
-    win.document.open();
-    win.document.write(printHTML);
-    win.document.close();
-    // Give fonts/images a moment to load, then trigger print dialog
-    win.addEventListener("load", () => {
-      setTimeout(() => { win.print(); }, 300);
-    });
+    await new Promise(r => setTimeout(r, 120)); // let browser reflow + recharts resize
+
+    try {
+      const paperWidth = paper.clientWidth || 794;
+
+      const fullCanvas = await domtoimage.toCanvas(paper, {
+        bgcolor: "#ffffff",
+        width:   paperWidth,
+        height:  paper.scrollHeight,
+        scale:   2,
+        // filter out any remaining SVG draw layer nodes
+        filter: (node: Node) => {
+          const el = node as HTMLElement;
+          return !(el.dataset && el.dataset.drawLayer === "1");
+        },
+      }) as HTMLCanvasElement;
+
+      const A4_W = 595.28;
+      const A4_H = 841.89;
+      const canvasW      = fullCanvas.width;
+      const canvasH      = fullCanvas.height;
+      const a4HeightPx   = Math.round(A4_H * (canvasW / A4_W));
+
+      const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+      let sliceY = 0, pageNum = 0;
+
+      while (sliceY < canvasH) {
+        const sliceH      = Math.min(a4HeightPx, canvasH - sliceY);
+        const sliceCanvas = document.createElement("canvas");
+        sliceCanvas.width  = canvasW;
+        sliceCanvas.height = a4HeightPx;
+        const ctx = sliceCanvas.getContext("2d")!;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvasW, a4HeightPx);
+        ctx.drawImage(fullCanvas, 0, sliceY, canvasW, sliceH, 0, 0, canvasW, sliceH);
+        const sliceData = sliceCanvas.toDataURL("image/png");
+        if (pageNum > 0) pdf.addPage();
+        pdf.addImage(sliceData, "PNG", 0, 0, A4_W, A4_H);
+        sliceY  += a4HeightPx;
+        pageNum++;
+      }
+
+      pdf.save((page?.title?.trim() || "page") + "-screenshot.pdf");
+    } finally {
+      // ── 3. Restore everything ────────────────────────────────────────
+      toHide.forEach(el => { el.style.visibility = ""; delete el.dataset._hiddenForPdf; });
+      editor.style.maxHeight = savedEditorMaxH;
+      editor.style.minHeight = savedEditorH;
+      editor.style.overflow  = savedEditorOvfl;
+      paper.style.height     = savedPaperH;
+      paper.style.overflow   = savedPaperOvfl;
+    }
   };
 
   const insertBorderBlock = () => {
@@ -2337,6 +2357,7 @@ hr{border:none;border-top:1px solid #ccc;margin:10px 0}a{color:#2563eb}
 
         {/* Draw SVG overlay */}
         <svg
+          data-draw-layer="1"
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: drawTool ? "all" : "none", zIndex: 10, overflow: "visible" }}
           onMouseDown={handleDrawMouseDown}
           onMouseMove={handleDrawMouseMove}
