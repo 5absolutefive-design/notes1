@@ -1086,7 +1086,8 @@ a{color:#2563eb}
 
     // Render inside an isolated same-origin iframe to fully escape app CSS
     const iframe = document.createElement("iframe");
-    iframe.style.cssText = "position:fixed;left:-9999px;top:0;width:794px;height:10000px;border:none;visibility:hidden";
+    // opacity:0 + pointer-events:none ensures full layout/rendering without visual display
+    iframe.style.cssText = "position:fixed;left:-9999px;top:0;width:794px;height:10000px;border:none;opacity:0;pointer-events:none";
     document.body.appendChild(iframe);
 
     try {
@@ -1098,34 +1099,51 @@ a{color:#2563eb}
       const iframeDoc = iframe.contentDocument!;
       const iframeBody = iframeDoc.body;
       const pageDiv = iframeBody.querySelector(".page") as HTMLElement;
+      const target = pageDiv || iframeBody;
 
-      const contentW = 794;
-      const contentH = pageDiv?.scrollHeight || iframeBody.scrollHeight;
-
+      // Measure true content height and resize iframe so nothing is clipped
+      const contentH = target.scrollHeight;
       iframe.style.height = contentH + "px";
-      // Allow layout to settle
-      await new Promise(r => setTimeout(r, 100));
+      await new Promise(r => setTimeout(r, 150));
 
-      const imgData = await domtoimage.toJpeg(pageDiv || iframeBody, {
-        quality: 0.95,
+      // Render to a full-resolution canvas
+      const fullCanvas = await domtoimage.toCanvas(target, {
         bgcolor: "#ffffff",
-        width: contentW,
-        height: contentH,
-      });
+        width: 794,
+        height: target.scrollHeight,
+      }) as HTMLCanvasElement;
+
+      // A4 dimensions in PDF points
+      const A4_W = 595.28;
+      const A4_H = 841.89;
+
+      // How many canvas pixels correspond to one A4 page height
+      const canvasW = fullCanvas.width;
+      const canvasH = fullCanvas.height;
+      const a4HeightPx = Math.round(A4_H * (canvasW / A4_W));
 
       const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
-      const pageW = pdf.internal.pageSize.getWidth();
-      const pageH = pdf.internal.pageSize.getHeight();
-      const imgW = pageW;
-      const imgH = (contentH / contentW) * imgW;
 
-      let yOffset = 0;
-      let remaining = imgH;
-      while (remaining > 0) {
-        pdf.addImage(imgData, "JPEG", 0, -yOffset, imgW, imgH);
-        remaining -= pageH;
-        yOffset += pageH;
-        if (remaining > 0) pdf.addPage();
+      let sliceY = 0;
+      let pageNum = 0;
+
+      while (sliceY < canvasH) {
+        // Slice exactly one A4 page worth of pixels
+        const sliceH = Math.min(a4HeightPx, canvasH - sliceY);
+        const sliceCanvas = document.createElement("canvas");
+        sliceCanvas.width = canvasW;
+        sliceCanvas.height = a4HeightPx; // always full A4 height (last page padded white)
+        const ctx = sliceCanvas.getContext("2d")!;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, canvasW, a4HeightPx);
+        ctx.drawImage(fullCanvas, 0, sliceY, canvasW, sliceH, 0, 0, canvasW, sliceH);
+
+        const sliceData = sliceCanvas.toDataURL("image/jpeg", 0.92);
+        if (pageNum > 0) pdf.addPage();
+        pdf.addImage(sliceData, "JPEG", 0, 0, A4_W, A4_H);
+
+        sliceY += a4HeightPx;
+        pageNum++;
       }
 
       const fileName = (page?.title?.trim() || "page") + ".pdf";
