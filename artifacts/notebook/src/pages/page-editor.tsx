@@ -1,4 +1,6 @@
 import { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
+import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
 import { createPortal } from "react-dom";
 import { useParams, useLocation, Redirect } from "wouter";
 import {
@@ -1049,34 +1051,58 @@ function A4Page({
     );
   };
 
-  const downloadAsPDF = () => {
+  const downloadAsPDF = async () => {
     const editor = editorRef.current;
     if (!editor) return;
     setCtxMenu(null);
-    const html = editor.innerHTML;
-    const w = window.open("", "_blank", "width=900,height=700");
-    if (!w) return;
-    w.document.write(`<!DOCTYPE html>
-<html><head><meta charset="utf-8"><title>Page</title><style>
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:Georgia,serif;background:#fff;color:#1a1a1a}
-.paper{width:794px;min-height:1123px;padding:60px 72px;margin:0 auto;font-size:13px;line-height:1.7}
-audio,video,input{display:none!important}
-table{border-collapse:collapse;width:100%;margin:8px 0}
-td,th{border:1.5px solid #b0b7c3;padding:6px 10px;font-size:12px}
-th{background:#f9fafb;font-weight:600}
-img{max-width:100%;display:block}
-h1{font-size:22px;font-weight:700;margin:12px 0 6px}
-h2{font-size:18px;font-weight:700;margin:10px 0 5px}
-h3{font-size:15px;font-weight:600;margin:8px 0 4px}
-@media print{body{margin:0}.paper{width:100%;padding:18mm 20mm}@page{size:A4;margin:0}}
-</style></head>
-<body><div class="paper">${html}</div>
-<script>
-document.querySelectorAll("audio,video,input,button").forEach(el=>el.remove());
-setTimeout(()=>{window.print();},400);
-<\/script></body></html>`);
-    w.document.close();
+
+    // Build a hidden render container styled like an A4 page
+    const container = document.createElement("div");
+    container.style.cssText = [
+      "position:fixed", "left:-9999px", "top:0",
+      "width:794px", "background:#fff", "color:#1a1a1a",
+      "font-family:Georgia,serif", "font-size:13px", "line-height:1.7",
+      "padding:60px 72px", "box-sizing:border-box",
+    ].join(";");
+
+    // Clone the editor content, stripping interactive elements
+    const clone = editor.cloneNode(true) as HTMLElement;
+    clone.querySelectorAll("audio,video,input,button,[data-remove-btn]").forEach(el => el.remove());
+    container.appendChild(clone);
+    document.body.appendChild(container);
+
+    try {
+      const canvas = await html2canvas(container, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff",
+        width: 794,
+        windowWidth: 794,
+      });
+
+      const imgData = canvas.toDataURL("image/jpeg", 0.95);
+      const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+
+      const pageW = pdf.internal.pageSize.getWidth();
+      const pageH = pdf.internal.pageSize.getHeight();
+      const imgW = pageW;
+      const imgH = (canvas.height / canvas.width) * imgW;
+
+      let yOffset = 0;
+      let remaining = imgH;
+
+      while (remaining > 0) {
+        pdf.addImage(imgData, "JPEG", 0, -yOffset, imgW, imgH);
+        remaining -= pageH;
+        yOffset += pageH;
+        if (remaining > 0) pdf.addPage();
+      }
+
+      const fileName = (page?.title?.trim() || "page") + ".pdf";
+      pdf.save(fileName);
+    } finally {
+      document.body.removeChild(container);
+    }
   };
 
   const insertBorderBlock = () => {
