@@ -1167,6 +1167,95 @@ a{color:#2563eb}
     }
   };
 
+  const downloadAllAsPDF = async () => {
+    setCtxMenu(null);
+    const allPages = store.listPages(bookId);
+    if (allPages.length === 0) return;
+    const bookTitle = store.getBook(bookId)?.title?.trim() || "notebook";
+    const paperEl = paperRef.current;
+    const paperWidth = paperEl?.clientWidth || 794;
+    const paperPadding = 16;
+
+    const buildCSS = () => `
+*{box-sizing:border-box;margin:0;padding:0;background-image:none!important}
+body{font-family:Inter,sans-serif;background:#fff;color:#222;width:${paperWidth}px}
+.page{width:${paperWidth}px;padding:${paperPadding}px;font-size:18px;line-height:1.9;background:#fff;color:#222;white-space:pre-wrap;word-break:break-word;font-family:Inter,sans-serif}
+h1{font-size:26px;font-weight:700;margin:14px 0 6px}
+h2{font-size:22px;font-weight:700;margin:12px 0 5px}
+h3{font-size:18px;font-weight:600;margin:10px 0 4px}
+b,strong{font-weight:700}i,em{font-style:italic}u{text-decoration:underline}
+table{border-collapse:collapse;width:100%;margin:8px 0}
+td,th{border:1.5px solid #b0b7c3;padding:6px 10px;font-size:16px;font-family:Inter,sans-serif;background:#fff}
+th{background:#f9fafb;font-weight:600}
+img{max-width:100%;display:block}
+ul,ol{padding-left:20px;margin:6px 0}li{margin:2px 0}
+hr{border:none;border-top:1px solid #ccc;margin:10px 0}a{color:#2563eb}
+[data-lined="true"] td{border:none;border-bottom:1px solid #e2e0db;background:#fff;font-size:16px;font-family:Inter,sans-serif}
+[data-lined="true"] th{font-size:16px;font-family:Inter,sans-serif}`;
+
+    const A4_W = 595.28;
+    const A4_H = 841.89;
+    const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
+    let firstPage = true;
+
+    for (const p of allPages) {
+      // For the currently open page use live DOM so unsaved changes are included
+      let contentHTML: string;
+      if (p.id === page.id && editorRef.current) {
+        const clone = editorRef.current.cloneNode(true) as HTMLElement;
+        clone.querySelectorAll("audio,video,input,button,[data-remove-btn],canvas,svg").forEach(el => el.remove());
+        contentHTML = clone.innerHTML;
+      } else {
+        contentHTML = p.content || "";
+      }
+
+      const cleanHTML = `<!DOCTYPE html><html><head><meta charset="utf-8"><style>${buildCSS()}</style></head><body><div class="page">${contentHTML}</div></body></html>`;
+
+      const iframe = document.createElement("iframe");
+      iframe.style.cssText = `position:fixed;left:-9999px;top:0;width:${paperWidth}px;height:10000px;border:none;opacity:0;pointer-events:none`;
+      document.body.appendChild(iframe);
+
+      try {
+        await new Promise<void>(resolve => { iframe.onload = () => resolve(); iframe.srcdoc = cleanHTML; });
+        const iframeDoc = iframe.contentDocument!;
+        const pageDiv = iframeDoc.body.querySelector(".page") as HTMLElement;
+        const target = pageDiv || iframeDoc.body;
+        const contentH = target.scrollHeight;
+        iframe.style.height = contentH + "px";
+        await new Promise(r => setTimeout(r, 150));
+
+        const fullCanvas = await domtoimage.toCanvas(target, {
+          bgcolor: "#ffffff", width: paperWidth, height: target.scrollHeight,
+        }) as HTMLCanvasElement;
+
+        const canvasW = fullCanvas.width;
+        const canvasH = fullCanvas.height;
+        const a4HeightPx = Math.round(A4_H * (canvasW / A4_W));
+
+        let sliceY = 0;
+        while (sliceY < canvasH) {
+          const sliceH = Math.min(a4HeightPx, canvasH - sliceY);
+          const sliceCanvas = document.createElement("canvas");
+          sliceCanvas.width = canvasW;
+          sliceCanvas.height = a4HeightPx;
+          const ctx = sliceCanvas.getContext("2d")!;
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, canvasW, a4HeightPx);
+          ctx.drawImage(fullCanvas, 0, sliceY, canvasW, sliceH, 0, 0, canvasW, sliceH);
+          const sliceData = sliceCanvas.toDataURL("image/jpeg", 0.92);
+          if (!firstPage) pdf.addPage();
+          pdf.addImage(sliceData, "JPEG", 0, 0, A4_W, A4_H);
+          firstPage = false;
+          sliceY += a4HeightPx;
+        }
+      } finally {
+        document.body.removeChild(iframe);
+      }
+    }
+
+    pdf.save(bookTitle + ".pdf");
+  };
+
   const insertBorderBlock = () => {
     insertHTML(
       `<div contenteditable="false" data-quote-block="1" style="position:relative;border-left:4px solid #6366f1;background:#f5f3ff;padding:10px 36px 10px 16px;border-radius:0 8px 8px 0;margin:8px 0">` +
@@ -2974,6 +3063,8 @@ a{color:#2563eb}
           <div className="my-1 border-t border-stone-100" />
           <CtxItem icon={<FileDown className="w-3.5 h-3.5 text-rose-500"/>} label="Download PDF"
             onClick={() => { downloadAsPDF(); }} />
+          <CtxItem icon={<FileDown className="w-3.5 h-3.5 text-violet-500"/>} label="Download All Pages PDF"
+            onClick={() => { downloadAllAsPDF(); }} />
         </div>
       , document.body)}
 
