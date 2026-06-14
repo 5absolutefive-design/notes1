@@ -1058,6 +1058,13 @@ function A4Page({
 
     // Clone and strip interactive/decorative elements
     const clone = editor.cloneNode(true) as HTMLElement;
+    // Replace date inputs with plain text before stripping inputs
+    clone.querySelectorAll<HTMLInputElement>("input[data-datecell]").forEach(inp => {
+      const span = document.createElement("span");
+      span.style.cssText = "display:block;font-size:16px;font-family:Inter,sans-serif;color:#1f2937";
+      span.textContent = inp.value || "";
+      inp.replaceWith(span);
+    });
     clone.querySelectorAll("audio,video,input,button,[data-remove-btn],canvas,svg").forEach(el => el.remove());
 
     // Match the exact paper dimensions and styles from the app
@@ -1204,6 +1211,12 @@ hr{border:none;border-top:1px solid #ccc;margin:10px 0}a{color:#2563eb}
       let contentHTML: string;
       if (p.id === page.id && editorRef.current) {
         const clone = editorRef.current.cloneNode(true) as HTMLElement;
+        clone.querySelectorAll<HTMLInputElement>("input[data-datecell]").forEach(inp => {
+          const span = document.createElement("span");
+          span.style.cssText = "display:block;font-size:16px;font-family:Inter,sans-serif;color:#1f2937";
+          span.textContent = inp.value || "";
+          inp.replaceWith(span);
+        });
         clone.querySelectorAll("audio,video,input,button,[data-remove-btn],canvas,svg").forEach(el => el.remove());
         contentHTML = clone.innerHTML;
       } else {
