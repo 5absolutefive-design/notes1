@@ -1120,18 +1120,20 @@ a{color:#2563eb}
       iframe.style.height = contentH + "px";
       await new Promise(r => setTimeout(r, 150));
 
-      // Render to a full-resolution canvas at the exact paper width
+      // Render at 2× scale for sharp text (effectively 192 DPI instead of 96 DPI)
+      const SCALE = 2;
       const fullCanvas = await domtoimage.toCanvas(target, {
         bgcolor: "#ffffff",
         width: paperWidth,
         height: target.scrollHeight,
+        style: { transform: `scale(${SCALE})`, transformOrigin: "top left" },
       }) as HTMLCanvasElement;
 
       // A4 dimensions in PDF points
       const A4_W = 595.28;
       const A4_H = 841.89;
 
-      // How many canvas pixels correspond to one A4 page height
+      // How many canvas pixels correspond to one A4 page height (accounting for scale)
       const canvasW = fullCanvas.width;
       const canvasH = fullCanvas.height;
       const a4HeightPx = Math.round(A4_H * (canvasW / A4_W));
@@ -1142,19 +1144,19 @@ a{color:#2563eb}
       let pageNum = 0;
 
       while (sliceY < canvasH) {
-        // Slice exactly one A4 page worth of pixels
         const sliceH = Math.min(a4HeightPx, canvasH - sliceY);
         const sliceCanvas = document.createElement("canvas");
         sliceCanvas.width = canvasW;
-        sliceCanvas.height = a4HeightPx; // always full A4 height (last page padded white)
+        sliceCanvas.height = a4HeightPx;
         const ctx = sliceCanvas.getContext("2d")!;
         ctx.fillStyle = "#ffffff";
         ctx.fillRect(0, 0, canvasW, a4HeightPx);
         ctx.drawImage(fullCanvas, 0, sliceY, canvasW, sliceH, 0, 0, canvasW, sliceH);
 
-        const sliceData = sliceCanvas.toDataURL("image/jpeg", 0.92);
+        // PNG is lossless — no JPEG blur on text edges
+        const sliceData = sliceCanvas.toDataURL("image/png");
         if (pageNum > 0) pdf.addPage();
-        pdf.addImage(sliceData, "JPEG", 0, 0, A4_W, A4_H);
+        pdf.addImage(sliceData, "PNG", 0, 0, A4_W, A4_H);
 
         sliceY += a4HeightPx;
         pageNum++;
@@ -1224,8 +1226,10 @@ hr{border:none;border-top:1px solid #ccc;margin:10px 0}a{color:#2563eb}
         iframe.style.height = contentH + "px";
         await new Promise(r => setTimeout(r, 150));
 
+        const SCALE = 2;
         const fullCanvas = await domtoimage.toCanvas(target, {
           bgcolor: "#ffffff", width: paperWidth, height: target.scrollHeight,
+          style: { transform: `scale(${SCALE})`, transformOrigin: "top left" },
         }) as HTMLCanvasElement;
 
         const canvasW = fullCanvas.width;
@@ -1242,9 +1246,9 @@ hr{border:none;border-top:1px solid #ccc;margin:10px 0}a{color:#2563eb}
           ctx.fillStyle = "#ffffff";
           ctx.fillRect(0, 0, canvasW, a4HeightPx);
           ctx.drawImage(fullCanvas, 0, sliceY, canvasW, sliceH, 0, 0, canvasW, sliceH);
-          const sliceData = sliceCanvas.toDataURL("image/jpeg", 0.92);
+          const sliceData = sliceCanvas.toDataURL("image/png");
           if (!firstPage) pdf.addPage();
-          pdf.addImage(sliceData, "JPEG", 0, 0, A4_W, A4_H);
+          pdf.addImage(sliceData, "PNG", 0, 0, A4_W, A4_H);
           firstPage = false;
           sliceY += a4HeightPx;
         }
