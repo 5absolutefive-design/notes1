@@ -48,6 +48,7 @@ const DEFAULT_COVER_IMAGES = [
   { id: "aurora",   label: "Aurora",   url: "https://images.unsplash.com/photo-1531366936337-7c912a4589a7?w=300&q=80" },
   { id: "desert",   label: "Desert",   url: "https://images.unsplash.com/photo-1509316785289-025f5b846b35?w=300&q=80" },
   { id: "abstract", label: "Abstract", url: "https://images.unsplash.com/photo-1557683316-973673baf926?w=300&q=80" },
+  { id: "shopping-cart", label: "Shopping", url: "/shopping-cart.png" },
 ];
 
 const PRESET_COLORS = [
