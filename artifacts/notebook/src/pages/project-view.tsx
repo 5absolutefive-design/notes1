@@ -2540,7 +2540,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 title="Change emoji"
               >
                 {(activeProject.emoji ?? DEFAULT_EMOJI).startsWith("data:")
-                  ? <img src={activeProject.emoji} alt="icon" className="w-full h-full object-cover rounded-lg" />
+                  ? <img src={activeProject.emoji} alt="icon" className="w-16 h-16 object-contain p-1" />
                   : (activeProject.emoji ?? DEFAULT_EMOJI)}
               </button>
               {showEmojiPicker && (
