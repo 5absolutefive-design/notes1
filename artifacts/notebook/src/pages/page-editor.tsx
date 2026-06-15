@@ -1419,8 +1419,8 @@ hr{border:none;border-top:1px solid #ccc;margin:10px 0}a{color:#2563eb}
   *, *::before, *::after { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: #fff; width: ${paperWidth}px; }
   body { font-family: Inter, sans-serif; font-size: 18px; line-height: 1.9; color: #1f2937; }
-  .page-wrap { page-break-after: always; padding-top: 14px; }
-  .page-wrap:last-child { page-break-after: avoid; }
+  .page-wrap { padding-top: 14px; }
+  .page-wrap + .page-wrap { break-before: page; }
   .page-label { font-size: 11px; font-weight: 700; color: #9ca3af; text-transform: uppercase;
     letter-spacing: 0.06em; padding: 0 ${paperPad}px 6px; }
   table { border-collapse: collapse; width: 100%; }
