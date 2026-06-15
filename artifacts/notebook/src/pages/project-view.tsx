@@ -2567,7 +2567,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                   </div>
                 </div>
               )}
-              <input ref={emojiImgUploadRef} type="file" accept="image/*" className="hidden" onChange={handleEmojiImageUpload} />
+              <input ref={emojiImgUploadRef} type="file" accept="image/*,.svg" className="hidden" onChange={handleEmojiImageUpload} />
             </div>
           </div>
 
