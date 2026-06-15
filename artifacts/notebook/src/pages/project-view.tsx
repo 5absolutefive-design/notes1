@@ -295,6 +295,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
   const bannerPickerRef = useRef<HTMLDivElement>(null);
   const calloutPickerRef = useRef<HTMLDivElement>(null);
   const emojiPickerRef = useRef<HTMLDivElement>(null);
+  const emojiImgUploadRef = useRef<HTMLInputElement>(null);
   const bannerUploadRef = useRef<HTMLInputElement>(null);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -704,6 +705,19 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
     saveProjects(updated);
     setProjects(updated);
     setShowEmojiPicker(false);
+  };
+
+  // ── Upload custom image as emoji
+  const handleEmojiImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const dataUrl = ev.target?.result as string;
+      if (dataUrl) setEmoji(dataUrl);
+    };
+    reader.readAsDataURL(file);
+    e.target.value = "";
   };
 
   // ── Track position of last todo item for inline +/- buttons
@@ -2522,14 +2536,24 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             <div className="absolute left-[78px] bottom-[-20px] translate-y-1/2 z-10" ref={emojiPickerRef}>
               <button
                 onClick={() => setShowEmojiPicker(v => !v)}
-                className="w-[110px] h-[90px] rounded-lg bg-white shadow-lg border border-stone-100 flex items-center justify-center text-6xl hover:scale-105 transition-transform"
+                className="w-[110px] h-[90px] rounded-lg bg-white shadow-lg border border-stone-100 flex items-center justify-center text-6xl hover:scale-105 transition-transform overflow-hidden"
                 title="Change emoji"
               >
-                {activeProject.emoji ?? DEFAULT_EMOJI}
+                {(activeProject.emoji ?? DEFAULT_EMOJI).startsWith("data:")
+                  ? <img src={activeProject.emoji} alt="icon" className="w-full h-full object-cover rounded-lg" />
+                  : (activeProject.emoji ?? DEFAULT_EMOJI)}
               </button>
               {showEmojiPicker && (
                 <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-stone-200 p-3 z-50">
-                  <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest mb-2">Pick an emoji</p>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest">Pick an emoji</p>
+                    <button
+                      onClick={() => emojiImgUploadRef.current?.click()}
+                      className="text-[9px] font-semibold text-indigo-500 hover:text-indigo-700 flex items-center gap-1 transition-colors"
+                    >
+                      📤 Upload image
+                    </button>
+                  </div>
                   <div className="grid grid-cols-9 gap-1">
                     {EMOJI_LIST.map(e => (
                       <button
@@ -2543,6 +2567,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                   </div>
                 </div>
               )}
+              <input ref={emojiImgUploadRef} type="file" accept="image/*" className="hidden" onChange={handleEmojiImageUpload} />
             </div>
           </div>
 
