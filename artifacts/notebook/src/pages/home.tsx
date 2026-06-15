@@ -2243,7 +2243,7 @@ export default function Home() {
                                 {!sidebarCollapsed && (
                                   <span className="flex flex-col min-w-0 flex-1">
                                     <span className="text-xs truncate flex items-center gap-1">
-                                      {p.emoji && <span className="flex-shrink-0">{p.emoji}</span>}
+                                      {p.emoji && (p.emoji.startsWith("data:") || p.emoji.startsWith("/") ? <img src={p.emoji} alt="" className="w-4 h-4 object-contain flex-shrink-0" /> : <span className="flex-shrink-0">{p.emoji}</span>)}
                                       {p.title}
                                     </span>
                                     {parent && <span className="text-[9px] text-stone-400 truncate">{parent.title}</span>}
@@ -2284,7 +2284,7 @@ export default function Home() {
                               <div className="w-1.5 h-1.5 rounded-full flex-shrink-0 bg-stone-300" />
                               {!sidebarCollapsed && (
                                 <span className="text-xs truncate flex-1 flex items-center gap-1">
-                                  {p.emoji && <span className="flex-shrink-0">{p.emoji}</span>}
+                                  {p.emoji && (p.emoji.startsWith("data:") || p.emoji.startsWith("/") ? <img src={p.emoji} alt="" className="w-4 h-4 object-contain flex-shrink-0" /> : <span className="flex-shrink-0">{p.emoji}</span>)}
                                   {p.title}
                                 </span>
                               )}
@@ -2352,7 +2352,7 @@ export default function Home() {
                                   )}
                                   {!sidebarCollapsed && (
                                     <span className="text-xs truncate flex-1 flex items-center gap-1">
-                                      {p.emoji && <span className="flex-shrink-0">{p.emoji}</span>}
+                                      {p.emoji && (p.emoji.startsWith("data:") || p.emoji.startsWith("/") ? <img src={p.emoji} alt="" className="w-4 h-4 object-contain flex-shrink-0" /> : <span className="flex-shrink-0">{p.emoji}</span>)}
                                       {p.title}
                                     </span>
                                   )}
