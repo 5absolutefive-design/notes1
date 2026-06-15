@@ -1278,89 +1278,166 @@ hr{border:none;border-top:1px solid #ccc;margin:10px 0}a{color:#2563eb}
     if (!paper || !editor) return;
 
     const paperWidth = paper.clientWidth || 794;
-    const title = page?.title?.trim() || "page";
+    const paperPad = 16; // matches paper div padding
+    const bookTitle = page?.title?.trim() || "notebook";
+    const allPages = store.listPages(bookId);
 
-    // Clone the full paper div — includes charts (SVG), draw shapes (SVG), images, editor content
-    const clone = paper.cloneNode(true) as HTMLElement;
+    // ── Inline SVG chart generator from stored GraphBlock data ─────────
+    const makeSvgChart = (g: GraphBlock): string => {
+      const W = g.width, H = Math.max(g.height - 44, 60);
+      const vals = g.data.map(d => d.value);
+      const maxVal = Math.max(...vals, 1);
+      const n = g.data.length || 1;
 
-    // Strip UI chrome from the clone
-    clone.querySelectorAll("[data-remove-btn], [data-note-panel]").forEach(el => el.remove());
-    // Remove buttons
-    clone.querySelectorAll("button").forEach(el => el.remove());
-    // Remove note panel divs (position:absolute overlays on left/right)
-    clone.querySelectorAll("[style*='transition: width']").forEach(el => el.remove());
-    // Remove draw layer (SVG overlay causes black lines in screenshot but keep drawn paths)
-    // We keep the draw SVG itself — browser print handles SVG natively and correctly
-    // Remove eraser circle (preview element)
-    clone.querySelectorAll("circle[fill*='rgba(239']").forEach(el => el.remove());
-    // Remove lined-paper background
-    clone.querySelectorAll<HTMLElement>(".notebook-lines").forEach(el => { el.style.backgroundImage = "none"; });
-    if (clone.classList.contains("notebook-lines")) clone.style.backgroundImage = "none";
-    // Remove contenteditable to stop browser adding gray box indicators
-    clone.querySelectorAll("[contenteditable]").forEach(el => el.setAttribute("contenteditable", "false"));
-    // Replace date inputs with plain text
-    clone.querySelectorAll<HTMLInputElement>("input[data-datecell]").forEach(inp => {
-      const span = document.createElement("span");
-      span.style.cssText = "font-size:16px;font-family:Inter,sans-serif;color:#1f2937";
-      span.textContent = inp.value || "";
-      inp.replaceWith(span);
-    });
-    // Remove remaining inputs (file pickers etc)
-    clone.querySelectorAll("input").forEach(el => el.remove());
-
-    // Expand editor inside clone to show all content
-    const cloneEditor = clone.querySelector<HTMLElement>(".a4-editor");
-    if (cloneEditor) {
-      cloneEditor.style.maxHeight = "none";
-      cloneEditor.style.overflow = "visible";
-      cloneEditor.style.minHeight = "0";
-    }
-    clone.style.height = "auto";
-    clone.style.minHeight = "0";
-    clone.style.overflow = "visible";
-    clone.style.boxShadow = "none";
-    clone.style.padding = "0";
-    clone.style.margin = "0";
-    clone.style.width = "100%";
-
-    // Recursively clear overflow:hidden and fixed heights that would clip content across pages
-    clone.querySelectorAll<HTMLElement>("*").forEach(el => {
-      const cs = window.getComputedStyle(el);
-      if (el.style.overflow === "hidden") el.style.overflow = "visible";
-      if (el.style.maxHeight && el.style.maxHeight !== "none") el.style.maxHeight = "none";
-      // Don't touch chart containers (they need their absolute positioning / height)
-      if (el.style.height && el.style.height !== "auto" && !el.dataset?.chartContainer) {
-        // Only clear height on flow elements (not position:absolute chart overlays)
-        if (cs.position !== "absolute" && cs.position !== "fixed") {
-          el.style.height = "auto";
-        }
+      if (g.type === "bar") {
+        const gap = 4, bw = Math.max(4, Math.floor((W - 20 - gap * (n - 1)) / n));
+        const bars = g.data.map((d, i) => {
+          const bh = Math.max(2, Math.round((d.value / maxVal) * (H - 28)));
+          const x = 10 + i * (bw + gap);
+          const y = H - 18 - bh;
+          return `<rect x="${x}" y="${y}" width="${bw}" height="${bh}" fill="${g.color}" rx="2"/>
+            <text x="${x + bw / 2}" y="${H - 4}" text-anchor="middle" font-size="8" fill="#6b7280" font-family="Inter,sans-serif">${d.label}</text>`;
+        }).join("");
+        return `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg" style="display:block">${bars}</svg>`;
       }
-    });
+
+      if (g.type === "line" || g.type === "area") {
+        const pts = g.data.map((d, i) => ({
+          x: Math.round(14 + i * (W - 28) / Math.max(n - 1, 1)),
+          y: Math.round(8 + (1 - d.value / maxVal) * (H - 28)),
+          label: d.label,
+        }));
+        const pl = pts.map(p => `${p.x},${p.y}`).join(" ");
+        const areaPath = g.type === "area"
+          ? `<polygon points="${pl} ${pts[n - 1].x},${H - 14} ${pts[0].x},${H - 14}" fill="${g.color}30"/>`
+          : "";
+        const dots = pts.map(p => `<circle cx="${p.x}" cy="${p.y}" r="3" fill="${g.color}"/>`).join("");
+        const labels = pts.map(p => `<text x="${p.x}" y="${H - 4}" text-anchor="middle" font-size="8" fill="#6b7280" font-family="Inter,sans-serif">${p.label}</text>`).join("");
+        return `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg" style="display:block">
+          ${areaPath}<polyline points="${pl}" fill="none" stroke="${g.color}" stroke-width="2"/>
+          ${dots}${labels}</svg>`;
+      }
+
+      if (g.type === "pie" || g.type === "donut") {
+        const total = vals.reduce((s, v) => s + v, 0) || 1;
+        const cx = W / 2, cy = H / 2, r = Math.min(cx, cy) - 6, ri = g.type === "donut" ? r * 0.5 : 0;
+        const COLORS = ["#3b82f6","#ef4444","#10b981","#f59e0b","#8b5cf6","#06b6d4","#f97316","#84cc16","#ec4899"];
+        let ang = -Math.PI / 2;
+        const slices = g.data.map((d, i) => {
+          const a = (d.value / total) * 2 * Math.PI;
+          const x1 = cx + r * Math.cos(ang), y1 = cy + r * Math.sin(ang);
+          ang += a;
+          const x2 = cx + r * Math.cos(ang), y2 = cy + r * Math.sin(ang);
+          const lg = a > Math.PI ? 1 : 0;
+          const c = COLORS[i % COLORS.length];
+          if (ri > 0) {
+            const ix1 = cx + ri * Math.cos(ang - a), iy1 = cy + ri * Math.sin(ang - a);
+            const ix2 = cx + ri * Math.cos(ang), iy2 = cy + ri * Math.sin(ang);
+            return `<path d="M${ix1} ${iy1}L${x1} ${y1}A${r} ${r} 0 ${lg} 1 ${x2} ${y2}L${ix2} ${iy2}A${ri} ${ri} 0 ${lg} 0 ${ix1} ${iy1}Z" fill="${c}"/>`;
+          }
+          return `<path d="M${cx} ${cy}L${x1} ${y1}A${r} ${r} 0 ${lg} 1 ${x2} ${y2}Z" fill="${c}"/>`;
+        }).join("");
+        return `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg" style="display:block">${slices}</svg>`;
+      }
+
+      return `<svg width="${W}" height="${H}" xmlns="http://www.w3.org/2000/svg"><text x="8" y="20" font-size="11" fill="#9ca3af">Chart</text></svg>`;
+    };
+
+    // ── Clean an element's HTML for printing ──────────────────────────
+    const cleanEl = (el: HTMLElement) => {
+      el.querySelectorAll("[data-remove-btn], [data-note-panel], button").forEach(e => e.remove());
+      el.querySelectorAll("[style*='transition: width']").forEach(e => e.remove());
+      el.querySelectorAll("[contenteditable]").forEach(e => e.setAttribute("contenteditable", "false"));
+      el.querySelectorAll<HTMLElement>(".notebook-lines").forEach(e => { e.style.backgroundImage = "none"; });
+      el.querySelectorAll<HTMLInputElement>("input[data-datecell]").forEach(inp => {
+        const sp = document.createElement("span");
+        sp.style.cssText = "font-size:16px;font-family:Inter,sans-serif;color:#1f2937";
+        sp.textContent = inp.value || "";
+        inp.replaceWith(sp);
+      });
+      el.querySelectorAll("input").forEach(e => e.remove());
+    };
+
+    // ── Build HTML for one page ────────────────────────────────────────
+    const buildPageHTML = (pg: typeof allPages[0]): string => {
+      const isCurrent = pg.id === page.id;
+
+      // Editor content
+      let editorHTML: string;
+      if (isCurrent) {
+        const ec = editor.cloneNode(true) as HTMLElement;
+        cleanEl(ec);
+        ec.style.maxHeight = "none";
+        ec.style.overflow  = "visible";
+        ec.style.minHeight = "0";
+        ec.style.backgroundImage = "none";
+        editorHTML = ec.outerHTML;
+      } else {
+        const tmp = document.createElement("div");
+        tmp.innerHTML = pg.content || "";
+        cleanEl(tmp);
+        tmp.style.cssText = `font-family:Inter,sans-serif;font-size:18px;line-height:1.9;color:#1f2937;width:100%`;
+        editorHTML = tmp.outerHTML;
+      }
+
+      // ImageBlocks — base64 src works for all pages
+      let imgBlocks: ImageBlock[] = [];
+      try { imgBlocks = JSON.parse(localStorage.getItem(`nb_page_imgs_${pg.id}`) || "[]"); } catch { /* */ }
+      const imgHTML = imgBlocks.map(blk =>
+        `<div style="position:absolute;left:${blk.x}px;top:${blk.y}px;width:${blk.width}px;z-index:20;pointer-events:none">
+          <img src="${blk.src}" style="width:100%;height:auto;display:block;border-radius:6px;border:2px solid #e2e8f0"/>
+        </div>`
+      ).join("");
+
+      // GraphBlocks — rendered as inline SVG for all pages
+      let gBlocks: GraphBlock[] = [];
+      try { gBlocks = JSON.parse(localStorage.getItem(`nb_page_graphs_${pg.id}`) || "[]"); } catch { /* */ }
+      const chartHTML = gBlocks.map(g =>
+        `<div style="position:absolute;left:${g.x}px;top:${g.y}px;width:${g.width}px;height:${g.height}px;z-index:19;background:#fff;border:1.5px solid #e5e7eb;border-radius:10px;overflow:hidden;pointer-events:none">
+          <div style="font-size:11px;font-weight:600;color:#374151;padding:4px 8px 4px;border-bottom:1px solid #f3f4f6;font-family:Inter,sans-serif">${g.title || ""}</div>
+          ${makeSvgChart(g)}
+        </div>`
+      ).join("");
+
+      return `<div class="page-wrap">
+        <div class="page-label">${pg.title?.trim() || "Page"}</div>
+        <div style="position:relative;width:${paperWidth}px;background:#fff;padding:${paperPad}px;overflow:visible">
+          ${editorHTML}
+          ${imgHTML}
+          ${chartHTML}
+        </div>
+      </div>`;
+    };
+
+    const pagesHTML = allPages.map(pg => buildPageHTML(pg)).join("\n");
 
     const printHTML = `<!DOCTYPE html><html><head><meta charset="utf-8">
-<title>${title}</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
+<title>${bookTitle}</title>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  @page { size: A4; margin: 8mm; }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; padding: 0; background: #fff; }
+  @page { size: A4; margin: 0; }
+  *, *::before, *::after { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #fff; width: ${paperWidth}px; }
   body { font-family: Inter, sans-serif; font-size: 18px; line-height: 1.9; color: #1f2937; }
+  .page-wrap { page-break-after: always; padding-top: 14px; }
+  .page-wrap:last-child { page-break-after: avoid; }
+  .page-label { font-size: 11px; font-weight: 700; color: #9ca3af; text-transform: uppercase;
+    letter-spacing: 0.06em; padding: 0 ${paperPad}px 6px; }
   table { border-collapse: collapse; width: 100%; }
-  td, th { border: 1.5px solid #b0b7c3; padding: 6px 10px; font-size: 16px; }
+  td, th { border: 1.5px solid #b0b7c3; padding: 6px 10px; font-size: 16px; font-family: Inter, sans-serif; }
   th { background: #f9fafb; font-weight: 600; }
   [data-lined="true"] td { border: none; border-bottom: 1px solid #e2e0db; }
   audio, video { display: none !important; }
   img { max-width: 100%; height: auto; }
 </style>
-</head><body>${clone.outerHTML}</body></html>`;
+</head><body>${pagesHTML}</body></html>`;
 
     const win = window.open("", "_blank", "width=900,height=1200,scrollbars=yes");
     if (!win) return;
     win.document.open();
     win.document.write(printHTML);
     win.document.close();
-    win.addEventListener("load", () => { setTimeout(() => win.print(), 400); });
+    win.addEventListener("load", () => { setTimeout(() => win.print(), 600); });
   };
 
   const insertBorderBlock = () => {
