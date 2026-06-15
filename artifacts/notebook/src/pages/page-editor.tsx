@@ -1287,11 +1287,16 @@ hr{border:none;border-top:1px solid #ccc;margin:10px 0}a{color:#2563eb}
 
     // ── Strip lined-paper background (repeating-linear-gradient causes gray lines) ──
     const linedEls: HTMLElement[] = Array.from(paper.querySelectorAll<HTMLElement>(".notebook-lines"));
-    // Also strip it from the paper/editor itself if it has the class
     if (paper.classList.contains("notebook-lines")) linedEls.push(paper);
     if (editor.classList.contains("notebook-lines")) linedEls.push(editor);
     const savedBg = linedEls.map(el => el.style.backgroundImage);
     linedEls.forEach(el => { el.style.backgroundImage = "none"; });
+
+    // ── Remove contenteditable from all elements (browser renders gray boxes on editable blocks) ──
+    const editableEls = Array.from(paper.querySelectorAll<HTMLElement>("[contenteditable]"));
+    editableEls.forEach(el => { el.setAttribute("contenteditable", "false"); });
+    editorRef.current?.blur();
+    await new Promise(r => setTimeout(r, 50));
 
     // ── 2. Expand editor + paper to reveal all content ───────────────
     const savedEditorMaxH   = editor.style.maxHeight;
@@ -1353,6 +1358,7 @@ hr{border:none;border-top:1px solid #ccc;margin:10px 0}a{color:#2563eb}
       // ── 3. Restore everything ────────────────────────────────────────
       toHide.forEach(el => { el.style.visibility = ""; delete el.dataset._hiddenForPdf; });
       linedEls.forEach((el, i) => { el.style.backgroundImage = savedBg[i]; });
+      editableEls.forEach(el => { el.setAttribute("contenteditable", "true"); });
       editor.style.maxHeight = savedEditorMaxH;
       editor.style.minHeight = savedEditorH;
       editor.style.overflow  = savedEditorOvfl;
