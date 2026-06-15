@@ -1285,6 +1285,14 @@ hr{border:none;border-top:1px solid #ccc;margin:10px 0}a{color:#2563eb}
     );
     toHide.forEach(el => { el.dataset._hiddenForPdf = "1"; el.style.visibility = "hidden"; });
 
+    // ── Strip lined-paper background (repeating-linear-gradient causes gray lines) ──
+    const linedEls: HTMLElement[] = Array.from(paper.querySelectorAll<HTMLElement>(".notebook-lines"));
+    // Also strip it from the paper/editor itself if it has the class
+    if (paper.classList.contains("notebook-lines")) linedEls.push(paper);
+    if (editor.classList.contains("notebook-lines")) linedEls.push(editor);
+    const savedBg = linedEls.map(el => el.style.backgroundImage);
+    linedEls.forEach(el => { el.style.backgroundImage = "none"; });
+
     // ── 2. Expand editor + paper to reveal all content ───────────────
     const savedEditorMaxH   = editor.style.maxHeight;
     const savedEditorH      = editor.style.minHeight;
@@ -1344,6 +1352,7 @@ hr{border:none;border-top:1px solid #ccc;margin:10px 0}a{color:#2563eb}
     } finally {
       // ── 3. Restore everything ────────────────────────────────────────
       toHide.forEach(el => { el.style.visibility = ""; delete el.dataset._hiddenForPdf; });
+      linedEls.forEach((el, i) => { el.style.backgroundImage = savedBg[i]; });
       editor.style.maxHeight = savedEditorMaxH;
       editor.style.minHeight = savedEditorH;
       editor.style.overflow  = savedEditorOvfl;
