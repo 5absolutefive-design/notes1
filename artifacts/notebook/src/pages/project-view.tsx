@@ -2536,11 +2536,11 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
             <div className="absolute left-[78px] bottom-[-20px] translate-y-1/2 z-10" ref={emojiPickerRef}>
               <button
                 onClick={() => setShowEmojiPicker(v => !v)}
-                className="w-[110px] h-[90px] rounded-lg bg-white shadow-lg border border-stone-100 flex items-center justify-center text-6xl hover:scale-105 transition-transform overflow-hidden"
+                className="w-[110px] h-[90px] rounded-lg bg-white shadow-lg border border-stone-100 flex items-center justify-center text-6xl hover:scale-105 transition-transform"
                 title="Change emoji"
               >
                 {(activeProject.emoji ?? DEFAULT_EMOJI).startsWith("data:")
-                  ? <img src={activeProject.emoji} alt="icon" className="w-16 h-16 object-contain p-1" />
+                  ? <img src={activeProject.emoji} alt="icon" className="w-20 h-20 object-contain" />
                   : (activeProject.emoji ?? DEFAULT_EMOJI)}
               </button>
               {showEmojiPicker && (
