@@ -3247,7 +3247,7 @@ hr{border:none;border-top:1px solid #ccc;margin:10px 0}a{color:#2563eb}
 
           <div className="my-1 border-t border-stone-100" />
           <div className="relative">
-            <CtxItem icon={<FileDown className="w-3.5 h-3.5 text-black"/>} label="Download PDF" hasArrow
+            <CtxItem icon={<FileDown className="w-3.5 h-3.5 text-stone-400"/>} label="Download PDF" hasArrow
               onClick={() => setCtxMenu(m => m ? { ...m, ...CLOSE_ALL_SUBS, pdfOpen: !m.pdfOpen } : null)} />
             {ctxMenu.pdfOpen && (
               <div className="absolute left-full bottom-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 py-2 px-2 z-[10000] min-w-[210px]">
