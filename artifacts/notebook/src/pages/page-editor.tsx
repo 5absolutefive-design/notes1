@@ -1316,25 +1316,42 @@ hr{border:none;border-top:1px solid #ccc;margin:10px 0}a{color:#2563eb}
       cloneEditor.style.minHeight = "0";
     }
     clone.style.height = "auto";
+    clone.style.minHeight = "0";
     clone.style.overflow = "visible";
     clone.style.boxShadow = "none";
+    clone.style.padding = "0";
+    clone.style.margin = "0";
+    clone.style.width = "100%";
+
+    // Recursively clear overflow:hidden and fixed heights that would clip content across pages
+    clone.querySelectorAll<HTMLElement>("*").forEach(el => {
+      const cs = window.getComputedStyle(el);
+      if (el.style.overflow === "hidden") el.style.overflow = "visible";
+      if (el.style.maxHeight && el.style.maxHeight !== "none") el.style.maxHeight = "none";
+      // Don't touch chart containers (they need their absolute positioning / height)
+      if (el.style.height && el.style.height !== "auto" && !el.dataset?.chartContainer) {
+        // Only clear height on flow elements (not position:absolute chart overlays)
+        if (cs.position !== "absolute" && cs.position !== "fixed") {
+          el.style.height = "auto";
+        }
+      }
+    });
 
     const printHTML = `<!DOCTYPE html><html><head><meta charset="utf-8">
 <title>${title}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
-  @page { size: A4; margin: 10mm 12mm; }
+  @page { size: A4; margin: 8mm; }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; background: #fff; }
-  body { font-family: Inter, sans-serif; font-size: 18px; line-height: 1.9; color: #1f2937; width: ${paperWidth}px; }
+  body { font-family: Inter, sans-serif; font-size: 18px; line-height: 1.9; color: #1f2937; }
   table { border-collapse: collapse; width: 100%; }
   td, th { border: 1.5px solid #b0b7c3; padding: 6px 10px; font-size: 16px; }
   th { background: #f9fafb; font-weight: 600; }
   [data-lined="true"] td { border: none; border-bottom: 1px solid #e2e0db; }
   audio, video { display: none !important; }
-  [contenteditable]:focus { outline: none; }
-  img { max-width: 100%; }
+  img { max-width: 100%; height: auto; }
 </style>
 </head><body>${clone.outerHTML}</body></html>`;
 
