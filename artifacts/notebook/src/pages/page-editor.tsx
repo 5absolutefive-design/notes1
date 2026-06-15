@@ -158,7 +158,7 @@ interface ContextMenuState {
   dividerOpen: boolean; linkOpen: boolean; todoOpen: boolean;
   todoCount: number; todoRemoveCount: number;
   drawOpen: boolean; graphOpen: boolean; tableOpen: boolean;
-  fontOpen: boolean; blockOpen: boolean; mediaOpen: boolean;
+  fontOpen: boolean; blockOpen: boolean; mediaOpen: boolean; pdfOpen: boolean;
   subActive: boolean; supActive: boolean;
   boldActive: boolean; italicActive: boolean; underlineActive: boolean; strikeActive: boolean;
 }
@@ -166,7 +166,7 @@ interface ContextMenuState {
 const CLOSE_ALL_SUBS = {
   formatOpen: false, fontOpen: false, alignOpen: false, bulletOpen: false,
   dividerOpen: false, linkOpen: false, drawOpen: false, tableOpen: false,
-  mediaOpen: false, blockOpen: false, graphOpen: false,
+  mediaOpen: false, blockOpen: false, graphOpen: false, pdfOpen: false,
   highlightOpen: false, fontColorOpen: false, headingOpen: false,
 };
 
@@ -2132,7 +2132,7 @@ hr{border:none;border-top:1px solid #ccc;margin:10px 0}a{color:#2563eb}
       dividerOpen: false, linkOpen: false, todoOpen: false,
       todoCount: 1, todoRemoveCount: 1,
       drawOpen: false, graphOpen: false, tableOpen: false,
-      fontOpen: false, blockOpen: false, mediaOpen: false,
+      fontOpen: false, blockOpen: false, mediaOpen: false, pdfOpen: false,
       subActive: document.queryCommandState("subscript"),
       supActive: document.queryCommandState("superscript"),
       boldActive: document.queryCommandState("bold"),
@@ -2511,7 +2511,7 @@ hr{border:none;border-top:1px solid #ccc;margin:10px 0}a{color:#2563eb}
                 dividerOpen: false, linkOpen: false, todoOpen: false,
                 todoCount: 1, todoRemoveCount: 1,
                 drawOpen: false, graphOpen: false, tableOpen: false,
-                fontOpen: false, blockOpen: false, mediaOpen: false,
+                fontOpen: false, blockOpen: false, mediaOpen: false, pdfOpen: false,
                 subActive: document.queryCommandState("subscript"),
                 supActive: document.queryCommandState("superscript"),
                 boldActive: document.queryCommandState("bold"),
@@ -3246,12 +3246,49 @@ hr{border:none;border-top:1px solid #ccc;margin:10px 0}a{color:#2563eb}
           </div>
 
           <div className="my-1 border-t border-stone-100" />
-          <CtxItem icon={<FileDown className="w-3.5 h-3.5 text-rose-500"/>} label="Download PDF"
-            onClick={() => { downloadAsPDF(); }} />
-          <CtxItem icon={<FileDown className="w-3.5 h-3.5 text-violet-500"/>} label="Download All Pages PDF"
-            onClick={() => { downloadAllAsPDF(); }} />
-          <CtxItem icon={<Camera className="w-3.5 h-3.5 text-emerald-500"/>} label="Screenshot PDF"
-            onClick={() => { downloadScreenshotPDF(); }} />
+          <div className="relative">
+            <CtxItem icon={<FileDown className="w-3.5 h-3.5 text-rose-500"/>} label="Download PDF" hasArrow
+              onClick={() => setCtxMenu(m => m ? { ...m, ...CLOSE_ALL_SUBS, pdfOpen: !m.pdfOpen } : null)} />
+            {ctxMenu.pdfOpen && (
+              <div className="absolute left-full bottom-0 ml-1 bg-white rounded-xl shadow-2xl border border-stone-200 py-2 px-2 z-[10000] min-w-[210px]">
+                <p className="text-[10px] font-semibold text-stone-400 uppercase tracking-wide px-1 mb-1.5">Choose Export Type</p>
+                {[
+                  {
+                    icon: <FileDown className="w-4 h-4 text-rose-500" />,
+                    label: "Current Page PDF",
+                    desc: "Clean text & tables",
+                    bg: "hover:bg-rose-50",
+                    action: () => { downloadAsPDF(); setCtxMenu(null); },
+                  },
+                  {
+                    icon: <FileDown className="w-4 h-4 text-violet-500" />,
+                    label: "All Pages PDF",
+                    desc: "Every page combined",
+                    bg: "hover:bg-violet-50",
+                    action: () => { downloadAllAsPDF(); setCtxMenu(null); },
+                  },
+                  {
+                    icon: <Camera className="w-4 h-4 text-emerald-500" />,
+                    label: "Visual Screenshot PDF",
+                    desc: "With charts & images",
+                    bg: "hover:bg-emerald-50",
+                    action: () => { downloadScreenshotPDF(); setCtxMenu(null); },
+                  },
+                ].map(({ icon, label, desc, bg, action }) => (
+                  <button key={label} onClick={action}
+                    className={`w-full flex items-center gap-2.5 px-2 py-2 rounded-lg ${bg} text-left transition-colors`}>
+                    <span className="w-7 h-7 flex items-center justify-center flex-shrink-0 bg-white rounded-lg border border-stone-100 shadow-sm">
+                      {icon}
+                    </span>
+                    <div>
+                      <div className="text-xs font-semibold text-stone-800">{label}</div>
+                      <div className="text-[10px] text-stone-400">{desc}</div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       , document.body)}
 
