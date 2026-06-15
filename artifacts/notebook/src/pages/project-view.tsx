@@ -62,6 +62,10 @@ const EMOJI_LIST = [
 
 const DEFAULT_EMOJI = "📁";
 
+const PRESET_ICONS = [
+  { id: "cart", label: "Cart", url: "/icon-cart.png" },
+];
+
 // ── Storage (exported for use in home.tsx) ───────────────────────
 const PROJECTS_KEY = "nb_projects";
 
@@ -2539,9 +2543,7 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                 className="w-[110px] h-[90px] rounded-lg bg-white shadow-lg border border-stone-100 flex items-center justify-center text-6xl hover:scale-105 transition-transform"
                 title="Change emoji"
               >
-                {(activeProject.emoji ?? DEFAULT_EMOJI).startsWith("data:")
-                  ? <img src={activeProject.emoji} alt="icon" className="w-20 h-20 object-contain" />
-                  : (activeProject.emoji ?? DEFAULT_EMOJI)}
+                {(() => { const e = activeProject.emoji ?? DEFAULT_EMOJI; return (e.startsWith("data:") || e.startsWith("/")) ? <img src={e} alt="icon" className="w-20 h-20 object-contain" /> : e; })()}
               </button>
               {showEmojiPicker && (
                 <div className="absolute top-full left-0 mt-2 w-72 bg-white rounded-2xl shadow-2xl border border-stone-200 p-3 z-50">
@@ -2554,6 +2556,24 @@ export default function ProjectView({ projects, setProjects, activeId, setActive
                       📤 Upload image
                     </button>
                   </div>
+                  {PRESET_ICONS.length > 0 && (
+                    <>
+                      <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest mb-1.5">Icons</p>
+                      <div className="flex flex-wrap gap-1 mb-2">
+                        {PRESET_ICONS.map(icon => (
+                          <button
+                            key={icon.id}
+                            onClick={() => setEmoji(icon.url)}
+                            title={icon.label}
+                            className={`w-9 h-9 flex items-center justify-center rounded-lg border-2 transition-all hover:border-indigo-400 ${(activeProject.emoji ?? DEFAULT_EMOJI) === icon.url ? "border-indigo-500 bg-indigo-50" : "border-transparent hover:bg-stone-50"}`}
+                          >
+                            <img src={icon.url} alt={icon.label} className="w-7 h-7 object-contain" />
+                          </button>
+                        ))}
+                      </div>
+                      <p className="text-[9px] font-bold text-stone-400 uppercase tracking-widest mb-1.5">Emoji</p>
+                    </>
+                  )}
                   <div className="grid grid-cols-9 gap-1">
                     {EMOJI_LIST.map(e => (
                       <button
