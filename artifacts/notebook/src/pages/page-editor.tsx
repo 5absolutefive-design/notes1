@@ -3270,7 +3270,7 @@ hr{border:none;border-top:1px solid #ccc;margin:10px 0}a{color:#2563eb}
                   {
                     icon: <Camera className="w-4 h-4 text-emerald-500" />,
                     label: "Visual Screenshot PDF",
-                    desc: "With charts & images",
+                    desc: "Everything",
                     bg: "hover:bg-emerald-50",
                     action: () => { downloadScreenshotPDF(); setCtxMenu(null); },
                   },
