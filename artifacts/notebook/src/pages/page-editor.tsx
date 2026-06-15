@@ -1271,100 +1271,79 @@ hr{border:none;border-top:1px solid #ccc;margin:10px 0}a{color:#2563eb}
     pdf.save(bookTitle + ".pdf");
   };
 
-  const downloadScreenshotPDF = async () => {
+  const downloadScreenshotPDF = () => {
     setCtxMenu(null);
     const paper = paperRef.current;
     const editor = editorRef.current;
     if (!paper || !editor) return;
 
-    // ── 1. Hide elements that cause rendering artifacts ──────────────
-    // The draw SVG overlay (position:absolute inset:0) renders as thick black lines in dom-to-image
-    // Note panels, remove-buttons, and other UI chrome should also be hidden
-    const toHide: HTMLElement[] = Array.from(
-      paper.querySelectorAll<HTMLElement>("[data-draw-layer], [data-remove-btn], button, [data-note-panel]")
-    );
-    toHide.forEach(el => { el.dataset._hiddenForPdf = "1"; el.style.visibility = "hidden"; });
+    const paperWidth = paper.clientWidth || 794;
+    const title = page?.title?.trim() || "page";
 
-    // ── Strip lined-paper background (repeating-linear-gradient causes gray lines) ──
-    const linedEls: HTMLElement[] = Array.from(paper.querySelectorAll<HTMLElement>(".notebook-lines"));
-    if (paper.classList.contains("notebook-lines")) linedEls.push(paper);
-    if (editor.classList.contains("notebook-lines")) linedEls.push(editor);
-    const savedBg = linedEls.map(el => el.style.backgroundImage);
-    linedEls.forEach(el => { el.style.backgroundImage = "none"; });
+    // Clone the full paper div — includes charts (SVG), draw shapes (SVG), images, editor content
+    const clone = paper.cloneNode(true) as HTMLElement;
 
-    // ── Remove contenteditable from all elements (browser renders gray boxes on editable blocks) ──
-    const editableEls = Array.from(paper.querySelectorAll<HTMLElement>("[contenteditable]"));
-    editableEls.forEach(el => { el.setAttribute("contenteditable", "false"); });
-    editorRef.current?.blur();
-    await new Promise(r => setTimeout(r, 50));
+    // Strip UI chrome from the clone
+    clone.querySelectorAll("[data-remove-btn], [data-note-panel]").forEach(el => el.remove());
+    // Remove buttons
+    clone.querySelectorAll("button").forEach(el => el.remove());
+    // Remove note panel divs (position:absolute overlays on left/right)
+    clone.querySelectorAll("[style*='transition: width']").forEach(el => el.remove());
+    // Remove draw layer (SVG overlay causes black lines in screenshot but keep drawn paths)
+    // We keep the draw SVG itself — browser print handles SVG natively and correctly
+    // Remove eraser circle (preview element)
+    clone.querySelectorAll("circle[fill*='rgba(239']").forEach(el => el.remove());
+    // Remove lined-paper background
+    clone.querySelectorAll<HTMLElement>(".notebook-lines").forEach(el => { el.style.backgroundImage = "none"; });
+    if (clone.classList.contains("notebook-lines")) clone.style.backgroundImage = "none";
+    // Remove contenteditable to stop browser adding gray box indicators
+    clone.querySelectorAll("[contenteditable]").forEach(el => el.setAttribute("contenteditable", "false"));
+    // Replace date inputs with plain text
+    clone.querySelectorAll<HTMLInputElement>("input[data-datecell]").forEach(inp => {
+      const span = document.createElement("span");
+      span.style.cssText = "font-size:16px;font-family:Inter,sans-serif;color:#1f2937";
+      span.textContent = inp.value || "";
+      inp.replaceWith(span);
+    });
+    // Remove remaining inputs (file pickers etc)
+    clone.querySelectorAll("input").forEach(el => el.remove());
 
-    // ── 2. Expand editor + paper to reveal all content ───────────────
-    const savedEditorMaxH   = editor.style.maxHeight;
-    const savedEditorH      = editor.style.minHeight;
-    const savedEditorOvfl   = editor.style.overflow;
-    const savedPaperH       = paper.style.height;
-    const savedPaperOvfl    = paper.style.overflow;
-
-    editor.style.maxHeight  = "none";
-    editor.style.minHeight  = "0";
-    editor.style.overflow   = "visible";
-    paper.style.height      = "auto";
-    paper.style.overflow    = "visible";
-
-    await new Promise(r => setTimeout(r, 120)); // let browser reflow + recharts resize
-
-    try {
-      const paperWidth = paper.clientWidth || 794;
-
-      const fullCanvas = await domtoimage.toCanvas(paper, {
-        bgcolor: "#ffffff",
-        width:   paperWidth,
-        height:  paper.scrollHeight,
-        scale:   2,
-        // filter out any remaining SVG draw layer nodes
-        filter: (node: Node) => {
-          const el = node as HTMLElement;
-          return !(el.dataset && el.dataset.drawLayer === "1");
-        },
-      }) as HTMLCanvasElement;
-
-      const A4_W = 595.28;
-      const A4_H = 841.89;
-      const canvasW      = fullCanvas.width;
-      const canvasH      = fullCanvas.height;
-      const a4HeightPx   = Math.round(A4_H * (canvasW / A4_W));
-
-      const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
-      let sliceY = 0, pageNum = 0;
-
-      while (sliceY < canvasH) {
-        const sliceH      = Math.min(a4HeightPx, canvasH - sliceY);
-        const sliceCanvas = document.createElement("canvas");
-        sliceCanvas.width  = canvasW;
-        sliceCanvas.height = a4HeightPx;
-        const ctx = sliceCanvas.getContext("2d")!;
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(0, 0, canvasW, a4HeightPx);
-        ctx.drawImage(fullCanvas, 0, sliceY, canvasW, sliceH, 0, 0, canvasW, sliceH);
-        const sliceData = sliceCanvas.toDataURL("image/png");
-        if (pageNum > 0) pdf.addPage();
-        pdf.addImage(sliceData, "PNG", 0, 0, A4_W, A4_H);
-        sliceY  += a4HeightPx;
-        pageNum++;
-      }
-
-      pdf.save((page?.title?.trim() || "page") + "-screenshot.pdf");
-    } finally {
-      // ── 3. Restore everything ────────────────────────────────────────
-      toHide.forEach(el => { el.style.visibility = ""; delete el.dataset._hiddenForPdf; });
-      linedEls.forEach((el, i) => { el.style.backgroundImage = savedBg[i]; });
-      editableEls.forEach(el => { el.setAttribute("contenteditable", "true"); });
-      editor.style.maxHeight = savedEditorMaxH;
-      editor.style.minHeight = savedEditorH;
-      editor.style.overflow  = savedEditorOvfl;
-      paper.style.height     = savedPaperH;
-      paper.style.overflow   = savedPaperOvfl;
+    // Expand editor inside clone to show all content
+    const cloneEditor = clone.querySelector<HTMLElement>(".a4-editor");
+    if (cloneEditor) {
+      cloneEditor.style.maxHeight = "none";
+      cloneEditor.style.overflow = "visible";
+      cloneEditor.style.minHeight = "0";
     }
+    clone.style.height = "auto";
+    clone.style.overflow = "visible";
+    clone.style.boxShadow = "none";
+
+    const printHTML = `<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>${title}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  @page { size: A4; margin: 10mm 12mm; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: #fff; }
+  body { font-family: Inter, sans-serif; font-size: 18px; line-height: 1.9; color: #1f2937; width: ${paperWidth}px; }
+  table { border-collapse: collapse; width: 100%; }
+  td, th { border: 1.5px solid #b0b7c3; padding: 6px 10px; font-size: 16px; }
+  th { background: #f9fafb; font-weight: 600; }
+  [data-lined="true"] td { border: none; border-bottom: 1px solid #e2e0db; }
+  audio, video { display: none !important; }
+  [contenteditable]:focus { outline: none; }
+  img { max-width: 100%; }
+</style>
+</head><body>${clone.outerHTML}</body></html>`;
+
+    const win = window.open("", "_blank", "width=900,height=1200,scrollbars=yes");
+    if (!win) return;
+    win.document.open();
+    win.document.write(printHTML);
+    win.document.close();
+    win.addEventListener("load", () => { setTimeout(() => win.print(), 400); });
   };
 
   const insertBorderBlock = () => {
